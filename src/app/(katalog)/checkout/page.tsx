@@ -2,12 +2,165 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { useCart } from "../components/contexts/CartContext";
+import { useCart, getItemKey } from "../components/contexts/CartContext";
+import { CartItem } from "../components/contexts/CartContext";
 import Link from "next/link";
+
+function formatPrice(price: number) {
+  return new Intl.NumberFormat("id-ID", {
+    style: "currency",
+    currency: "IDR",
+    minimumFractionDigits: 0,
+  }).format(price);
+}
+
+function VariantBadges({
+  variants,
+}: {
+  variants?: Record<string, string>;
+}) {
+  if (!variants) return null;
+  return (
+    <div className="flex flex-wrap gap-1.5 mt-1.5">
+      {Object.entries(variants).map(([k, v]) => (
+        <span
+          key={k}
+          className="inline-flex items-center gap-1 bg-white/10 text-white/70 text-[11px] px-2 py-0.5 rounded-md"
+        >
+          <span className="text-white/40">{k}:</span> {v}
+        </span>
+      ))}
+    </div>
+  );
+}
+
+function OrderItem({
+  item,
+  isExpanded,
+  onToggle,
+}: {
+  item: CartItem;
+  isExpanded: boolean;
+  onToggle: () => void;
+}) {
+  const p = item.product;
+
+  return (
+    <div className="bg-white/5 rounded-xl border border-white/10 overflow-hidden">
+      {/* Collapsed row */}
+      <button
+        onClick={onToggle}
+        className="w-full flex gap-4 p-4 text-left hover:bg-white/5 transition-colors"
+      >
+        <div
+          className="w-16 h-16 rounded-lg bg-cover bg-center flex-shrink-0"
+          style={{ backgroundImage: `url('${p.img}')` }}
+        />
+        <div className="flex-1 min-w-0">
+          <h4 className="text-label-sm font-bold text-white truncate">
+            {p.title}
+          </h4>
+          <VariantBadges variants={item.selectedVariants} />
+          <p className="text-[12px] text-white/50 mt-1">
+            {formatPrice(p.price)} x{item.quantity}
+          </p>
+        </div>
+        <div className="flex flex-col items-end justify-between flex-shrink-0">
+          <span className="text-label-sm font-bold text-white">
+            {formatPrice(p.price * item.quantity)}
+          </span>
+          <span className="material-symbols-outlined text-[18px] text-white/40 transition-transform">
+            {isExpanded ? "expand_less" : "expand_more"}
+          </span>
+        </div>
+      </button>
+
+      {/* Expanded detail */}
+      {isExpanded && (
+        <div className="px-4 pb-4 border-t border-white/10">
+          <div className="pt-4">
+            <div
+              className="w-full aspect-video rounded-lg bg-cover bg-center mb-4"
+              style={{ backgroundImage: `url('${p.img}')` }}
+            />
+            <div className="flex items-center gap-3 mb-3">
+              <span
+                className={`${p.badgeBg} text-white px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider`}
+              >
+                {p.badge}
+              </span>
+              <span className="text-secondary text-[12px] font-bold uppercase tracking-widest">
+                {p.category}
+              </span>
+            </div>
+            <h4 className="text-headline-h3 font-bold text-white mb-2">
+              {p.title}
+            </h4>
+            <p className="text-body-sm text-white/60 mb-4">{p.desc}</p>
+
+            <div className="grid grid-cols-2 gap-3 mb-4">
+              <div className="bg-white/5 rounded-lg p-3">
+                <span className="text-[11px] text-white/40 block mb-1">
+                  Harga Satuan
+                </span>
+                <span className="text-label-sm font-bold text-secondary">
+                  {formatPrice(p.price)}
+                </span>
+              </div>
+              <div className="bg-white/5 rounded-lg p-3">
+                <span className="text-[11px] text-white/40 block mb-1">
+                  Stok Tersedia
+                </span>
+                <span className="text-label-sm font-bold text-white">
+                  {p.stock} pcs
+                </span>
+              </div>
+              <div className="bg-white/5 rounded-lg p-3">
+                <span className="text-[11px] text-white/40 block mb-1">
+                  Jumlah Dipesan
+                </span>
+                <span className="text-label-sm font-bold text-white">
+                  {item.quantity} pcs
+                </span>
+              </div>
+              <div className="bg-white/5 rounded-lg p-3">
+                <span className="text-[11px] text-white/40 block mb-1">
+                  Subtotal
+                </span>
+                <span className="text-label-sm font-bold text-secondary">
+                  {formatPrice(p.price * item.quantity)}
+                </span>
+              </div>
+            </div>
+
+            {item.selectedVariants && (
+              <div className="bg-white/5 rounded-lg p-3">
+                <span className="text-[11px] text-white/40 block mb-2">
+                  Varian yang Dipilih
+                </span>
+                <div className="flex flex-wrap gap-2">
+                  {Object.entries(item.selectedVariants).map(([k, v]) => (
+                    <span
+                      key={k}
+                      className="inline-flex items-center gap-1.5 bg-secondary/20 text-secondary text-[12px] font-bold px-3 py-1 rounded-lg"
+                    >
+                      {k}: {v}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function CheckoutPage() {
   const router = useRouter();
   const { items, totalPrice, clearCart } = useCart();
+  const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
   const [form, setForm] = useState({
     name: "",
     email: "",
@@ -16,19 +169,26 @@ export default function CheckoutPage() {
     note: "",
   });
 
-  const formatPrice = (price: number) =>
-    new Intl.NumberFormat("id-ID", {
-      style: "currency",
-      currency: "IDR",
-      minimumFractionDigits: 0,
-    }).format(price);
+  const toggleExpand = (key: string) => {
+    setExpandedItems((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) {
+        next.delete(key);
+      } else {
+        next.add(key);
+      }
+      return next;
+    });
+  };
 
   const handleSubmit = () => {
     const productList = items
-      .map(
-        (item) =>
-          `- ${item.product.title} x${item.quantity} = ${formatPrice(item.product.price * item.quantity)}`
-      )
+      .map((item) => {
+        const variantStr = item.selectedVariants
+          ? ` (${Object.values(item.selectedVariants).join(", ")})`
+          : "";
+        return `- ${item.product.title}${variantStr} x${item.quantity} = ${formatPrice(item.product.price * item.quantity)}`;
+      })
       .join("%0A");
 
     const message = `Halo ALUPBESK, saya ingin memesan:%0A%0A${productList}%0A%0ATotal: ${formatPrice(totalPrice)}%0A%0ANama: ${form.name}%0AEmail: ${form.email}%0ATelp: ${form.phone}%0AAlamat: ${form.address}%0ACatatan: ${form.note}`;
@@ -67,7 +227,7 @@ export default function CheckoutPage() {
 
   return (
     <section className="min-h-screen bg-primary pt-28 pb-16">
-      <div className="max-w-5xl mx-auto px-6">
+      <div className="max-w-6xl mx-auto px-6">
         {/* Header */}
         <div className="mb-10">
           <Link
@@ -86,33 +246,28 @@ export default function CheckoutPage() {
 
         <div className="grid lg:grid-cols-5 gap-8">
           {/* Ringkasan Pesanan */}
-          <div className="lg:col-span-2">
-            <div className="bg-primary-container rounded-2xl border border-white/10 p-6 sticky top-28">
-              <h3 className="text-label-sm font-bold text-secondary uppercase tracking-widest mb-6">
-                Ringkasan Pesanan
-              </h3>
-              <div className="space-y-4">
-                {items.map((item) => (
-                  <div key={item.product.id} className="flex gap-4">
-                    <div
-                      className="w-16 h-16 rounded-lg bg-cover bg-center flex-shrink-0"
-                      style={{
-                        backgroundImage: `url('${item.product.img}')`,
-                      }}
+          <div className="lg:col-span-3">
+            <div className="bg-primary-container rounded-2xl border border-white/10 p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-label-sm font-bold text-secondary uppercase tracking-widest">
+                  Ringkasan Pesanan
+                </h3>
+                <span className="text-label-sm text-white/40">
+                  {items.length} produk
+                </span>
+              </div>
+              <div className="space-y-3">
+                {items.map((item) => {
+                  const key = getItemKey(item);
+                  return (
+                    <OrderItem
+                      key={key}
+                      item={item}
+                      isExpanded={expandedItems.has(key)}
+                      onToggle={() => toggleExpand(key)}
                     />
-                    <div className="flex-1 min-w-0">
-                      <h4 className="text-label-sm font-bold text-white truncate">
-                        {item.product.title}
-                      </h4>
-                      <p className="text-[12px] text-white/50">
-                        {formatPrice(item.product.price)} x{item.quantity}
-                      </p>
-                    </div>
-                    <span className="text-label-sm font-bold text-white flex-shrink-0">
-                      {formatPrice(item.product.price * item.quantity)}
-                    </span>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
               <div className="border-t border-white/10 mt-6 pt-6 flex justify-between items-center">
                 <span className="text-body-md font-bold text-white">Total</span>
@@ -124,8 +279,8 @@ export default function CheckoutPage() {
           </div>
 
           {/* Form Data Diri */}
-          <div className="lg:col-span-3">
-            <div className="bg-primary-container rounded-2xl border border-white/10 p-8">
+          <div className="lg:col-span-2">
+            <div className="bg-primary-container rounded-2xl border border-white/10 p-8 sticky top-28">
               <h3 className="text-label-sm font-bold text-secondary uppercase tracking-widest mb-6">
                 Data Diri
               </h3>

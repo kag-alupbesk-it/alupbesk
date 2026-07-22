@@ -1,4 +1,5 @@
 import "./globals.css";
+import Providers from "./Providers";
 
 export const metadata = {
   title: "ALUPBESK | Solusi Produk Aluminium & Komponen Industrial Terpercaya",
@@ -22,7 +23,7 @@ export default function RootLayout({
         />
       </head>
       <body className="bg-background text-on-surface font-body-md custom-scrollbar overflow-x-hidden">
-        {children}
+        <Providers>{children}</Providers>
       </body>
     </html>
   );

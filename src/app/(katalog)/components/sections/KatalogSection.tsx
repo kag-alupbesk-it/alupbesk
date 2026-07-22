@@ -80,7 +80,11 @@ export default function KatalogSection() {
                     Detail
                   </button>
                   <button
-                    onClick={() => addToCart(item, 1)}
+                    onClick={() =>
+                      item.variants
+                        ? setDetailProduct(item)
+                        : addToCart(item, 1)
+                    }
                     className="py-3 px-4 rounded-lg border border-white/20 text-white hover:bg-secondary hover:border-secondary hover:text-primary transition-all"
                   >
                     <span className="material-symbols-outlined text-[18px]">

@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useCart } from "../contexts/CartContext";
+import { useCart, getItemKey } from "../contexts/CartContext";
 
 export default function CartDrawer() {
   const router = useRouter();
@@ -69,66 +69,73 @@ export default function CartDrawer() {
               <p className="text-body-md">Keranjang masih kosong</p>
             </div>
           ) : (
-            items.map((item) => (
-              <div
-                key={item.product.id}
-                className="flex gap-4 p-4 bg-white/5 rounded-xl border border-white/10"
-              >
+            items.map((item) => {
+              const key = getItemKey(item);
+              const variantLabels = item.selectedVariants
+                ? Object.entries(item.selectedVariants)
+                    .map(([k, v]) => `${k}: ${v}`)
+                    .join(" | ")
+                : null;
+              return (
                 <div
-                  className="w-20 h-20 rounded-lg bg-cover bg-center flex-shrink-0"
-                  style={{ backgroundImage: `url('${item.product.img}')` }}
-                />
-                <div className="flex-1 min-w-0">
-                  <h4 className="text-label-sm font-bold text-white truncate">
-                    {item.product.title}
-                  </h4>
-                  <p className="text-[12px] text-secondary font-bold mt-1">
-                    {formatPrice(item.product.price)}
-                  </p>
-                  <div className="flex items-center justify-between mt-3">
-                    <div className="flex items-center border border-white/20 rounded-lg">
-                      <button
-                        onClick={() =>
-                          updateQuantity(
-                            item.product.id,
-                            item.quantity - 1
-                          )
-                        }
-                        className="px-2 py-1 text-white/60 hover:text-white transition-colors"
-                      >
-                        <span className="material-symbols-outlined text-[16px]">
-                          remove
+                  key={key}
+                  className="flex gap-4 p-4 bg-white/5 rounded-xl border border-white/10"
+                >
+                  <div
+                    className="w-20 h-20 rounded-lg bg-cover bg-center flex-shrink-0"
+                    style={{ backgroundImage: `url('${item.product.img}')` }}
+                  />
+                  <div className="flex-1 min-w-0">
+                    <h4 className="text-label-sm font-bold text-white truncate">
+                      {item.product.title}
+                    </h4>
+                    {variantLabels && (
+                      <p className="text-[11px] text-white/50 mt-0.5 truncate">
+                        {variantLabels}
+                      </p>
+                    )}
+                    <p className="text-[12px] text-secondary font-bold mt-1">
+                      {formatPrice(item.product.price)}
+                    </p>
+                    <div className="flex items-center justify-between mt-3">
+                      <div className="flex items-center border border-white/20 rounded-lg">
+                        <button
+                          onClick={() =>
+                            updateQuantity(key, item.quantity - 1)
+                          }
+                          className="px-2 py-1 text-white/60 hover:text-white transition-colors"
+                        >
+                          <span className="material-symbols-outlined text-[16px]">
+                            remove
+                          </span>
+                        </button>
+                        <span className="px-3 text-white text-[14px] font-bold">
+                          {item.quantity}
                         </span>
-                      </button>
-                      <span className="px-3 text-white text-[14px] font-bold">
-                        {item.quantity}
-                      </span>
+                        <button
+                          onClick={() =>
+                            updateQuantity(key, item.quantity + 1)
+                          }
+                          className="px-2 py-1 text-white/60 hover:text-white transition-colors"
+                        >
+                          <span className="material-symbols-outlined text-[16px]">
+                            add
+                          </span>
+                        </button>
+                      </div>
                       <button
-                        onClick={() =>
-                          updateQuantity(
-                            item.product.id,
-                            item.quantity + 1
-                          )
-                        }
-                        className="px-2 py-1 text-white/60 hover:text-white transition-colors"
+                        onClick={() => removeFromCart(key)}
+                        className="text-white/40 hover:text-danger transition-colors"
                       >
-                        <span className="material-symbols-outlined text-[16px]">
-                          add
+                        <span className="material-symbols-outlined text-[18px]">
+                          delete
                         </span>
                       </button>
                     </div>
-                    <button
-                      onClick={() => removeFromCart(item.product.id)}
-                      className="text-white/40 hover:text-danger transition-colors"
-                    >
-                      <span className="material-symbols-outlined text-[18px]">
-                        delete
-                      </span>
-                    </button>
                   </div>
                 </div>
-              </div>
-            ))
+              );
+            })
           )}
         </div>
 
