@@ -1,6 +1,5 @@
 "use client";
 
-import { CartProvider } from "./contexts/CartContext";
 import Navbar from "./layout/Navbar";
 import Footer from "./layout/Footer";
 import HeroSection from "./sections/HeroSection";
@@ -11,11 +10,10 @@ import FaqSection from "./sections/FaqSection";
 import ContactSection from "./sections/ContactSection";
 import CartDrawer from "./ui/CartDrawer";
 import ProductDetailModal from "./ui/ProductDetailModal";
-import CheckoutModal from "./ui/CheckoutModal";
 
 export default function Components() {
   return (
-    <CartProvider>
+    <>
       <Navbar />
       <main>
         <HeroSection />
@@ -28,7 +26,6 @@ export default function Components() {
       <Footer />
       <CartDrawer />
       <ProductDetailModal />
-      <CheckoutModal />
-    </CartProvider>
+    </>
   );
 }

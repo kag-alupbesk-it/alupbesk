@@ -1,8 +1,10 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useCart } from "../contexts/CartContext";
 
 export default function CartDrawer() {
+  const router = useRouter();
   const {
     items,
     removeFromCart,
@@ -12,7 +14,6 @@ export default function CartDrawer() {
     totalPrice,
     isCartOpen,
     setCartOpen,
-    setCheckoutOpen,
   } = useCart();
 
   const formatPrice = (price: number) =>
@@ -24,7 +25,7 @@ export default function CartDrawer() {
 
   const handleCheckout = () => {
     setCartOpen(false);
-    setCheckoutOpen(true);
+    router.push("/checkout");
   };
 
   if (!isCartOpen) return null;
