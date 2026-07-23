@@ -1,6 +1,6 @@
 "use client";
 
-import { useCart } from "../contexts/CartContext";
+import { useCart } from "../../checkout/CartContext";
 import Link from "next/link";
 
 export default function CartIcon() {

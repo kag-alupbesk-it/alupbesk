@@ -18,6 +18,8 @@ export interface Product {
   specs: { label: string; value: string }[];
   variants?: ProductVariant[];
   datasheet?: string;
+  bestSeller?: boolean;
+  soldCount?: number;
 }
 
 export const products: Product[] = [
@@ -31,7 +33,7 @@ export const products: Product[] = [
     sku: "ALU-4040-500",
     price: 125000,
     stock: 150,
-        img: "https://lh3.googleusercontent.com/aida-public/AB6AXuA2zDYfDPQRCFU9Hv20Z47_uvlI2eRBZNDstYo0yIr-z7SBrQf80xtUEVykli4ynO7xmBeOy38qru8uUOQGJUwa9bXaj7qIQ7DFPveodN9Jg0v9ieDAIWBCfaqX757wlT4HBeMRJesCoBIZsAReji5Ewn6NjtK4vk6zo-DY_69Zb96FFFZteF1ubS-JZcFr1miTJmZ7Szr3xIHBKeqjxGTi_E55qOFq_-y239gi_osNxNLgZLMlwMna68twTdjG75IFp9ASFE_InCY",
+    img: "https://lh3.googleusercontent.com/aida-public/AB6AXuA2zDYfDPQRCFU9Hv20Z47_uvlI2eRBZNDstYo0yIr-z7SBrQf80xtUEVykli4ynO7xmBeOy38qru8uUOQGJUwa9bXaj7qIQ7DFPveodN9Jg0v9ieDAIWBCfaqX757wlT4HBeMRJesCoBIZsAReji5Ewn6NjtK4vk6zo-DY_69Zb96FFFZteF1ubS-JZcFr1miTJmZ7Szr3xIHBKeqjxGTi_E55qOFq_-y239gi_osNxNLgZLMlwMna68twTdjG75IFp9ASFE_InCY",
     highlights: [
       "Bisa dipotong custom sesuai permintaan",
       "Kompatibel dengan semua aksesoris T-Slot standar",
@@ -51,6 +53,8 @@ export const products: Product[] = [
       { name: "Panjang", options: ["1m", "2m", "3m", "6m"] },
     ],
     datasheet: "datasheet-tslot-4040.pdf",
+    bestSeller: true,
+    soldCount: 324,
   },
   {
     id: 2,
@@ -81,7 +85,7 @@ export const products: Product[] = [
       { name: "Ukuran", options: ["20x20", "30x30", "40x40"] },
     ],
   },
-  {
+    {
     id: 3,
     badge: "In Stock",
     badgeBg: "bg-success",
@@ -91,7 +95,7 @@ export const products: Product[] = [
     sku: "LIN-SBR16-1000",
     price: 280000,
     stock: 75,
-        img: "https://lh3.googleusercontent.com/aida-public/AB6AXuA6jqk1YW2Du6Vd_2ptSiP7rui2MZ8x3xUaDSCOQD_aQPAyJ6n2HIvi5RQAdLKHDNwfxhGfJvP2D67EhnzikqDz3THthUWcdSbXgvZzMWPlvQr2gvBOgBp0I8T-CAUdwWPqiT3QMZcA9XH3CW_zIhTlTtSjFvTER_8c4SEC68AtVOpZ0_JN9xeGiYd4qC1AKld8Y9pzqhuud-NAqWaL3GCgqd_BY5juSR_EHIGQE_L7FE1mJriZraL0O_0cgOiEE5XMIDFaJcci7us",
+    img: "https://lh3.googleusercontent.com/aida-public/AB6AXuA6jqk1YW2Du6Vd_2ptSiP7rui2MZ8x3xUaDSCOQD_aQPAyJ6n2HIvi5RQAdLKHDNwfxhGfJvP2D67EhnzikqDz3THthUWcdSbXgvZzMWPlvQr2gvBOgBp0I8T-CAUdwWPqiT3QMZcA9XH3CW_zIhTlTtSjFvTER_8c4SEC68AtVOpZ0_JN9xeGiYd4qC1AKld8Y9pzqhuud-NAqWaL3GCgqd_BY5juSR_EHIGQE_L7FE1mJriZraL0O_0cgOiEE5XMIDFaJcci7us",
     highlights: [
       "Akurasi gerakan ±0.02 mm",
       "Tersedia panjang 300mm hingga 1500mm",
@@ -110,6 +114,8 @@ export const products: Product[] = [
       { name: "Tipe", options: ["SBR16", "SBR20", "SBR25"] },
       { name: "Panjang", options: ["400mm", "600mm", "1000mm"] },
     ],
+    bestSeller: true,
+    soldCount: 218,
   },
   {
     id: 4,

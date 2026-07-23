@@ -1,4 +1,4 @@
-import FooterLinks from "../ui/FooterLinks";
+import FooterLinks from "../shared/FooterLinks";
 
 export default function Footer() {
   return (
@@ -35,30 +35,6 @@ export default function Footer() {
               "Custom Machining",
             ]}
           />
-          <div>
-            <h4 className="mb-6 text-[12px] font-bold uppercase tracking-widest">
-              Newsletter
-            </h4>
-            <p className="text-label-sm mb-4 text-primary-fixed-dim">
-              Dapatkan update terbaru mengenai stok dan inovasi produk kami.
-            </p>
-            <form className="flex gap-2">
-              <input
-                className="flex-grow rounded-lg border-0 bg-white/10 p-3 text-label-sm focus:ring-1 focus:ring-secondary"
-                placeholder="Email Anda"
-                type="email"
-              />
-              <button
-                aria-label="Kirim newsletter"
-                className="rounded-lg bg-secondary p-3"
-                type="submit"
-              >
-                <span className="material-symbols-outlined text-primary">
-                  arrow_forward
-                </span>
-              </button>
-            </form>
-          </div>
         </div>
         <div className="flex flex-col items-center justify-between gap-6 border-t border-white/10 pt-8 md:flex-row">
           <p className="text-label-sm text-primary-fixed-dim">

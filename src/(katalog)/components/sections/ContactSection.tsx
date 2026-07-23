@@ -1,5 +1,5 @@
-import ContactDetail from "../ui/ContactDetail";
-import FormField from "../ui/FormField";
+import ContactDetail from "../shared/ContactDetail";
+import FormField from "../shared/FormField";
 
 export default function ContactSection() {
   return (

@@ -1,6 +1,8 @@
 import { portfolioItems, caseStudies } from "@/data/portfolio";
 import Link from "next/link";
 import { Suspense } from "react";
+import Navbar from "@/(katalog)/components/layout/Navbar";
+import Footer from "@/(katalog)/components/layout/Footer";
 
 export const metadata = {
   title: "Portofolio Proyek — ALUPBESK",
@@ -10,26 +12,9 @@ export const metadata = {
 export default function PortofolioPage() {
   return (
     <div className="min-h-screen bg-primary">
-      {/* Topbar */}
-      <div className="sticky top-0 z-50 bg-primary-container border-b border-white/10 shadow-lg">
-        <div className="max-w-6xl mx-auto px-4 md:px-8 h-16 flex items-center gap-4">
-          <Link href="/" className="text-white/60 hover:text-white transition-colors">
-            <span className="material-symbols-outlined text-[28px]">arrow_back</span>
-          </Link>
-          <div className="flex-1">
-            <h1 className="text-[16px] font-bold text-white leading-none">Portofolio Proyek</h1>
-            <p className="text-[11px] text-white/40 mt-0.5">Bukti nyata kualitas kerja kami</p>
-          </div>
-          <Link
-            href="/jasa-custom"
-            className="px-4 py-2 bg-secondary text-primary text-[13px] font-bold rounded-xl hover:brightness-110 transition-all"
-          >
-            Request Custom
-          </Link>
-        </div>
-      </div>
+      <Navbar />
 
-      <div className="max-w-6xl mx-auto px-4 md:px-8 py-12">
+      <div className="max-w-6xl mx-auto px-4 md:px-8 py-12 pt-28">
         {/* Header */}
         <div className="text-center mb-16">
           <span className="text-secondary text-[11px] font-bold uppercase tracking-widest">PORTOFOLIO</span>
@@ -151,6 +136,7 @@ export default function PortofolioPage() {
           </div>
         </div>
       </div>
+      <Footer />
     </div>
   );
 }

@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { useCart, getItemKey } from "../components/contexts/CartContext";
-import { CartItem } from "../components/contexts/CartContext";
+import { useCart, getItemKey } from "./CartContext";
+import { CartItem } from "./CartContext";
 import Link from "next/link";
 
 function formatPrice(price: number) {
