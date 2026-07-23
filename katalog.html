@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+
+<html class="light" lang="id"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Katalog Produk Industrial | Alupbesk</title>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Google Fonts: Plus Jakarta Sans & Inter -->
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Plus+Jakarta+Sans:wght@600;700;800&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind Config -->
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "surface-container-highest": "#e4e2e2",
+                    "inverse-primary": "#bfc7cf",
+                    "secondary-50": "#fdf7e8",
+                    "on-primary-container": "#818991",
+                    "on-primary-fixed-variant": "#40484e",
+                    "on-tertiary-container": "#958675",
+                    "secondary": "#795900",
+                    "success": "#1e8e5a",
+                    "secondary-container": "#fdc330",
+                    "on-secondary-fixed": "#261a00",
+                    "surface-tint": "#575f66",
+                    "outline": "#74777b",
+                    "tertiary-fixed": "#f3dfcc",
+                    "on-tertiary-fixed": "#231a0e",
+                    "tertiary-container": "#291f13",
+                    "primary-fixed-dim": "#bfc7cf",
+                    "secondary-800": "#7a5b01",
+                    "primary-100": "#e4e6e8",
+                    "on-secondary-fixed-variant": "#5b4300",
+                    "on-surface": "#1b1b1c",
+                    "on-error": "#ffffff",
+                    "on-surface-variant": "#44474a",
+                    "error-container": "#ffdad6",
+                    "danger": "#c0392b",
+                    "text-body": "#3a4148",
+                    "background": "#fcf9f9",
+                    "error": "#ba1a1a",
+                    "surface": "#fcf9f9",
+                    "on-error-container": "#93000a",
+                    "inverse-on-surface": "#f3f0f0",
+                    "surface-variant": "#e4e2e2",
+                    "tertiary-fixed-dim": "#d6c3b1",
+                    "surface-container-lowest": "#ffffff",
+                    "surface-container-low": "#f6f3f3",
+                    "on-primary-fixed": "#151d22",
+                    "tertiary": "#100802",
+                    "on-tertiary-fixed-variant": "#514537",
+                    "surface-container-high": "#eae7e8",
+                    "on-background": "#1b1b1c",
+                    "primary-700": "#313d46",
+                    "on-secondary-container": "#6e5200",
+                    "secondary-fixed": "#ffdf9e",
+                    "on-primary": "#ffffff",
+                    "surface-container": "#f0eded",
+                    "outline-variant": "#c4c7ca",
+                    "on-secondary": "#ffffff",
+                    "primary": "#040b10",
+                    "primary-fixed": "#dbe3ec",
+                    "inverse-surface": "#303031",
+                    "primary-container": "#1a2228",
+                    "bg-subtle": "#f7f8f9",
+                    "on-tertiary": "#ffffff",
+                    "surface-dim": "#dcd9d9",
+                    "surface-bright": "#fcf9f9"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "margin-x-mobile": "24px",
+                    "container-max": "1280px",
+                    "section-gap-desktop": "96px",
+                    "gutter": "24px",
+                    "section-gap-mobile": "56px",
+                    "margin-x-desktop": "64px"
+            },
+            "fontFamily": {
+                    "body-md": ["Inter"],
+                    "body-lg": ["Inter"],
+                    "label-sm": ["Inter"],
+                    "display-hero-mobile": ["Plus Jakarta Sans"],
+                    "eyebrow": ["Plus Jakarta Sans"],
+                    "headline-h2": ["Plus Jakarta Sans"],
+                    "headline-h3": ["Plus Jakarta Sans"],
+                    "headline-h1": ["Plus Jakarta Sans"],
+                    "display-hero": ["Plus Jakarta Sans"]
+            },
+            "fontSize": {
+                    "body-md": ["16px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                    "body-lg": ["18px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                    "label-sm": ["14px", {"lineHeight": "1.4", "letterSpacing": "0.02em", "fontWeight": "500"}],
+                    "display-hero-mobile": ["40px", {"lineHeight": "1.2", "fontWeight": "700"}],
+                    "eyebrow": ["14px", {"lineHeight": "1.2", "letterSpacing": "0.1em", "fontWeight": "700"}],
+                    "headline-h2": ["28px", {"lineHeight": "1.2", "fontWeight": "600"}],
+                    "headline-h3": ["20px", {"lineHeight": "1.3", "fontWeight": "600"}],
+                    "headline-h1": ["36px", {"lineHeight": "1.2", "fontWeight": "600"}],
+                    "display-hero": ["56px", {"lineHeight": "1.1", "fontWeight": "700"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .scrollbar-hide::-webkit-scrollbar {
+            display: none;
+        }
+        .scrollbar-hide {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        .modal-overlay {
+            background-color: rgba(4, 11, 16, 0.85);
+            backdrop-filter: blur(4px);
+        }
+    </style>
+</head>
+<body class="bg-surface text-on-surface font-body-md overflow-x-hidden">
+<!-- TopNavBar (Shared Component) -->
+<header class="fixed top-0 w-full bg-surface dark:bg-surface-container-high border-b border-outline-variant dark:border-outline z-50 h-20 flex items-center">
+<div class="flex justify-between items-center w-full px-margin-x-desktop max-w-container-max mx-auto">
+<div class="font-headline-h3 text-headline-h3 font-bold text-primary dark:text-primary-fixed">Alupbesk</div>
+<!-- Desktop Links -->
+<nav class="hidden md:flex gap-8 items-center h-full">
+<a class="text-on-surface-variant hover:text-secondary transition-colors font-body-md text-body-md" href="#">Beranda</a>
+<a class="text-on-surface-variant hover:text-secondary transition-colors font-body-md text-body-md" href="#">Profile</a>
+<a class="text-secondary dark:text-secondary-fixed font-bold border-b-2 border-secondary dark:border-secondary-fixed pb-1 font-body-md text-body-md" href="#">Katalog</a>
+<a class="text-on-surface-variant hover:text-secondary transition-colors font-body-md text-body-md" href="#">Partners</a>
+<a class="text-on-surface-variant hover:text-secondary transition-colors font-body-md text-body-md" href="#">FAQ</a>
+<a class="text-on-surface-variant hover:text-secondary transition-colors font-body-md text-body-md" href="#">Kontak</a>
+</nav>
+<div class="flex items-center gap-4">
+<button class="hidden lg:flex items-center gap-2 bg-secondary text-on-primary font-bold px-6 py-2.5 rounded-full hover:bg-secondary-800 transition-all active:scale-95">
+                    Request Quote
+                </button>
+<button class="md:hidden flex p-2 text-primary">
+<span class="material-symbols-outlined">menu</span>
+</button>
+</div>
+</div>
+</header>
+<!-- Page Content Wrap -->
+<main class="pt-20">
+<!-- Page Header -->
+<section class="bg-bg-subtle py-12 md:py-16">
+<div class="px-margin-x-desktop max-w-container-max mx-auto">
+<nav class="flex mb-4 gap-2 text-on-surface-variant font-label-sm text-label-sm">
+<a class="hover:text-secondary" href="#">Beranda</a>
+<span>/</span>
+<span class="text-primary font-bold">Katalog</span>
+</nav>
+<h1 class="font-headline-h1 text-headline-h1 text-primary-container">Katalog Produk Industrial</h1>
+<p class="mt-4 text-on-surface-variant max-w-2xl font-body-lg text-body-lg">Solusi komponen aluminium presisi untuk kebutuhan manufaktur, otomasi, dan konstruksi industrial Anda.</p>
+</div>
+</section>
+<!-- Main Catalog Section -->
+<section class="py-section-gap-desktop px-margin-x-desktop max-w-container-max mx-auto">
+<div class="flex flex-col md:flex-row gap-gutter">
+<!-- Sidebar Filters (Desktop) -->
+<aside class="hidden md:block w-64 flex-shrink-0 space-y-8">
+<div>
+<h3 class="font-headline-h3 text-headline-h3 text-primary-container mb-4">Kategori</h3>
+<div class="flex flex-col gap-3">
+<label class="flex items-center gap-3 cursor-pointer group">
+<input class="w-5 h-5 rounded border-outline text-secondary focus:ring-secondary" type="checkbox"/>
+<span class="text-on-surface-variant group-hover:text-primary transition-colors">Profil Ekstrusi</span>
+</label>
+<label class="flex items-center gap-3 cursor-pointer group">
+<input checked="" class="w-5 h-5 rounded border-outline text-secondary focus:ring-secondary" type="checkbox"/>
+<span class="text-primary font-medium">Aksesori</span>
+</label>
+<label class="flex items-center gap-3 cursor-pointer group">
+<input class="w-5 h-5 rounded border-outline text-secondary focus:ring-secondary" type="checkbox"/>
+<span class="text-on-surface-variant group-hover:text-primary transition-colors">Sistem Linier</span>
+</label>
+<label class="flex items-center gap-3 cursor-pointer group">
+<input class="w-5 h-5 rounded border-outline text-secondary focus:ring-secondary" type="checkbox"/>
+<span class="text-on-surface-variant group-hover:text-primary transition-colors">Lembaran</span>
+</label>
+</div>
+</div>
+<div class="pt-6 border-t border-outline-variant">
+<h3 class="font-headline-h3 text-headline-h3 text-primary-container mb-4">Status Stok</h3>
+<div class="flex flex-col gap-3">
+<label class="flex items-center gap-3 cursor-pointer">
+<input class="w-5 h-5 border-outline text-secondary focus:ring-secondary" name="stock" type="radio"/>
+<span class="text-on-surface-variant">Tersedia</span>
+</label>
+<label class="flex items-center gap-3 cursor-pointer">
+<input class="w-5 h-5 border-outline text-secondary focus:ring-secondary" name="stock" type="radio"/>
+<span class="text-on-surface-variant">Terbatas</span>
+</label>
+</div>
+</div>
+<div class="pt-6 border-t border-outline-variant">
+<h3 class="font-headline-h3 text-headline-h3 text-primary-container mb-4">Minimal Order (MOQ)</h3>
+<input class="w-full h-2 bg-surface-container-highest rounded-lg appearance-none cursor-pointer accent-secondary" type="range"/>
+<div class="flex justify-between mt-2 text-label-sm text-on-surface-variant">
+<span>1 Unit</span>
+<span>100+ Units</span>
+</div>
+</div>
+</aside>
+<!-- Product Content -->
+<div class="flex-1">
+<!-- Toolbar -->
+<div class="flex flex-col md:flex-row gap-4 mb-8 justify-between items-center bg-white p-4 rounded-xl shadow-sm border border-primary-100">
+<div class="relative w-full md:w-96">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">search</span>
+<input class="w-full pl-10 pr-4 py-2 border border-primary-100 rounded-lg focus:ring-2 focus:ring-secondary focus:border-secondary outline-none" placeholder="Cari produk industrial..." type="text"/>
+</div>
+<div class="flex items-center gap-3 w-full md:w-auto">
+<span class="text-on-surface-variant font-label-sm whitespace-nowrap">Urutkan:</span>
+<select class="w-full md:w-auto bg-surface border border-primary-100 rounded-lg px-4 py-2 text-on-surface focus:ring-2 focus:ring-secondary focus:border-secondary outline-none">
+<option>Terbaru</option>
+<option>Populer</option>
+<option>Harga Terendah</option>
+<option>Harga Tertinggi</option>
+</select>
+</div>
+</div>
+<!-- Product Grid -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-gutter">
+<!-- Product Card 1 -->
+<div class="group bg-white rounded-xl border border-primary-100 p-4 transition-all hover:shadow-md hover:border-secondary flex flex-col relative">
+<button class="absolute top-6 right-6 z-10 text-on-surface-variant hover:text-danger transition-colors">
+<span class="material-symbols-outlined">favorite</span>
+</button>
+<div class="aspect-square bg-surface rounded-lg mb-4 overflow-hidden">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="A professional studio product photograph of a silver T-Slot Aluminum 4040 profile. The lighting is crisp and industrial, highlighting the precise metallic edges and structural grooves of the component. The background is a clean, minimalist off-white, maintaining a corporate and high-end B2B catalog aesthetic. Sharp focus and high-resolution details emphasize the manufacturing quality." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAwb8tJYf2l4drztyYHBhlt_TBtE6q9bg9Xu9mzf8jh4_L1Pg0re_6VRHNXJpGEK4-UFrzvkkwYPUGHHTaAwQ1Zk_QRkpVo5o4Bd9Xd26VSr28wCKPqoKfhxZl35RJSo_290LLAgyTdAQJuGHwhIMd6_ZjxA0-dCxgoe_UX-kQ8Qm_JDtl9E0kEmX2jZYxiyxgkOJlJHGGrr5oLaq4TJl55-W8kU-EzFN8VEJLqoAzpEghKXaus9NoZEX4fwllxOmbIathER8qnIc0"/>
+</div>
+<span class="inline-block px-2 py-0.5 bg-secondary-50 text-secondary-800 rounded font-label-sm text-[12px] w-fit mb-2">Profil Ekstrusi</span>
+<h3 class="font-headline-h3 text-headline-h3 text-primary-container mb-2">T-Slot Aluminum 4040</h3>
+<div class="flex items-center gap-2 mb-3">
+<span class="w-2 h-2 rounded-full bg-success"></span>
+<span class="text-label-sm text-on-surface-variant">In Stock</span>
+</div>
+<div class="mt-auto pt-4 border-t border-primary-100 flex items-center justify-between">
+<span class="font-label-sm text-on-surface-variant">MOQ: 10 units</span>
+<button class="text-secondary font-bold hover:underline flex items-center gap-1" onclick="openModal()">
+                                    Lihat Detail <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+</button>
+</div>
+</div>
+<!-- Product Card 2 -->
+<div class="group bg-white rounded-xl border border-primary-100 p-4 transition-all hover:shadow-md hover:border-secondary flex flex-col relative">
+<button class="absolute top-6 right-6 z-10 text-on-surface-variant hover:text-danger transition-colors">
+<span class="material-symbols-outlined">favorite</span>
+</button>
+<div class="aspect-square bg-surface rounded-lg mb-4 overflow-hidden">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="Close-up photograph of a heavy-duty industrial corner bracket accessory for aluminum profiles. The bracket is made of cast zinc with a sandblasted finish. It is presented in a modern, clean industrial warehouse setting with soft overhead lighting. The color palette is composed of metallic grays and neutral tones, fitting a professional engineering and manufacturing brand identity." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBYrcw18lUD7iYuuc53Hu7DJR7TTsjxs9mQQUNLk8Jy2HP3WAIeA08ckFC0cxzJGg2pp5M9ieqd9M_oQfBmPBFLTygfkAtGu9qvxGgO1r50utoXT1CEg0q8N-e1jqHBErxpK8VCBBqHH9YQtDqutYTdOn7zc4M_1NSgFZd_1-GUuzdILxBMtKZCB6jg9cdQN5T80GFtILIBFUwzAj2HizEJBkD5RdFAzfJllyOZixBcpBQPoTJ6zafnlbiCCl1xbQC9R6dBDZiU8kI"/>
+</div>
+<span class="inline-block px-2 py-0.5 bg-secondary-50 text-secondary-800 rounded font-label-sm text-[12px] w-fit mb-2">Aksesori</span>
+<h3 class="font-headline-h3 text-headline-h3 text-primary-container mb-2">Heavy Duty Corner Joint</h3>
+<div class="flex items-center gap-2 mb-3">
+<span class="w-2 h-2 rounded-full bg-secondary-container"></span>
+<span class="text-label-sm text-on-surface-variant">Limited Stock</span>
+</div>
+<div class="mt-auto pt-4 border-t border-primary-100 flex items-center justify-between">
+<span class="font-label-sm text-on-surface-variant">MOQ: 50 units</span>
+<button class="text-secondary font-bold hover:underline flex items-center gap-1">
+                                    Lihat Detail <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+</button>
+</div>
+</div>
+<!-- Product Card 3 -->
+<div class="group bg-white rounded-xl border border-primary-100 p-4 transition-all hover:shadow-md hover:border-secondary flex flex-col relative">
+<button class="absolute top-6 right-6 z-10 text-on-surface-variant hover:text-danger transition-colors">
+<span class="material-symbols-outlined">favorite</span>
+</button>
+<div class="aspect-square bg-surface rounded-lg mb-4 overflow-hidden">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="A high-quality image of an industrial linear rail guide system with a carriage block. The steel surface is polished to a mirror finish, reflecting soft studio lights. The component is centered in a high-contrast charcoal and white environment, emphasizing precision engineering and mechanical stability. A professional B2B product photography style is maintained throughout." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDuNjgGKyeENRaIBiIQ1ssc57MaG-L-Kfj6DfKLXZUmkimVDdx0tAOcGE5ZHsMx2aX8LYS7cxdeomsO79zYaZofwulY7fFvBCtGu6xyi4sNf-mxl5pFrKmjoYzN_1HSe5sYOCZl3qC3gsNA_xzUlthb0ZFODeCa38wBrZojcKd6_4p5aqTbZPZAr8tqU1Fidl5hXMf-F9wJRcuH4s3IslKvdzXTZnFYdBc2VTQRQv3COtHdRxpg2OS17bsC5hMRDs-w7UPXjkbvgNY"/>
+</div>
+<span class="inline-block px-2 py-0.5 bg-secondary-50 text-secondary-800 rounded font-label-sm text-[12px] w-fit mb-2">Sistem Linier</span>
+<h3 class="font-headline-h3 text-headline-h3 text-primary-container mb-2">Linear Rail SBR20</h3>
+<div class="flex items-center gap-2 mb-3">
+<span class="w-2 h-2 rounded-full bg-success"></span>
+<span class="text-label-sm text-on-surface-variant">In Stock</span>
+</div>
+<div class="mt-auto pt-4 border-t border-primary-100 flex items-center justify-between">
+<span class="font-label-sm text-on-surface-variant">MOQ: 2 units</span>
+<button class="text-secondary font-bold hover:underline flex items-center gap-1">
+                                    Lihat Detail <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+</button>
+</div>
+</div>
+<!-- Product Card 4 -->
+<div class="group bg-white rounded-xl border border-primary-100 p-4 transition-all hover:shadow-md hover:border-secondary flex flex-col relative opacity-80">
+<div class="absolute inset-0 bg-white/20 z-20 pointer-events-none"></div>
+<button class="absolute top-6 right-6 z-10 text-on-surface-variant hover:text-danger transition-colors">
+<span class="material-symbols-outlined">favorite</span>
+</button>
+<div class="aspect-square bg-surface rounded-lg mb-4 overflow-hidden grayscale">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="Industrial aluminum sheet plate with a textured diamond pattern. The shot is captured at a low angle to highlight the structural depth of the pattern. Lighting is cool and metallic, featuring deep shadows and bright highlights on the aluminum surface. The surrounding space is clean and orderly, typical of a professional industrial supply catalog." src="https://lh3.googleusercontent.com/aida-public/AB6AXuC128fGvCkgznLZZ2uDUrTJsr_KtDBag4rDDrHvxxhIXPg0YS4JKC8SGNj8vavCKeX7YIYC_7eoBJtERjKL6WANVxK7F6NBPrcQay6GJnlFPhBGLWnciOhxr1C6oTSts28Lkcw2XDY5ybpPB9dTBgWcveE5c7T3KLXP8DTMT-Yrtf2DDDLZTeGCqA27qSNyAGW9Cscm3N2pGjNyKtPEYixWv9n0Rx36Wu3YEW0qxY0i44m4xpndxoTUJUtGPSl8-BsvzCIwOFwJz7k"/>
+</div>
+<span class="inline-block px-2 py-0.5 bg-surface-container-highest text-on-surface-variant rounded font-label-sm text-[12px] w-fit mb-2">Lembaran</span>
+<h3 class="font-headline-h3 text-headline-h3 text-primary-container mb-2">Alu-Plate 5052 5mm</h3>
+<div class="flex items-center gap-2 mb-3">
+<span class="w-2 h-2 rounded-full bg-danger"></span>
+<span class="text-label-sm text-on-surface-variant">Out of Stock</span>
+</div>
+<div class="mt-auto pt-4 border-t border-primary-100 flex items-center justify-between">
+<span class="font-label-sm text-on-surface-variant">MOQ: 5 units</span>
+<button class="text-on-surface-variant font-bold cursor-not-allowed flex items-center gap-1">
+                                    Habis Terjual
+                                </button>
+</div>
+</div>
+</div>
+<!-- Pagination (Visual Placeholder) -->
+<div class="mt-12 flex justify-center gap-2">
+<button class="w-10 h-10 flex items-center justify-center rounded-lg border border-primary-100 hover:bg-secondary hover:text-white transition-colors">1</button>
+<button class="w-10 h-10 flex items-center justify-center rounded-lg border border-secondary bg-secondary text-white">2</button>
+<button class="w-10 h-10 flex items-center justify-center rounded-lg border border-primary-100 hover:bg-secondary hover:text-white transition-colors">3</button>
+<button class="w-10 h-10 flex items-center justify-center rounded-lg border border-primary-100 hover:bg-secondary hover:text-white transition-colors">
+<span class="material-symbols-outlined">chevron_right</span>
+</button>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- Product Detail / RFQ Modal -->
+<div class="hidden fixed inset-0 z-[100] flex items-center justify-center p-4" id="rfqModal">
+<div class="modal-overlay absolute inset-0" onclick="closeModal()"></div>
+<div class="relative bg-white w-full max-w-4xl max-h-[921px] overflow-y-auto rounded-xl shadow-2xl animate-in fade-in zoom-in duration-300">
+<button class="absolute top-4 right-4 p-2 text-on-surface-variant hover:text-primary" onclick="closeModal()">
+<span class="material-symbols-outlined">close</span>
+</button>
+<div class="grid grid-cols-1 md:grid-cols-2">
+<!-- Left: Details & Specs -->
+<div class="p-8 border-b md:border-b-0 md:border-r border-outline-variant">
+<h2 class="font-headline-h2 text-headline-h2 text-primary-container mb-2">T-Slot Aluminum 4040</h2>
+<p class="text-on-surface-variant mb-6 font-body-md">Profil aluminium ekstrusi standar industri dengan kekuatan tinggi dan presisi tinggi untuk rangka mesin CNC, workstation, dan konveyor.</p>
+<div class="mb-6">
+<h4 class="font-bold text-primary mb-3">Spesifikasi Teknis</h4>
+<table class="w-full text-label-sm border-collapse">
+<tbody><tr class="border-b border-outline-variant">
+<td class="py-2 text-on-surface-variant">Material</td>
+<td class="py-2 font-medium text-right">6063-T5 Aluminum</td>
+</tr>
+<tr class="border-b border-outline-variant">
+<td class="py-2 text-on-surface-variant">Dimensi</td>
+<td class="py-2 font-medium text-right">40 x 40 mm</td>
+</tr>
+<tr class="border-b border-outline-variant">
+<td class="py-2 text-on-surface-variant">Berat / Meter</td>
+<td class="py-2 font-medium text-right">1.42 kg</td>
+</tr>
+<tr class="border-b border-outline-variant">
+<td class="py-2 text-on-surface-variant">Slot Width</td>
+<td class="py-2 font-medium text-right">8.2 mm</td>
+</tr>
+</tbody></table>
+</div>
+<button class="w-full flex items-center justify-center gap-3 border-2 border-primary-100 py-3 rounded-full hover:bg-primary-100 transition-colors font-bold text-primary">
+<span class="material-symbols-outlined">description</span>
+                        Download Datasheet (PDF)
+                    </button>
+</div>
+<!-- Right: RFQ Form -->
+<div class="p-8 bg-bg-subtle">
+<h3 class="font-headline-h3 text-headline-h3 text-primary-container mb-6">Minta Penawaran (RFQ)</h3>
+<form class="space-y-4" onsubmit="event.preventDefault(); alert('Permintaan Anda telah dikirim! Tim kami akan segera menghubungi Anda.'); closeModal();">
+<div>
+<label class="block text-label-sm font-bold text-primary mb-1">Nama Lengkap</label>
+<input class="w-full border border-outline-variant rounded-lg px-4 py-2 focus:ring-2 focus:ring-secondary focus:border-secondary outline-none" required="" type="text"/>
+</div>
+<div>
+<label class="block text-label-sm font-bold text-primary mb-1">Nama Perusahaan</label>
+<input class="w-full border border-outline-variant rounded-lg px-4 py-2 focus:ring-2 focus:ring-secondary focus:border-secondary outline-none" required="" type="text"/>
+</div>
+<div class="grid grid-cols-2 gap-4">
+<div>
+<label class="block text-label-sm font-bold text-primary mb-1">Jumlah (Unit)</label>
+<input class="w-full border border-outline-variant rounded-lg px-4 py-2 focus:ring-2 focus:ring-secondary focus:border-secondary outline-none" min="10" required="" type="number" value="10"/>
+</div>
+<div>
+<label class="block text-label-sm font-bold text-primary mb-1">E-mail</label>
+<input class="w-full border border-outline-variant rounded-lg px-4 py-2 focus:ring-2 focus:ring-secondary focus:border-secondary outline-none" required="" type="email"/>
+</div>
+</div>
+<div>
+<label class="block text-label-sm font-bold text-primary mb-1">Pesan / Spesifikasi Tambahan</label>
+<textarea class="w-full border border-outline-variant rounded-lg px-4 py-2 focus:ring-2 focus:ring-secondary focus:border-secondary outline-none" rows="3"></textarea>
+</div>
+<button class="w-full bg-secondary text-on-primary font-bold py-4 rounded-full hover:bg-secondary-800 transition-all active:scale-95 shadow-lg shadow-secondary/20" type="submit">
+                            Kirim Permintaan Penawaran
+                        </button>
+</form>
+</div>
+</div>
+</div>
+</div>
+<!-- Footer (Shared Component) -->
+<footer class="bg-primary dark:bg-primary-container text-on-primary dark:text-on-primary-fixed">
+<div class="grid grid-cols-1 md:grid-cols-4 gap-gutter px-margin-x-desktop py-section-gap-desktop max-w-container-max mx-auto">
+<div class="space-y-6">
+<div class="font-headline-h2 text-headline-h2 font-bold text-on-primary dark:text-on-primary-fixed">Alupbesk</div>
+<p class="text-on-primary-container dark:text-on-primary-fixed-variant font-body-md">Pemimpin dalam solusi ekstrusi aluminium dan komponen industrial presisi tinggi untuk pasar global.</p>
+</div>
+<div class="md:col-start-3">
+<h4 class="font-bold mb-6 text-secondary-fixed">Legal &amp; Info</h4>
+<ul class="space-y-4 font-body-md text-on-primary-container dark:text-on-primary-fixed-variant">
+<li><a class="hover:text-secondary-fixed transition-colors" href="#">Privacy Policy</a></li>
+<li><a class="hover:text-secondary-fixed transition-colors" href="#">Terms of Service</a></li>
+<li><a class="hover:text-secondary-fixed transition-colors" href="#">Shipping Info</a></li>
+<li><a class="hover:text-secondary-fixed transition-colors" href="#">Certification</a></li>
+</ul>
+</div>
+<div>
+<h4 class="font-bold mb-6 text-secondary-fixed">Hubungi Kami</h4>
+<p class="text-on-primary-container dark:text-on-primary-fixed-variant font-body-md">
+                    Jl. Industrial Raya No. 45<br/>
+                    Bekasi, Jawa Barat, Indonesia<br/>
+                    info@alupbesk.com
+                </p>
+<div class="flex gap-4 mt-6">
+<a class="p-2 bg-on-primary-container/20 rounded-full hover:bg-secondary-fixed hover:text-primary transition-all" href="#">
+<span class="material-symbols-outlined text-[20px]">share</span>
+</a>
+<a class="p-2 bg-on-primary-container/20 rounded-full hover:bg-secondary-fixed hover:text-primary transition-all" href="#">
+<span class="material-symbols-outlined text-[20px]">mail</span>
+</a>
+</div>
+</div>
+</div>
+<div class="px-margin-x-desktop py-8 border-t border-on-primary-container/20 max-w-container-max mx-auto text-center md:text-left text-label-sm text-on-primary-container">
+            © 2024 Alupbesk Industrial Solutions. All rights reserved.
+        </div>
+</footer>
+<script>
+        function openModal() {
+            const modal = document.getElementById('rfqModal');
+            modal.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('rfqModal');
+            modal.classList.add('hidden');
+            document.body.style.overflow = 'auto';
+        }
+
+        // Close on ESC key
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeModal();
+        });
+    </script>
+</body></html>
