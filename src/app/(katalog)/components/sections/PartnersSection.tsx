@@ -1,5 +1,5 @@
 import { dummyPartners, testimonials } from "@/data/partners";
-import TestimonialCard from "../ui/TestimonialCard";
+
 
 export default function PartnersSection() {
   return (
@@ -29,12 +29,7 @@ export default function PartnersSection() {
           ))}
         </div>
 
-        {/* Grid Testimonial */}
-        <div className="grid gap-8 md:grid-cols-2">
-          {testimonials.map((t, i) => (
-            <TestimonialCard key={i} {...t} />
-          ))}
-        </div>
+        
       </div>
     </section>
   );
