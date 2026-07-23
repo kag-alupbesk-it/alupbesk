@@ -3,8 +3,9 @@
 import { useMemo, useEffect, useState, useCallback, useRef } from "react";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { products } from "@/data/products";
-import { useCart } from "../contexts/CartContext";
+import { useCart } from "../../checkout/CartContext";
 import { useDebounce } from "@/hooks/useDebounce";
+import BestSellerSection from "./BestSellerSection";
 
 // Ekstrak kategori unik secara dinamis
 const ALL_CATEGORIES = ["Semua", ...Array.from(new Set(products.map((p) => p.category)))];
@@ -88,6 +89,8 @@ export default function KatalogSection() {
   return (
     <section className="py-section-gap-desktop bg-primary" id="katalog">
       <div className="max-w-container-max mx-auto px-margin-x-mobile md:px-margin-x-desktop">
+        <BestSellerSection />
+
         {/* Header */}
         <div className="flex flex-col md:flex-row justify-between items-end mb-8 gap-6">
           <div>
@@ -160,44 +163,38 @@ export default function KatalogSection() {
 
         {/* Grid Katalog */}
         {filteredProducts.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
             {filteredProducts.map((item) => (
               <div
                 key={item.id}
-                className="group bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 overflow-hidden hover:border-secondary transition-all duration-300 hover:shadow-2xl hover:-translate-y-1 hover:bg-white/10"
-                            >
-                <div
-                  className="relative aspect-square cursor-pointer"
-                  onClick={() => setDetailProduct(item)}
-                >
+                onClick={() => setDetailProduct(item)}
+                className="group bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 overflow-hidden hover:border-secondary transition-all duration-300 hover:shadow-2xl hover:-translate-y-1 hover:bg-white/10 cursor-pointer"
+              >
+                <div className="relative aspect-square">
                   <div
                     className="w-full h-full bg-cover bg-center group-hover:scale-105 transition-transform duration-500"
                     style={{ backgroundImage: `url('${item.img}')` }}
                   />
-                  <div className="absolute top-4 left-4">
-                    <span className={`${item.badgeBg} text-white px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider shadow-sm`}>
+                  <div className="absolute top-2 left-2 sm:top-4 sm:left-4">
+                    <span className={`${item.badgeBg} text-white px-2 py-0.5 sm:px-3 sm:py-1 rounded-full text-[9px] sm:text-[10px] font-bold uppercase tracking-wider shadow-sm`}>
                       {item.badge}
                     </span>
                   </div>
                 </div>
 
-                <div className="p-6">
-                  <div className="text-secondary text-[12px] font-bold uppercase tracking-widest mb-2">
-                    {item.category}
-                  </div>
-                  <h4 className="text-headline-h3 text-white mb-1">{item.title}</h4>
-                  <p className="text-[11px] text-white/30 font-mono mb-2">SKU: {item.sku}</p>
-                  <p className="text-secondary font-bold text-label-sm mb-3">{formatPrice(item.price)}</p>
-                  <p className="text-label-sm text-white/70 mb-6 line-clamp-2">{item.desc}</p>
-                  <div className="flex gap-2">
+                <div className="p-2.5 sm:p-5">
+                  <h4 className="text-[13px] sm:text-headline-h3 text-white mb-0.5 sm:mb-1 line-clamp-2 min-h-[34px] sm:min-h-0">{item.title}</h4>
+                  <p className="text-secondary font-bold text-[13px] sm:text-label-sm mb-1 sm:mb-2">{formatPrice(item.price)}</p>
+                  <p className="text-[11px] sm:text-label-sm text-white/50 mb-2 sm:mb-4 line-clamp-1 hidden sm:block">{item.desc}</p>
+                  <div className="hidden sm:flex gap-2">
                     <button
-                      onClick={() => setDetailProduct(item)}
+                      onClick={(e) => { e.stopPropagation(); setDetailProduct(item); }}
                       className="flex-1 py-3 rounded-lg border border-white/20 text-white group-hover:bg-secondary group-hover:border-secondary group-hover:text-primary transition-all font-bold text-label-sm"
                     >
                       Detail
                     </button>
                     <button
-                      onClick={() => item.variants ? setDetailProduct(item) : addToCart(item, 1)}
+                      onClick={(e) => { e.stopPropagation(); if (item.variants) { setDetailProduct(item); } else { addToCart(item, 1); } }}
                       className="py-3 px-4 rounded-lg border border-white/20 text-white hover:bg-secondary hover:border-secondary hover:text-primary transition-all"
                     >
                       <span className="material-symbols-outlined text-[18px]">add_shopping_cart</span>

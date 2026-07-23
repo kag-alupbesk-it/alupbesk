@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { useCart } from "../contexts/CartContext";
-import Modal from "./Modal";
+import { useCart } from "../../checkout/CartContext";
+import Modal from "../shared/Modal";
 
 function getInitialVariants(
   variants?: { name: string; options: string[] }[]

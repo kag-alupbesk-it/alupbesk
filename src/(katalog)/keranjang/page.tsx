@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useCart, itemKey } from "@/app/(katalog)/components/contexts/CartContext";
+import { useCart, itemKey } from "@/(katalog)/checkout/CartContext";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 

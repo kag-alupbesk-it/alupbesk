@@ -1,24 +1,17 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
-import CartIcon from "../ui/CartIcon";
+import CartIcon from "../cart/CartIcon";
 
-// 4 menu utama — bersih, tidak penuh
-const mainNav = [
-  { name: "Tentang Kami", href: "/#profile" },
-  { name: "Kontak", href: "/#kontak" },
-];
-
-// Dropdown: Produk & Layanan
-const produkNav = [
-  { name: "Katalog Produk", href: "/#katalog", desc: "Browse semua produk aluminium & komponen" },
+const katalogDropdown = [
+  { name: "Produk", href: "/#katalog", desc: "Browse semua produk aluminium & komponen" },
   { name: "Jasa Custom", href: "/jasa-custom", desc: "Request desain & fabrikasi custom" },
 ];
 
-// Dropdown: Portofolio
-const portofolioNav = [
-  { name: "Galeri Proyek", href: "/portofolio", desc: "Contoh proyek yang sudah kami kerjakan" },
-  { name: "Mitra & Klien", href: "/#partners", desc: "Perusahaan yang mempercayai kami" },
+const perusahaanDropdown = [
+  { name: "Tentang Kami", href: "/#profile", desc: "Profil dan visi misi perusahaan" },
+  { name: "Mitra Kami", href: "/#partners", desc: "Perusahaan yang mempercayai kami" },
+  { name: "Kontak", href: "/#kontak", desc: "Hubungi tim kami" },
 ];
 
 export default function Navbar() {
@@ -27,9 +20,8 @@ export default function Navbar() {
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  // Track active section saat scroll
   useEffect(() => {
-    const sections = ["profile", "katalog", "partners", "kontak"];
+    const sections = ["katalog", "profile", "partners", "kontak"];
     const handleScroll = () => {
       const scrollPosition = window.scrollY + 120;
       for (const id of sections) {
@@ -45,7 +37,6 @@ export default function Navbar() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // Tutup dropdown saat klik di luar
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
@@ -77,23 +68,21 @@ export default function Navbar() {
           {/* Desktop Nav */}
           <div ref={dropdownRef} className="hidden lg:flex items-center gap-8">
 
-            {/* Dropdown: Produk & Layanan */}
+            {/* Dropdown: Katalog Produk */}
             <div className="relative">
               <button
-                onClick={() => toggleDropdown("produk")}
+                onClick={() => toggleDropdown("katalog")}
                 className={`flex items-center gap-1 text-[14px] font-medium transition-colors ${
-                  openDropdown === "produk" ? "text-secondary" : "text-white/70 hover:text-white"
+                  openDropdown === "katalog" ? "text-secondary" : activeSection === "katalog" ? "text-secondary" : "text-white/70 hover:text-white"
                 }`}
               >
-                Produk & Layanan
-                <span className={`material-symbols-outlined text-[16px] transition-transform ${
-                  openDropdown === "produk" ? "rotate-180" : ""
-                }`}>expand_more</span>
+                Katalog Produk
+                <span className={`material-symbols-outlined text-[16px] transition-transform ${openDropdown === "katalog" ? "rotate-180" : ""}`}>expand_more</span>
               </button>
-              {openDropdown === "produk" && (
+              {openDropdown === "katalog" && (
                 <div className="absolute top-full left-1/2 -translate-x-1/2 mt-3 w-64 bg-primary-container border border-white/10 rounded-2xl shadow-2xl overflow-hidden">
                   <div className="p-2">
-                    {produkNav.map((item) => (
+                    {katalogDropdown.map((item) => (
                       <Link
                         key={item.href}
                         href={item.href}
@@ -109,23 +98,21 @@ export default function Navbar() {
               )}
             </div>
 
-            {/* Dropdown: Portofolio */}
+            {/* Dropdown: Perusahaan */}
             <div className="relative">
               <button
-                onClick={() => toggleDropdown("portofolio")}
+                onClick={() => toggleDropdown("perusahaan")}
                 className={`flex items-center gap-1 text-[14px] font-medium transition-colors ${
-                  openDropdown === "portofolio" ? "text-secondary" : "text-white/70 hover:text-white"
+                  openDropdown === "perusahaan" ? "text-secondary" : "text-white/70 hover:text-white"
                 }`}
               >
-                Portofolio
-                <span className={`material-symbols-outlined text-[16px] transition-transform ${
-                  openDropdown === "portofolio" ? "rotate-180" : ""
-                }`}>expand_more</span>
+                Perusahaan
+                <span className={`material-symbols-outlined text-[16px] transition-transform ${openDropdown === "perusahaan" ? "rotate-180" : ""}`}>expand_more</span>
               </button>
-              {openDropdown === "portofolio" && (
+              {openDropdown === "perusahaan" && (
                 <div className="absolute top-full left-1/2 -translate-x-1/2 mt-3 w-64 bg-primary-container border border-white/10 rounded-2xl shadow-2xl overflow-hidden">
                   <div className="p-2">
-                    {portofolioNav.map((item) => (
+                    {perusahaanDropdown.map((item) => (
                       <Link
                         key={item.href}
                         href={item.href}
@@ -141,21 +128,13 @@ export default function Navbar() {
               )}
             </div>
 
-            {/* Menu utama biasa */}
-            {mainNav.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={`text-[14px] font-medium transition-colors ${
-                  (item.href === "/#profile" && activeSection === "profile") ||
-                  (item.href === "/#kontak" && activeSection === "kontak")
-                    ? "text-secondary"
-                    : "text-white/70 hover:text-white"
-                }`}
-              >
-                {item.name}
-              </Link>
-            ))}
+            {/* Flat link: Portofolio */}
+            <Link
+              href="/portofolio"
+              className="text-[14px] font-medium text-white/70 hover:text-white transition-colors"
+            >
+              Portofolio
+            </Link>
           </div>
 
           {/* CTA kanan */}
@@ -201,47 +180,46 @@ export default function Navbar() {
 
         {/* Menu mobile */}
         <div className="flex flex-col gap-1 overflow-y-auto flex-1">
-          {/* Produk & Layanan group */}
-          <p className="text-[10px] font-bold text-white/30 uppercase tracking-widest px-3 mb-2 mt-2">Produk & Layanan</p>
-          {produkNav.map((item) => (
+          {/* Katalog Produk group */}
+          <p className="text-[10px] font-bold text-white/30 uppercase tracking-widest px-3 mb-2 mt-2">Katalog Produk</p>
+          {katalogDropdown.map((item) => (
             <Link
               key={item.href}
               href={item.href}
               onClick={() => setIsMobileMenuOpen(false)}
-              className="flex items-center gap-3 px-3 py-3.5 rounded-xl hover:bg-white/5 transition-colors"
+              className="flex flex-col px-3 py-3 rounded-xl hover:bg-white/5 transition-colors"
             >
               <span className="text-[16px] font-semibold text-white">{item.name}</span>
+              <span className="text-[11px] text-white/40 mt-0.5">{item.desc}</span>
             </Link>
           ))}
 
           <div className="h-px bg-white/10 my-3" />
 
-          {/* Portofolio group */}
-          <p className="text-[10px] font-bold text-white/30 uppercase tracking-widest px-3 mb-2">Portofolio</p>
-          {portofolioNav.map((item) => (
+          {/* Perusahaan group */}
+          <p className="text-[10px] font-bold text-white/30 uppercase tracking-widest px-3 mb-2">Perusahaan</p>
+          {perusahaanDropdown.map((item) => (
             <Link
               key={item.href}
               href={item.href}
               onClick={() => setIsMobileMenuOpen(false)}
-              className="flex items-center gap-3 px-3 py-3.5 rounded-xl hover:bg-white/5 transition-colors"
+              className="flex flex-col px-3 py-3 rounded-xl hover:bg-white/5 transition-colors"
             >
               <span className="text-[16px] font-semibold text-white">{item.name}</span>
+              <span className="text-[11px] text-white/40 mt-0.5">{item.desc}</span>
             </Link>
           ))}
 
           <div className="h-px bg-white/10 my-3" />
 
-          {/* Menu lain */}
-          {mainNav.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              onClick={() => setIsMobileMenuOpen(false)}
-              className="flex items-center gap-3 px-3 py-3.5 rounded-xl hover:bg-white/5 transition-colors"
-            >
-              <span className="text-[16px] font-semibold text-white/80">{item.name}</span>
-            </Link>
-          ))}
+          {/* Portofolio */}
+          <Link
+            href="/portofolio"
+            onClick={() => setIsMobileMenuOpen(false)}
+            className="flex items-center gap-3 px-3 py-3.5 rounded-xl hover:bg-white/5 transition-colors"
+          >
+            <span className="text-[16px] font-semibold text-white">Portofolio</span>
+          </Link>
         </div>
 
         {/* CTA bawah */}
