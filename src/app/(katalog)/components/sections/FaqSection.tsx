@@ -38,7 +38,7 @@ export default function FaqSection() {
             const isOpen = openIndex === index;
             return (
               <div
-                className="overflow-hidden rounded-xl border border-primary-100 bg-white"
+                className="overflow-hidden rounded-xl border border-white/10 bg-white/5 backdrop-blur-sm"
                 key={question}
               >
                 <button
@@ -46,11 +46,11 @@ export default function FaqSection() {
                   onClick={() => setOpenIndex(isOpen ? null : index)}
                   type="button"
                 >
-                  <span className="font-bold text-primary transition-colors group-hover:text-secondary">
+                  <span className="font-bold text-white transition-colors group-hover:text-secondary">
                     {question}
                   </span>
                   <span
-                    className={`material-symbols-outlined transition-transform duration-300 ${isOpen ? "rotate-180 text-secondary" : ""}`}
+                    className={`material-symbols-outlined transition-transform duration-300 ${isOpen ? "rotate-180 text-secondary" : "text-white/60"}`}
                   >
                     expand_more
                   </span>
@@ -59,7 +59,7 @@ export default function FaqSection() {
                   className={`grid transition-[grid-template-rows] duration-300 ${isOpen ? "grid-rows-[1fr]" : "grid-rows-[0fr]"}`}
                 >
                   <div className="overflow-hidden">
-                    <p className="p-6 pt-0 text-label-sm text-on-surface-variant">
+                    <p className="p-6 pt-0 text-label-sm text-white/70">
                       {answer}
                     </p>
                   </div>
