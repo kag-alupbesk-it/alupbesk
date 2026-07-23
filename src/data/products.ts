@@ -1,3 +1,13 @@
+export interface ProductVariant {
+  name: string;
+  options: string[];
+}
+
+export interface ProductSpec {
+  label: string;
+  value: string;
+}
+
 export interface Product {
   id: number;
   badge: string;
@@ -8,6 +18,9 @@ export interface Product {
   price: number;
   stock: number;
   img: string;
+  variants?: ProductVariant[];
+  specs?: ProductSpec[];
+  datasheet?: string;
 }
 
 export const products: Product[] = [
@@ -21,6 +34,17 @@ export const products: Product[] = [
     price: 125000,
     stock: 150,
     img: "https://lh3.googleusercontent.com/aida-public/AB6AXuA2zDYfDPQRCFU9Hv20Z47_uvlI2eRBZNDstYo0yIr-z7SBrQf80xtUEVykli4ynO7xmBeOy38qru8uUOQGJUwa9bXaj7qIQ7DFPveodN9Jg0v9ieDAIWBCfaqX757wlT4HBeMRJesCoBIZsAReji5Ewn6NjtK4vk6zo-DY_69Zb96FFFZteF1ubS-JZcFr1miTJmZ7Szr3xIHBKeqjxGTi_E55qOFq_-y239gi_osNxNLgZLMlwMna68twTdjG75IFp9ASFE_InCY",
+    variants: [
+      { name: "Ukuran", options: ["40x40", "40x80", "40x120"] },
+      { name: "Panjang", options: ["1m", "2m", "3m", "6m"] },
+    ],
+    specs: [
+      { label: "Material", value: "6063-T5 Aluminum" },
+      { label: "Dimensi", value: "40 x 40 mm" },
+      { label: "Berat / Meter", value: "1.42 kg" },
+      { label: "Slot Width", value: "8.2 mm" },
+    ],
+    datasheet: "datasheet-tslot-4040.pdf",
   },
   {
     id: 2,
@@ -32,6 +56,9 @@ export const products: Product[] = [
     price: 45000,
     stock: 30,
     img: "https://lh3.googleusercontent.com/aida-public/AB6AXuCRhmyJkMT3IBV7DuxGBMPSNr-gaJJRD1shSGQSjoaydygKWHEVM-NShZMfljIV7sY1olkekHXhFnYJIeTZZFf2XC5ml4Q1C3EDgPBwxFrhwMwxf18KEjImp0qU8lGLIz-59nuWZvOY5kSSqgcx5GvkLjOwU0qc8wgy_cqbWeesbcE41OOfUX2fyIWJuxV9wKjrrmBUUwxs-n9CO5_1dLjsG32Sy3n5rCoJKQAiLjcx3wbFGF_umvGXEz_sI3YOdL3d5vK2ed39CpM",
+    variants: [
+      { name: "Ukuran", options: ["20x20", "30x30", "40x40"] },
+    ],
   },
   {
     id: 3,
@@ -43,6 +70,10 @@ export const products: Product[] = [
     price: 280000,
     stock: 75,
     img: "https://lh3.googleusercontent.com/aida-public/AB6AXuA6jqk1YW2Du6Vd_2ptSiP7rui2MZ8x3xUaDSCOQD_aQPAyJ6n2HIvi5RQAdLKHDNwfxhGfJvP2D67EhnzikqDz3THthUWcdSbXgvZzMWPlvQr2gvBOgBp0I8T-CAUdwWPqiT3QMZcA9XH3CW_zIhTlTtSjFvTER_8c4SEC68AtVOpZ0_JN9xeGiYd4qC1AKld8Y9pzqhuud-NAqWaL3GCgqd_BY5juSR_EHIGQE_L7FE1mJriZraL0O_0cgOiEE5XMIDFaJcci7us",
+    variants: [
+      { name: "Tipe", options: ["SBR16", "SBR20", "SBR25"] },
+      { name: "Panjang", options: ["400mm", "600mm", "1000mm"] },
+    ],
   },
   {
     id: 4,
@@ -54,5 +85,9 @@ export const products: Product[] = [
     price: 520000,
     stock: 40,
     img: "https://lh3.googleusercontent.com/aida-public/AB6AXuAK2sheNgcQjh4f4wICpYPbeom1cRrboOLNMBHjSWXDLZvCNoWJWS81kr9iG9Feh6DCnhcA0368B8zZqCq4PttRBR4CCZNX_NgomMF3fNEcJTfG98qCWOhhtRQTeXGkiowkZTD-a2LmZAMFPqKIqwYhprRmyrQyG3YxhFCNaxkvIV6xQV6uw_mSh2MNOdNihidwa4OcowAw1MsDUcZE6CUnbOew44HaiFQnHtfdaVl-OhEst6qJYXDMI039_0TYNf3HW03y6qstNzM",
+    variants: [
+      { name: "Ketebalan", options: ["3mm", "5mm", "6mm", "10mm"] },
+      { name: "Ukuran", options: ["1x1m", "1x2m", "1.2x2.4m"] },
+    ],
   },
 ];

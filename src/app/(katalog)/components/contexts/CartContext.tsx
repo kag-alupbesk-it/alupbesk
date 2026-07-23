@@ -6,13 +6,23 @@ import { Product } from "@/data/products";
 export interface CartItem {
   product: Product;
   quantity: number;
+  selectedVariants?: Record<string, string>;
+}
+
+function itemKey(productId: number, variants?: Record<string, string>): string {
+  if (!variants) return String(productId);
+  const sorted = Object.entries(variants)
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([k, v]) => `${k}:${v}`)
+    .join("|");
+  return `${productId}#${sorted}`;
 }
 
 interface CartContextType {
   items: CartItem[];
-  addToCart: (product: Product, quantity: number) => void;
-  removeFromCart: (productId: number) => void;
-  updateQuantity: (productId: number, quantity: number) => void;
+  addToCart: (product: Product, quantity: number, selectedVariants?: Record<string, string>) => void;
+  removeFromCart: (key: string) => void;
+  updateQuantity: (key: string, quantity: number) => void;
   clearCart: () => void;
   totalItems: number;
   totalPrice: number;
@@ -32,33 +42,39 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const [isCheckoutOpen, setCheckoutOpen] = useState(false);
   const [detailProduct, setDetailProduct] = useState<Product | null>(null);
 
-  const addToCart = useCallback((product: Product, quantity: number) => {
+  const addToCart = useCallback((product: Product, quantity: number, selectedVariants?: Record<string, string>) => {
+    const key = itemKey(product.id, selectedVariants);
     setItems((prev) => {
-      const existing = prev.find((item) => item.product.id === product.id);
-      if (existing) {
-        return prev.map((item) =>
-          item.product.id === product.id
-            ? { ...item, quantity: item.quantity + quantity }
-            : item
-        );
+      const existingIdx = prev.findIndex(
+        (item) => itemKey(item.product.id, item.selectedVariants) === key
+      );
+      if (existingIdx !== -1) {
+        const updated = [...prev];
+        updated[existingIdx] = {
+          ...updated[existingIdx],
+          quantity: updated[existingIdx].quantity + quantity,
+        };
+        return updated;
       }
-      return [...prev, { product, quantity }];
+      return [...prev, { product, quantity, selectedVariants }];
     });
     setCartOpen(true);
   }, []);
 
-  const removeFromCart = useCallback((productId: number) => {
-    setItems((prev) => prev.filter((item) => item.product.id !== productId));
+  const removeFromCart = useCallback((key: string) => {
+    setItems((prev) => prev.filter((item) => itemKey(item.product.id, item.selectedVariants) !== key));
   }, []);
 
-  const updateQuantity = useCallback((productId: number, quantity: number) => {
+  const updateQuantity = useCallback((key: string, quantity: number) => {
     if (quantity <= 0) {
-      setItems((prev) => prev.filter((item) => item.product.id !== productId));
+      setItems((prev) => prev.filter((item) => itemKey(item.product.id, item.selectedVariants) !== key));
       return;
     }
     setItems((prev) =>
       prev.map((item) =>
-        item.product.id === productId ? { ...item, quantity } : item
+        itemKey(item.product.id, item.selectedVariants) === key
+          ? { ...item, quantity }
+          : item
       )
     );
   }, []);
@@ -98,4 +114,8 @@ export function useCart() {
   const context = useContext(CartContext);
   if (!context) throw new Error("useCart must be used within CartProvider");
   return context;
+}
+
+export function getItemKey(item: CartItem): string {
+  return itemKey(item.product.id, item.selectedVariants);
 }

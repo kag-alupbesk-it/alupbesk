@@ -5,7 +5,7 @@ export default function ContactSection() {
   return (
     <section className="bg-primary py-section-gap-desktop" id="kontak">
       <div className="max-w-container-max mx-auto px-margin-x-mobile md:px-margin-x-desktop">
-        <div className="flex flex-col overflow-hidden rounded-3xl border border-primary-100 shadow-2xl lg:flex-row">
+        <div className="flex flex-col overflow-hidden rounded-3xl border border-white/10 shadow-2xl lg:flex-row">
           <div className="flex flex-col justify-between bg-primary-container p-12 text-white lg:w-2/5">
             <div>
               <h2 className="text-headline-h1 font-headline-h1 mb-6">
@@ -52,7 +52,7 @@ export default function ContactSection() {
               </a>
             </div>
           </div>
-          <div className="bg-white p-12 lg:w-3/5">
+          <div className="bg-white/5 backdrop-blur-sm p-12 lg:w-3/5">
             <form className="space-y-6">
               <div className="grid gap-6 md:grid-cols-2">
                 <FormField
@@ -67,23 +67,23 @@ export default function ContactSection() {
                 />
               </div>
               <label className="block space-y-2">
-                <span className="text-label-sm font-bold text-primary">
+                <span className="text-label-sm font-bold text-white">
                   Kategori Produk
                 </span>
-                <select className="w-full rounded-xl border border-primary-100 bg-bg-subtle p-4 focus:border-secondary focus:outline-none">
-                  <option>Pilih Kategori</option>
-                  <option>Profil Ekstrusi</option>
-                  <option>Linear Motion</option>
-                  <option>Aksesoris Framing</option>
-                  <option>Lainnya</option>
+                <select className="w-full rounded-xl border border-white/20 bg-white/10 p-4 text-white focus:border-secondary focus:outline-none">
+                  <option className="bg-primary text-white">Pilih Kategori</option>
+                  <option className="bg-primary text-white">Profil Ekstrusi</option>
+                  <option className="bg-primary text-white">Linear Motion</option>
+                  <option className="bg-primary text-white">Aksesoris Framing</option>
+                  <option className="bg-primary text-white">Lainnya</option>
                 </select>
               </label>
               <label className="block space-y-2">
-                <span className="text-label-sm font-bold text-primary">
+                <span className="text-label-sm font-bold text-white">
                   Pesan
                 </span>
                 <textarea
-                  className="w-full rounded-xl border border-primary-100 bg-bg-subtle p-4 focus:border-secondary focus:ring-1 focus:ring-secondary focus:outline-none"
+                  className="w-full rounded-xl border border-white/20 bg-white/10 p-4 text-white placeholder:text-white/40 focus:border-secondary focus:ring-1 focus:ring-secondary focus:outline-none"
                   placeholder="Detail kebutuhan atau pertanyaan Anda..."
                   rows={4}
                 />
@@ -95,7 +95,7 @@ export default function ContactSection() {
                 Kirim Pesan{" "}
                 <span className="material-symbols-outlined">send</span>
               </button>
-              <p className="text-center text-[12px] text-on-surface-variant">
+              <p className="text-center text-[12px] text-white/50">
                 Dengan mengirim form ini, Anda menyetujui kebijakan privasi
                 kami.
               </p>
