@@ -1,4 +1,4 @@
-export default function HeroSection() {
+﻿export default function HeroSection() {
   return (
     <section
       className="relative min-h-screen flex items-center pt-20 bg-primary overflow-hidden"
@@ -42,35 +42,10 @@ export default function HeroSection() {
               <span className="material-symbols-outlined">chat</span>
               Hubungi via WhatsApp
             </a>
-          </div>
-          <div className="grid grid-cols-3 gap-8 pt-8 border-t border-white/10">
-            <div>
-              <div className="text-headline-h2 text-secondary font-bold">
-                15+
-              </div>
-              <div className="text-label-sm text-primary-fixed-dim">
-                Tahun Pengalaman
-              </div>
-            </div>
-            <div>
-              <div className="text-headline-h2 text-secondary font-bold">
-                500+
-              </div>
-              <div className="text-label-sm text-primary-fixed-dim">
-                Partner Industri
-              </div>
-            </div>
-            <div>
-              <div className="text-headline-h2 text-secondary font-bold">
-                1k+
-              </div>
-              <div className="text-label-sm text-primary-fixed-dim">
-                Varian Produk
-              </div>
-            </div>
-          </div>
+      </div>
         </div>
       </div>
     </section>
   );
 }
+

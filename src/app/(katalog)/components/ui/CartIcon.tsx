@@ -1,13 +1,14 @@
 "use client";
 
 import { useCart } from "../contexts/CartContext";
+import Link from "next/link";
 
 export default function CartIcon() {
-  const { totalItems, setCartOpen } = useCart();
+  const { totalItems } = useCart();
 
   return (
-    <button
-      onClick={() => setCartOpen(true)}
+    <Link
+      href="/keranjang"
       className="relative text-white hover:text-secondary transition-colors"
     >
       <span className="material-symbols-outlined text-[28px]">
@@ -18,6 +19,6 @@ export default function CartIcon() {
           {totalItems > 99 ? "99+" : totalItems}
         </span>
       )}
-    </button>
+    </Link>
   );
 }
