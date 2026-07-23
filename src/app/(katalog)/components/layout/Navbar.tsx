@@ -5,8 +5,8 @@ import CartIcon from "../ui/CartIcon";
 
 // 4 menu utama — bersih, tidak penuh
 const mainNav = [
-  { name: "Tentang Kami", href: "#profile" },
-  { name: "Kontak", href: "#kontak" },
+  { name: "Tentang Kami", href: "/#profile" },
+  { name: "Kontak", href: "/#kontak" },
 ];
 
 // Dropdown: Produk & Layanan
@@ -147,8 +147,8 @@ export default function Navbar() {
                 key={item.href}
                 href={item.href}
                 className={`text-[14px] font-medium transition-colors ${
-                  (item.href === "#profile" && activeSection === "profile") ||
-                  (item.href === "#kontak" && activeSection === "kontak")
+                  (item.href === "/#profile" && activeSection === "profile") ||
+                  (item.href === "/#kontak" && activeSection === "kontak")
                     ? "text-secondary"
                     : "text-white/70 hover:text-white"
                 }`}
