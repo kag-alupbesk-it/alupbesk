@@ -3,6 +3,11 @@ export interface ProductVariant {
   options: string[];
 }
 
+export interface ProductSpec {
+  label: string;
+  value: string;
+}
+
 export interface Product {
   id: number;
   badge: string;
@@ -14,6 +19,8 @@ export interface Product {
   stock: number;
   img: string;
   variants?: ProductVariant[];
+  specs?: ProductSpec[];
+  datasheet?: string;
 }
 
 export const products: Product[] = [
@@ -31,6 +38,13 @@ export const products: Product[] = [
       { name: "Ukuran", options: ["40x40", "40x80", "40x120"] },
       { name: "Panjang", options: ["1m", "2m", "3m", "6m"] },
     ],
+    specs: [
+      { label: "Material", value: "6063-T5 Aluminum" },
+      { label: "Dimensi", value: "40 x 40 mm" },
+      { label: "Berat / Meter", value: "1.42 kg" },
+      { label: "Slot Width", value: "8.2 mm" },
+    ],
+    datasheet: "datasheet-tslot-4040.pdf",
   },
   {
     id: 2,

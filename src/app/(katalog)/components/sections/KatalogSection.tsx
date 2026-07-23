@@ -28,7 +28,7 @@ export default function KatalogSection() {
           </div>
           <a
             className="text-secondary font-bold flex items-center gap-2 group hover:gap-4 transition-all"
-            href="#"
+            href="/katalog"
           >
             Lihat Semua Produk
             <span className="material-symbols-outlined">arrow_right_alt</span>
