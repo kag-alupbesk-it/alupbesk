@@ -4,6 +4,7 @@ const orders = new Map<string, LocalOrder>();
 const listeners = new Map<string, Set<(event: OrderStatusEvent) => void>>();
 
 export function readOrder(id: string): LocalOrder | undefined { return orders.get(id); }
+export function readOrders(): LocalOrder[] { return [...orders.values()].sort((left, right) => right.createdAt.localeCompare(left.createdAt)); }
 export function writeOrder(order: LocalOrder): void { orders.set(order.id, order); }
 export function listenOrder(id: string, listener: (event: OrderStatusEvent) => void): () => void {
   const orderListeners = listeners.get(id) ?? new Set<(event: OrderStatusEvent) => void>();

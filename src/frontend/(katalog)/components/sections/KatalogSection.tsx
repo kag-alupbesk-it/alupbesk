@@ -29,6 +29,8 @@ export default function KatalogSection() {
 
     // Sync input jika URL berubah dari luar (back button)
   useEffect(() => {
+    // Sinkronkan nilai input ketika pengguna memakai tombol back/forward browser.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setSearchInput(urlQuery);
   }, [urlQuery]);
 

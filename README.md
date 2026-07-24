@@ -1,36 +1,52 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# ALUPBESK
 
-## Getting Started
+Website katalog aluminium dan komponen industri berbasis Next.js 16, Tailwind CSS, serta Express API lokal. Proyek dapat dijalankan tanpa database untuk pengembangan tampilan dan alur checkout awal.
 
-First, run the development server:
+## Menjalankan project
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+1. Install Node.js 20 atau lebih baru.
+2. Salin konfigurasi contoh:
+
+   ```powershell
+   Copy-Item .env.example .env.local
+   ```
+
+3. Install paket dan jalankan dua terminal:
+
+   ```powershell
+   npm install
+   npm run dev:api
+   ```
+
+   Terminal kedua:
+
+   ```powershell
+   npm run dev
+   ```
+
+4. Buka:
+
+   - Website: http://localhost:3000
+   - Katalog penuh: http://localhost:3000/katalog
+   - Keranjang: http://localhost:3000/keranjang
+   - Checkout: http://localhost:3000/checkout
+   - Admin persiapan: http://localhost:3000/admin
+   - API: http://localhost:4000/api/catalog/products
+
+## Perintah penting
+
+```powershell
+npm run dev       # Website Next.js
+npm run dev:api   # Express API lokal
+npm run lint      # Pemeriksaan ESLint
+npx tsc --noEmit  # Pemeriksaan TypeScript
+npm run build     # Build produksi
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Catatan pengembangan
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Produk dan gambar saat ini bersifat dinamis dari data di `src/services/catalog/products.ts` dan disajikan oleh API. Mitra menggunakan data sementara di `src/features/home/data/partners.ts`; setiap item sudah memiliki tempat `logoUrl` untuk integrasi media.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Katalog beranda hanya menampilkan delapan produk agar halaman tidak terlalu panjang, sementara semua produk tersedia di `/katalog`. Keranjang menggabungkan produk yang sama menjadi satu item dan mencantumkan pilihan ukuran/varian di dalamnya.
 
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Lihat [WARNING.md](WARNING.md) sebelum mulai integrasi database, unggahan gambar, dan autentikasi admin.

@@ -12,7 +12,7 @@ interface Toast {
 
 let toastId = 0;
 
-function ToastContainer({ toasts, onRemove }: { toasts: Toast[]; onRemove: (id: number) => void }) {
+function ToastContainer({ toasts }: { toasts: Toast[] }) {
   return (
     <div className="fixed bottom-6 right-6 z-[9999] flex flex-col gap-2 pointer-events-none">
       {toasts.map((t) => (
@@ -42,12 +42,52 @@ export interface CartItem {
 }
 
 export function itemKey(productId: number, variants?: Record<string, string>): string {
-  if (!variants) return String(productId);
-  const sorted = Object.entries(variants)
-    .sort(([a], [b]) => a.localeCompare(b))
-    .map(([k, v]) => `${k}:${v}`)
-    .join("|");
-  return `${productId}#${sorted}`;
+  // Satu produk tetap satu baris walaupun pembeli memilih ukuran berbeda.
+  // Detail pilihan varian digabungkan dan ditampilkan sebagai keterangan pada item.
+  void variants;
+  return String(productId);
+}
+
+function mergeVariants(current?: Record<string, string>, incoming?: Record<string, string>): Record<string, string> | undefined {
+  if (!current && !incoming) return undefined;
+  const merged: Record<string, string> = { ...current };
+  Object.entries(incoming ?? {}).forEach(([name, value]) => {
+    const choices = new Set((merged[name] ?? "").split(", ").filter(Boolean));
+    choices.add(value);
+    merged[name] = [...choices].join(", ");
+  });
+  return merged;
+}
+
+// Function untuk menggabungkan cache keranjang lama: satu produk hanya satu kartu,
+// sedangkan semua ukuran/varian disimpan sebagai keterangan pada kartu tersebut.
+function normalizeCartItems(savedItems: CartItem[]): CartItem[] {
+  const grouped = new Map<number, CartItem>();
+
+  savedItems.forEach((item) => {
+    const product = products.find((catalogProduct) => catalogProduct.id === item.product.id);
+    if (!product || item.quantity <= 0) return;
+
+    const existing = grouped.get(product.id);
+    if (!existing) {
+      grouped.set(product.id, {
+        product,
+        quantity: Math.min(item.quantity, product.stock),
+        note: item.note ?? "",
+        selectedVariants: item.selectedVariants,
+      });
+      return;
+    }
+
+    grouped.set(product.id, {
+      ...existing,
+      quantity: Math.min(existing.quantity + item.quantity, product.stock),
+      note: [existing.note, item.note].filter(Boolean).filter((value, index, values) => values.indexOf(value) === index).join(" | "),
+      selectedVariants: mergeVariants(existing.selectedVariants, item.selectedVariants),
+    });
+  });
+
+  return [...grouped.values()];
 }
 
 interface CartContextType {
@@ -85,15 +125,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
       if (saved) {
         const parsed: CartItem[] = JSON.parse(saved);
         {
-          const validated = parsed
-            .map((item) => {
-              const fresh = products.find((p: Product) => p.id === item.product.id);
-              if (!fresh) return null;
-              const clampedQty = Math.min(item.quantity, fresh.stock);
-              if (clampedQty <= 0) return null;
-              return { ...item, product: fresh, quantity: clampedQty, note: item.note ?? "" };
-            })
-            .filter(Boolean) as CartItem[];
+          const validated = normalizeCartItems(parsed);
+          // Data cache browser perlu direhidrasi sekali setelah komponen terpasang.
+          // eslint-disable-next-line react-hooks/set-state-in-effect
           setItems(validated);
         }
       }
@@ -136,7 +170,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
       if (existingIdx !== -1) {
         const updated = [...prev];
-        updated[existingIdx] = { ...updated[existingIdx], quantity: newQty };
+        updated[existingIdx] = { ...updated[existingIdx], quantity: newQty, selectedVariants: mergeVariants(updated[existingIdx].selectedVariants, selectedVariants) };
         return updated;
       }
       return [...prev, { product, quantity, selectedVariants, note: "" }];
@@ -174,10 +208,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const clearCart = useCallback(() => setItems([]), []);
 
-    const totalItems = useMemo(
-    () => items.reduce((sum, item) => sum + item.quantity, 0),
-    [items]
-  );
+  // Badge keranjang menghitung jenis produk, bukan banyaknya unit/ukuran.
+  const totalItems = useMemo(() => items.length, [items]);
   const totalPrice = useMemo(
     () => items.reduce((sum, item) => sum + item.product.price * item.quantity, 0),
     [items]
@@ -204,7 +236,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
             }}
     >
             {children}
-            <ToastContainer toasts={toasts} onRemove={(id) => setToasts((prev) => prev.filter((t) => t.id !== id))} />
+            <ToastContainer toasts={toasts} />
     </CartContext.Provider>
   );
 }

@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
+import { usePathname } from "next/navigation";
 import Link from "next/link";
 import CartIcon from "../cart/CartIcon";
 
@@ -15,6 +16,7 @@ const perusahaanDropdown = [
 ];
 
 export default function Navbar() {
+  const pathname = usePathname();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [activeSection, setActiveSection] = useState("");
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
@@ -49,6 +51,19 @@ export default function Navbar() {
 
   const toggleDropdown = (name: string) =>
     setOpenDropdown((prev) => (prev === name ? null : name));
+
+  // Function untuk memindahkan navigasi beranda dengan scroll halus.
+  const handleSectionNavigation = (event: React.MouseEvent<HTMLAnchorElement>, href: string) => {
+    const sectionId = href.replace("/#", "");
+    if (pathname !== "/" || !sectionId) return;
+    const section = document.getElementById(sectionId);
+    if (!section) return;
+    event.preventDefault();
+    section.scrollIntoView({ behavior: "smooth", block: "start" });
+    window.history.replaceState(null, "", `/#${sectionId}`);
+    setOpenDropdown(null);
+    setIsMobileMenuOpen(false);
+  };
 
   return (
     <>
@@ -86,7 +101,7 @@ export default function Navbar() {
                       <Link
                         key={item.href}
                         href={item.href}
-                        onClick={() => setOpenDropdown(null)}
+                        onClick={(event) => handleSectionNavigation(event, item.href)}
                         className="flex flex-col px-4 py-3 rounded-xl hover:bg-white/5 transition-colors group"
                       >
                         <span className="text-[13px] font-semibold text-white group-hover:text-secondary transition-colors">{item.name}</span>
@@ -116,7 +131,7 @@ export default function Navbar() {
                       <Link
                         key={item.href}
                         href={item.href}
-                        onClick={() => setOpenDropdown(null)}
+                        onClick={(event) => handleSectionNavigation(event, item.href)}
                         className="flex flex-col px-4 py-3 rounded-xl hover:bg-white/5 transition-colors group"
                       >
                         <span className="text-[13px] font-semibold text-white group-hover:text-secondary transition-colors">{item.name}</span>
@@ -186,7 +201,7 @@ export default function Navbar() {
             <Link
               key={item.href}
               href={item.href}
-              onClick={() => setIsMobileMenuOpen(false)}
+              onClick={(event) => handleSectionNavigation(event, item.href)}
               className="flex flex-col px-3 py-3 rounded-xl hover:bg-white/5 transition-colors"
             >
               <span className="text-[16px] font-semibold text-white">{item.name}</span>
@@ -202,7 +217,7 @@ export default function Navbar() {
             <Link
               key={item.href}
               href={item.href}
-              onClick={() => setIsMobileMenuOpen(false)}
+              onClick={(event) => handleSectionNavigation(event, item.href)}
               className="flex flex-col px-3 py-3 rounded-xl hover:bg-white/5 transition-colors"
             >
               <span className="text-[16px] font-semibold text-white">{item.name}</span>

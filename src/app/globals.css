@@ -31,3 +31,14 @@ body {
   background: #dba501;
   color: #1a2228;
 }
+
+@keyframes partner-scroll {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
+.partner-track { animation: partner-scroll 14s linear infinite; will-change: transform; }
+
+@media (prefers-reduced-motion: reduce) {
+  .partner-track { animation: none; }
+}
