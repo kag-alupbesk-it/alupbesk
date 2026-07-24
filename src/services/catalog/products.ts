@@ -1,6 +1,7 @@
 export interface ProductVariant {
   name: string;
   options: string[];
+  colors?: string[];
 }
 
 export interface Product {
@@ -51,6 +52,7 @@ export const products: Product[] = [
     variants: [
       { name: "Ukuran", options: ["40x40", "40x80", "40x120"] },
       { name: "Panjang", options: ["1m", "2m", "3m", "6m"] },
+      { name: "Warna", options: ["Silver", "Black", "Gold"], colors: ["#C0C0C0", "#2C2C2C", "#C5A55A"] },
     ],
     datasheet: "datasheet-tslot-4040.pdf",
     bestSeller: true,
@@ -83,6 +85,7 @@ export const products: Product[] = [
     ],
     variants: [
       { name: "Ukuran", options: ["20x20", "30x30", "40x40"] },
+      { name: "Warna", options: ["Silver", "Black"], colors: ["#C0C0C0", "#2C2C2C"] },
     ],
   },
     {
@@ -113,6 +116,7 @@ export const products: Product[] = [
     variants: [
       { name: "Tipe", options: ["SBR16", "SBR20", "SBR25"] },
       { name: "Panjang", options: ["400mm", "600mm", "1000mm"] },
+      { name: "Warna", options: ["Chrome", "Black"], colors: ["#DBE4EB", "#2C2C2C"] },
     ],
     bestSeller: true,
     soldCount: 218,
@@ -145,6 +149,7 @@ export const products: Product[] = [
     variants: [
       { name: "Ketebalan", options: ["3mm", "5mm", "6mm", "10mm"] },
       { name: "Ukuran", options: ["1x1m", "1x2m", "1.2x2.4m"] },
+      { name: "Warna", options: ["Silver", "Black", "Red"], colors: ["#C0C0C0", "#2C2C2C", "#B22222"] },
     ],
   },
 ];
