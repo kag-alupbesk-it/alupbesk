@@ -65,6 +65,15 @@ export default function KeranjangPage() {
                           <div className={styles.productInfo}>
                             <span className={styles.stockBadge}><span className={styles.stockDot} />{item.product.stock > 50 ? "Ready Stock" : item.product.stock > 0 ? `Stok: ${item.product.stock}` : "Habis"}</span>
                             <h3 className={styles.productTitle}>{item.product.title}</h3>
+                            {item.selectedVariants && Object.keys(item.selectedVariants).length > 0 && (
+                              <div className={styles.variantBadges}>
+                                {Object.entries(item.selectedVariants).map(([k, v]) => (
+                                  <span key={k} className={styles.variantBadge}>
+                                    <span className={styles.variantKey}>{k}:</span> {v}
+                                  </span>
+                                ))}
+                              </div>
+                            )}
                             <p className={styles.unitPrice}>@ {formatPrice(item.product.price)} / pcs</p>
                           </div>
                           <button onClick={() => removeFromCart(key)} className={styles.deleteButton} title="Hapus produk"><span className={styles.icon}>delete</span></button>
@@ -93,7 +102,7 @@ export default function KeranjangPage() {
             <div className={styles.summaryColumn}>
               <div className={styles.summary}>
                 <h2 className={styles.summaryTitle}>Ringkasan Belanja</h2>
-                <div className={styles.summaryItems}>{items.map((item) => <div key={getKey(item.product.id, item.selectedVariants)} className={styles.summaryItem}><span className={styles.summaryItemName}>{item.product.title} <span className={styles.mutedQuantity}>×{item.quantity}</span></span><span className={styles.summaryItemPrice}>{formatPrice(item.product.price * item.quantity)}</span></div>)}</div>
+                <div className={styles.summaryItems}>{items.map((item) => <div key={getKey(item.product.id, item.selectedVariants)} className={styles.summaryItemBlock}><div className={styles.summaryItem}><span className={styles.summaryItemName}>{item.product.title} <span className={styles.mutedQuantity}>×{item.quantity}</span></span><span className={styles.summaryItemPrice}>{formatPrice(item.product.price * item.quantity)}</span></div>{item.selectedVariants && Object.keys(item.selectedVariants).length > 0 && <div className={styles.summaryVariants}>{Object.entries(item.selectedVariants).map(([k, v]) => <span key={k} className={styles.summaryVariantTag}><span className={styles.summaryVariantKey}>{k}:</span> {v}</span>)}</div>}</div>)}</div>
                 <div className={styles.dividerSection}><div className={styles.summaryRow}><span className={styles.label}>Subtotal</span><span className={styles.price}>{formatPrice(totalPrice)}</span></div><div className={styles.summaryRow}><span className={styles.label}>Estimasi Ongkir</span><span className={styles.shipping}>Dihitung saat checkout</span></div></div>
                 <div className={styles.totalSection}><div className={styles.totalRow}><span className={styles.totalLabel}>Total</span><span className={styles.totalPrice}>{formatPrice(totalPrice)}</span></div><p className={styles.totalNotice}>*Belum termasuk ongkir</p></div>
                 <button onClick={() => router.push("/checkout")} className={styles.checkoutButton}><span className={styles.checkoutIcon}>shopping_cart_checkout</span>Checkout Sekarang</button>
