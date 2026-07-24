@@ -1,5 +1,5 @@
-import Components from "@/(katalog)/components";
+import HomePage from "@/features/home/HomePage";
 
 export default function Home() {
-  return <Components />;
+  return <HomePage />;
 }

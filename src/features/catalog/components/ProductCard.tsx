@@ -1,0 +1,15 @@
+"use client";
+import type { Product } from "@/services/catalog";
+import { useCart } from "@/features/cart/CartContext";
+interface ProductCardProps { product: Product; }
+// Function untuk kartu produk katalog dan best seller.
+export function ProductCard({ product }: ProductCardProps) {
+  const { setDetailProduct, addToCart } = useCart();
+  const price = new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(product.price);
+  const handleQuickAdd = (event: React.MouseEvent<HTMLButtonElement>) => {
+    event.stopPropagation();
+    if (product.variants?.length) { setDetailProduct(product); return; }
+    addToCart(product, 1);
+  };
+  return <article onClick={() => setDetailProduct(product)} className="group cursor-pointer overflow-hidden rounded-xl border border-white/10 bg-white/5 backdrop-blur-sm transition-all duration-300 hover:-translate-y-1 hover:border-secondary hover:bg-white/10 hover:shadow-2xl"><div className="relative aspect-square overflow-hidden"><img src={product.img} alt={product.title} className="size-full object-cover transition-transform duration-500 group-hover:scale-105" /><span className={`absolute left-2 top-2 ${product.badgeBg} rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-white shadow-sm sm:left-4 sm:top-4 sm:px-3 sm:py-1 sm:text-[10px]`}>{product.badge}</span></div><div className="p-2.5 sm:p-5"><h3 className="min-h-[34px] line-clamp-2 text-[13px] text-white sm:min-h-0 sm:text-headline-h3">{product.title}</h3><p className="mb-2 text-[13px] font-bold text-secondary sm:mb-4 sm:text-label-sm">{price}</p><div className="hidden gap-2 sm:flex"><button onClick={(event) => { event.stopPropagation(); setDetailProduct(product); }} className="flex-1 rounded-lg border border-white/20 py-3 text-label-sm font-bold text-white transition-all group-hover:border-secondary group-hover:bg-secondary group-hover:text-primary">Detail</button><button onClick={handleQuickAdd} className="rounded-lg border border-white/20 px-4 py-3 text-white transition-all hover:border-secondary hover:bg-secondary hover:text-primary" aria-label={`Tambah ${product.title}`}><span className="material-symbols-outlined text-[18px]">add_shopping_cart</span></button></div></div></article>;
+}
