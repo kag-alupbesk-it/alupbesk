@@ -35,6 +35,27 @@ export default function Footer() {
               "Custom Machining",
             ]}
           />
+          <div className="space-y-4">
+            <h3 className="text-headline-h3 font-semibold text-secondary-fixed">
+              Lokasi Kami
+            </h3>
+            <div className="overflow-hidden rounded-xl border border-white/10">
+              <iframe
+                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3952.849310412219!2d110.444865!3d-7.832166!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x2e7a5100040e42c3%3A0xedafc0d0b2eb3e8d!2sCV%20ALUPBESK%20CONTRACTOR!5e0!3m2!1sid!2sid!4v1"
+                width="100%"
+                height="180"
+                style={{ border: 0 }}
+                allowFullScreen
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+                title="CV ALUPBESK CONTRACTOR - Google Maps"
+                className="rounded-xl"
+              />
+            </div>
+            <p className="text-label-sm leading-relaxed text-primary-fixed-dim">
+            Karang Tengah Sitimulyo, Karang Anom, Sitimulyo, Kec. Piyungan, Kabupaten Bantul, Daerah Istimewa Yogyakarta,Indonesia
+            </p>
+          </div>
         </div>
         <div className="flex flex-col items-center justify-between gap-6 border-t border-white/10 pt-8 md:flex-row">
           <p className="text-label-sm text-primary-fixed-dim">
