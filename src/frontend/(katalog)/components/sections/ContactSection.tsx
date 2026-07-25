@@ -19,7 +19,7 @@ export default function ContactSection() {
                 <ContactDetail
                   icon="location_on"
                   title="Kantor Pusat"
-                  text="Kawasan Industri Jababeka II, Blok C No. 12, Cikarang, Jawa Barat 17530"
+                  text="5C9W+4XP, Karang Tengah Sitimulyo, Karang Anom, Sitimulyo, Kec. Piyungan, Kabupaten Bantul, Daerah Istimewa Yogyakarta 55792"
                 />
                 <ContactDetail
                   icon="mail"
