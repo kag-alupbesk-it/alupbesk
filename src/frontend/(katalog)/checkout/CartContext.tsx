@@ -94,6 +94,7 @@ interface CartContextType {
   items: CartItem[];
   addToCart: (product: Product, quantity: number, selectedVariants?: Record<string, string>) => void;
   removeFromCart: (key: string) => void;
+  restoreItem: (item: CartItem) => void;
   updateQuantity: (key: string, quantity: number) => void;
   updateNote: (key: string, note: string) => void;
   clearCart: () => void;
@@ -178,8 +179,16 @@ export function CartProvider({ children }: { children: ReactNode }) {
     showToast(`${product.title} ditambahkan ke keranjang`);
   }, [showToast]);
 
-      const removeFromCart = useCallback((key: string) => {
+  const removeFromCart = useCallback((key: string) => {
     setItems((prev) => prev.filter((item) => itemKey(item.product.id, item.selectedVariants) !== key));
+  }, []);
+
+  const restoreItem = useCallback((item: CartItem) => {
+    setItems((prev) => {
+      const exists = prev.some((i) => itemKey(i.product.id, i.selectedVariants) === itemKey(item.product.id, item.selectedVariants));
+      if (exists) return prev;
+      return [...prev, item];
+    });
   }, []);
 
   const updateQuantity = useCallback((key: string, quantity: number) => {
@@ -221,6 +230,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
               items,
               addToCart,
               removeFromCart,
+              restoreItem,
               updateQuantity,
               updateNote,
               clearCart,

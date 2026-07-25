@@ -2,8 +2,8 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
-import { itemKey, useCart } from "../checkout/CartContext";
+import { useState, useRef, useCallback } from "react";
+import { itemKey, useCart, type CartItem } from "../checkout/CartContext";
 import { cartStyles as styles } from "./style";
 
 const formatPrice = (price: number): string => new Intl.NumberFormat("id-ID", {
@@ -12,11 +12,82 @@ const formatPrice = (price: number): string => new Intl.NumberFormat("id-ID", {
   minimumFractionDigits: 0,
 }).format(price);
 
+interface DeleteTarget {
+  key: string;
+  item: CartItem;
+}
+
+interface PendingDelete {
+  key: string;
+  item: CartItem;
+}
+
 export default function KeranjangPage() {
-  const { items, removeFromCart, updateQuantity, updateNote, clearCart, totalItems, totalPrice } = useCart();
+  const { items, removeFromCart, restoreItem, updateQuantity, updateNote, clearCart, totalItems, totalPrice } = useCart();
   const router = useRouter();
   const [confirmClear, setConfirmClear] = useState(false);
   const [qtyInputs, setQtyInputs] = useState<Record<string, string>>({});
+  const [deleteTarget, setDeleteTarget] = useState<DeleteTarget | null>(null);
+  const [popupExiting, setPopupExiting] = useState(false);
+  const [pendingDelete, setPendingDelete] = useState<PendingDelete | null>(null);
+  const [undoExiting, setUndoExiting] = useState(false);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const pendingRef = useRef<PendingDelete | null>(null);
+
+  const openDeletePopup = useCallback((key: string, item: CartItem) => {
+    setPopupExiting(false);
+    setDeleteTarget({ key, item });
+  }, []);
+
+  const closeDeletePopup = useCallback(() => {
+    setPopupExiting(true);
+    setTimeout(() => {
+      setDeleteTarget(null);
+      setPopupExiting(false);
+    }, 250);
+  }, []);
+
+  const confirmDelete = useCallback(() => {
+    if (!deleteTarget) return;
+    const { key, item } = deleteTarget;
+
+    if (timerRef.current) clearTimeout(timerRef.current);
+    setUndoExiting(false);
+
+    const pending: PendingDelete = { key, item };
+    pendingRef.current = pending;
+    setPendingDelete(pending);
+
+    setPopupExiting(true);
+    setTimeout(() => {
+      setDeleteTarget(null);
+      setPopupExiting(false);
+    }, 250);
+
+    const timer = setTimeout(() => {
+      removeFromCart(key);
+      pendingRef.current = null;
+      setUndoExiting(true);
+      setTimeout(() => {
+        setPendingDelete(null);
+        setUndoExiting(false);
+      }, 300);
+    }, 5000);
+    timerRef.current = timer;
+  }, [deleteTarget, removeFromCart]);
+
+  const handleUndo = useCallback(() => {
+    if (!pendingRef.current) return;
+    if (timerRef.current) clearTimeout(timerRef.current);
+    timerRef.current = null;
+    restoreItem(pendingRef.current.item);
+    setUndoExiting(true);
+    setTimeout(() => {
+      pendingRef.current = null;
+      setPendingDelete(null);
+      setUndoExiting(false);
+    }, 300);
+  }, [restoreItem]);
 
   const getKey = (productId: number, variants?: Record<string, string>): string => itemKey(productId, variants);
   const updateQuantityInput = (key: string, value: string): void => {
@@ -44,7 +115,7 @@ export default function KeranjangPage() {
       </div>
 
       <div className={styles.content}>
-        {items.length === 0 ? (
+        {items.length === 0 && !pendingDelete ? (
           <div className={styles.empty}>
             <span className={styles.emptyIcon}>shopping_cart</span>
             <p className={styles.emptyTitle}>Keranjang kamu masih kosong</p>
@@ -56,8 +127,9 @@ export default function KeranjangPage() {
             <div className={styles.itemList}>
               {items.map((item) => {
                 const key = getKey(item.product.id, item.selectedVariants);
+                const isPending = pendingDelete?.key === key;
                 return (
-                  <div key={key} className={styles.itemCard}>
+                  <div key={key} className={`${styles.itemCard} ${isPending ? styles.itemCardPending : ""}`}>
                     <div className={styles.itemRow}>
                       <div className={styles.productImage} style={{ backgroundImage: `url('${item.product.img}')` }} />
                       <div className={styles.itemInfo}>
@@ -76,7 +148,8 @@ export default function KeranjangPage() {
                             )}
                             <p className={styles.unitPrice}>@ {formatPrice(item.product.price)} / pcs</p>
                           </div>
-                          <button onClick={() => removeFromCart(key)} className={styles.deleteButton} title="Hapus produk"><span className={styles.icon}>delete</span></button>
+                          {!isPending && <button onClick={() => openDeletePopup(key, item)} className={styles.deleteButton} title="Hapus produk"><span className={styles.icon}>delete</span></button>}
+                          {isPending && <span className={`${styles.icon} text-red-400/60`}>hourglass_empty</span>}
                         </div>
                         <div className={styles.quantityRow}>
                           <div className={styles.quantityControl}>
@@ -89,6 +162,7 @@ export default function KeranjangPage() {
                       </div>
                     </div>
                     <div className={styles.noteContainer}><input type="text" placeholder="Catatan / spesifikasi custom (misal: potong 500mm)..." value={item.note} onChange={(event) => updateNote(key, event.target.value)} className={styles.noteInput} /></div>
+                    {isPending && <div className={styles.pendingTimer}><div className={styles.pendingTimerBar} /></div>}
                   </div>
                 );
               })}
@@ -113,6 +187,62 @@ export default function KeranjangPage() {
           </div>
         )}
       </div>
+
+      {/* Delete Confirmation Popup */}
+      {deleteTarget && (
+        <div className={`${styles.popupOverlay} ${popupExiting ? "animate-fadeOut" : "animate-fadeIn"}`} onClick={closeDeletePopup}>
+          <div className={`${styles.popupBox} ${popupExiting ? "animate-scaleOut" : "animate-scaleIn"}`} onClick={(e) => e.stopPropagation()}>
+            <div className="relative">
+              <div className="absolute inset-0 rounded-2xl bg-gradient-to-b from-red-500/10 to-transparent pointer-events-none" />
+              <div className="relative p-6">
+                <div className={styles.popupImageWrap}>
+                  <div className={styles.popupImage} style={{ backgroundImage: `url('${deleteTarget.item.product.img}')` }} />
+                </div>
+                <h3 className={styles.popupTitle}>Hapus dari Keranjang?</h3>
+                <p className={styles.popupDesc}>
+                  <span className="text-white font-semibold">{deleteTarget.item.product.title}</span> akan dihapus dari keranjang belanja Anda.
+                </p>
+                {deleteTarget.item.selectedVariants && Object.keys(deleteTarget.item.selectedVariants).length > 0 && (
+                  <div className="flex flex-wrap justify-center gap-1.5 mb-4">
+                    {Object.entries(deleteTarget.item.selectedVariants).map(([k, v]) => (
+                      <span key={k} className="inline-flex items-center gap-1 bg-white/5 text-white/50 text-[11px] px-2 py-0.5 rounded-md border border-white/10">
+                        <span className="text-white/30">{k}:</span> {v}
+                      </span>
+                    ))}
+                  </div>
+                )}
+                <div className={styles.popupActions}>
+                  <button onClick={closeDeletePopup} className={styles.popupCancel}>Batal</button>
+                  <button onClick={confirmDelete} className={styles.popupConfirm}>
+                    <span className="material-symbols-outlined text-[16px]">delete</span>
+                    Ya, Hapus
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Undo Toast */}
+      {pendingDelete && (
+        <div className={`${styles.undoToast} ${undoExiting ? styles.undoToastExiting : styles.undoToastEntering}`}>
+          <div className={`${styles.undoToastBox} ${undoExiting ? "animate-slideUpToTop" : "animate-slideDownFromTop"}`}>
+            <div className={styles.undoToastContent}>
+              <span className="material-symbols-outlined text-[22px] text-red-400/70">delete</span>
+              <p className={styles.undoToastText}>
+                <span className="font-semibold text-white">{pendingDelete.item.product.title}</span> dihapus dari keranjang
+              </p>
+            </div>
+            <div className="flex justify-center pb-4">
+              <button onClick={handleUndo} className={styles.undoToastButton}>Urungkan</button>
+            </div>
+            <div className={styles.undoToastProgress}>
+              <div className={styles.undoToastProgressBar} />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
