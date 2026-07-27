@@ -19,12 +19,35 @@
 }
 .glass-card {
   background: rgba(255, 255, 255, 0.05);
-  webkit-backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
+@layer utilities {
+  .rounded-pill {
+    border-radius: 9999px;
+  }
+}
+
 body {
-  background: #1a2228;
+  background: #000000;
+}
+
+.owner-dark {
+  --color-surface: #000000;
+  --color-surface-variant: #111111;
+  --color-surface-container: #0a0a0a;
+  --color-surface-container-low: #050505;
+  --color-surface-container-lowest: #000000;
+  --color-surface-container-high: #1a1a1a;
+  --color-surface-container-highest: #222222;
+  --color-on-surface: #e8ecef;
+  --color-on-surface-variant: #9aabb6;
+  --color-outline: #333333;
+  --color-outline-variant: #444444;
+  --color-background: #000000;
+  --color-primary-container: #111111;
 }
 
 ::selection {
