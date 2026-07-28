@@ -52,7 +52,7 @@ const config: Config = {
         "primary": "#1a2228",
         "error": "#ba1a1a",
         "background": "#000000",
-        "primary-container": "#111111",
+        "primary-container": "#1a1a1a",
         "on-primary-fixed-variant": "#44535c",
         "secondary": "#dba501",
         "on-secondary-fixed": "#2c2100",
