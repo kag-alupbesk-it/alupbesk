@@ -1,4 +1,4 @@
-export default function OwnerLayout({
+export default function ManagerLayout({
   children,
 }: {
   children: React.ReactNode;

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { financialCards, activities } from "../../data/ownerData";
+import { financialCards, activities } from "../../data/managerData";
 
 type RegistrationStatus = "pending" | "approved" | "rejected";
 
@@ -75,7 +75,7 @@ export default function DashboardSection() {
         <section className="bg-primary-container border border-white/10 rounded-xl overflow-hidden">
           <div className="p-6 border-b border-white/10 flex justify-between items-center">
             <h4 className="text-xl font-bold text-white font-headline">Pendaftaran Baru</h4>
-            <button onClick={() => router.push("/owner/users")} className="text-secondary hover:underline text-xs font-bold uppercase tracking-wider">Lihat Semua</button>
+            <button onClick={() => router.push("/manager/users")} className="text-secondary hover:underline text-xs font-bold uppercase tracking-wider">Lihat Semua</button>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-left">

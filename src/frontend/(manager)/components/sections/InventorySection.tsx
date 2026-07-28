@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { inventoryItems as initialItems } from "../../data/ownerData";
+import { inventoryItems as initialItems } from "../../data/managerData";
 
 type InventoryItem = typeof initialItems[0] & { statusColor: string; barColor: string };
 

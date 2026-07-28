@@ -6,14 +6,14 @@ import TopBar from "./TopBar";
 import { useSidebar } from "./SidebarProvider";
 
 const pageTitles: Record<string, string> = {
-  "/owner": "Overview",
-  "/owner/financials": "Financials",
-  "/owner/users": "User Management",
-  "/owner/inventory": "Inventory",
-  "/owner/reports": "Reports",
+  "/manager": "Overview",
+  "/manager/financials": "Financials",
+  "/manager/users": "User Management",
+  "/manager/inventory": "Inventory",
+  "/manager/reports": "Reports",
 };
 
-export default function OwnerShell({ children }: { children: React.ReactNode }) {
+export default function ManagerShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const title = pageTitles[pathname] || "Dashboard";
   const { desktopOpen } = useSidebar();

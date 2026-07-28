@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { users as initialUsers } from "../../data/ownerData";
+import { users as initialUsers } from "../../data/managerData";
 
 type UserData = {
   name: string;

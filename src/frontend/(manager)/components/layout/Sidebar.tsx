@@ -5,18 +5,18 @@ import { usePathname } from "next/navigation";
 import { clsx } from "clsx";
 
 const navItems = [
-  { href: "/owner", label: "Overview", icon: "dashboard" },
-  { href: "/owner/financials", label: "Financials", icon: "payments" },
-  { href: "/owner/users", label: "User Management", icon: "group" },
-  { href: "/owner/inventory", label: "Inventory", icon: "inventory_2" },
-  { href: "/owner/reports", label: "Reports", icon: "assessment" },
+  { href: "/manager", label: "Overview", icon: "dashboard" },
+  { href: "/manager/financials", label: "Financials", icon: "payments" },
+  { href: "/manager/users", label: "User Management", icon: "group" },
+  { href: "/manager/inventory", label: "Inventory", icon: "inventory_2" },
+  { href: "/manager/reports", label: "Reports", icon: "assessment" },
 ];
 
 export default function Sidebar() {
   const pathname = usePathname();
 
   const isActive = (href: string) => {
-    if (href === "/owner") return pathname === "/owner";
+    if (href === "/manager") return pathname === "/manager";
     return pathname.startsWith(href);
   };
 
@@ -56,7 +56,7 @@ export default function Sidebar() {
 
       <div className="px-6 mb-8">
         <Link
-          href="/owner/reports"
+          href="/manager/reports"
           className="w-full py-3 bg-secondary text-on-secondary font-bold rounded-pill flex items-center justify-center gap-2 hover:brightness-110 transition-all shadow-lg shadow-secondary/20 text-sm"
         >
           <span className="material-symbols-outlined text-sm">add_chart</span>
