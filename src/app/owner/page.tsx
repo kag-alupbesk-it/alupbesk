@@ -1,4 +1,4 @@
-import OwnerDashboardPage from "@/features/owner/OwnerDashboardPage";
+import OwnerDashboardPage from "./_components/OwnerDashboardPage";
 
 export const metadata = { title: "Overview | ALUPBESK Owner" };
 

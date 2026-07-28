@@ -1,1 +1,1 @@
-export { default } from "@/features/checkout/CheckoutPage";
+export { default } from "@/frontend/(katalog)/checkout/page";

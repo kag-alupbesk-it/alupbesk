@@ -1,4 +1,4 @@
-import InventoryPage from "@/features/owner/InventoryPage";
+import InventoryPage from "./_components/InventoryPage";
 
 export const metadata = { title: "Inventory | ALUPBESK Owner" };
 

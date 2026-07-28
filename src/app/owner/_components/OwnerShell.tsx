@@ -19,10 +19,9 @@ export default function OwnerShell({ children }: { children: React.ReactNode }) 
   const { desktopOpen } = useSidebar();
 
   return (
-    <div 
+    <div
       className={clsx(
         "flex-1 flex flex-col min-w-0 transition-all duration-300",
-        // Menyesuaikan margin kiri dengan status sidebar desktop
         desktopOpen ? "lg:ml-64" : "lg:ml-0"
       )}
     >

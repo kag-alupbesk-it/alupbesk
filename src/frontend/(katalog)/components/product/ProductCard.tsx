@@ -1,6 +1,6 @@
 "use client";
 import type { Product } from "@/services/catalog";
-import { useCart } from "@/features/cart/CartContext";
+import { useCart } from "@/frontend/(katalog)/checkout/CartContext";
 
 interface ProductCardProps { product: Product; }
 

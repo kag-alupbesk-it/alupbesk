@@ -1,4 +1,4 @@
-import ReportsPage from "@/features/owner/ReportsPage";
+import ReportsPage from "./_components/ReportsPage";
 
 export const metadata = { title: "Reports | ALUPBESK Owner" };
 
