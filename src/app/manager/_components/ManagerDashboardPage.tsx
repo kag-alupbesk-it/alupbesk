@@ -47,7 +47,7 @@ const activities = [
   { time: "Kemarin, 17:15", text: "Direktur: Mengunduh Laporan Keuangan Q3" },
 ];
 
-export default function OwnerDashboardPage() {
+export default function ManagerDashboardPage() {
   const router = useRouter();
   const [registrations, setRegistrations] = useState(initialRegistrations);
 
@@ -200,7 +200,7 @@ export default function OwnerDashboardPage() {
               Pendaftaran Baru
             </h4>
             <button
-              onClick={() => router.push("/owner/users")}
+              onClick={() => router.push("/manager/users")}
               className="text-secondary hover:underline text-[10px] sm:text-xs font-bold uppercase tracking-wider"
             >
               Lihat Semua

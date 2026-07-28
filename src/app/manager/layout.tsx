@@ -1,21 +1,21 @@
 import Sidebar from "./_components/Sidebar";
 import { SidebarProvider } from "./_components/SidebarProvider";
-import OwnerShell from "./_components/OwnerShell";
+import ManagerShell from "./_components/ManagerShell";
 
 export const metadata = {
-  title: "Owner Dashboard | ALUPBESK",
+  title: "Manager Dashboard | ALUPBESK",
 };
 
-export default function OwnerLayout({
+export default function ManagerLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
   return (
     <SidebarProvider>
-      <div className="owner-dark flex min-h-screen bg-primary-container">
+      <div className="manager-dark flex min-h-screen bg-primary-container">
         <Sidebar />
-        <OwnerShell>{children}</OwnerShell>
+        <ManagerShell>{children}</ManagerShell>
       </div>
     </SidebarProvider>
   );

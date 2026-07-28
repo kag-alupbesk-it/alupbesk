@@ -34,7 +34,7 @@ body {
   background: #000000;
 }
 
-.owner-dark {
+.manager-dark {
   --color-surface: #0a0a0a;
   --color-surface-variant: #141414;
   --color-surface-container: #0f0f0f;

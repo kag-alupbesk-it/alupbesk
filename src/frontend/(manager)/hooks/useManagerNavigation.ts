@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useCallback } from "react";
 
-export function useOwnerNavigation() {
+export function useManagerNavigation() {
   const router = useRouter();
 
   const goTo = useCallback((path: string) => {

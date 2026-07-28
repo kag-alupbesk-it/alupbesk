@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { statements, expenses } from "../../data/ownerData";
+import { statements, expenses } from "../../data/managerData";
 
 const metrics = [
   { label: "Net Revenue", value: "$4,282,190", sub: "+12.4% vs last quarter", subColor: "text-secondary", icon: "trending_up" },
