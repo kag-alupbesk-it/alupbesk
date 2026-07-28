@@ -1,6 +1,6 @@
 "use client";
 
-import { partners } from "@/features/home/data/partners";
+import { partners } from "./data";
 
 // Function untuk menampilkan logo mitra yang bergerak otomatis.
 export function PartnerCarousel() {

@@ -1,7 +1,7 @@
 "use client";
 
 import { products } from "@/services/catalog";
-import { ProductCard } from "@/features/catalog/components/ProductCard";
+import { ProductCard } from "../product/ProductCard";
 
 const bestSellerProducts = products.filter((p) => p.bestSeller);
 

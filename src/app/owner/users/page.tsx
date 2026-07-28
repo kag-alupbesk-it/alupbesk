@@ -1,4 +1,4 @@
-import UsersPage from "@/features/owner/UsersPage";
+import UsersPage from "./_components/UsersPage";
 
 export const metadata = { title: "User Management | ALUPBESK Owner" };
 

@@ -6,7 +6,7 @@ import type { Product } from "@/services/catalog";
 import { catalogApi } from "@/services/api";
 import { useDebounce } from "../../hooks/useDebounce";
 import BestSellerSection from "./BestSeller";
-import { ProductCard } from "@/features/catalog/components/ProductCard";
+import { ProductCard } from "../product/ProductCard";
 
 export default function KatalogSection() {
   const router = useRouter();

@@ -1,6 +1,6 @@
-import Sidebar from "@/(owner)/components/Sidebar";
-import { SidebarProvider } from "@/(owner)/components/SidebarProvider";
-import OwnerShell from "@/(owner)/components/OwnerShell";
+import Sidebar from "./_components/Sidebar";
+import { SidebarProvider } from "./_components/SidebarProvider";
+import OwnerShell from "./_components/OwnerShell";
 
 export const metadata = {
   title: "Owner Dashboard | ALUPBESK",

@@ -1,4 +1,4 @@
-import FinancialsPage from "@/features/owner/FinancialsPage";
+import FinancialsPage from "./_components/FinancialsPage";
 
 export const metadata = { title: "Financials | ALUPBESK Owner" };
 
