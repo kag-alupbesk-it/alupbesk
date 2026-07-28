@@ -35,19 +35,19 @@ body {
 }
 
 .owner-dark {
-  --color-surface: #000000;
-  --color-surface-variant: #111111;
-  --color-surface-container: #0a0a0a;
-  --color-surface-container-low: #050505;
-  --color-surface-container-lowest: #000000;
+  --color-surface: #0a0a0a;
+  --color-surface-variant: #141414;
+  --color-surface-container: #0f0f0f;
+  --color-surface-container-low: #0a0a0a;
+  --color-surface-container-lowest: #050505;
   --color-surface-container-high: #1a1a1a;
   --color-surface-container-highest: #222222;
   --color-on-surface: #e8ecef;
   --color-on-surface-variant: #9aabb6;
-  --color-outline: #333333;
-  --color-outline-variant: #444444;
+  --color-outline: #2a2a2a;
+  --color-outline-variant: #3a3a3a;
   --color-background: #000000;
-  --color-primary-container: #111111;
+  --color-primary-container: #1a1a1a;
 }
 
 ::selection {
@@ -99,6 +99,11 @@ body {
   to { transform: scaleX(0); }
 }
 
+@keyframes slideRightIn {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(0); }
+}
+
 .animate-fadeIn { animation: popupOverlayIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
 .animate-fadeOut { animation: popupOverlayOut 0.22s ease-in forwards; }
 .animate-scaleIn { animation: popupBoxIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
@@ -106,8 +111,9 @@ body {
 .animate-slideDownFromTop { animation: slideDownFromTop 0.45s cubic-bezier(0.34, 1.4, 0.64, 1) forwards; }
 .animate-slideUpToTop { animation: slideUpToTop 0.25s ease-in forwards; }
 .animate-progressShrink { animation: progressShrink 5s linear forwards; }
+.animate-slideRight { animation: slideRightIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
 
 @media (prefers-reduced-motion: reduce) {
   .partner-track, .animate-fadeIn, .animate-fadeOut, .animate-scaleIn, .animate-scaleOut,
-  .animate-slideDownFromTop, .animate-slideUpToTop, .animate-progressShrink { animation: none; }
+  .animate-slideDownFromTop, .animate-slideUpToTop, .animate-progressShrink, .animate-slideRight { animation: none; }
 }

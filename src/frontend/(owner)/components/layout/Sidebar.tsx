@@ -21,7 +21,7 @@ export default function Sidebar() {
   };
 
   return (
-    <aside className="w-64 h-screen fixed left-0 top-0 bg-surface border-r border-outline/20 shadow-2xl z-50 flex flex-col py-10">
+    <aside className="w-64 h-screen fixed left-0 top-0 bg-primary-container border-r border-white/10 shadow-2xl z-50 flex flex-col py-10">
       <div className="px-8 mb-12">
         <h1 className="text-2xl font-extrabold text-secondary tracking-tighter uppercase font-headline">
           ALUPBESK
@@ -64,7 +64,7 @@ export default function Sidebar() {
         </Link>
       </div>
 
-      <div className="mt-auto px-4 space-y-1 border-t border-outline/50 pt-6">
+      <div className="mt-auto px-4 space-y-1 border-t border-white/10 pt-6">
         <Link
           href="#"
           className="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:text-white transition-colors text-sm"

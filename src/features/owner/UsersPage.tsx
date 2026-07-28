@@ -136,9 +136,9 @@ export default function UsersPage() {
   };
 
   return (
-    <div className="p-10 flex-1">
+    <div className="p-4 md:p-10 flex-1">
       {/* Page Header */}
-      <div className="flex justify-between items-start mb-10">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-4 mb-8 sm:mb-10">
         <div>
           <h3 className="text-3xl font-bold text-white mb-2 font-headline tracking-tight">
             User Management
@@ -159,7 +159,7 @@ export default function UsersPage() {
 
       {/* Filter Grid */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-10">
-        <div className="md:col-span-2 bg-surface border border-outline p-4 rounded-xl flex items-center gap-4">
+        <div className="md:col-span-2 bg-primary-container border border-white/10 p-4 rounded-xl flex items-center gap-4">
           <span className="material-symbols-outlined text-secondary">
             filter_list
           </span>
@@ -175,7 +175,7 @@ export default function UsersPage() {
           />
         </div>
         <div
-          className="bg-surface border border-outline p-4 rounded-xl flex items-center justify-between cursor-pointer hover:border-secondary/50 transition-colors relative"
+          className="bg-primary-container border border-white/10 p-4 rounded-xl flex items-center justify-between cursor-pointer hover:border-secondary/50 transition-colors relative"
           onClick={() => setShowRoleDropdown(!showRoleDropdown)}
         >
           <span className="text-on-surface-variant text-sm font-semibold">
@@ -185,7 +185,7 @@ export default function UsersPage() {
             expand_more
           </span>
           {showRoleDropdown && (
-            <div className="absolute top-full left-0 right-0 mt-2 bg-surface border border-outline rounded-xl shadow-xl z-10 overflow-hidden">
+            <div className="absolute top-full left-0 right-0 mt-2 bg-primary-container border border-white/10 rounded-xl shadow-xl z-10 overflow-hidden">
               {["All", "Owner", "Admin", "Staff"].map((role) => (
                 <button
                   key={role}
@@ -205,7 +205,7 @@ export default function UsersPage() {
             </div>
           )}
         </div>
-        <div className="bg-surface border border-outline p-4 rounded-xl flex items-center justify-between cursor-pointer hover:border-secondary/50 transition-colors">
+        <div className="bg-primary-container border border-white/10 p-4 rounded-xl flex items-center justify-between cursor-pointer hover:border-secondary/50 transition-colors">
           <span className="text-on-surface-variant text-sm font-semibold">
             Dept: Manufacturing
           </span>
@@ -216,15 +216,16 @@ export default function UsersPage() {
       </div>
 
       {/* User Directory Table */}
-      <div className="bg-surface border border-outline rounded-2xl overflow-hidden shadow-xl">
+      <div className="bg-primary-container border border-white/10 rounded-2xl overflow-hidden shadow-xl">
+        <div className="overflow-x-auto">
         <table className="w-full text-left border-collapse">
           <thead>
-            <tr className="border-b border-outline bg-surface-variant/30">
+            <tr className="border-b border-white/10 bg-white/[0.03]">
               {["Employee", "Department", "Role", "Status", "Actions"].map(
                 (h) => (
                   <th
                     key={h}
-                    className={`px-8 py-5 font-bold text-xs text-on-surface-variant uppercase tracking-widest font-headline ${
+                    className={`px-4 md:px-8 py-5 font-bold text-xs text-on-surface-variant uppercase tracking-widest font-headline ${
                       h === "Actions" ? "text-right" : ""
                     }`}
                   >
@@ -234,13 +235,13 @@ export default function UsersPage() {
               )}
             </tr>
           </thead>
-          <tbody className="divide-y divide-outline/30">
+          <tbody className="divide-y divide-white/5">
             {paginatedUsers.map((u, i) => (
               <tr
                 key={u.email}
                 className="hover:bg-surface-variant/20 transition-colors"
               >
-                <td className="px-8 py-5">
+                <td className="px-4 md:px-8 py-5">
                   <div className="flex items-center gap-4">
                     <div className="w-10 h-10 rounded-lg bg-background border border-outline flex items-center justify-center text-secondary">
                       <span className="material-symbols-outlined">
@@ -255,17 +256,17 @@ export default function UsersPage() {
                     </div>
                   </div>
                 </td>
-                <td className="px-8 py-5 text-sm text-on-surface-variant">
+                <td className="px-4 md:px-8 py-5 text-sm text-on-surface-variant">
                   {u.dept}
                 </td>
-                <td className="px-8 py-5">
+                <td className="px-4 md:px-8 py-5">
                   <span
                     className={`px-3 py-1 rounded-pill text-[11px] font-bold uppercase tracking-wider ${u.roleColor}`}
                   >
                     {u.role}
                   </span>
                 </td>
-                <td className="px-8 py-5">
+                <td className="px-4 md:px-8 py-5">
                   <span
                     className={`flex items-center text-xs font-bold ${u.statusColor}`}
                   >
@@ -279,7 +280,7 @@ export default function UsersPage() {
                     {u.status}
                   </span>
                 </td>
-                <td className="px-8 py-5 text-right">
+                <td className="px-4 md:px-8 py-5 text-right">
                   <div className="flex items-center justify-end gap-1">
                     <button
                       onClick={() => handleOpenEdit(i)}
@@ -301,10 +302,11 @@ export default function UsersPage() {
             ))}
           </tbody>
         </table>
+        </div>
       </div>
 
       {/* Pagination */}
-      <div className="flex justify-between items-center mt-10 text-on-surface-variant text-sm">
+      <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mt-8 text-on-surface-variant text-sm">
         <p className="font-medium">
           Showing <span className="text-white">{filteredUsers.length > 0 ? (page - 1) * ITEMS_PER_PAGE + 1 : 0} to {Math.min(page * ITEMS_PER_PAGE, filteredUsers.length)}</span> of{" "}
           <span className="text-white">{filteredUsers.length}</span> employees
@@ -384,7 +386,7 @@ export default function UsersPage() {
             <div className="flex gap-3 mt-8">
               <button
                 onClick={() => setShowAddModal(false)}
-                className="flex-1 py-3 border border-outline rounded-pill text-on-surface-variant font-bold text-sm hover:bg-surface-variant transition-colors"
+                className="flex-1 py-3 border border-white/10 rounded-pill text-on-surface-variant font-bold text-sm hover:bg-white/5 transition-colors"
               >
                 Batal
               </button>
@@ -453,7 +455,7 @@ export default function UsersPage() {
             <div className="flex gap-3 mt-8">
               <button
                 onClick={() => setShowEditModal(false)}
-                className="flex-1 py-3 border border-outline rounded-pill text-on-surface-variant font-bold text-sm hover:bg-surface-variant transition-colors"
+                className="flex-1 py-3 border border-white/10 rounded-pill text-on-surface-variant font-bold text-sm hover:bg-white/5 transition-colors"
               >
                 Batal
               </button>
