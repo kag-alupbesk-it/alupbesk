@@ -1,7 +1,9 @@
 "use client";
 
 import { usePathname } from "next/navigation";
+import { clsx } from "clsx";
 import TopBar from "./TopBar";
+import { useSidebar } from "./SidebarProvider";
 
 const pageTitles: Record<string, string> = {
   "/owner": "Overview",
@@ -14,9 +16,16 @@ const pageTitles: Record<string, string> = {
 export default function OwnerShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const title = pageTitles[pathname] || "Dashboard";
+  const { desktopOpen } = useSidebar();
 
   return (
-    <div className="lg:ml-64 flex-1 flex flex-col min-w-0">
+    <div 
+      className={clsx(
+        "flex-1 flex flex-col min-w-0 transition-all duration-300",
+        // Menyesuaikan margin kiri dengan status sidebar desktop
+        desktopOpen ? "lg:ml-64" : "lg:ml-0"
+      )}
+    >
       <TopBar title={title} />
       <main className="flex-1 pt-12 lg:pt-16">{children}</main>
     </div>

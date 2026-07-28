@@ -9,14 +9,28 @@ interface TopBarProps {
 }
 
 export default function TopBar({ title, tabs }: TopBarProps) {
-  const { toggle } = useSidebar();
+  const { toggle, toggleDesktop, desktopOpen } = useSidebar();
 
   return (
-    <header className="fixed top-0 left-0 right-0 lg:left-64 z-40 bg-primary-container/80 backdrop-blur-md border-b border-white/10 flex items-center h-12 lg:h-16">
+    <header className={clsx(
+      "fixed top-0 right-0 z-40 bg-primary-container/80 backdrop-blur-md border-b border-white/10 flex items-center h-12 lg:h-16 transition-all duration-300",
+      desktopOpen ? "left-0 lg:left-64" : "left-0"
+    )}>
+      {/* Mobile Menu Button */}
       <button onClick={toggle} className="lg:hidden flex items-center justify-center w-12 h-12 shrink-0 text-on-surface-variant hover:text-white transition-colors">
         <span className="material-symbols-outlined text-[22px]">menu</span>
       </button>
+
+      {/* Desktop Menu Button - Perhatikan penambahan z-[60] */}
+      <button 
+        onClick={toggleDesktop} 
+        className="hidden lg:flex items-center justify-center w-12 h-12 lg:h-16 shrink-0 text-on-surface-variant hover:text-white transition-colors relative z-[60] cursor-pointer"
+      >
+        <span className="material-symbols-outlined text-[22px]">{desktopOpen ? 'menu_open' : 'menu'}</span>
+      </button>
+
       <h2 className="text-sm lg:text-lg font-bold text-white font-headline truncate pr-4">{title}</h2>
+      
       <div className="ml-auto flex items-center gap-2 lg:gap-4 pr-3 lg:pr-6">
         <div className="relative group hidden sm:block">
           <span className="material-symbols-outlined absolute left-2.5 top-1/2 -translate-y-1/2 text-on-surface-variant text-[18px] group-focus-within:text-secondary transition-colors">
@@ -39,7 +53,7 @@ export default function TopBar({ title, tabs }: TopBarProps) {
             calendar_today
           </span>
         </button>
-        <div className="w-7 h-7 lg:w-8 lg:h-8 rounded-full overflow-hidden border-2 border-outline hover:border-secondary transition-colors cursor-pointer">
+        <div className="w-7 h-7 lg:w-8 lg:h-8 rounded-full overflow-hidden border-2 border-outline hover:border-secondary transition-colors cursor-pointer relative z-[60]">
           <div className="w-full h-full bg-surface-variant flex items-center justify-center">
             <span className="material-symbols-outlined text-secondary text-xs lg:text-sm">
               person
