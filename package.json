@@ -6,9 +6,9 @@
         "dev": "next dev",
         "build": "next build",
         "start": "next start",
-    "lint": "eslint",
-    "dev:api": "tsx src/backend/server.ts",
-    "dev:all": "npm run dev & npm run dev:api"
+        "lint": "eslint",
+        "dev:api": "tsx src/backend/server.ts",
+        "dev:all": "npm run dev & npm run dev:api"
     },
     "dependencies": {
         "@hookform/resolvers": "^5.4.0",
@@ -22,6 +22,7 @@
         "react": "19.2.4",
         "react-dom": "19.2.4",
         "react-hook-form": "^7.82.0",
+        "swr": "^2.4.2",
         "zod": "^4.4.3"
     },
     "devDependencies": {

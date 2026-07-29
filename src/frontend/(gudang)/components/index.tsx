@@ -1,0 +1,1 @@
+export { GudangSection } from "./gudang";

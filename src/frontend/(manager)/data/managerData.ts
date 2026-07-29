@@ -1,25 +1,7 @@
 export const financialCards = [
-  {
-    label: "Total Pendapatan",
-    value: "Rp 4.25M",
-    change: "+12.4%",
-    positive: true,
-    bars: [2, 4, 3, 5, 4],
-  },
-  {
-    label: "Biaya Operasional",
-    value: "Rp 1.12M",
-    change: "-2.1%",
-    positive: false,
-    bars: [4, 6, 3, 2, 5],
-  },
-  {
-    label: "Laba Bersih",
-    value: "Rp 3.13M",
-    change: "+8.7%",
-    positive: true,
-    bars: [3, 5, 6, 4, 8],
-  },
+  { label: "Total Pendapatan", value: "Rp 0", change: "0%", positive: true, bars: [0, 0, 0, 0, 0] },
+  { label: "Biaya Operasional", value: "Rp 0", change: "0%", positive: true, bars: [0, 0, 0, 0, 0] },
+  { label: "Laba Bersih", value: "Rp 0", change: "0%", positive: true, bars: [0, 0, 0, 0, 0] },
 ];
 
 export const registrations = [
@@ -29,15 +11,7 @@ export const registrations = [
 ];
 
 export const activities = [
-  {
-    time: "09:45 WIB",
-    text: "Admin Budi: Update harga T-Slot 4040",
-    tag: "Inventory",
-    highlight: true,
-  },
-  { time: "08:30 WIB", text: "Staf Gudang Andi: Mengeluarkan 50 unit Linear Rail" },
-  { time: "07:00 WIB", text: "Sistem: Backup data selesai", system: true },
-  { time: "Kemarin, 17:15", text: "Direktur: Mengunduh Laporan Keuangan Q3" },
+  { time: "--:-- WIB", text: "Belum ada aktivitas", tag: "System", highlight: false, system: true },
 ];
 
 export const users = [
@@ -119,15 +93,13 @@ export const inventoryItems = [
 ];
 
 export const statements = [
-  { period: "Q3 2024 Interim", revenue: "$1,450,200", profit: "$412,000", margin: "28.4%" },
-  { period: "August 2024 P&L", revenue: "$485,000", profit: "$138,000", margin: "28.4%" },
-  { period: "July 2024 P&L", revenue: "$462,100", profit: "$129,400", margin: "28.0%" },
+  { period: "Q4 2024 Interim", revenue: "$0", profit: "$0", margin: "0%" },
 ];
 
 export const expenses = [
-  { label: "Logistics", value: "$661,470", pct: 60, color: "bg-secondary" },
-  { label: "Production", value: "$330,735", pct: 25, color: "bg-on-surface-variant" },
-  { label: "Payroll", value: "$110,245", pct: 15, color: "bg-outline" },
+  { label: "Logistics", value: "$0", pct: 0, color: "bg-secondary" },
+  { label: "Production", value: "$0", pct: 0, color: "bg-on-surface-variant" },
+  { label: "Payroll", value: "$0", pct: 0, color: "bg-outline" },
 ];
 
 export const suppliers = [
