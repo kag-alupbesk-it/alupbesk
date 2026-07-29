@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { clsx } from "clsx";
+import { useSidebar } from "./SidebarProvider";
 import * as styles from "./style";
 
 const navItems = [
@@ -15,14 +16,22 @@ const navItems = [
 
 export default function Sidebar() {
   const pathname = usePathname();
+  const { open, close, desktopOpen } = useSidebar();
 
   const isActive = (href: string) => {
     if (href === "/manager") return pathname === "/manager";
     return pathname.startsWith(href);
   };
 
-  return (
-    <aside className={styles.aside}>
+  const sidebarContent = (
+    <aside
+      className={clsx(
+        "w-64 h-screen fixed left-0 top-0 bg-primary-container border-r border-outline/30 shadow-2xl z-50 flex flex-col py-10 max-lg:shadow-none transition-all duration-300",
+        desktopOpen
+          ? "lg:translate-x-0"
+          : "lg:-translate-x-full lg:pointer-events-none lg:opacity-0"
+      )}
+    >
       <div className={styles.brand}>
         <h1 className={styles.brandTitle}>ALUPBESK</h1>
         <p className={styles.brandSub}>Industrial Precision</p>
@@ -35,6 +44,7 @@ export default function Sidebar() {
             <Link
               key={item.href}
               href={item.href}
+              onClick={close}
               className={clsx(styles.navLink, active ? styles.navLinkActive : styles.navLinkInactive)}
             >
               <span className={styles.navIcon}>{item.icon}</span>
@@ -45,22 +55,39 @@ export default function Sidebar() {
       </nav>
 
       <div className={styles.ctaWrapper}>
-        <Link href="/manager/reports" className={styles.ctaLink}>
+        <Link href="/manager/reports" onClick={close} className={styles.ctaLink}>
           <span className={styles.ctaIcon}>add_chart</span>
           Create Report
         </Link>
       </div>
 
       <div className={styles.footer}>
-        <Link href="#" className={styles.footerLink}>
+        <Link href="#" onClick={close} className={styles.footerLink}>
           <span className={styles.footerIcon}>settings</span>
           <span>Settings</span>
         </Link>
-        <Link href="/" className={styles.footerLink}>
+        <Link href="/" onClick={close} className={styles.footerLink}>
           <span className={styles.footerIcon}>logout</span>
           <span>Logout</span>
         </Link>
       </div>
     </aside>
+  );
+
+  return (
+    <>
+      {/* Desktop view */}
+      <div className="hidden lg:block">{sidebarContent}</div>
+      
+      {/* Mobile view with backdrop drawer */}
+      {open && (
+        <div className="lg:hidden fixed inset-0 z-[55] animate-fadeIn">
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={close} />
+          <div className="absolute left-0 top-0 h-full w-64 animate-slideRight">
+            {sidebarContent}
+          </div>
+        </div>
+      )}
+    </>
   );
 }

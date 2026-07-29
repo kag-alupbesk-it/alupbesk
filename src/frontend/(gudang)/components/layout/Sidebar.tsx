@@ -19,7 +19,7 @@ export default function Sidebar() {
   const sidebarContent = (
     <aside
       className={clsx(
-        "w-64 h-screen fixed left-0 top-0 bg-primary-container border-r border-white/10 shadow-2xl z-50 flex flex-col py-6 lg:py-10 max-lg:shadow-none transition-all duration-300",
+        "w-64 h-screen fixed left-0 top-0 bg-primary-container border-r border-outline/30 shadow-2xl z-50 flex flex-col py-6 lg:py-10 max-lg:shadow-none transition-all duration-300",
         desktopOpen
           ? "lg:translate-x-0"
           : "lg:-translate-x-full lg:pointer-events-none lg:opacity-0"
@@ -44,7 +44,7 @@ export default function Sidebar() {
               "flex items-center gap-3 px-3 lg:px-4 py-2.5 lg:py-3 rounded-lg transition-all text-xs lg:text-sm",
               isActive(item.href)
                 ? "bg-secondary text-on-secondary font-bold shadow-lg shadow-secondary/20"
-                : "text-on-surface-variant hover:text-white hover:bg-surface-variant"
+                : "text-on-surface-variant hover:text-on-surface hover:bg-surface-variant"
             )}
           >
             <span className="material-symbols-outlined text-[18px] lg:text-[20px]">
