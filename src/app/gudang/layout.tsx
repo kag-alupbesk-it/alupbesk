@@ -1,6 +1,6 @@
-import Sidebar from "./_components/Sidebar";
-import { SidebarProvider } from "./_components/SidebarProvider";
-import GudangShell from "./_components/GudangShell";
+import { SidebarProvider } from "@/frontend/(gudang)/components/layout/SidebarProvider";
+import Sidebar from "@/frontend/(gudang)/components/layout/Sidebar";
+import GudangShell from "@/frontend/(gudang)/components/layout/GudangShell";
 
 export const metadata = {
   title: "Gudang Inventaris | ALUPBESK",

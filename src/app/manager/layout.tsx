@@ -1,6 +1,4 @@
-import Sidebar from "./_components/Sidebar";
-import { SidebarProvider } from "./_components/SidebarProvider";
-import ManagerShell from "./_components/ManagerShell";
+import { Sidebar, SidebarProvider, ManagerShell } from "@/frontend/(manager)/components/layout";
 
 export const metadata = {
   title: "Manager Dashboard | ALUPBESK",

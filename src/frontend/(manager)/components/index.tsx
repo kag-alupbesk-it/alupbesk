@@ -1,14 +1,10 @@
 "use client";
 
-import { useState } from "react";
 import { Sidebar } from "./layout";
-import {
-  DashboardSection,
-  FinancialsSection,
-  UsersSection,
-  InventorySection,
-  ReportsSection,
-} from "./sections";
+import { DashboardSection } from "./dashboard";
+import { FinancialsSection } from "./financials";
+import { UsersSection } from "./users";
+import { InventorySection } from "./inventory";
 
 export default function Components() {
   return (
