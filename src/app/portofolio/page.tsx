@@ -1,1 +1,1 @@
-export { default } from "@/frontend/(katalog)/portofolio/page";
+export { default } from "@/frontend/(pelanggan)/components/portfolio";

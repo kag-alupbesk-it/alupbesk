@@ -1,1 +1,1 @@
-export { default } from "@/frontend/(katalog)/keranjang/page";
+export { CartSection as default } from "@/frontend/(pelanggan)/components/cart";
