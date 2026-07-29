@@ -1,6 +1,6 @@
 "use client";
 
-import { CartProvider } from "@/frontend/(katalog)/checkout/CartContext";
+import { CartProvider } from "@/frontend/(pelanggan)/hooks/useCart";
 import { ThemeProvider } from "@/app/ThemeContext";
 
 export default function Providers({ children }: { children: React.ReactNode }) {
