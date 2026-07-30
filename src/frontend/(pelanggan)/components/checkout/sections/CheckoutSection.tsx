@@ -26,9 +26,9 @@ function VariantBadges({
       {Object.entries(variants).map(([k, v]) => (
         <span
           key={k}
-          className="inline-flex items-center gap-1 bg-white/10 text-white/70 text-[11px] px-2 py-0.5 rounded-md"
+          className="inline-flex items-center gap-1 bg-surface-container text-on-surface/70 text-[11px] px-2 py-0.5 rounded-md"
         >
-          <span className="text-white/40">{k}:</span> {v}
+          <span className="text-on-surface/40">{k}:</span> {v}
         </span>
       ))}
     </div>
@@ -47,36 +47,36 @@ function OrderItem({
   const p = item.product;
 
   return (
-    <div className="bg-white/5 rounded-xl border border-white/10 overflow-hidden">
+    <div className="bg-surface-container rounded-xl border border-outline/20 overflow-hidden">
       <button
         onClick={onToggle}
-        className="w-full flex gap-4 p-4 text-left hover:bg-white/5 transition-colors"
+        className="w-full flex gap-4 p-4 text-left hover:bg-surface-container-high transition-colors"
       >
         <div
           className="w-16 h-16 rounded-lg bg-cover bg-center flex-shrink-0"
           style={{ backgroundImage: `url('${p.img}')` }}
         />
         <div className="flex-1 min-w-0">
-          <h4 className="text-label-sm font-bold text-white truncate">
+          <h4 className="text-label-sm font-bold text-on-surface truncate">
             {p.title}
           </h4>
           <VariantBadges variants={item.selectedVariants} />
-          <p className="text-[12px] text-white/50 mt-1">
+          <p className="text-[12px] text-on-surface/50 mt-1">
             {formatPrice(p.price)} x{item.quantity}
           </p>
         </div>
         <div className="flex flex-col items-end justify-between flex-shrink-0">
-          <span className="text-label-sm font-bold text-white">
+          <span className="text-label-sm font-bold text-on-surface">
             {formatPrice(p.price * item.quantity)}
           </span>
-          <span className="material-symbols-outlined text-[18px] text-white/40 transition-transform">
+          <span className="material-symbols-outlined text-[18px] text-on-surface/40 transition-transform">
             {isExpanded ? "expand_less" : "expand_more"}
           </span>
         </div>
       </button>
 
       {isExpanded && (
-        <div className="px-4 pb-4 border-t border-white/10">
+        <div className="px-4 pb-4 border-t border-outline/20">
           <div className="pt-4">
             <div
               className="w-full aspect-video rounded-lg bg-cover bg-center mb-4"
@@ -84,7 +84,7 @@ function OrderItem({
             />
             <div className="flex items-center gap-3 mb-3">
               <span
-                className={`${p.badgeBg} text-white px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider`}
+                className={`${p.badgeBg} text-on-surface px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider`}
               >
                 {p.badge}
               </span>
@@ -92,38 +92,38 @@ function OrderItem({
                 {p.category}
               </span>
             </div>
-            <h4 className="text-headline-h3 font-bold text-white mb-2">
+            <h4 className="text-headline-h3 font-bold text-on-surface mb-2">
               {p.title}
             </h4>
-            <p className="text-body-sm text-white/60 mb-4">{p.desc}</p>
+            <p className="text-body-sm text-on-surface/60 mb-4">{p.desc}</p>
 
             <div className="grid grid-cols-2 gap-3 mb-4">
-              <div className="bg-white/5 rounded-lg p-3">
-                <span className="text-[11px] text-white/40 block mb-1">
+              <div className="bg-surface-container rounded-lg p-3">
+                <span className="text-[11px] text-on-surface/40 block mb-1">
                   Harga Satuan
                 </span>
                 <span className="text-label-sm font-bold text-secondary">
                   {formatPrice(p.price)}
                 </span>
               </div>
-              <div className="bg-white/5 rounded-lg p-3">
-                <span className="text-[11px] text-white/40 block mb-1">
+              <div className="bg-surface-container rounded-lg p-3">
+                <span className="text-[11px] text-on-surface/40 block mb-1">
                   Stok Tersedia
                 </span>
-                <span className="text-label-sm font-bold text-white">
+                <span className="text-label-sm font-bold text-on-surface">
                   {p.stock} pcs
                 </span>
               </div>
-              <div className="bg-white/5 rounded-lg p-3">
-                <span className="text-[11px] text-white/40 block mb-1">
+              <div className="bg-surface-container rounded-lg p-3">
+                <span className="text-[11px] text-on-surface/40 block mb-1">
                   Jumlah Dipesan
                 </span>
-                <span className="text-label-sm font-bold text-white">
+                <span className="text-label-sm font-bold text-on-surface">
                   {item.quantity} pcs
                 </span>
               </div>
-              <div className="bg-white/5 rounded-lg p-3">
-                <span className="text-[11px] text-white/40 block mb-1">
+              <div className="bg-surface-container rounded-lg p-3">
+                <span className="text-[11px] text-on-surface/40 block mb-1">
                   Subtotal
                 </span>
                 <span className="text-label-sm font-bold text-secondary">
@@ -133,8 +133,8 @@ function OrderItem({
             </div>
 
             {item.selectedVariants && (
-              <div className="bg-white/5 rounded-lg p-3">
-                <span className="text-[11px] text-white/40 block mb-2">
+              <div className="bg-surface-container rounded-lg p-3">
+                <span className="text-[11px] text-on-surface/40 block mb-2">
                   Varian yang Dipilih
                 </span>
                 <div className="flex flex-wrap gap-2">
@@ -214,15 +214,15 @@ export default function CheckoutSection() {
 
   if (items.length === 0) {
     return (
-      <section className="min-h-screen bg-primary pt-28 pb-16">
+      <section className="min-h-screen bg-primary-container pt-28 pb-16">
         <div className="max-w-2xl mx-auto px-6 text-center">
-          <span className="material-symbols-outlined text-[80px] text-white/20 mb-6 block">
+          <span className="material-symbols-outlined text-[80px] text-on-surface/20 mb-6 block">
             shopping_cart
           </span>
-          <h1 className="text-headline-h1 font-headline-h1 text-white mb-4">
+          <h1 className="text-headline-h1 font-headline-h1 text-on-surface mb-4">
             Keranjang Kosong
           </h1>
-          <p className="text-primary-fixed-dim text-body-md mb-8">
+          <p className="text-on-surface-variant text-body-md mb-8">
             Belum ada produk di keranjang. Yuk mulai belanja!
           </p>
           <Link
@@ -238,7 +238,7 @@ export default function CheckoutSection() {
   }
 
   return (
-    <section className="min-h-screen bg-primary pt-28 pb-16">
+    <section className="min-h-screen bg-primary-container pt-28 pb-16">
       <div className="max-w-6xl mx-auto px-6">
         <div className="mb-10">
           <Link
@@ -250,19 +250,19 @@ export default function CheckoutSection() {
             </span>
             Kembali
           </Link>
-          <h1 className="text-headline-h1 font-headline-h1 text-white">
+          <h1 className="text-headline-h1 font-headline-h1 text-on-surface">
             Checkout
           </h1>
         </div>
 
         <div className="grid lg:grid-cols-5 gap-8">
           <div className="lg:col-span-3">
-            <div className="bg-primary-container rounded-2xl border border-white/10 p-6">
+            <div className="bg-primary-container rounded-2xl border border-outline/20 p-6">
               <div className="flex items-center justify-between mb-6">
                 <h3 className="text-label-sm font-bold text-secondary uppercase tracking-widest">
                   Ringkasan Pesanan
                 </h3>
-                <span className="text-label-sm text-white/40">
+                <span className="text-label-sm text-on-surface/40">
                   {items.length} produk
                 </span>
               </div>
@@ -279,8 +279,8 @@ export default function CheckoutSection() {
                   );
                 })}
               </div>
-              <div className="border-t border-white/10 mt-6 pt-6 flex justify-between items-center">
-                <span className="text-body-md font-bold text-white">Total</span>
+              <div className="border-t border-outline/20 mt-6 pt-6 flex justify-between items-center">
+                <span className="text-body-md font-bold text-on-surface">Total</span>
                 <span className="text-headline-h3 font-bold text-secondary">
                   {formatPrice(totalPrice)}
                 </span>
@@ -289,18 +289,18 @@ export default function CheckoutSection() {
           </div>
 
           <div className="lg:col-span-2">
-            <div className="bg-primary-container rounded-2xl border border-white/10 p-8 sticky top-28">
+            <div className="bg-primary-container rounded-2xl border border-outline/20 p-8 sticky top-28">
               <h3 className="text-label-sm font-bold text-secondary uppercase tracking-widest mb-6">
                 Data Diri
               </h3>
               <div className="space-y-5">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                   <label className="block space-y-2">
-                    <span className="text-label-sm font-bold text-white">
+                    <span className="text-label-sm font-bold text-on-surface">
                       Nama Lengkap *
                     </span>
                     <input
-                      className="w-full rounded-xl border border-white/20 bg-white/5 p-4 text-label-sm text-white placeholder:text-white/30 focus:border-secondary focus:ring-1 focus:ring-secondary focus:outline-none"
+                      className="w-full rounded-xl border border-outline/30 bg-surface-container p-4 text-label-sm text-on-surface placeholder:text-on-surface/30 focus:border-secondary focus:ring-1 focus:ring-secondary focus:outline-none"
                       placeholder="John Doe"
                       value={form.name}
                       onChange={(e) =>
@@ -309,11 +309,11 @@ export default function CheckoutSection() {
                     />
                   </label>
                   <label className="block space-y-2">
-                    <span className="text-label-sm font-bold text-white">
+                    <span className="text-label-sm font-bold text-on-surface">
                       Email (Opsional)
                     </span>
                     <input
-                      className="w-full rounded-xl border border-white/20 bg-white/5 p-4 text-label-sm text-white placeholder:text-white/30 focus:border-secondary focus:ring-1 focus:ring-secondary focus:outline-none"
+                      className="w-full rounded-xl border border-outline/30 bg-surface-container p-4 text-label-sm text-on-surface placeholder:text-on-surface/30 focus:border-secondary focus:ring-1 focus:ring-secondary focus:outline-none"
                       placeholder="john@perusahaan.com"
                       type="email"
                       value={form.email}
@@ -324,11 +324,11 @@ export default function CheckoutSection() {
                   </label>
                 </div>
                 <label className="block space-y-2">
-                  <span className="text-label-sm font-bold text-white">
+                  <span className="text-label-sm font-bold text-on-surface">
                     No. Telepon / WhatsApp *
                   </span>
                   <input
-                    className="w-full rounded-xl border border-white/20 bg-white/5 p-4 text-label-sm text-white placeholder:text-white/30 focus:border-secondary focus:ring-1 focus:ring-secondary focus:outline-none"
+                    className="w-full rounded-xl border border-outline/30 bg-surface-container p-4 text-label-sm text-on-surface placeholder:text-on-surface/30 focus:border-secondary focus:ring-1 focus:ring-secondary focus:outline-none"
                     placeholder="+62 812 3456 7890"
                     value={form.phone}
                     onChange={(e) =>
@@ -337,11 +337,11 @@ export default function CheckoutSection() {
                   />
                 </label>
                 <label className="block space-y-2">
-                  <span className="text-label-sm font-bold text-white">
+                  <span className="text-label-sm font-bold text-on-surface">
                     Alamat Pengiriman *
                   </span>
                   <textarea
-                    className="w-full rounded-xl border border-white/20 bg-white/5 p-4 text-label-sm text-white placeholder:text-white/30 focus:border-secondary focus:ring-1 focus:ring-secondary focus:outline-none"
+                    className="w-full rounded-xl border border-outline/30 bg-surface-container p-4 text-label-sm text-on-surface placeholder:text-on-surface/30 focus:border-secondary focus:ring-1 focus:ring-secondary focus:outline-none"
                     placeholder="Alamat lengkap pengiriman..."
                     rows={3}
                     value={form.address}
@@ -351,11 +351,11 @@ export default function CheckoutSection() {
                   />
                 </label>
                 <label className="block space-y-2">
-                  <span className="text-label-sm font-bold text-white">
+                  <span className="text-label-sm font-bold text-on-surface">
                     Catatan (Opsional)
                   </span>
                   <textarea
-                    className="w-full rounded-xl border border-white/20 bg-white/5 p-4 text-label-sm text-white placeholder:text-white/30 focus:border-secondary focus:ring-1 focus:ring-secondary focus:outline-none"
+                    className="w-full rounded-xl border border-outline/30 bg-surface-container p-4 text-label-sm text-on-surface placeholder:text-on-surface/30 focus:border-secondary focus:ring-1 focus:ring-secondary focus:outline-none"
                     placeholder="Catatan tambahan untuk pesanan Anda..."
                     rows={2}
                     value={form.note}
@@ -376,7 +376,7 @@ export default function CheckoutSection() {
                 </span>
                 {isSubmitting ? "Memproses pesanan..." : "Kirim Pesan via WhatsApp"}
               </button>
-              <p className="text-center text-[12px] text-white/40 mt-4">
+              <p className="text-center text-[12px] text-on-surface/40 mt-4">
                 Pesanan Anda akan dikirimkan ke WhatsApp kami.
               </p>
             </div>

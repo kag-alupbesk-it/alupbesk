@@ -11,11 +11,11 @@ export function CatalogPreview() {
     catalogApi.getProducts().then(setCatalogProducts).catch(() => setCatalogProducts(products));
   }, []);
   return (
-    <section className="py-section-gap-desktop bg-primary" id="katalog">
+    <section className="py-section-gap-desktop bg-primary-container" id="katalog">
       <div className="max-w-container-max mx-auto px-margin-x-mobile md:px-margin-x-desktop">
         <span className="text-secondary font-eyebrow text-eyebrow">KATALOG PRODUK</span>
         <div className="mb-8 mt-4 flex flex-wrap items-end justify-between gap-4">
-          <h2 className="text-headline-h1 font-headline-h1 text-white">
+          <h2 className="text-headline-h1 font-headline-h1 text-on-surface">
             Komponen Presisi untuk Konstruksi Unggul
           </h2>
           <Link

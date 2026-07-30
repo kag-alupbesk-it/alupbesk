@@ -24,24 +24,24 @@ export default function ServiceSelector({
           className={`${styles.service} ${
             form.layanan === service.title
               ? "border-secondary bg-secondary/10"
-              : "border-white/10 bg-primary-container hover:border-white/25"
+              : "border-outline/20 bg-primary-container hover:border-outline"
           }`}
         >
           <span
             className={`material-symbols-outlined text-[24px] mb-2 block ${
               form.layanan === service.title
                 ? "text-secondary"
-                : "text-white/40"
+                : "text-on-surface/40"
             }`}
           >
             {service.icon}
           </span>
 
-          <p className="text-[13px] font-bold text-white mb-1">
+          <p className="text-[13px] font-bold text-on-surface mb-1">
             {service.title}
           </p>
 
-          <p className="text-[11px] text-white/40">
+          <p className="text-[11px] text-on-surface/40">
             {service.desc}
           </p>
         </button>

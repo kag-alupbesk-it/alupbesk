@@ -1,7 +1,7 @@
 export default function HeroSection() {
   return (
     <section
-      className="relative min-h-screen flex items-center pt-20 bg-primary overflow-hidden"
+      className="relative min-h-screen flex items-center pt-20 bg-primary-container overflow-hidden"
       id="beranda"
     >
       <div className="absolute inset-0 opacity-40">
@@ -12,15 +12,15 @@ export default function HeroSection() {
               "url('https://lh3.googleusercontent.com/aida-public/AB6AXuAF01DjQuzxqehDWahuPf_aFZ3DcXxh2BQCZ6HnCpt0_6BjRemnRnCOreO2TuteIan0mTHZDXWotXGPoHKMVkicB5M76tANcB8cictuFOPGDHTtjt4X50Klwc7yOeYbxWSeeQhk2awTZI3kVF80cvuF_fo60X4dAZeiHPA-U-2pkWgj2_SYaqTqgKLwGjJ1hjgIBqe1Nu9AVSLCoCEbRxMKYknt41vggriwhwoIgYvhxTnUvHQZ495EOROjUTitJHD1WSaQZeQs1vk')",
           }}
         ></div>
-        <div className="absolute inset-0 bg-gradient-to-r from-primary via-primary/80 to-transparent"></div>
+        <div className="absolute inset-0 bg-gradient-to-r from-primary-container via-primary-container/80 to-transparent"></div>
       </div>
       <div className="relative z-10 max-w-container-max mx-auto px-margin-x-mobile md:px-margin-x-desktop grid lg:grid-cols-2 gap-12 items-center">
         <div className="space-y-8">
-          <h1 className="text-display-hero-mobile md:text-display-hero font-display-hero text-white leading-tight">
+          <h1 className="text-display-hero-mobile md:text-display-hero font-display-hero text-on-surface leading-tight">
             Solusi Produk Aluminium &amp; Komponen Industrial{" "}
             <span className="text-secondary">Terpercaya</span>
           </h1>
-          <p className="text-primary-fixed-dim text-body-lg max-w-xl">
+          <p className="text-on-surface-variant text-body-lg max-w-xl">
             Menyediakan material aluminium berkualitas tinggi dan komponen
             industri presisi untuk mendukung akselerasi produksi bisnis Anda di
             seluruh Indonesia.
@@ -36,7 +36,7 @@ export default function HeroSection() {
               </span>
             </a>
             <a
-              className="px-8 py-4 border border-white text-white font-bold rounded-full flex items-center justify-center gap-2 hover:bg-white hover:text-primary transition-all"
+              className="px-8 py-4 border border-on-surface text-on-surface font-bold rounded-full flex items-center justify-center gap-2 hover:bg-on-surface hover:text-primary-container transition-all"
               href="#"
             >
               <span className="material-symbols-outlined">chat</span>

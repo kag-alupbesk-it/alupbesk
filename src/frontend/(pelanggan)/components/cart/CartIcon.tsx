@@ -9,7 +9,7 @@ export default function CartIcon() {
   return (
     <Link
       href="/keranjang"
-      className="relative text-white hover:text-secondary transition-colors"
+      className="relative text-on-surface hover:text-secondary transition-colors"
     >
       <span className="material-symbols-outlined text-[28px]">
         shopping_cart

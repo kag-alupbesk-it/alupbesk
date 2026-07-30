@@ -1,5 +1,5 @@
 export const portfolioStyles = {
-  page: "min-h-screen bg-primary",
+  page: "min-h-screen bg-primary-container",
 
   content: "max-w-6xl mx-auto px-4 md:px-8 py-12 pt-28",
 
@@ -8,16 +8,16 @@ export const portfolioStyles = {
   eyebrow: "text-secondary text-[11px] font-bold uppercase tracking-widest",
 
   heroTitle:
-    "text-[36px] md:text-[48px] font-bold text-white mt-3 leading-tight",
+    "text-[36px] md:text-[48px] font-bold text-on-surface mt-3 leading-tight",
 
   description:
-    "text-white/50 text-[15px] mt-4 max-w-xl mx-auto",
+    "text-on-surface/50 text-[15px] mt-4 max-w-xl mx-auto",
 
   grid:
     "grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-20",
 
   card:
-    "group bg-primary-container rounded-2xl border border-white/10 overflow-hidden hover:border-secondary/50 transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl",
+    "group bg-primary-container rounded-2xl border border-outline/20 overflow-hidden hover:border-secondary/50 transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl",
 
   image:
     "relative aspect-video overflow-hidden",
@@ -35,16 +35,16 @@ export const portfolioStyles = {
     "bg-secondary text-primary text-[10px] font-bold px-2 py-1 rounded-full",
 
   year:
-    "bg-black/50 backdrop-blur-sm text-white/70 text-[10px] px-2 py-1 rounded-full",
+    "bg-surface-container/80 backdrop-blur-sm text-on-surface/70 text-[10px] px-2 py-1 rounded-full",
 
   cardContent:
     "p-5",
 
   client:
-    "text-[11px] text-white/40 mb-1",
+    "text-[11px] text-on-surface/40 mb-1",
 
   title:
-    "text-[15px] font-bold text-white mb-3 leading-snug",
+    "text-[15px] font-bold text-on-surface mb-3 leading-snug",
 
   tags:
     "flex flex-wrap gap-1.5 mb-4",
@@ -59,16 +59,16 @@ export const portfolioStyles = {
     "text-[10px] font-bold uppercase tracking-wider mb-1",
 
   challengeLabel:
-    "text-white/30",
+    "text-on-surface/30",
 
   resultLabel:
     "text-secondary/60",
 
   challenge:
-    "text-[12px] text-white/60 leading-relaxed line-clamp-2",
+    "text-[12px] text-on-surface/60 leading-relaxed line-clamp-2",
 
   result:
-    "text-[12px] text-white/70 leading-relaxed line-clamp-2",
+    "text-[12px] text-on-surface/70 leading-relaxed line-clamp-2",
 
   section:
     "mb-20",
@@ -77,13 +77,13 @@ export const portfolioStyles = {
     "text-center mb-10",
 
   sectionTitle:
-    "text-[28px] font-bold text-white mt-2",
+    "text-[28px] font-bold text-on-surface mt-2",
 
   caseGrid:
     "grid md:grid-cols-2 gap-6",
 
   caseCard:
-    "bg-primary-container rounded-2xl border border-white/10 p-6",
+    "bg-primary-container rounded-2xl border border-outline/20 p-6",
 
   caseClient:
     "flex items-start gap-4 mb-5",
@@ -95,19 +95,19 @@ export const portfolioStyles = {
     "text-secondary font-bold text-[14px]",
 
   clientName:
-    "text-[13px] font-bold text-white",
+    "text-[13px] font-bold text-on-surface",
 
   meta:
-    "text-[11px] text-white/40",
+    "text-[11px] text-on-surface/40",
 
   caseTitle:
-    "text-[16px] font-bold text-white mb-3",
+    "text-[16px] font-bold text-on-surface mb-3",
 
   caseDescription:
-    "text-[13px] text-white/60 leading-relaxed mb-5",
+    "text-[13px] text-on-surface/60 leading-relaxed mb-5",
 
   metrics:
-    "grid grid-cols-3 gap-3 pt-4 border-t border-white/10",
+    "grid grid-cols-3 gap-3 pt-4 border-t border-outline/20",
 
   metric:
     "text-center",
@@ -116,13 +116,13 @@ export const portfolioStyles = {
     "text-[20px] font-bold text-secondary",
 
   metricLabel:
-    "text-[10px] text-white/40 leading-tight mt-0.5",
+    "text-[10px] text-on-surface/40 leading-tight mt-0.5",
 
   cta:
-    "bg-primary-container rounded-2xl border border-white/10 p-8 md:p-12 text-center",
+    "bg-primary-container rounded-2xl border border-outline/20 p-8 md:p-12 text-center",
 
   ctaTitle:
-    "text-[24px] font-bold text-white mb-3",
+    "text-[24px] font-bold text-on-surface mb-3",
 
   ctaButtons:
     "flex flex-col sm:flex-row gap-3 justify-center",
@@ -131,5 +131,5 @@ export const portfolioStyles = {
     "px-8 py-3.5 bg-secondary text-primary font-bold rounded-xl hover:brightness-110 transition-all text-[14px]",
 
   secondary:
-    "px-8 py-3.5 border border-white/20 text-white font-bold rounded-xl hover:border-white/40 transition-all text-[14px]",
+    "px-8 py-3.5 border border-outline text-on-surface font-bold rounded-xl hover:border-on-surface/40 transition-all text-[14px]",
 } as const;

@@ -14,7 +14,7 @@ export default function ContactDetail({
       </span>
       <div>
         <div className="font-bold mb-1">{title}</div>
-        <p className="text-label-sm text-primary-fixed-dim">{text}</p>
+        <p className="text-label-sm text-on-primary/70">{text}</p>
       </div>
     </div>
   );

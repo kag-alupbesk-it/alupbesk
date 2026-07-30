@@ -44,10 +44,10 @@ export default function ProductDetailModal() {
           <p className="text-[12px] font-bold text-secondary uppercase tracking-widest">
             {product.category}
           </p>
-          <h2 className="text-headline-h2 font-bold text-white">
+          <h2 className="text-headline-h2 font-bold text-on-surface">
             {product.title}
           </h2>
-          <p className="text-body-sm text-white/60">
+          <p className="text-body-sm text-on-surface/60">
             {product.desc}
           </p>
           <div className="text-[28px] font-bold text-secondary">
@@ -56,7 +56,7 @@ export default function ProductDetailModal() {
 
           {product.variants?.map((v) => (
             <div key={v.name}>
-              <p className="text-[12px] font-bold text-white/70 mb-2">
+              <p className="text-[12px] font-bold text-on-surface/70 mb-2">
                 {v.name}
               </p>
               <div className="flex flex-wrap gap-2">
@@ -69,7 +69,7 @@ export default function ProductDetailModal() {
                       className={`px-4 py-2 rounded-xl text-[12px] font-bold border transition-all ${
                         isSelected
                           ? "bg-secondary text-primary border-secondary"
-                          : "bg-white/5 text-white/60 border-white/15 hover:border-white/30"
+                          : "bg-surface-container text-on-surface/60 border-outline/20 hover:border-outline"
                       }`}
                     >
                       {v.colors?.[v.options.indexOf(opt)] ? (
@@ -99,13 +99,13 @@ export default function ProductDetailModal() {
           </button>
 
           {product.specs && (
-            <div className="space-y-3 pt-4 border-t border-white/10">
-              <p className="text-[12px] font-bold text-white/70 uppercase tracking-wider">Spesifikasi</p>
+            <div className="space-y-3 pt-4 border-t border-outline/20">
+              <p className="text-[12px] font-bold text-on-surface/70 uppercase tracking-wider">Spesifikasi</p>
               <div className="grid grid-cols-2 gap-3">
                 {product.specs.map((spec) => (
-                  <div key={spec.label} className="bg-white/5 rounded-lg p-3">
-                    <p className="text-[10px] text-white/40">{spec.label}</p>
-                    <p className="text-[12px] font-semibold text-white/80">{spec.value}</p>
+                  <div key={spec.label} className="bg-surface-container rounded-lg p-3">
+                    <p className="text-[10px] text-on-surface/40">{spec.label}</p>
+                    <p className="text-[12px] font-semibold text-on-surface/80">{spec.value}</p>
                   </div>
                 ))}
               </div>
@@ -115,7 +115,7 @@ export default function ProductDetailModal() {
           {product.highlights && (
             <div className="space-y-2 pt-2">
               {product.highlights.map((h, i) => (
-                <div key={i} className="flex items-start gap-2 text-[12px] text-white/60">
+                <div key={i} className="flex items-start gap-2 text-[12px] text-on-surface/60">
                   <span className="material-symbols-outlined text-[16px] text-secondary flex-shrink-0">check_circle</span>
                   {h}
                 </div>

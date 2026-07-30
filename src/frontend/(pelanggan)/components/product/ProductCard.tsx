@@ -7,7 +7,7 @@ export function ProductCard({ product }: { product: Product }) {
   const { addToCart, setDetailProduct } = useCart();
 
   return (
-    <div className="group relative flex flex-col overflow-hidden rounded-2xl border border-white/10 bg-primary-container transition-all duration-300 hover:border-secondary/40 hover:shadow-2xl hover:-translate-y-1">
+    <div className="group relative flex flex-col overflow-hidden rounded-2xl border border-outline/40 bg-primary-container transition-all duration-300 hover:border-secondary/40 hover:shadow-2xl hover:-translate-y-1">
       {/* Image */}
       <div
         className="aspect-[4/3] w-full bg-cover bg-center cursor-pointer"
@@ -35,12 +35,12 @@ export function ProductCard({ product }: { product: Product }) {
           {product.category}
         </p>
         <h3
-          className="text-[14px] font-bold text-white leading-snug line-clamp-2 cursor-pointer hover:text-secondary transition-colors"
+          className="text-[14px] font-bold text-on-surface leading-snug line-clamp-2 cursor-pointer hover:text-secondary transition-colors"
           onClick={() => setDetailProduct(product)}
         >
           {product.title}
         </h3>
-        <p className="text-[12px] text-white/50 line-clamp-2 leading-relaxed flex-1">
+        <p className="text-[12px] text-on-surface/50 line-clamp-2 leading-relaxed flex-1">
           {product.desc}
         </p>
         <div className="flex items-center justify-between mt-auto pt-2">
@@ -62,7 +62,7 @@ export function ProductCard({ product }: { product: Product }) {
       </div>
 
       {/* Hover overlay */}
-      <div className="pointer-events-none absolute inset-0 rounded-2xl ring-1 ring-inset ring-white/0 group-hover:ring-secondary/30 transition-all duration-300" />
+      <div className="pointer-events-none absolute inset-0 rounded-2xl ring-1 ring-inset ring-on-surface/0 group-hover:ring-secondary/30 transition-all duration-300" />
     </div>
   );
 }

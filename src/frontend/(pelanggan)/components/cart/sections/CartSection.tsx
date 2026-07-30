@@ -200,13 +200,13 @@ export default function CartSection() {
                 </div>
                 <h3 className={styles.popupTitle}>Hapus dari Keranjang?</h3>
                 <p className={styles.popupDesc}>
-                  <span className="text-white font-semibold">{deleteTarget.item.product.title}</span> akan dihapus dari keranjang belanja Anda.
+                  <span className="text-on-surface font-semibold">{deleteTarget.item.product.title}</span> akan dihapus dari keranjang belanja Anda.
                 </p>
                 {deleteTarget.item.selectedVariants && Object.keys(deleteTarget.item.selectedVariants).length > 0 && (
                   <div className="flex flex-wrap justify-center gap-1.5 mb-4">
                     {Object.entries(deleteTarget.item.selectedVariants).map(([k, v]) => (
-                      <span key={k} className="inline-flex items-center gap-1 bg-white/5 text-white/50 text-[11px] px-2 py-0.5 rounded-md border border-white/10">
-                        <span className="text-white/30">{k}:</span> {v}
+                      <span key={k} className="inline-flex items-center gap-1 bg-surface-container text-on-surface/50 text-[11px] px-2 py-0.5 rounded-md border border-outline/20">
+                        <span className="text-on-surface/30">{k}:</span> {v}
                       </span>
                     ))}
                   </div>
@@ -230,7 +230,7 @@ export default function CartSection() {
             <div className={styles.undoToastContent}>
               <span className="material-symbols-outlined text-[22px] text-red-400/70">delete</span>
               <p className={styles.undoToastText}>
-                <span className="font-semibold text-white">{pendingDelete.item.product.title}</span> dihapus dari keranjang
+                <span className="font-semibold text-on-surface">{pendingDelete.item.product.title}</span> dihapus dari keranjang
               </p>
             </div>
             <div className="flex justify-center pb-4">

@@ -35,12 +35,12 @@ export default function Modal({
     >
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
       <div
-        className={`relative ${maxWidth} w-full bg-primary-container rounded-2xl border border-white/10 shadow-2xl max-h-[90vh] overflow-y-auto custom-scrollbar`}
+        className={`relative ${maxWidth} w-full bg-surface-container-highest rounded-2xl border border-outline/20 shadow-2xl max-h-[90vh] overflow-y-auto custom-scrollbar`}
         onClick={(e) => e.stopPropagation()}
       >
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 z-10 text-white/60 hover:text-white transition-colors"
+          className="absolute top-4 right-4 z-10 text-on-surface/60 hover:text-on-surface transition-colors"
         >
           <span className="material-symbols-outlined text-[28px]">close</span>
         </button>

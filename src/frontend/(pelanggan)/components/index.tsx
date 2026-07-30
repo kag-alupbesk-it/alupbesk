@@ -18,7 +18,7 @@ export default function PelangganComponents() {
 
       <main>
         <HeroSection />
-        <Suspense fallback={<div className="py-section-gap-desktop bg-primary" />}>
+        <Suspense fallback={<div className="py-section-gap-desktop bg-primary-container" />}>
           <KatalogSection />
         </Suspense>
         <ProfileSection />

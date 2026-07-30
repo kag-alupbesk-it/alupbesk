@@ -11,7 +11,7 @@ export default function RequestSidebar({
   return (
     <aside className={styles.sidebar}>
       <section className={styles.panel}>
-        <h2 className="text-[13px] font-semibold text-white/70 mb-4">
+        <h2 className="text-[13px] font-semibold text-on-surface/70 mb-4">
           Alur Request Custom
         </h2>
 
@@ -25,11 +25,11 @@ export default function RequestSidebar({
             </span>
 
             <div>
-              <p className="text-[12px] font-bold text-white">
+              <p className="text-[12px] font-bold text-on-surface">
                 {step}
               </p>
 
-              <p className="text-[11px] text-white/40">
+              <p className="text-[11px] text-on-surface/40">
                 Tim kami mendampingi kebutuhan Anda.
               </p>
             </div>
@@ -50,7 +50,7 @@ export default function RequestSidebar({
       </section>
 
       <section className={styles.panel}>
-        <p className="text-[11px] font-bold text-white/40 uppercase tracking-widest mb-3">
+        <p className="text-[11px] font-bold text-on-surface/40 uppercase tracking-widest mb-3">
           Kapasitas Produksi
         </p>
 
@@ -59,11 +59,11 @@ export default function RequestSidebar({
             key={label}
             className="flex justify-between text-[12px] mb-2"
           >
-            <span className="text-white/40">
+            <span className="text-on-surface/40">
               {label}
             </span>
 
-            <span className="text-white/80">
+            <span className="text-on-surface/80">
               {value}
             </span>
           </div>

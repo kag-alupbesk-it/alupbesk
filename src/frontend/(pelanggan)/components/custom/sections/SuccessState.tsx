@@ -12,18 +12,18 @@ export default function SuccessState({
         check_circle
       </span>
 
-      <h2 className="text-[24px] font-bold text-white mb-3">
+      <h2 className="text-[24px] font-bold text-on-surface mb-3">
         Permintaan Terkirim!
       </h2>
 
-      <p className="text-white/50 text-sm max-w-md">
+      <p className="text-on-surface/50 text-sm max-w-md">
         Tim kami akan menghubungi Anda melalui WhatsApp dalam 1x24 jam kerja.
       </p>
 
       <div className="flex gap-3 mt-8">
         <button
           onClick={onReset}
-          className="px-6 py-3 border border-white/20 text-white rounded-xl"
+          className="px-6 py-3 border border-outline/30 text-on-surface rounded-xl"
         >
           Request Lagi
         </button>

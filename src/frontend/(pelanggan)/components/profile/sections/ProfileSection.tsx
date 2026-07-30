@@ -1,6 +1,6 @@
 export default function ProfileSection() {
   return (
-    <section className="py-section-gap-desktop bg-primary" id="profile">
+    <section className="py-section-gap-desktop bg-primary-container" id="profile">
       <div className="max-w-container-max mx-auto px-margin-x-mobile md:px-margin-x-desktop">
         <div className="grid lg:grid-cols-2 gap-16 items-start mb-24">
           <div>
@@ -8,11 +8,11 @@ export default function ProfileSection() {
               TENTANG KAMI
             </span>
             <h2 className="text-headline-h1 font-headline-h1 mt-4 mb-8 text-primary">
-              <span className="text-white">
+              <span className="text-on-surface">
                 Inovasi Material untuk Masa Depan Industri
               </span>
             </h2>
-            <div className="space-y-6 text-primary-fixed-dim text-body-md">
+            <div className="space-y-6 text-on-surface-variant text-body-md">
               <p>
                 Berdiri sejak tahun 2009, Alupbesk telah bertransformasi dari
                 penyedia lokal menjadi salah satu distributor utama komponen
@@ -26,21 +26,21 @@ export default function ProfileSection() {
               </p>
             </div>
             <div className="mt-10 grid grid-cols-2 gap-6">
-              <div className="p-6 bg-primary-container rounded-xl border border-white/10 text-primary-fixed-dim">
+              <div className="p-6 bg-surface-container-high rounded-xl border border-outline/20 text-on-surface-variant">
                 <span className="material-symbols-outlined text-secondary text-4xl mb-4">
                   visibility
                 </span>
-                <h4 className="font-bold text-white mb-2">Visi Kami</h4>
+                <h4 className="font-bold text-on-surface mb-2">Visi Kami</h4>
                 <p className="text-label-sm">
                   Menjadi hub komponen industrial terintegrasi yang memajukan
                   manufaktur Indonesia.
                 </p>
               </div>
-              <div className="p-6 bg-primary-container rounded-xl border border-white/10 text-primary-fixed-dim">
+              <div className="p-6 bg-surface-container-high rounded-xl border border-outline/20 text-on-surface-variant">
                 <span className="material-symbols-outlined text-secondary text-4xl mb-4">
                   rocket_launch
                 </span>
-                <h4 className="font-bold text-white mb-2">Misi Kami</h4>
+                <h4 className="font-bold text-on-surface mb-2">Misi Kami</h4>
                 <p className="text-label-sm">
                   Memberikan solusi material tepat waktu dengan efisiensi biaya
                   maksimal bagi mitra.
@@ -49,7 +49,7 @@ export default function ProfileSection() {
             </div>
           </div>
           <div className="relative">
-            <div className="aspect-square rounded-xl overflow-hidden border-8 border-primary-container shadow-xl">
+            <div className="aspect-square rounded-xl overflow-hidden border-8 border-surface-container shadow-xl">
               <div
                 className="w-full h-full bg-cover bg-center"
                 style={{
@@ -58,7 +58,7 @@ export default function ProfileSection() {
                 }}
               ></div>
             </div>
-            <div className="absolute -bottom-8 -left-8 bg-primary-container text-white p-8 rounded-xl max-w-xs shadow-2xl border border-white/10">
+            <div className="absolute -bottom-8 -left-8 bg-surface-container-high text-on-surface p-8 rounded-xl max-w-xs shadow-2xl border border-outline/20">
               <p className="italic text-body-md">
                 &ldquo;Alupbesk memberikan standar baru dalam distribusi
                 aluminium. Cepat, tepat, dan berkualitas.&rdquo;

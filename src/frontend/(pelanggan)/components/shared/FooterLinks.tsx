@@ -10,11 +10,11 @@ export default function FooterLinks({
       <h4 className="mb-6 text-[12px] font-bold uppercase tracking-widest">
         {title}
       </h4>
-      <ul className="space-y-4 text-label-sm text-primary-fixed-dim">
+      <ul className="space-y-4 text-label-sm text-on-surface-variant">
         {links.map((link) => (
           <li key={link}>
             <a
-              className="transition-colors hover:text-secondary-fixed-dim"
+              className="transition-colors hover:text-secondary"
               href={link === "FAQ" ? "#faq" : "#"}
             >
               {link}

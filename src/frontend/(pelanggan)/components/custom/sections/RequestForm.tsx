@@ -20,7 +20,7 @@ export default function RequestForm({
 
   return (
     <section className={styles.form}>
-      <h2 className="text-[13px] font-semibold text-white/70">
+      <h2 className="text-[13px] font-semibold text-on-surface/70">
         Data Pemesan
       </h2>
 
@@ -54,7 +54,7 @@ export default function RequestForm({
         ))}
       </div>
 
-      <h2 className="text-[13px] font-semibold text-white/70 pt-2">
+      <h2 className="text-[13px] font-semibold text-on-surface/70 pt-2">
         Detail Kebutuhan
       </h2>
 

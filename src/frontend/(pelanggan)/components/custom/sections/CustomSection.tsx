@@ -45,7 +45,7 @@ export default function CustomSection() {
         <div className={styles.topbarInner}>
           <Link
             href="/"
-            className="text-white/60"
+            className="text-on-surface/60"
           >
             <span className="material-symbols-outlined">
               arrow_back
@@ -53,11 +53,11 @@ export default function CustomSection() {
           </Link>
 
           <div>
-            <h1 className="text-[16px] font-bold text-white">
+            <h1 className="text-[16px] font-bold text-on-surface">
               Jasa Custom & Konsultasi
             </h1>
 
-            <p className="text-[11px] text-white/40">
+            <p className="text-[11px] text-on-surface/40">
               Request quote untuk kebutuhan spesifik Anda
             </p>
           </div>
