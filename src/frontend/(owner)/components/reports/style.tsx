@@ -1,0 +1,7 @@
+export const container = "p-10 flex-1"
+export const title = "text-3xl font-bold text-on-surface mb-2 font-headline tracking-tight"
+export const subtitle = "text-on-surface-variant"
+export const toggleGroup = "flex p-1 bg-surface-variant rounded-pill self-start"
+export const toggleButton = "px-4 py-1.5 text-[10px] font-bold rounded-pill transition-colors"
+export const toggleActive = "bg-secondary text-primary shadow-sm"
+export const toggleInactive = "text-on-surface-variant hover:text-on-surface"
