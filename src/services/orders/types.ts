@@ -1,4 +1,4 @@
-export type OrderStatus = "pending" | "confirmed" | "processing" | "completed" | "cancelled";
+export type OrderStatus = "pending" | "submitted_to_manager" | "confirmed" | "rejected_by_manager" | "processing" | "completed" | "cancelled";
 
 export interface OrderLineInput {
   productId: number;

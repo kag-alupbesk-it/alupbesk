@@ -10,10 +10,13 @@ import ServiceSelector from "./ServiceSelector";
 import RequestForm from "./RequestForm";
 import RequestSidebar from "./RequestSidebar";
 import SuccessState from "./SuccessState";
+import { customApi } from "@/services/api";
 
 export default function CustomSection() {
   const [form, setForm] = useState(emptyCustomRequestForm);
   const [submitted, setSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState("");
 
   const isValid = Boolean(
     form.nama &&
@@ -22,7 +25,12 @@ export default function CustomSection() {
       form.deskripsi
   );
 
-  const submit = () => {
+  const submit = async () => {
+    if (!isValid || isSubmitting) return;
+    setIsSubmitting(true);
+    setSubmitError("");
+    try {
+      await customApi.createRequest(form);
     const message =
       `Halo ALUPBESK, saya ingin request Custom Quote:%0A%0A` +
       `Nama: ${form.nama}%0A` +
@@ -35,8 +43,12 @@ export default function CustomSection() {
       `https://wa.me/6281234567890?text=${message}`,
       "_blank"
     );
-
     setSubmitted(true);
+    } catch (error) {
+      setSubmitError(error instanceof Error ? error.message : "Request gagal dikirim.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -90,6 +102,7 @@ export default function CustomSection() {
               isValid={isValid}
               onSubmit={submit}
             />
+            {submitError && <p className="text-sm text-red-400 sm:col-span-2">{submitError}</p>}
           </div>
         )}
       </main>
