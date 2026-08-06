@@ -1,4 +1,4 @@
-import type { MarketingBanner, MarketingBannerInput, MarketingOrder, MarketingReport } from "@/backend/modules/pemasaran";
+import type { MarketingBanner, MarketingBannerInput, MarketingOrder, MarketingReport } from "@/backend/modules/marketing";
 import { request } from "../request";
 export const marketingApi = {
   getBanners: (): Promise<MarketingBanner[]> => request("/marketing/banners"),

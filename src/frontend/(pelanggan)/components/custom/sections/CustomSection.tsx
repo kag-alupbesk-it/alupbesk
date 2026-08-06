@@ -40,7 +40,7 @@ export default function CustomSection() {
       `Kuantitas: ${form.kuantitas || "-"}`;
 
     window.open(
-      `https://wa.me/6281234567890?text=${message}`,
+      `https://wa.me/6283847105847?text=${message}`,
       "_blank"
     );
     setSubmitted(true);
