@@ -8,7 +8,10 @@ export interface GudangStockInput {
 
 // Divisi gudang hanya mengelola stok. Field identitas barang (SKU, merek, dsb.)
 // dikelola oleh divisi lain, jadi fungsi ini hanya menimpa nilai stok.
-export function updateGudangStock(id: string, input: GudangStockInput): GudangItem | undefined {
+export function updateGudangStock(
+  id: string,
+  input: GudangStockInput,
+): GudangItem | undefined {
   const item = gudangItems.get(id);
   if (!item) return undefined;
   const updated = { ...item, stok: input.stok, minStok: input.minStok };

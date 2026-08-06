@@ -46,24 +46,55 @@ router.get("/banners", (_request, response) => {
 router.post("/banners", (request, response) => {
   const parsed = bannerSchema.safeParse(request.body);
   if (!parsed.success) {
-    return response.status(400).json({ success: false, error: { code: "INVALID_BANNER", message: parsed.error.issues[0]?.message ?? "Data banner tidak valid." } });
+    return response
+      .status(400)
+      .json({
+        success: false,
+        error: {
+          code: "INVALID_BANNER",
+          message:
+            parsed.error.issues[0]?.message ?? "Data banner tidak valid.",
+        },
+      });
   }
-  return response.status(201).json({ success: true, data: createMarketingBanner(parsed.data) });
+  return response
+    .status(201)
+    .json({ success: true, data: createMarketingBanner(parsed.data) });
 });
 
 router.put("/banners/:id", (request, response) => {
   const parsed = bannerSchema.safeParse(request.body);
   if (!parsed.success) {
-    return response.status(400).json({ success: false, error: { code: "INVALID_BANNER", message: parsed.error.issues[0]?.message ?? "Data banner tidak valid." } });
+    return response
+      .status(400)
+      .json({
+        success: false,
+        error: {
+          code: "INVALID_BANNER",
+          message:
+            parsed.error.issues[0]?.message ?? "Data banner tidak valid.",
+        },
+      });
   }
   const banner = updateMarketingBanner(request.params.id, parsed.data);
-  if (!banner) return response.status(404).json({ success: false, error: { code: "BANNER_NOT_FOUND", message: "Banner tidak ditemukan." } });
+  if (!banner)
+    return response
+      .status(404)
+      .json({
+        success: false,
+        error: { code: "BANNER_NOT_FOUND", message: "Banner tidak ditemukan." },
+      });
   return response.json({ success: true, data: banner });
 });
 
 router.delete("/banners/:id", (request, response) => {
   if (!deleteMarketingBanner(request.params.id)) {
-    return response.status(404).json({ success: false, error: { code: "BANNER_NOT_FOUND", message: "Banner tidak ditemukan." } });
+    return response
+      .status(404)
+      .json({
+        success: false,
+        error: { code: "BANNER_NOT_FOUND", message: "Banner tidak ditemukan." },
+      });
   }
   return response.json({ success: true, data: null });
 });
@@ -74,7 +105,13 @@ router.get("/orders", (_request, response) => {
 
 router.post("/orders/:id/submit", (request, response) => {
   const order = submitOrderToManager(request.params.id);
-  if (!order) return response.status(404).json({ success: false, error: { code: "ORDER_NOT_FOUND", message: "Pesanan tidak ditemukan." } });
+  if (!order)
+    return response
+      .status(404)
+      .json({
+        success: false,
+        error: { code: "ORDER_NOT_FOUND", message: "Pesanan tidak ditemukan." },
+      });
   return response.json({ success: true, data: order });
 });
 
@@ -89,24 +126,64 @@ router.get("/products", (_request, response) => {
 router.post("/products", (request, response) => {
   const parsed = productSchema.safeParse(request.body);
   if (!parsed.success) {
-    return response.status(400).json({ success: false, error: { code: "INVALID_PRODUCT", message: parsed.error.issues[0]?.message ?? "Data produk tidak valid." } });
+    return response
+      .status(400)
+      .json({
+        success: false,
+        error: {
+          code: "INVALID_PRODUCT",
+          message:
+            parsed.error.issues[0]?.message ?? "Data produk tidak valid.",
+        },
+      });
   }
-  return response.status(201).json({ success: true, data: createMarketingProduct(parsed.data) });
+  return response
+    .status(201)
+    .json({ success: true, data: createMarketingProduct(parsed.data) });
 });
 
 router.put("/products/:id", (request, response) => {
   const parsed = productSchema.safeParse(request.body);
   if (!parsed.success) {
-    return response.status(400).json({ success: false, error: { code: "INVALID_PRODUCT", message: parsed.error.issues[0]?.message ?? "Data produk tidak valid." } });
+    return response
+      .status(400)
+      .json({
+        success: false,
+        error: {
+          code: "INVALID_PRODUCT",
+          message:
+            parsed.error.issues[0]?.message ?? "Data produk tidak valid.",
+        },
+      });
   }
-  const product = updateMarketingProduct(Number(request.params.id), parsed.data);
-  if (!product) return response.status(404).json({ success: false, error: { code: "PRODUCT_NOT_FOUND", message: "Produk tidak ditemukan." } });
+  const product = updateMarketingProduct(
+    Number(request.params.id),
+    parsed.data,
+  );
+  if (!product)
+    return response
+      .status(404)
+      .json({
+        success: false,
+        error: {
+          code: "PRODUCT_NOT_FOUND",
+          message: "Produk tidak ditemukan.",
+        },
+      });
   return response.json({ success: true, data: product });
 });
 
 router.delete("/products/:id", (request, response) => {
   if (!deleteMarketingProduct(Number(request.params.id))) {
-    return response.status(404).json({ success: false, error: { code: "PRODUCT_NOT_FOUND", message: "Produk tidak ditemukan." } });
+    return response
+      .status(404)
+      .json({
+        success: false,
+        error: {
+          code: "PRODUCT_NOT_FOUND",
+          message: "Produk tidak ditemukan.",
+        },
+      });
   }
   return response.json({ success: true, data: null });
 });
