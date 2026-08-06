@@ -1,14 +1,13 @@
 "use client";
 
-import { useState, useMemo, useEffect, useRef } from "react";
-import { useApi } from "@/frontend/(manager)/hooks/useApi";
-import { fetchGudangData } from "@/frontend/(gudang)/services/gudang";
+import { useState, useMemo, useEffect } from "react";
+import { gudangApi } from "@/services/api";
 import { GudangHeader } from "./GudangHeader";
 import { GudangTable } from "./GudangTable";
 import { GudangFormModal } from "./GudangFormModal";
 import { DeleteConfirmModal } from "./DeleteConfirmModal";
 import { filterItems, computeMetrics } from "./helpers";
-import type { GudangItem } from "./types";
+import type { GudangItem } from "@/backend/modules/gudang";
 import * as s from "../style";
 
 interface GudangSectionProps {
@@ -31,21 +30,15 @@ function LoadingSkeleton() {
 }
 
 export function GudangSection({ initialItems }: GudangSectionProps) {
-  const { data: apiData } = useApi(fetchGudangData, { interval: 30000, enabled: false });
-  const seeded = useRef(false);
   const [items, setItems] = useState<GudangItem[]>(initialItems);
+  const [error, setError] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedMerek, setSelectedMerek] = useState("ALL");
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editItem, setEditItem] = useState<GudangItem | null>(null);
   const [deleteItem, setDeleteItem] = useState<GudangItem | null>(null);
 
-  useEffect(() => {
-    if (apiData && apiData.items.length > 0 && !seeded.current) {
-      seeded.current = true;
-      setItems(apiData.items);
-    }
-  }, [apiData]);
+  useEffect(() => { gudangApi.getItems().then(setItems).catch((reason) => setError(reason instanceof Error ? reason.message : "Data gudang gagal dimuat.")); }, []);
 
   function handleTambah() {
     setEditItem(null);
@@ -61,18 +54,20 @@ export function GudangSection({ initialItems }: GudangSectionProps) {
     setDeleteItem(item);
   }
 
-  function handleSave(saved: GudangItem) {
-    setItems((prev) => {
-      const exists = prev.some((i) => i.id === saved.id);
-      return exists ? prev.map((i) => (i.id === saved.id ? saved : i)) : [...prev, saved];
-    });
-    setIsFormOpen(false);
-    setEditItem(null);
+  async function handleSave(saved: GudangItem) {
+    setError("");
+    try {
+      const { id: _id, ...input } = saved;
+      const result = editItem ? await gudangApi.updateItem(editItem.id, input) : await gudangApi.createItem(input);
+      setItems((prev) => editItem ? prev.map((item) => item.id === result.id ? result : item) : [...prev, result]);
+      setIsFormOpen(false); setEditItem(null);
+    } catch (reason) { setError(reason instanceof Error ? reason.message : "Barang gagal disimpan."); }
   }
 
-  function handleDeleteConfirm(id: string) {
-    setItems((prev) => prev.filter((i) => i.id !== id));
-    setDeleteItem(null);
+  async function handleDeleteConfirm(id: string) {
+    setError("");
+    try { await gudangApi.deleteItem(id); setItems((prev) => prev.filter((item) => item.id !== id)); setDeleteItem(null); }
+    catch (reason) { setError(reason instanceof Error ? reason.message : "Barang gagal dihapus."); }
   }
 
   const { totalStok, jumlahLowStock, daftarMerek } = useMemo(() => computeMetrics(items), [items]);
@@ -92,6 +87,7 @@ export function GudangSection({ initialItems }: GudangSectionProps) {
             jumlahLowStock={jumlahLowStock}
             onTambah={handleTambah}
           />
+          {error && <p className="mb-4 text-sm text-red-400">{error}</p>}
           <GudangTable
             items={filteredItems}
             searchQuery={searchQuery}

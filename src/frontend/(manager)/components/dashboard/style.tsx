@@ -15,7 +15,6 @@ export const toggleGroup = "flex p-1 bg-surface-variant rounded-pill"
 export const toggleButton = "px-4 py-1.5 text-[10px] font-bold rounded-pill transition-colors"
 export const toggleActive = "bg-secondary text-primary shadow-sm"
 export const toggleInactive = "text-on-surface-variant hover:text-on-surface"
-
 export const chartSection = "bg-primary-container border border-outline/30 rounded-xl p-8"
 export const chartHeader = "flex justify-between items-center mb-8"
 export const chartTitle = "text-xl font-bold text-on-surface font-headline"
