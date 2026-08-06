@@ -1,7 +1,7 @@
 import express from "express";
 import { corsMiddleware } from "./middleware/cors";
-import { adminRouter, catalogRouter, checkoutRouter, portfolioRouter } from "./modules/(katalog)";
-import marketingRouter from "./modules/pemasaran/router";
+import { adminRouter, catalogRouter, checkoutRouter, portfolioRouter } from "./modules/(pelanggan)";
+import marketingRouter from "./modules/marketing/router";
 import customRouter from "./modules/custom/router";
 import gudangRouter from "./modules/gudang/router";
 export const app = express();

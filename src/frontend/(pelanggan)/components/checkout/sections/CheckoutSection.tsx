@@ -200,7 +200,7 @@ export default function CheckoutSection() {
 
       const message = `Halo ALUPBESK, saya ingin memesan:%0A%0A${productList}%0A%0ATotal: ${formatPrice(totalPrice)}%0A%0ANama: ${form.name}%0AEmail: ${form.email}%0ATelp: ${form.phone}%0AAlamat: ${form.address}%0ACatatan: ${form.note}`;
 
-      window.open(`https://wa.me/6281234567890?text=${encodeURIComponent(`${message}\n\nID Pesanan: ${order.id}`)}`, "_blank");
+      window.open(`https://wa.me/6283847105847?text=${encodeURIComponent(`${message}\n\nID Pesanan: ${order.id}`)}`, "_blank");
       clearCart();
       router.push("/");
     } catch (error) {

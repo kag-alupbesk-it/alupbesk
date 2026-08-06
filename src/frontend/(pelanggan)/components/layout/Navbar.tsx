@@ -149,7 +149,7 @@ export default function Navbar() {
             <CartIcon />
             <ThemeToggle />
             <a
-              href="https://wa.me/6281234567890"
+              href="https://wa.me/6283847105847"
               target="_blank"
               rel="noopener noreferrer"
               className="hidden md:flex items-center gap-2 bg-secondary text-primary px-5 py-2.5 rounded-full text-[13px] font-bold hover:brightness-110 active:scale-95 transition-all"
@@ -225,7 +225,7 @@ export default function Navbar() {
         <div className="flex items-center justify-center gap-2 pt-6 border-t border-outline/20">
           <ThemeToggle className="w-10 h-10 text-on-surface/60" />
           <a
-            href="https://wa.me/6281234567890"
+            href="https://wa.me/6283847105847"
             target="_blank"
             rel="noopener noreferrer"
             className="w-full flex justify-center items-center gap-2 bg-secondary text-primary py-4 rounded-xl font-bold hover:brightness-110 transition-all text-[14px]"
