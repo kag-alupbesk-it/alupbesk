@@ -1,10 +1,10 @@
-import type { caseStudies } from "@/services/portfolio";
+import type { CaseStudy } from "@/services/portfolio";
 import { portfolioStyles as styles } from "../style";
 
 export default function CaseStudyCard({
   study,
 }: {
-  study: (typeof caseStudies)[number];
+  study: CaseStudy;
 }) {
   return (
     <article className={styles.caseCard}>

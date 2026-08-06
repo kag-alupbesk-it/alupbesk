@@ -10,13 +10,12 @@ interface GudangTableProps {
   daftarMerek: string[];
   onSearchChange: (value: string) => void;
   onMerekChange: (value: string) => void;
-  onEdit: (item: GudangItem) => void;
-  onDelete: (item: GudangItem) => void;
+  onStock: (item: GudangItem) => void;
 }
 
 export function GudangTable({
   items, searchQuery, selectedMerek, daftarMerek,
-  onSearchChange, onMerekChange, onEdit, onDelete,
+  onSearchChange, onMerekChange, onStock,
 }: GudangTableProps) {
   return (
     <div className={s.tableCard}>
@@ -94,11 +93,8 @@ export function GudangTable({
                     </td>
                     <td className={s.tdRight}>
                       <div className={s.aksiWrapper}>
-                        <button onClick={() => onEdit(item)} title="Edit barang" className={s.editButton}>
-                          <span className={s.iconSm}>edit</span>
-                        </button>
-                        <button onClick={() => onDelete(item)} title="Hapus barang" className={s.deleteButton}>
-                          <span className={s.iconSm}>delete</span>
+                        <button onClick={() => onStock(item)} title="Kelola stok" className={s.editButton}>
+                          <span className={s.iconSm}>inventory</span>
                         </button>
                       </div>
                     </td>
@@ -115,7 +111,7 @@ export function GudangTable({
           Menampilkan <span className={s.footerAccent}>{items.length}</span> item
         </p>
         <p className={s.footerHint}>
-          Klik ikon <span className={s.footerEdit}>pensil</span> untuk edit · <span className={s.footerDelete}>tong sampah</span> untuk hapus
+          Klik ikon <span className={s.footerEdit}>inventaris</span> untuk kelola stok
         </p>
       </div>
     </div>

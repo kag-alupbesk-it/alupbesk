@@ -2,15 +2,31 @@ import { Router } from "express";
 import { z } from "zod";
 import {
   createMarketingBanner,
+  createMarketingProduct,
   deleteMarketingBanner,
+  deleteMarketingProduct,
   getMarketingBanners,
   getMarketingOrders,
+  getMarketingProducts,
   getMarketingReport,
   submitOrderToManager,
   updateMarketingBanner,
+  updateMarketingProduct,
 } from ".";
 
 const router = Router();
+
+const productSchema = z.object({
+  badge: z.string().trim().min(1, "Badge wajib diisi."),
+  badgeBg: z.string().trim().optional(),
+  category: z.string().trim().min(1, "Kategori wajib diisi."),
+  title: z.string().trim().min(1, "Nama produk wajib diisi."),
+  desc: z.string().trim().min(1, "Deskripsi wajib diisi."),
+  price: z.number().int().min(0, "Harga tidak boleh negatif."),
+  stock: z.number().int().min(0, "Stok tidak boleh negatif."),
+  img: z.string().trim().min(1, "URL gambar wajib diisi."),
+  sku: z.string().trim().min(1, "SKU wajib diisi."),
+});
 
 const bannerSchema = z.object({
   title: z.string().trim().min(1, "Judul banner wajib diisi."),
@@ -64,6 +80,35 @@ router.post("/orders/:id/submit", (request, response) => {
 
 router.get("/reports", (_request, response) => {
   response.json({ success: true, data: getMarketingReport() });
+});
+
+router.get("/products", (_request, response) => {
+  response.json({ success: true, data: getMarketingProducts() });
+});
+
+router.post("/products", (request, response) => {
+  const parsed = productSchema.safeParse(request.body);
+  if (!parsed.success) {
+    return response.status(400).json({ success: false, error: { code: "INVALID_PRODUCT", message: parsed.error.issues[0]?.message ?? "Data produk tidak valid." } });
+  }
+  return response.status(201).json({ success: true, data: createMarketingProduct(parsed.data) });
+});
+
+router.put("/products/:id", (request, response) => {
+  const parsed = productSchema.safeParse(request.body);
+  if (!parsed.success) {
+    return response.status(400).json({ success: false, error: { code: "INVALID_PRODUCT", message: parsed.error.issues[0]?.message ?? "Data produk tidak valid." } });
+  }
+  const product = updateMarketingProduct(Number(request.params.id), parsed.data);
+  if (!product) return response.status(404).json({ success: false, error: { code: "PRODUCT_NOT_FOUND", message: "Produk tidak ditemukan." } });
+  return response.json({ success: true, data: product });
+});
+
+router.delete("/products/:id", (request, response) => {
+  if (!deleteMarketingProduct(Number(request.params.id))) {
+    return response.status(404).json({ success: false, error: { code: "PRODUCT_NOT_FOUND", message: "Produk tidak ditemukan." } });
+  }
+  return response.json({ success: true, data: null });
 });
 
 export default router;

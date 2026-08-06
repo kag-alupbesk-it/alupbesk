@@ -1,4 +1,4 @@
-const delay = (ms: number) => new Promise((r) => setTimeout(r, ms));
+import { request } from "@/services/api/request";
 
 export interface UserItem {
   name: string;
@@ -13,10 +13,6 @@ export interface UsersData {
   users: UserItem[];
 }
 
-export async function fetchUsersData(): Promise<UsersData> {
-  // TODO: Replace with real API call
-  await delay(500);
-  return {
-    users: [],
-  };
+export function fetchUsersData(): Promise<UsersData> {
+  return request<UsersData>("/owner/users");
 }

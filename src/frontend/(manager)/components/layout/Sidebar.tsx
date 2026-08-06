@@ -66,10 +66,6 @@ export default function Sidebar() {
           <span className={styles.footerIcon}>settings</span>
           <span>Settings</span>
         </Link>
-        <Link href="/" onClick={close} className={styles.footerLink}>
-          <span className={styles.footerIcon}>logout</span>
-          <span>Logout</span>
-        </Link>
       </div>
     </aside>
   );

@@ -1,6 +1,6 @@
 "use client";
 
-import type { Banner } from "../../../types";
+import type { MarketingBanner as Banner } from "@/backend/modules/marketing";
 import * as s from "../style";
 
 interface BannerCardProps {

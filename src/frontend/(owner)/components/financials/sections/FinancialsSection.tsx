@@ -24,7 +24,7 @@ function LoadingSkeleton() {
 
 export default function FinancialsSection() {
   const [period, setPeriod] = useState<Period>("monthly");
-  const { data, loading, error, refetch } = useApi(() => fetchFinancialsData(period), { interval: 30000 });
+  const { data, loading, error, refetch } = useApi(() => fetchFinancialsData(period), { interval: 30000, key: period });
 
   const handleDownloadAll = () => {
     const stmts = data?.statements ?? [];

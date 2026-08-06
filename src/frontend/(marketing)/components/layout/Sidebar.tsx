@@ -7,6 +7,7 @@ import { useSidebar } from "./SidebarProvider";
 
 const navItems = [
   { href: "/marketing", label: "Promosi", icon: "campaign" },
+  { href: "/marketing/produk", label: "Produk", icon: "inventory_2" },
   { href: "/marketing/pesanan", label: "Pesanan", icon: "receipt_long" },
   { href: "/marketing/laporan", label: "Laporan", icon: "bar_chart" },
 ];
@@ -63,7 +64,7 @@ export default function Sidebar() {
           onClick={close}
           className="flex items-center gap-3 px-3 lg:px-4 py-2.5 lg:py-3 text-on-surface-variant hover:text-on-surface transition-colors text-xs lg:text-sm rounded-lg"
         >
-          <span className="material-symbols-outlined text-[18px] lg:text-[20px]">logout</span>
+          <span className="material-symbols-outlined text-[18px] lg:text-[20px]">storefront</span>
           <span className="font-medium">Kembali ke Website</span>
         </Link>
       </div>

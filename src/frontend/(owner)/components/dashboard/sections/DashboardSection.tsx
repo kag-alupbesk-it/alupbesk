@@ -28,7 +28,7 @@ function LoadingSkeleton() {
 export default function DashboardSection() {
   const router = useRouter();
   const [period, setPeriod] = useState<Period>("monthly");
-  const { data, loading, error, refetch } = useApi(() => fetchDashboardData(period), { interval: 30000 });
+  const { data, loading, error, refetch } = useApi(() => fetchDashboardData(period), { interval: 30000, key: period });
 
   const registrations = data?.registrations ?? [];
 
