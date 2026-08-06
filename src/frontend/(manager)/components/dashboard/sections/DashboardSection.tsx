@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import * as styles from "../style";
 import { useApi } from "@/frontend/(manager)/hooks/useApi";
 import { fetchDashboardData } from "@/frontend/(manager)/services/dashboard";
+import { getOrders, decideOrder } from "@/frontend/(manager)/services/orders";
+import type { LocalOrder } from "@/services/orders";
 import type { Registration } from "@/frontend/(manager)/services/dashboard";
 import { periodLabels, type Period } from "@/frontend/(manager)/types";
 
@@ -29,8 +31,15 @@ function LoadingSkeleton() {
 export default function DashboardSection() {
   const router = useRouter();
   const [period, setPeriod] = useState<Period>("monthly");
-  const { data, loading, error, refetch } = useApi(() => fetchDashboardData(period), { interval: 30000 });
+  const { data, loading, error, refetch } = useApi(() => fetchDashboardData(period), { interval: 30000, key: period });
+  const { data: orders, refetch: refetchOrders } = useApi(() => getOrders(), { interval: 30000 });
   const [registrations, setRegistrations] = useState<Registration[]>([]);
+  const [rejectTarget, setRejectTarget] = useState<LocalOrder | null>(null);
+  const [rejectReason, setRejectReason] = useState("");
+  const [rejectBusy, setRejectBusy] = useState(false);
+  const [actionError, setActionError] = useState("");
+
+  const pendingOrders = (orders ?? []).filter((order) => order.status === "submitted_to_manager");
 
   const handleApprove = (name: string) => {
     setRegistrations((prev) =>
@@ -42,6 +51,34 @@ export default function DashboardSection() {
     setRegistrations((prev) =>
       prev.map((r) => (r.name === name ? { ...r, status: "rejected" as const } : r))
     );
+  };
+
+  const handleApproveOrder = async (id: string) => {
+    setActionError("");
+    try {
+      await decideOrder(id, "confirmed");
+      refetchOrders();
+      refetch();
+    } catch (reason) {
+      setActionError(reason instanceof Error ? reason.message : "Gagal menyetujui pesanan.");
+    }
+  };
+
+  const submitRejectOrder = async () => {
+    if (!rejectTarget) return;
+    setRejectBusy(true);
+    setActionError("");
+    try {
+      await decideOrder(rejectTarget.id, "rejected_by_manager", rejectReason);
+      setRejectTarget(null);
+      setRejectReason("");
+      refetchOrders();
+      refetch();
+    } catch (reason) {
+      setActionError(reason instanceof Error ? reason.message : "Gagal menolak pesanan.");
+    } finally {
+      setRejectBusy(false);
+    }
   };
 
   const displayRegistrations = registrations.length > 0 ? registrations : data?.registrations ?? [];
@@ -157,6 +194,65 @@ export default function DashboardSection() {
             </table>
           </div>
         </section>
+
+        <section className={styles.registrationSection}>
+          <div className={styles.registrationHeader}>
+            <h4 className={styles.registrationTitle}>Pesanan Perlu Persetujuan</h4>
+            <span className={styles.viewAllButton}>{pendingOrders.length} menunggu</span>
+          </div>
+          {actionError && (
+            <p className="px-6 py-3 text-xs text-red-400 bg-red-500/10 border-b border-red-500/20">
+              {actionError}
+            </p>
+          )}
+          <div className={styles.tableWrapper}>
+            <table className={styles.table}>
+              <thead>
+                <tr className={styles.tableHeaderRow}>
+                  <th className={styles.tableHeaderCell}>ID Pesanan</th>
+                  <th className={styles.tableHeaderCell}>Pelanggan</th>
+                  <th className={styles.tableHeaderCell}>Produk</th>
+                  <th className={styles.tableHeaderCell}>Total</th>
+                  <th className={styles.tableHeaderCellRight}>Aksi</th>
+                </tr>
+              </thead>
+              <tbody className={styles.tableBody}>
+                {pendingOrders.length === 0 ? (
+                  <tr>
+                    <td colSpan={5} className={styles.emptyState}>
+                      Tidak ada pesanan yang menunggu persetujuan.
+                    </td>
+                  </tr>
+                ) : (
+                  pendingOrders.map((order) => (
+                    <tr key={order.id} className={styles.tableRow}>
+                      <td className={styles.tableCellSimple}>
+                        <span className={styles.orderIdText}>{order.id}</span>
+                      </td>
+                      <td className={styles.tableCell}>
+                        <div className={styles.avatar}>
+                          {(order.customer.name.trim()[0] ?? "?").toUpperCase()}
+                        </div>
+                        <div>
+                          <span className={styles.nameText}>{order.customer.name}</span>
+                          <p className="text-[10px] text-on-surface-variant mt-0.5">{order.customer.phone}</p>
+                        </div>
+                      </td>
+                      <td className={styles.tableCellSimple}>{order.items.length} item</td>
+                      <td className={styles.tableCellSimple}>
+                        {new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(order.total)}
+                      </td>
+                      <td className={styles.tableCellActions}>
+                        <button onClick={() => handleApproveOrder(order.id)} className={styles.approveButton}>Setujui</button>
+                        <button onClick={() => setRejectTarget(order)} className={styles.rejectButton}>Tolak</button>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </section>
       </div>
 
       <aside className={styles.sidebar}>
@@ -194,6 +290,45 @@ export default function DashboardSection() {
           </div>
         </div>
       </aside>
+
+      {rejectTarget && (
+        <div className={styles.modalOverlay}>
+          <div className={styles.modalCard}>
+            <h5 className={styles.modalTitle}>Tolak Pesanan {rejectTarget.id}</h5>
+            <p className={styles.modalText}>
+              Beri alasan penolakan. Alasan ini akan terlihat di bagian marketing.
+            </p>
+            <textarea
+              autoFocus
+              value={rejectReason}
+              onChange={(event) => setRejectReason(event.target.value)}
+              placeholder="Tuliskan alasan penolakan..."
+              rows={4}
+              className={styles.modalTextarea}
+            />
+            <div className={styles.modalActions}>
+              <button
+                type="button"
+                onClick={() => {
+                  setRejectTarget(null);
+                  setRejectReason("");
+                }}
+                className={styles.modalCancel}
+              >
+                Batal
+              </button>
+              <button
+                type="button"
+                disabled={rejectBusy || !rejectReason.trim()}
+                onClick={submitRejectOrder}
+                className={styles.modalConfirm}
+              >
+                {rejectBusy ? "Mengirim..." : "Tolak Pesanan"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

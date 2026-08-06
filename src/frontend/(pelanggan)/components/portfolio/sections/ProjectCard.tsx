@@ -1,10 +1,10 @@
-import type { portfolioItems } from "@/services/portfolio";
+import type { PortfolioItem } from "@/services/portfolio";
 import { portfolioStyles as styles } from "../style";
 
 export default function ProjectCard({
   item,
 }: {
-  item: (typeof portfolioItems)[number];
+  item: PortfolioItem;
 }) {
   return (
     <article className={styles.card}>

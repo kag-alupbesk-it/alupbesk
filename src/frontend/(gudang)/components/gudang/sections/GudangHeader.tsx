@@ -4,28 +4,20 @@ interface GudangHeaderProps {
   totalStok: number;
   totalJenisItem: number;
   jumlahLowStock: number;
-  onTambah: () => void;
 }
 
-export function GudangHeader({ totalStok, totalJenisItem, jumlahLowStock, onTambah }: GudangHeaderProps) {
+export function GudangHeader({ totalStok, totalJenisItem, jumlahLowStock }: GudangHeaderProps) {
   return (
     <header className={s.header}>
       <div>
         <div className={s.headerLeft}>
           <h1 className={s.headerTitle}>Data Gudang Inventaris</h1>
-          <span className={s.badge}>Real-time Sync</span>
+          <span className={s.badge}>Kelola Stok</span>
         </div>
-        <p className={s.headerSubtitle}>Monitoring stok barang, lokasi seksi rak, dan status penyesuaian inventaris.</p>
+        <p className={s.headerSubtitle}>Monitoring stok barang dan status penyesuaian inventaris. Data produk dikelola oleh divisi marketing.</p>
       </div>
 
       <div className={s.headerActions}>
-        <button onClick={onTambah} className={s.tambahButton}>
-          <span className={s.tambahIcon}>add</span>
-          <span className="hidden sm:inline">Tambah Barang</span>
-        </button>
-
-        <div className={s.divider} />
-
         <div className={s.metricCard}>
           <div className={s.metricIcon}>
             <span className={s.iconMd}>inventory_2</span>

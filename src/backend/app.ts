@@ -1,14 +1,15 @@
 import express from "express";
 import { corsMiddleware } from "./middleware/cors";
-import { adminRouter, catalogRouter, checkoutRouter, portfolioRouter } from "./modules/(pelanggan)";
+import { catalogRouter, checkoutRouter, portfolioRouter } from "./modules/(pelanggan)";
 import marketingRouter from "./modules/marketing/router";
 import customRouter from "./modules/custom/router";
 import gudangRouter from "./modules/gudang/router";
+import managerRouter from "./modules/manager/router";
 export const app = express();
 app.use(corsMiddleware); app.use(express.json());
 app.use("/api/catalog", catalogRouter); app.use("/api/checkout", checkoutRouter); app.use("/api/portfolio", portfolioRouter);
-app.use("/api/admin", adminRouter);
 app.use("/api/marketing", marketingRouter);
 app.use("/api/custom", customRouter);
 app.use("/api/gudang", gudangRouter);
+app.use("/api/manager", managerRouter); app.use("/api/owner", managerRouter);
 app.use((_request, response) => response.status(404).json({ success: false, error: { code: "NOT_FOUND", message: "Endpoint tidak ditemukan." } }));

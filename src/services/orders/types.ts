@@ -34,6 +34,8 @@ export interface LocalOrder {
   total: number;
   createdAt: string;
   updatedAt: string;
+  managerDecisionAt?: string;
+  managerRejectionReason?: string;
 }
 
 export interface OrderStatusEvent {

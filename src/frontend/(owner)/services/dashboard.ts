@@ -1,5 +1,4 @@
-const delay = (ms: number) => new Promise((r) => setTimeout(r, ms));
-
+import { request } from "@/services/api/request";
 import type { Period } from "@/frontend/(owner)/types";
 
 export interface FinancialCard {
@@ -38,24 +37,6 @@ export interface DashboardData {
   systemStatus: SystemStatus;
 }
 
-export async function fetchDashboardData(_period?: Period): Promise<DashboardData> {
-  // TODO: Replace with real API call
-  // const res = await fetch(`/api/owner/dashboard?period=${_period}`);
-  // if (!res.ok) throw new Error("Failed to fetch dashboard data");
-  // return res.json();
-  await delay(500);
-  return {
-    financialCards: [
-      { label: "Total Pendapatan", value: "Rp 0", change: "0%", positive: true, bars: [0, 0, 0, 0, 0] },
-      { label: "Biaya Operasional", value: "Rp 0", change: "0%", positive: true, bars: [0, 0, 0, 0, 0] },
-      { label: "Laba Bersih", value: "Rp 0", change: "0%", positive: true, bars: [0, 0, 0, 0, 0] },
-    ],
-    registrations: [
-      { name: "-", dept: "-", date: "-", initial: "-", status: "pending" },
-    ],
-    activities: [
-      { time: "--:-- WIB", text: "Belum ada aktivitas", tag: "System", highlight: false, system: true },
-    ],
-    systemStatus: { serverGudang: "--", dbLatency: "--" },
-  };
+export function fetchDashboardData(period: Period = "monthly"): Promise<DashboardData> {
+  return request<DashboardData>(`/owner/dashboard?period=${period}`);
 }

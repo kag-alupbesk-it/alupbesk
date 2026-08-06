@@ -11,12 +11,12 @@ export interface ApiState<T> {
 
 export function useApi<T>(
   fetcher: () => Promise<T>,
-  options?: { interval?: number; enabled?: boolean }
+  options?: { interval?: number; enabled?: boolean; key?: string }
 ): ApiState<T> {
-  const key = fetcher.toString() + (options?.interval ?? "");
+  const cacheKey = (options?.key ?? "") + fetcher.toString() + (options?.interval ?? "");
 
   const { data, error, isLoading, mutate } = useSWR<T>(
-    options?.enabled ?? true ? key : null,
+    options?.enabled ?? true ? cacheKey : null,
     fetcher,
     {
       refreshInterval: options?.interval,

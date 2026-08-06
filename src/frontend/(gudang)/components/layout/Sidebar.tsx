@@ -54,6 +54,17 @@ export default function Sidebar() {
           </Link>
         ))}
       </nav>
+
+      <div className="mt-auto px-3 lg:px-4 space-y-0.5 border-t border-outline/20 pt-6">
+        <Link
+          href="/"
+          onClick={close}
+          className="flex items-center gap-3 px-3 lg:px-4 py-2.5 lg:py-3 text-on-surface-variant hover:text-on-surface transition-colors text-xs lg:text-sm rounded-lg"
+        >
+          <span className="material-symbols-outlined text-[18px] lg:text-[20px]">storefront</span>
+          <span className="font-medium">Kembali ke Website</span>
+        </Link>
+      </div>
     </aside>
   );
 

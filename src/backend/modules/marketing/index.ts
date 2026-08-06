@@ -1,4 +1,5 @@
 export * from "./types";
+export * from "./products";
 export * from "./banners/getMarketingBanners";
 export * from "./banners/createMarketingBanner";
 export * from "./banners/updateMarketingBanner";
