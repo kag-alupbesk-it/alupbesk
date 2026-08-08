@@ -7,15 +7,24 @@ interface GudangTableProps {
   items: GudangItem[];
   searchQuery: string;
   selectedMerek: string;
+  selectedKategori: string;
+  selectedProyek: string;
   daftarMerek: string[];
+  daftarProyek: string[];
   onSearchChange: (value: string) => void;
   onMerekChange: (value: string) => void;
+  onKategoriChange: (value: string) => void;
+  onProyekChange: (value: string) => void;
   onStock: (item: GudangItem) => void;
+  onMasuk: (item: GudangItem) => void;
+  onKeluar: (item: GudangItem) => void;
 }
 
 export function GudangTable({
-  items, searchQuery, selectedMerek, daftarMerek,
-  onSearchChange, onMerekChange, onStock,
+  items, searchQuery, selectedMerek, selectedKategori, selectedProyek,
+  daftarMerek, daftarProyek,
+  onSearchChange, onMerekChange, onKategoriChange, onProyekChange,
+  onStock, onMasuk, onKeluar,
 }: GudangTableProps) {
   return (
     <div className={s.tableCard}>
@@ -23,14 +32,33 @@ export function GudangTable({
         <div className={s.searchWrapper}>
           <span className={s.searchIcon}>search</span>
           <input type="text" value={searchQuery} onChange={(e) => onSearchChange(e.target.value)}
-            placeholder="Cari SKU, jenis, merek, atau lokasi..." className={s.searchInput} />
+            placeholder="Cari SKU, jenis, merek, kategori, atau lokasi..." className={s.searchInput} />
         </div>
-        <div className={s.filterWrapper}>
-          <label className={s.filterLabel}>Merek:</label>
-          <select value={selectedMerek} onChange={(e) => onMerekChange(e.target.value)} className={s.filterSelect}>
-            <option value="ALL">Semua Merek</option>
-            {daftarMerek.map((merek) => (<option key={merek} value={merek}>{merek}</option>))}
-          </select>
+        <div className={s.filterGroup}>
+          <div className={s.filterWrapper}>
+            <label className={s.filterLabel}>Merek:</label>
+            <select value={selectedMerek} onChange={(e) => onMerekChange(e.target.value)} className={s.filterSelect}>
+              <option value="ALL">Semua Merek</option>
+              {daftarMerek.map((merek) => (<option key={merek} value={merek}>{merek}</option>))}
+            </select>
+          </div>
+          <div className={s.filterWrapper}>
+            <label className={s.filterLabel}>Kategori:</label>
+            <select value={selectedKategori} onChange={(e) => onKategoriChange(e.target.value)} className={s.filterSelect}>
+              <option value="ALL">Semua</option>
+              <option value="eceran">Barang Eceran</option>
+              <option value="proyek">Proyek / Inventaris</option>
+            </select>
+          </div>
+          {daftarProyek.length > 0 && (
+            <div className={s.filterWrapper}>
+              <label className={s.filterLabel}>Proyek:</label>
+              <select value={selectedProyek} onChange={(e) => onProyekChange(e.target.value)} className={s.filterSelect}>
+                <option value="ALL">Semua Proyek</option>
+                {daftarProyek.map((proyek) => (<option key={proyek} value={proyek}>{proyek}</option>))}
+              </select>
+            </div>
+          )}
         </div>
       </div>
 
@@ -40,9 +68,11 @@ export function GudangTable({
             <tr>
               <th scope="col" className={s.th}>SKU / No. Model</th>
               <th scope="col" className={s.th}>Jenis Barang</th>
+              <th scope="col" className={s.thHiddenSm}>Kategori</th>
               <th scope="col" className={s.th}>Merek</th>
               <th scope="col" className={s.thHiddenSm}>Warna</th>
               <th scope="col" className={s.th}>Lokasi / Seksi</th>
+              <th scope="col" className={s.thHiddenMd}>Proyek</th>
               <th scope="col" className={s.thRight}>Jumlah / Stok</th>
               <th scope="col" className={s.thHiddenMd}>Catatan</th>
               <th scope="col" className={s.thRight}>Aksi</th>
@@ -51,7 +81,7 @@ export function GudangTable({
           <tbody className={s.tbody}>
             {items.length === 0 ? (
               <tr>
-                <td colSpan={8} className={s.emptyCell}>
+                <td colSpan={10} className={s.emptyCell}>
                   Tidak ada barang yang cocok dengan pencarian atau filter yang dipilih.
                 </td>
               </tr>
@@ -66,6 +96,11 @@ export function GudangTable({
                     <td className={s.td}>
                       <span className={s.jenisText}>{item.jenisBarang}</span>
                     </td>
+                    <td className={s.tdHiddenSm}>
+                      <span className={item.kategoriBarang === "proyek" ? s.kategoriProyekBadge : s.kategoriEceranBadge}>
+                        {item.kategoriBarang === "proyek" ? "Proyek" : "Eceran"}
+                      </span>
+                    </td>
                     <td className={s.td}>
                       <span className={s.merekBadge}>{item.merek}</span>
                     </td>
@@ -78,9 +113,17 @@ export function GudangTable({
                         {item.seksiLokasi}
                       </span>
                     </td>
+                    <td className={s.tdHiddenMd}>
+                      {item.proyek ? (
+                        <span className={s.proyekText}>{item.proyek}</span>
+                      ) : (
+                        <span className={s.noCatatan}>&mdash;</span>
+                      )}
+                    </td>
                     <td className={s.tdRight}>
                       <div className={s.stokWrapper}>
                         <span className={isLowStock ? s.stokValueError : s.stokValue}>{item.stok}</span>
+                        <span className={s.satuanText}>{item.satuan}</span>
                         {isLowStock && <span className={s.lowStockBadge}>Low Stock</span>}
                       </div>
                     </td>
@@ -93,6 +136,12 @@ export function GudangTable({
                     </td>
                     <td className={s.tdRight}>
                       <div className={s.aksiWrapper}>
+                        <button onClick={() => onMasuk(item)} title="Catat barang masuk" className={s.editButton}>
+                          <span className={s.iconSm}>login</span>
+                        </button>
+                        <button onClick={() => onKeluar(item)} title="Catat barang keluar" className={s.editButton}>
+                          <span className={s.iconSm}>logout</span>
+                        </button>
                         <button onClick={() => onStock(item)} title="Kelola stok" className={s.editButton}>
                           <span className={s.iconSm}>inventory</span>
                         </button>
@@ -111,7 +160,7 @@ export function GudangTable({
           Menampilkan <span className={s.footerAccent}>{items.length}</span> item
         </p>
         <p className={s.footerHint}>
-          Klik ikon <span className={s.footerEdit}>inventaris</span> untuk kelola stok
+          Ikon <span className={s.footerEdit}>masuk / keluar</span> untuk catat pergerakan barang
         </p>
       </div>
     </div>

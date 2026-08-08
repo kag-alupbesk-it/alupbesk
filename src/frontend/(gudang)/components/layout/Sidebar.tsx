@@ -7,6 +7,8 @@ import { useSidebar } from "./SidebarProvider";
 
 const navItems = [
   { href: "/gudang", label: "Data Gudang", icon: "inventory_2" },
+  { href: "/gudang/pesanan", label: "Pesanan Gudang", icon: "assignment" },
+  { href: "/gudang/pesanan-proyek", label: "Pesanan Proyek", icon: "apartment" },
 ];
 
 export default function Sidebar() {
@@ -14,7 +16,9 @@ export default function Sidebar() {
   const { open, close, desktopOpen } = useSidebar();
 
   const isActive = (href: string) =>
-    href === "/gudang" ? pathname === "/gudang" : pathname.startsWith(href);
+    href === "/gudang"
+      ? pathname === "/gudang"
+      : pathname === href || pathname.startsWith(`${href}/`);
 
   const sidebarContent = (
     <aside

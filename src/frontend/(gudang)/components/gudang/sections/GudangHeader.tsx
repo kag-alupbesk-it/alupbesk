@@ -4,9 +4,10 @@ interface GudangHeaderProps {
   totalStok: number;
   totalJenisItem: number;
   jumlahLowStock: number;
+  onTambah?: () => void;
 }
 
-export function GudangHeader({ totalStok, totalJenisItem, jumlahLowStock }: GudangHeaderProps) {
+export function GudangHeader({ totalStok, totalJenisItem, jumlahLowStock, onTambah }: GudangHeaderProps) {
   return (
     <header className={s.header}>
       <div>
@@ -18,6 +19,13 @@ export function GudangHeader({ totalStok, totalJenisItem, jumlahLowStock }: Guda
       </div>
 
       <div className={s.headerActions}>
+        {onTambah && (
+          <button onClick={onTambah} className={s.tambahButton}>
+            <span className={s.tambahIcon}>add</span>
+            Tambah Barang
+          </button>
+        )}
+        <span className={s.divider} />
         <div className={s.metricCard}>
           <div className={s.metricIcon}>
             <span className={s.iconMd}>inventory_2</span>
