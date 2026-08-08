@@ -1,1 +1,1 @@
-export type { KasData, KasEntry } from "@/backend/modules/keuangan";
+export type { KasData, KasEntry, KasEntryInput, KasTipe, KasKategori } from "@/backend/modules/keuangan";

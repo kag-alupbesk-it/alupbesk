@@ -1,0 +1,23 @@
+export const container = "p-3 sm:p-4 md:p-10 min-h-screen"
+export const wrapper = "mx-auto max-w-4xl"
+export const header = "mb-8 flex flex-col gap-4 md:flex-row md:items-start md:justify-between"
+export const title = "text-xl lg:text-2xl font-extrabold text-on-surface tracking-tight uppercase font-headline"
+export const badge = "rounded-full bg-secondary/10 px-3 py-1 text-[10px] font-bold text-secondary border border-secondary/20 uppercase tracking-widest"
+export const subtitle = "mt-1 text-xs text-on-surface-variant"
+
+export const card = "rounded-xl border border-outline/30 bg-primary-container shadow-2xl p-5 md:p-6"
+export const cardTitle = "text-sm font-bold text-on-surface uppercase tracking-wider font-headline"
+export const cardSubtitle = "text-[11px] text-on-surface-variant"
+export const fieldLabel = "block text-[10px] font-bold tracking-widest text-on-surface-variant uppercase mb-1"
+export const input = "w-full rounded-lg border border-outline/30 bg-surface-variant px-3 py-2 text-xs text-on-surface placeholder:text-on-surface-variant focus:ring-1 focus:ring-secondary focus:border-secondary transition-all outline-none"
+export const textarea = "w-full rounded-lg border border-outline/30 bg-surface-variant px-3 py-2 text-xs text-on-surface placeholder:text-on-surface-variant focus:ring-1 focus:ring-secondary focus:border-secondary transition-all outline-none"
+export const hint = "mt-1 text-[10px] text-on-surface-variant"
+
+export const itemCard = "flex items-center justify-between gap-3 rounded-lg border border-outline/30 bg-surface-variant/40 px-3 py-2"
+export const itemInfo = "min-w-0"
+export const itemTitle = "text-xs font-bold text-on-surface"
+export const itemMeta = "text-[10px] text-on-surface-variant truncate"
+export const qtyInput = "w-20 rounded-lg border border-outline/30 bg-surface-variant px-2 py-1.5 text-xs text-on-surface focus:ring-1 focus:ring-secondary focus:border-secondary outline-none text-center"
+
+export const primaryButton = "flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-secondary hover:brightness-110 text-on-secondary text-xs font-bold transition-all shadow-lg shadow-secondary/20 disabled:opacity-50 disabled:cursor-not-allowed"
+export const notice = "mb-6 rounded-xl border border-secondary/30 bg-secondary/10 px-4 py-3 text-xs text-secondary animate-fadeIn"

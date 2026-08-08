@@ -5,8 +5,9 @@ export type KasTipe = "masuk" | "keluar";
 export type PaymentStatus = "belum_bayar" | "lunas";
 export type KasKategori = "eceran" | "proyek" | "operasional";
 
-// Satu baris transaksi kas. Pemasukan otomatis dari pesanan; pengeluaran
-// dicatat manual oleh admin keuangan.
+// Satu baris transaksi kas. Pemasukan disinkronkan otomatis dari pesanan
+// disetujui dan bisa dikoreksi manual; pengeluaran dicatat manual oleh
+// admin keuangan. Keduanya bisa ditambah, diubah, dan dihapus (CRUD).
 export interface KasEntry {
   id: string;
   tipe: KasTipe;
@@ -16,6 +17,14 @@ export interface KasEntry {
   kategori: KasKategori;
   tanggal: string;
   createdAt: string;
+}
+
+export interface KasEntryInput {
+  tipe: KasTipe;
+  deskripsi: string;
+  jumlah: number;
+  kategori: KasKategori;
+  tanggal?: string;
 }
 
 export interface KasData {
@@ -38,7 +47,7 @@ export interface PenagihanItem {
 
 export type KasResult =
   | { ok: true; entry: KasEntry }
-  | { ok: false; code: "INVALID_AMOUNT" };
+  | { ok: false; code: "INVALID_AMOUNT" | "INVALID_INPUT" | "KAS_ENTRY_NOT_FOUND" };
 
 export type PenagihanResult =
   | { ok: true; item: PenagihanItem }
