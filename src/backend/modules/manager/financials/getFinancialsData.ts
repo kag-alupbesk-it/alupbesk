@@ -1,4 +1,6 @@
 import { getLocalOrders } from "@/services/orders";
+import { getCatalogProduct } from "@/services/catalog";
+import { getGudangItems } from "@/backend/modules/gudang";
 import { formatRp, isRevenueStatus, periodDays, withinDays } from "../helpers";
 import type { BarData, FinancialsData, Metric, Statement } from "../types";
 
@@ -7,6 +9,7 @@ export function getFinancialsData(period = "monthly"): FinancialsData {
   const days = periodDays(period);
   const now = Date.now();
   const windowMs = days * 86400000;
+  const gudangItems = getGudangItems();
 
   const current = orders.filter((order) => withinDays(order.createdAt, now, days));
   const revenueList = current.filter((order) => isRevenueStatus(order.status));
@@ -14,6 +17,24 @@ export function getFinancialsData(period = "monthly"): FinancialsData {
   const total = current.length;
   const approved = revenueList.length;
   const rejected = current.filter((order) => order.status === "rejected_by_manager" || order.status === "cancelled").length;
+
+  // Memisah pendapatan ke "eceran" vs "proyek" berdasarkan kategori item gudang
+  // yang cocok dengan SKU produk tiap baris pesanan.
+  let eceranRevenue = 0;
+  let proyekRevenue = 0;
+  for (const order of revenueList) {
+    for (const line of order.items) {
+      const product = getCatalogProduct(line.productId);
+      const sku = product?.sku ?? "";
+      const item = gudangItems.find((gudangItem) => gudangItem.sku === sku);
+      if (item?.kategoriBarang === "proyek") proyekRevenue += line.subtotal;
+      else eceranRevenue += line.subtotal;
+    }
+  }
+  const donut = [
+    { value: eceranRevenue, label: "Penjualan Eceran", color: "#dba501" },
+    { value: proyekRevenue, label: "Pendapatan Proyek", color: "#4f9cf0" },
+  ].filter((segment) => segment.value > 0);
 
   const metrics: Metric[] = [
     { label: "Net Revenue", value: formatRp(revenue), sub: null, icon: "trending_up" },
@@ -50,5 +71,5 @@ export function getFinancialsData(period = "monthly"): FinancialsData {
     margin: `${value > 0 ? 100 : 0}%`,
   }));
 
-  return { metrics, statements, expenses: [], barChart, donut: [] };
+  return { metrics, statements, expenses: [], barChart, donut };
 }

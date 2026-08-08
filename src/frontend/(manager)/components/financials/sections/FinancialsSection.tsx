@@ -69,6 +69,11 @@ export default function FinancialsSection() {
   const metrics = data?.metrics ?? [];
   const statements = data?.statements ?? [];
   const expenses = data?.expenses ?? [];
+  const donut = data?.donut ?? [];
+  const donutTotal = donut.reduce((sum, d) => sum + d.value, 0);
+  const circumference = 2 * Math.PI * 40;
+  const lead = donut[0];
+  const leadPct = donutTotal > 0 && lead ? Math.round((lead.value / donutTotal) * 100) : 0;
 
   return (
     <div className={styles.container}>
@@ -117,22 +122,41 @@ export default function FinancialsSection() {
 
         <div className={styles.expenseCard}>
           <div className={styles.expenseCardHeader}>
-            <h4 className={styles.sectionTitle}>Expense Breakdown</h4>
-            <p className={styles.sectionSubtitle}>Allocation by Category</p>
+            <h4 className={styles.sectionTitle}>Revenue Split</h4>
+            <p className={styles.sectionSubtitle}>Penjualan Eceran vs Pendapatan Proyek</p>
           </div>
           <div className={styles.donutContainer}>
             <svg className={styles.donutSvg} viewBox="0 0 100 100">
               <circle cx="50" cy="50" fill="transparent" r="40" stroke="#242e36" strokeWidth="10" />
-              <circle cx="50" cy="50" fill="transparent" r="40" stroke="#dba501" strokeDasharray="251.2" strokeDashoffset="251.2" strokeLinecap="round" strokeWidth="10" />
-              <circle cx="50" cy="50" fill="transparent" r="40" stroke="#9ca3af" strokeDasharray="251.2" strokeDashoffset="251.2" strokeLinecap="round" strokeWidth="10" />
+              {donut.map((d, i) => {
+                const frac = d.value / donutTotal;
+                const cumulative = donut.slice(0, i).reduce((sum, x) => sum + x.value, 0) / donutTotal;
+                return (
+                  <circle
+                    key={d.label}
+                    cx="50" cy="50" fill="transparent" r="40" stroke={d.color}
+                    strokeDasharray={`${frac * circumference} ${circumference}`}
+                    strokeDashoffset={-cumulative * circumference}
+                    strokeLinecap="round" strokeWidth="10"
+                  />
+                );
+              })}
             </svg>
             <div className={styles.donutCenter}>
-              <span className={styles.donutCenterValue}>0%</span>
-              <span className={styles.donutCenterLabel}>No Data</span>
+              <span className={styles.donutCenterValue}>{donutTotal > 0 ? `${leadPct}%` : "0%"}</span>
+              <span className={styles.donutCenterLabel}>{lead ? lead.label : "No Data"}</span>
             </div>
           </div>
           <div className={styles.expenseList}>
-            {expenses.map((e) => (
+            {donutTotal > 0 ? donut.map((d) => (
+              <div key={d.label} className={styles.expenseItem}>
+                <div className={styles.expenseItemLeft}>
+                  <span className={styles.expenseDot} style={{ backgroundColor: d.color }} />
+                  <span className={styles.expenseLabel}>{d.label}</span>
+                </div>
+                <span className={styles.expenseValue}>{Math.round((d.value / donutTotal) * 100)}%</span>
+              </div>
+            )) : expenses.map((e) => (
               <div key={e.label} className={styles.expenseItem}>
                 <div className={styles.expenseItemLeft}>
                   <span className={`${styles.expenseDot} ${e.color} ${e.color === "bg-secondary" ? styles.expenseDotShadow : ""}`} />
