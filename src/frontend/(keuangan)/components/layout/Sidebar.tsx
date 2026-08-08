@@ -6,9 +6,9 @@ import { clsx } from "clsx";
 import { useSidebar } from "./SidebarProvider";
 
 const navItems = [
-  { href: "/gudang", label: "Data Gudang", icon: "inventory_2" },
-  { href: "/gudang/pesanan", label: "Pesanan Gudang", icon: "assignment" },
-  { href: "/gudang/pesanan-proyek", label: "Pesanan Proyek", icon: "apartment" },
+  { href: "/keuangan", label: "Kas", icon: "payments" },
+  { href: "/keuangan/penagihan", label: "Penagihan", icon: "receipt_long" },
+  { href: "/keuangan/laporan", label: "Laporan Keuangan", icon: "bar_chart" },
 ];
 
 export default function Sidebar() {
@@ -16,8 +16,8 @@ export default function Sidebar() {
   const { open, close, desktopOpen } = useSidebar();
 
   const isActive = (href: string) =>
-    href === "/gudang"
-      ? pathname === "/gudang"
+    href === "/keuangan"
+      ? pathname === "/keuangan"
       : pathname === href || pathname.startsWith(`${href}/`);
 
   const sidebarContent = (
@@ -34,7 +34,7 @@ export default function Sidebar() {
           ALUPBESK
         </h1>
         <p className="text-on-surface-variant text-[9px] lg:text-[10px] font-semibold tracking-widest uppercase mt-1">
-          Gudang Inventaris
+          Admin Keuangan
         </p>
       </div>
 
