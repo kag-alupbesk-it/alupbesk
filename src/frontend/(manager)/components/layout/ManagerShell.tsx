@@ -8,6 +8,7 @@ import { useSidebar } from "./SidebarProvider";
 const pageTitles: Record<string, string> = {
   "/manager": "Overview",
   "/manager/financials": "Financials",
+  "/manager/pesanan": "Pesanan Proyek",
   "/manager/users": "User Management",
   "/manager/inventory": "Inventory",
   "/manager/reports": "Reports",

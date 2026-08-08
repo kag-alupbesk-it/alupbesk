@@ -13,7 +13,6 @@ import * as s from "./style";
 import { ProjectOrdersTable } from "./ProjectOrdersTable";
 import { ProjectOrderDetailModal } from "./ProjectOrderDetailModal";
 import { ProjectOrderActionModal } from "./ProjectOrderActionModal";
-import { ProjectOrderFormModal } from "./ProjectOrderFormModal";
 
 const PAGE_SIZE = 6;
 
@@ -25,7 +24,6 @@ export function ProjectOrdersSection() {
   const [filterOpen, setFilterOpen] = useState(false);
   const [page, setPage] = useState(0);
   const [detail, setDetail] = useState<ProjectOrder | null>(null);
-  const [formOpen, setFormOpen] = useState(false);
   const [actionOrder, setActionOrder] = useState<ProjectOrder | null>(null);
   const [action, setAction] = useState<ProjectOrderAction | null>(null);
   const [deleteOrder, setDeleteOrder] = useState<ProjectOrder | null>(null);
@@ -145,13 +143,9 @@ export function ProjectOrdersSection() {
               <span className={s.badge}>Custom Order</span>
             </div>
             <p className={s.headerSubtitle}>
-              Pesanan dari permintaan custom pelanggan: konversi permintaan menjadi pesanan, proses pengambilan stok barang proyek hingga pengiriman selesai.
+              Pesanan proyek yang dibuat manajer: proses pengambilan stok barang proyek hingga pengiriman selesai.
             </p>
           </div>
-          <button className={s.createButton} onClick={() => setFormOpen(true)}>
-            <span className="material-symbols-outlined text-[18px]">add_task</span>
-            Buat Pesanan
-          </button>
         </div>
 
         {notice && (
@@ -255,16 +249,6 @@ export function ProjectOrdersSection() {
       </div>
 
       <ProjectOrderDetailModal order={detail} onClose={() => setDetail(null)} />
-      {formOpen && (
-        <ProjectOrderFormModal
-          onClose={() => setFormOpen(false)}
-          onCreated={() => {
-            setFormOpen(false);
-            flash("Pesanan proyek berhasil dibuat.");
-            load();
-          }}
-        />
-      )}
       <ProjectOrderActionModal
         order={actionOrder}
         action={action}

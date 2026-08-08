@@ -9,6 +9,7 @@ import * as styles from "./style";
 const navItems = [
   { href: "/manager", label: "Overview", icon: "dashboard" },
   { href: "/manager/financials", label: "Financials", icon: "payments" },
+  { href: "/manager/pesanan", label: "Pesanan Proyek", icon: "apartment" },
   { href: "/manager/users", label: "User Management", icon: "group" },
   { href: "/manager/inventory", label: "Inventory", icon: "inventory_2" },
   { href: "/manager/reports", label: "Reports", icon: "assessment" },
