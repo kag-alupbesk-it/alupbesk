@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { createProjectOrder } from "@/backend/modules/gudang";
+import { flushWrites } from "@/services/supabase";
 
 const createSchema = z.object({
   requestId: z.string().optional(),
@@ -26,6 +27,7 @@ export async function POST(request: Request) {
     );
 
   const result = createProjectOrder(parsed.data);
+  await flushWrites();
   if (result.ok) return Response.json({ success: true, data: result.order }, { status: 201 });
 
   if (result.code === "REQUEST_NOT_FOUND")

@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { createKasEntry, getKasData } from "@/backend/modules/keuangan";
+import { flushWrites } from "@/services/supabase";
 
 const kasSchema = z.object({
   tipe: z.enum(["masuk", "keluar"], { message: "Tipe transaksi tidak valid." }),
@@ -10,7 +11,9 @@ const kasSchema = z.object({
 });
 
 export async function GET() {
-  return Response.json({ success: true, data: getKasData() });
+  const data = getKasData();
+  await flushWrites();
+  return Response.json({ success: true, data });
 }
 
 export async function POST(request: Request) {
@@ -22,6 +25,7 @@ export async function POST(request: Request) {
     );
 
   const result = createKasEntry(parsed.data);
+  await flushWrites();
   if (result.ok) return Response.json({ success: true, data: result.entry }, { status: 201 });
 
   if (result.code === "INVALID_AMOUNT")

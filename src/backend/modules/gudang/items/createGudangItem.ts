@@ -1,5 +1,5 @@
-import { gudangItems } from "./store";
-import { generateMovementId, gudangMovements } from "../movements/store";
+import { persistGudangItem, gudangItems } from "./store";
+import { generateMovementId, persistGudangMovement } from "../movements/store";
 import type { GudangItem, KategoriBarang } from "./types";
 import type { GudangMovement } from "../movements/types";
 
@@ -44,7 +44,7 @@ export function createGudangItem(input: GudangItemInput): GudangItemCreateResult
     proyek: input.proyek?.trim() || undefined,
     catatan: input.catatan?.trim() || undefined,
   };
-  gudangItems.set(id, item);
+  persistGudangItem(item);
 
   if (input.stokAwal > 0) {
     const movement: GudangMovement = {
@@ -59,7 +59,7 @@ export function createGudangItem(input: GudangItemInput): GudangItemCreateResult
       stokSebelum: 0,
       stokSesudah: input.stokAwal,
     };
-    gudangMovements.set(movement.id, movement);
+    persistGudangMovement(movement);
   }
 
   return { ok: true, item };

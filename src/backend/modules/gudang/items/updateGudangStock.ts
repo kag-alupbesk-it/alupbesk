@@ -1,4 +1,4 @@
-import { gudangItems } from "./store";
+import { persistGudangItem, gudangItems } from "./store";
 import type { GudangItem } from "./types";
 
 export interface GudangStockInput {
@@ -15,6 +15,6 @@ export function updateGudangStock(
   const item = gudangItems.get(id);
   if (!item) return undefined;
   const updated = { ...item, stok: input.stok, minStok: input.minStok };
-  gudangItems.set(id, updated);
+  persistGudangItem(updated);
   return updated;
 }

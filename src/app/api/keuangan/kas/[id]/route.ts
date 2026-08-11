@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { deleteKasEntry, updateKasEntry } from "@/backend/modules/keuangan";
+import { flushWrites } from "@/services/supabase";
 
 const kasSchema = z.object({
   tipe: z.enum(["masuk", "keluar"], { message: "Tipe transaksi tidak valid." }),
@@ -26,6 +27,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
     );
 
   const result = updateKasEntry(id, parsed.data);
+  await flushWrites();
   if (!result.ok) {
     if (result.code === "KAS_ENTRY_NOT_FOUND") return notFound(id);
     return Response.json({ success: false, error: { code: result.code, message: "Data transaksi tidak valid." } }, { status: 400 });
@@ -36,6 +38,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
 export async function DELETE(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const result = deleteKasEntry(id);
+  await flushWrites();
   if (!result.ok) return notFound(id);
   return Response.json({ success: true, data: result.entry });
 }

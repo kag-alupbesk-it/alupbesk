@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { createLocalOrder } from "@/services/orders";
+import { flushWrites } from "@/services/supabase";
 
 const orderSchema = z.object({
   items: z.array(z.object({
@@ -28,8 +29,10 @@ export async function POST(request: Request) {
   }
   try {
     const order = createLocalOrder(parsed.data);
+    await flushWrites();
     return Response.json({ success: true, data: order }, { status: 201 });
   } catch (error) {
+    await flushWrites();
     return Response.json(
       { success: false, error: { code: "ORDER_VALIDATION_FAILED", message: error instanceof Error ? error.message : "Pesanan tidak valid." } },
       { status: 422 }

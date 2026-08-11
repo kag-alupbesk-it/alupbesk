@@ -1,4 +1,4 @@
-import { customRequests } from "./store";
+import { persistCustomRequest } from "./store";
 import type { CreateCustomRequestInput, CustomRequest } from "./types";
 
 export function createCustomRequest(input: CreateCustomRequestInput): CustomRequest {
@@ -12,7 +12,7 @@ export function createCustomRequest(input: CreateCustomRequestInput): CustomRequ
     updatedAt: now,
   };
 
-  customRequests.set(request.id, request);
+  persistCustomRequest(request);
 
   return request;
 }

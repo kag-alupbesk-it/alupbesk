@@ -1,4 +1,4 @@
-import { marketingBanners } from "./store";
+import { persistMarketingBanner } from "./store";
 import type { MarketingBanner, MarketingBannerInput } from "../types";
 export function createMarketingBanner(
   input: MarketingBannerInput,
@@ -9,6 +9,6 @@ export function createMarketingBanner(
     title: input.title.trim(),
     createdAt: new Date().toISOString(),
   };
-  marketingBanners.set(banner.id, banner);
+  persistMarketingBanner(banner);
   return banner;
 }

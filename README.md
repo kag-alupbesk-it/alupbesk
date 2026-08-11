@@ -1,17 +1,20 @@
 # ALUPBESK
 
-Website katalog aluminium dan komponen industri berbasis Next.js 16, Tailwind CSS, serta Express API lokal. Proyek dapat dijalankan tanpa database untuk pengembangan tampilan dan alur checkout awal.
+Website katalog aluminium dan komponen industri berbasis Next.js 16, Tailwind CSS, serta Express API lokal. Data dipersist ke Supabase (PostgreSQL) — saat server dimulai, seluruh data di-load ke memori lalu setiap mutasi ditulis kembali secara sinkron.
 
 ## Menjalankan project
 
 1. Install Node.js 20 atau lebih baru.
-2. Salin konfigurasi contoh:
+2. Buat project Supabase, lalu jalankan seluruh isi `database/schema.sql` di SQL Editor Supabase.
+3. Salin `.env.example` menjadi `.env` dan isi dengan kredensial Supabase:
 
    ```powershell
-   Copy-Item .env.example .env.local
+   Copy-Item .env.example .env
    ```
 
-3. Install paket dan jalankan dua terminal:
+   Variabel yang dibutuhkan: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, dan `SUPABASE_SERVICE_ROLE_KEY` (untuk tulis lintas-RLS dari server).
+
+4. Install paket dan jalankan dua terminal:
 
    ```powershell
    npm install
@@ -24,7 +27,7 @@ Website katalog aluminium dan komponen industri berbasis Next.js 16, Tailwind CS
    npm run dev
    ```
 
-4. Buka:
+5. Buka:
 
    - Website: http://localhost:3000
    - Katalog penuh: http://localhost:3000/katalog
@@ -42,6 +45,13 @@ npm run lint      # Pemeriksaan ESLint
 npx tsc --noEmit  # Pemeriksaan TypeScript
 npm run build     # Build produksi
 ```
+
+## Persistensi Supabase
+
+- Skema database ada di `database/schema.sql` (tabel, enum, index). Eksekusi sekali di SQL Editor Supabase.
+- Saat server start, `src/services/supabaseHydrate.ts` memuat semua tabel ke store in-memory dan men-seed data awal (produk, gudang, kas) jika tabel kosong. Pemicu: `src/instrumentation.ts` untuk Next.js dan middleware di `src/backend/app.ts` untuk Express.
+- Setiap mutasi store memanggil `enqueueUpsert`/`enqueueDelete` dari `src/services/supabase.ts`, lalu route API memanggil `await flushWrites()` untuk menulis antrean ke Supabase.
+- Karena tulis memakai antrean sinkron, jangan jalankan dua instance aplikasi (mis. `next dev` + `next start`) terhadap database yang sama secara bersamaan.
 
 ## Catatan pengembangan
 

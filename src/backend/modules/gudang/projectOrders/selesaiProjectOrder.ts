@@ -1,4 +1,4 @@
-import { projectOrders } from "./store";
+import { persistProjectOrder, projectOrders } from "./store";
 import type { ProjectOrder, ProjectOrderResult } from "./types";
 
 // Menandai pesanan proyek yang sudah dikirim sebagai selesai.
@@ -13,7 +13,7 @@ export function selesaiProjectOrder(id: string): ProjectOrderResult {
     completedAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   };
-  projectOrders.set(id, updated);
+  persistProjectOrder(updated);
 
   return { ok: true, order: updated };
 }
