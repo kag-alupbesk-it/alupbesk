@@ -1,4 +1,4 @@
-import { customRequests } from "./store";
+import { persistCustomRequest, customRequests } from "./store";
 import type { CustomRequest, CustomRequestStatus } from "./types";
 
 // Mengubah status permintaan custom. Dipakai gudang saat permintaan custom
@@ -15,7 +15,7 @@ export function setCustomRequestStatus(
     status,
     updatedAt: new Date().toISOString(),
   };
-  customRequests.set(id, updated);
+  persistCustomRequest(updated);
 
   return updated;
 }

@@ -1,5 +1,5 @@
-import { gudangItems } from "../items/store";
-import { generateMovementId, gudangMovements } from "./store";
+import { gudangItems, persistGudangItem } from "../items/store";
+import { generateMovementId, persistGudangMovement } from "./store";
 import type { GudangItem } from "../items/types";
 import type { GudangMovement, GudangMovementResult, MasukInput } from "./types";
 
@@ -15,7 +15,7 @@ export function createGudangMasuk(
   const stokSesudah = stokSebelum + input.jumlah;
 
   const updated: GudangItem = { ...item, stok: stokSesudah };
-  gudangItems.set(itemId, updated);
+  persistGudangItem(updated);
 
   const movement: GudangMovement = {
     id: generateMovementId(),
@@ -30,7 +30,7 @@ export function createGudangMasuk(
     stokSebelum,
     stokSesudah,
   };
-  gudangMovements.set(movement.id, movement);
+  persistGudangMovement(movement);
 
   return { ok: true, item: { id: itemId, stok: stokSesudah }, movement };
 }

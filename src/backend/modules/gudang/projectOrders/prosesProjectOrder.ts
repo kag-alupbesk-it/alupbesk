@@ -1,4 +1,4 @@
-import { projectOrders } from "./store";
+import { persistProjectOrder, projectOrders } from "./store";
 import { getGudangItems } from "../items/getGudangItems";
 import { createGudangKeluar } from "../movements/createGudangKeluar";
 import type { ProjectOrder, ProjectProcessResult } from "./types";
@@ -50,7 +50,7 @@ export function prosesProjectOrder(id: string): ProjectProcessResult {
     processedAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   };
-  projectOrders.set(id, updated);
+  persistProjectOrder(updated);
 
   return { ok: true, order: updated, failed };
 }

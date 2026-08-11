@@ -1,4 +1,4 @@
-import { kasEntries } from "./store";
+import { persistKasEntry, kasEntries } from "./store";
 import type { KasEntryInput, KasResult } from "../types";
 
 export function updateKasEntry(id: string, input: KasEntryInput): KasResult {
@@ -17,6 +17,6 @@ export function updateKasEntry(id: string, input: KasEntryInput): KasResult {
     kategori: input.kategori,
     tanggal: input.tanggal || existing.tanggal,
   };
-  kasEntries.set(id, updated);
+  persistKasEntry(updated);
   return { ok: true, entry: updated };
 }

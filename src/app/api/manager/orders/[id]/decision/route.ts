@@ -1,4 +1,5 @@
 import { decideOrder, MANAGER_DECISIONS } from "@/backend/modules/manager";
+import { flushWrites } from "@/services/supabase";
 
 export async function POST(
   request: Request,
@@ -23,6 +24,7 @@ export async function POST(
   }
 
   const order = decideOrder(id, decision as "confirmed" | "rejected_by_manager", typeof reason === "string" ? reason : undefined);
+  await flushWrites();
   if (!order) {
     return Response.json(
       { success: false, error: { code: "ORDER_NOT_FOUND", message: "Pesanan tidak ditemukan." } },

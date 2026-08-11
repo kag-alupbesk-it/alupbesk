@@ -1,3 +1,4 @@
+import { enqueueDelete } from "@/services/supabase";
 import { projectOrders } from "./store";
 import type { ProjectOrderDeleteResult } from "./types";
 
@@ -8,5 +9,6 @@ export function deleteProjectOrder(id: string): ProjectOrderDeleteResult {
   if (current.status !== "diajukan") return { ok: false, code: "ORDER_NOT_DELETABLE" };
 
   projectOrders.delete(id);
+  enqueueDelete("project_orders", "id", id);
   return { ok: true };
 }

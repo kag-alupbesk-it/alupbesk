@@ -2,7 +2,7 @@ import { getLocalOrders } from "@/services/orders";
 import { getCatalogProduct } from "@/services/catalog";
 import { getGudangItems, getProjectOrders } from "@/backend/modules/gudang";
 import { isRevenueStatus } from "@/backend/modules/manager/helpers";
-import { kasEntries } from "./store";
+import { persistKasEntry, kasEntries } from "./store";
 import type { KasKategori } from "../types";
 
 // Menambahkan pemasukan otomatis dari pesanan yang disetujui ke buku kas,
@@ -21,7 +21,7 @@ export function syncKasDariPesanan(): void {
       const item = gudangItems.find((gudangItem) => gudangItem.sku === product?.sku);
       if (item?.kategoriBarang === "proyek") kategori = "proyek";
     }
-    kasEntries.set(id, {
+    persistKasEntry({
       id,
       tipe: "masuk",
       sumber: `Pesanan ${order.id}`,
@@ -37,7 +37,7 @@ export function syncKasDariPesanan(): void {
     if (order.status === "diajukan") continue;
     const id = `masuk-${order.id}`;
     if (kasEntries.has(id)) continue;
-    kasEntries.set(id, {
+    persistKasEntry({
       id,
       tipe: "masuk",
       sumber: `Pesanan proyek ${order.id}`,

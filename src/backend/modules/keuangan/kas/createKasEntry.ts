@@ -1,4 +1,4 @@
-import { kasEntries, seedKasEntries } from "./store";
+import { persistKasEntry, seedKasEntries } from "./store";
 import type { KasEntry, KasEntryInput, KasResult } from "../types";
 
 export function createKasEntry(input: KasEntryInput): KasResult {
@@ -9,7 +9,7 @@ export function createKasEntry(input: KasEntryInput): KasResult {
 
   const createdAt = new Date().toISOString();
   const entry: KasEntry = {
-    id: `keu-${input.tipe === "masuk" ? "masuk" : "keluar"}-${kasEntries.size + 1}-${Date.now()}`,
+    id: `keu-${input.tipe === "masuk" ? "masuk" : "keluar"}-${Date.now()}`,
     tipe: input.tipe,
     sumber: input.tipe === "masuk" ? "Pencatatan manual" : "Manual",
     deskripsi: input.deskripsi.trim(),
@@ -18,6 +18,6 @@ export function createKasEntry(input: KasEntryInput): KasResult {
     tanggal: input.tanggal || createdAt.slice(0, 10),
     createdAt,
   };
-  kasEntries.set(entry.id, entry);
+  persistKasEntry(entry);
   return { ok: true, entry };
 }

@@ -1,4 +1,4 @@
-import { projectOrders } from "./store";
+import { persistProjectOrder } from "./store";
 import { getCustomRequests, setCustomRequestStatus } from "@/backend/modules/custom";
 import { getGudangItems } from "../items/getGudangItems";
 import type {
@@ -80,7 +80,7 @@ export function createProjectOrder(input: CreateProjectOrderInput): CreateProjec
     updatedAt: createdAt,
   };
 
-  projectOrders.set(order.id, order);
+  persistProjectOrder(order);
   if (requestId) setCustomRequestStatus(requestId, "accepted");
 
   return { ok: true, order };

@@ -5,8 +5,19 @@ import marketingRouter from "./modules/marketing/router";
 import customRouter from "./modules/custom/router";
 import gudangRouter from "./modules/gudang/router";
 import managerRouter from "./modules/manager/router";
+import { ensureHydrated } from "@/services/supabaseHydrate";
+import { flushWrites } from "@/services/supabase";
 export const app = express();
 app.use(corsMiddleware); app.use(express.json());
+// Muat data dari Supabase sebelum memproses request, lalu kirim antrean
+// tulis setelah respons selesai agar data ikut tersimpan.
+app.use((_request, _response, next) => {
+  void ensureHydrated().then(() => next());
+});
+app.use((_request, response, next) => {
+  response.on("finish", () => void flushWrites());
+  next();
+});
 app.use("/api/catalog", catalogRouter); app.use("/api/checkout", checkoutRouter); app.use("/api/portfolio", portfolioRouter);
 app.use("/api/marketing", marketingRouter);
 app.use("/api/custom", customRouter);
