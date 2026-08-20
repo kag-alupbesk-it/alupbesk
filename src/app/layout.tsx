@@ -1,9 +1,35 @@
 import "./globals.css";
 import Providers from "./Providers";
 import { themeInitScript } from "./theme-script";
+import ServiceWorkerRegistration from "./ServiceWorkerRegistration";
 
 export const metadata = {
   title: "ALUPBESK | Solusi Produk Aluminium & Komponen Industrial Terpercaya",
+  description:
+    "Solusi Produk Aluminium & Komponen Industrial Terpercaya - Katalog, Pemesanan, dan Manajemen",
+  manifest: "/manifest.json",
+  themeColor: "#e94560",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "ALUPBESK",
+  },
+  formatDetection: {
+    telephone: true,
+  },
+  icons: {
+    icon: [
+      { url: "/icon-192x192.png", sizes: "192x192", type: "image/png" },
+      { url: "/icon-512x512.png", sizes: "512x512", type: "image/png" },
+    ],
+    apple: [
+      {
+        url: "/apple-touch-icon.png",
+        sizes: "180x180",
+        type: "image/png",
+      },
+    ],
+  },
 };
 
 export default function RootLayout({
@@ -41,6 +67,7 @@ export default function RootLayout({
         suppressHydrationWarning
       >
         <Providers>{children}</Providers>
+        <ServiceWorkerRegistration />
       </body>
     </html>
   );
