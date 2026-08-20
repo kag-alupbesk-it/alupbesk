@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import type { CaseStudy, PortfolioItem } from "@/services/portfolio";
 import { portfolioApi } from "@/services/api";
+import { Navbar } from "@/frontend/(pelanggan)/components/layout";
 
 import { portfolioStyles as styles } from "../style";
 import ProjectCard from "./ProjectCard";
@@ -28,6 +29,7 @@ export default function PortfolioSection() {
 
   return (
     <div className={styles.page}>
+      <Navbar />
       <main className={styles.content}>
         <header className={styles.header}>
           <span className={styles.eyebrow}>PORTOFOLIO</span>
