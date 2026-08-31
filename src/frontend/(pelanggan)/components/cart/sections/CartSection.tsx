@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useState, useRef, useCallback } from "react";
 import { useCart, itemKey } from "@/frontend/(pelanggan)/hooks/useCart";
 import type { CartItem } from "@/frontend/(pelanggan)/types";
+import Navbar from "../../layout/Navbar";
 import { cartStyles as styles } from "../style";
 
 const formatPrice = (price: number): string => new Intl.NumberFormat("id-ID", {
@@ -104,7 +105,9 @@ export default function CartSection() {
   };
 
   return (
-    <div className={styles.page}>
+    <>
+      <Navbar />
+      <div className={`${styles.page} pt-[72px]`}>
       <div className={styles.topbar}>
         <div className={styles.topbarContent}>
           <Link href="/" className={styles.backLink}><span className={styles.backIcon}>arrow_back</span></Link>
@@ -243,5 +246,6 @@ export default function CartSection() {
         </div>
       )}
     </div>
+    </>
   );
 }

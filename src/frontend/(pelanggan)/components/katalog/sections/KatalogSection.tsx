@@ -93,42 +93,44 @@ export default function KatalogSection() {
           </div>
         </div>
 
-        <div className="flex flex-col md:flex-row gap-4 mb-8">
-          <div className="relative flex-1">
-            <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface/30 text-[20px]">
-              search
-            </span>
-            <input
-              type="text"
-              value={searchInput}
-              onChange={(e) => handleSearchChange(e.target.value)}
-              placeholder="Cari produk, SKU, atau deskripsi..."
-              className="w-full pl-11 pr-4 py-3 rounded-xl bg-surface-container border border-outline/30 text-on-surface placeholder:text-on-surface/30 text-[14px] focus:outline-none focus:border-secondary/60 focus:ring-1 focus:ring-secondary/30 transition-all"
-            />
-            {searchInput && (
-              <button
-                onClick={() => handleSearchChange("")}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-on-surface/30 hover:text-on-surface transition-colors"
-              >
-                <span className="material-symbols-outlined text-[18px]">close</span>
-              </button>
-            )}
-          </div>
+        <div className="mb-8">
+          <div className="grid gap-4 rounded-2xl border border-outline/20 bg-primary-container p-5 shadow-sm md:grid-cols-[1fr_auto]">
+            <div className="relative">
+              <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface/40 text-[20px]">
+                search
+              </span>
+              <input
+                type="text"
+                value={searchInput}
+                onChange={(e) => handleSearchChange(e.target.value)}
+                placeholder="Cari produk, SKU, atau deskripsi..."
+                className="w-full rounded-2xl border border-outline/20 bg-surface-container px-12 py-4 text-on-surface placeholder:text-on-surface/40 text-[14px] focus:outline-none focus:border-secondary/60 focus:ring-1 focus:ring-secondary/30 transition-all"
+              />
+              {searchInput && (
+                <button
+                  onClick={() => handleSearchChange("")}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-on-surface/40 hover:text-on-surface transition-colors"
+                >
+                  <span className="material-symbols-outlined text-[18px]">close</span>
+                </button>
+              )}
+            </div>
 
-          <div className="flex flex-wrap gap-2">
-            {categories.map((kat) => (
-              <button
-                key={kat}
-                onClick={() => handleKategoriChange(kat)}
-                className={`px-4 py-2.5 rounded-xl text-[13px] font-semibold transition-all ${
-                  urlKategori === kat || (kat === "Semua" && !urlKategori)
-                    ? "bg-secondary text-primary"
-                    : "bg-surface-container border border-outline/30 text-on-surface/60 hover:text-on-surface hover:border-outline"
-                }`}
-              >
-                {kat}
-              </button>
-            ))}
+            <div className="flex flex-wrap items-center gap-2">
+              {categories.map((kat) => (
+                <button
+                  key={kat}
+                  onClick={() => handleKategoriChange(kat)}
+                  className={`px-4 py-3 rounded-2xl text-[13px] font-semibold transition-all ${
+                    urlKategori === kat || (kat === "Semua" && !urlKategori)
+                      ? "bg-secondary text-primary shadow-sm shadow-secondary/20"
+                      : "bg-surface-container border border-outline/20 text-on-surface/70 hover:text-on-surface hover:border-outline"
+                  }`}
+                >
+                  {kat}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
 
