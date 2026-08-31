@@ -161,17 +161,23 @@ export default function KatalogSection() {
           </div>
         ) : (
           <div className="flex flex-col items-center justify-center py-24 text-center">
-            <span className="material-symbols-outlined text-[64px] text-on-surface/20 mb-4">search_off</span>
-            <p className="text-[16px] font-semibold text-on-surface/50 mb-2">Produk tidak ditemukan</p>
-            <p className="text-[13px] text-on-surface/30 mb-6">
-              Tidak ada produk yang cocok dengan pencarian atau filter yang dipilih.
-            </p>
-            <button
-              onClick={resetFilter}
-              className="px-6 py-3 rounded-xl bg-secondary text-primary font-bold text-[13px] hover:brightness-110 transition-all"
-            >
-              Reset Filter
-            </button>
+            {catalogProducts.length === 0 ? (
+              <>
+                <span className="material-symbols-outlined text-[64px] text-on-surface/20 mb-4">inventory_2</span>
+                <p className="text-[16px] font-semibold text-on-surface/50 mb-2">Produk masih kosong</p>
+                <p className="text-[13px] text-on-surface/30 mb-6">
+                  Belum ada produk yang ditambahkan. Katalog akan tampil setelah produk tersedia.
+                </p>
+              </>
+            ) : (
+              <>
+                <span className="material-symbols-outlined text-[64px] text-on-surface/20 mb-4">search_off</span>
+                <p className="text-[16px] font-semibold text-on-surface/50 mb-2">Produk tidak ditemukan</p>
+                <p className="text-[13px] text-on-surface/30 mb-6">
+                  Tidak ada produk yang cocok dengan pencarian atau filter yang dipilih.
+                </p>
+              </>
+            )}
           </div>
         )}
       </div>

@@ -1,5 +1,6 @@
-import { portfolioItems, type PortfolioItem } from "./data";
+import { portfolioItems } from "./store";
+import type { PortfolioItem } from "./data";
 
 export function getPortfolioItems(): PortfolioItem[] {
-  return portfolioItems;
+  return [...portfolioItems.values()].sort((a, b) => a.year - b.year);
 }

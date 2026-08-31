@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import type { BannerFormData } from "../../../types";
 import { emptyBannerForm } from "../../../types";
 import { validateBannerForm } from "./helpers";
+import FileUploadInput from "../../shared/FileUploadInput";
 import * as s from "../style";
 
 interface BannerFormModalProps {
@@ -63,9 +64,12 @@ export default function BannerFormModal({ isOpen, editBanner, onClose, onSave }:
             <input className={s.modalInput} placeholder="Teks pendukung banner" value={form.subtitle} onChange={(e) => setForm({ ...form, subtitle: e.target.value })} />
           </div>
           <div>
-            <label className={s.modalLabel}>URL Gambar *</label>
-            <input className={s.modalInput} placeholder="https://example.com/banner.jpg" value={form.imageUrl} onChange={(e) => setForm({ ...form, imageUrl: e.target.value })} />
-            {errors.imageUrl && <p className={s.modalError}>{errors.imageUrl}</p>}
+            <FileUploadInput
+              label="Gambar Banner *"
+              value={form.imageUrl}
+              onChange={(imageUrl) => setForm({ ...form, imageUrl })}
+              error={errors.imageUrl}
+            />
           </div>
           <div>
             <label className={s.modalLabel}>URL Tautan</label>

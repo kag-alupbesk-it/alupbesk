@@ -53,10 +53,11 @@ export function ProductCard({ product }: { product: Product }) {
           </span>
           <button
             onClick={() => addToCart(product, 1)}
-            className="flex items-center gap-1.5 bg-secondary/20 text-secondary px-4 py-2 rounded-xl text-[12px] font-bold hover:bg-secondary hover:text-primary transition-all active:scale-95"
+            title="Tambah ke keranjang"
+            aria-label="Tambah ke keranjang"
+            className="flex h-9 w-9 items-center justify-center rounded-full bg-secondary/20 text-secondary transition-all hover:bg-secondary hover:text-primary active:scale-95"
           >
-            <span className="material-symbols-outlined text-[16px]">add_shopping_cart</span>
-            Tambah
+            <span className="material-symbols-outlined text-[18px]">add_shopping_cart</span>
           </button>
         </div>
       </div>

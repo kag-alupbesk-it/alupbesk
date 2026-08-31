@@ -9,6 +9,7 @@ const navItems = [
   { href: "/marketing", label: "Promosi", icon: "campaign" },
   { href: "/marketing/produk", label: "Produk", icon: "inventory_2" },
   { href: "/marketing/pesanan", label: "Pesanan", icon: "receipt_long" },
+  { href: "/marketing/konten", label: "Konten Website", icon: "edit_note" },
   { href: "/marketing/laporan", label: "Laporan", icon: "bar_chart" },
 ];
 

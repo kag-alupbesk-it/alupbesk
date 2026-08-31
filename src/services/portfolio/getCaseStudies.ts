@@ -1,5 +1,6 @@
-import { caseStudies, type CaseStudy } from "./data";
+import { caseStudies } from "./store";
+import type { CaseStudy } from "./data";
 
 export function getCaseStudies(): CaseStudy[] {
-  return caseStudies;
+  return [...caseStudies.values()].sort((a, b) => a.year - b.year);
 }

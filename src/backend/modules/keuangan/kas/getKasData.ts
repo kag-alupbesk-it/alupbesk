@@ -1,9 +1,8 @@
-import { kasEntries, seedKasEntries } from "./store";
+import { kasEntries } from "./store";
 import { syncKasDariPesanan } from "./sync";
 import type { KasData } from "../types";
 
 export function getKasData(): KasData {
-  seedKasEntries();
   syncKasDariPesanan();
 
   const sorted = [...kasEntries.values()].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
