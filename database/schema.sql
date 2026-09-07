@@ -284,6 +284,50 @@ create table case_studies (
     year        integer
 );
 
+-- ---------------------------------------------------------------------
+-- 10. KONTEN WEBSITE — data CMS yang dikelola admin marketing
+-- ---------------------------------------------------------------------
+
+-- Mitra / partner (logo ditampilkan sebagai strip di beranda)
+create table partners (
+    id          uuid primary key default gen_random_uuid(),
+    name        text not null,
+    initials    text not null,
+    logo_url    text,
+    sort_order  integer not null default 0,
+    active      boolean not null default true,
+    created_at  timestamptz not null default now()
+);
+
+-- FAQ (tanya-jawab ditampilkan di beranda)
+create table faq_items (
+    id          uuid primary key default gen_random_uuid(),
+    question    text not null,
+    answer      text not null,
+    sort_order  integer not null default 0,
+    active      boolean not null default true,
+    created_at  timestamptz not null default now()
+);
+
+-- Layanan jasa custom
+create table custom_services (
+    id          uuid primary key default gen_random_uuid(),
+    icon        text not null,
+    title       text not null,
+    description text not null,
+    sort_order  integer not null default 0,
+    active      boolean not null default true,
+    created_at  timestamptz not null default now()
+);
+
+-- Konten situs dinamis (hero, profil/tentang, kontak, steps custom, kapasitas)
+-- Data berbentuk key-value; value disimpan sebagai jsonb untuk fleksibilitas.
+create table site_content (
+    key         text primary key,
+    value       jsonb not null,
+    updated_at  timestamptz not null default now()
+);
+
 -- =====================================================================
 -- INDEX
 -- =====================================================================

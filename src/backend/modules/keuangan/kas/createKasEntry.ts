@@ -1,8 +1,7 @@
-import { persistKasEntry, seedKasEntries } from "./store";
+import { persistKasEntry } from "./store";
 import type { KasEntry, KasEntryInput, KasResult } from "../types";
 
 export function createKasEntry(input: KasEntryInput): KasResult {
-  seedKasEntries();
   const jumlah = Math.round(Number(input.jumlah));
   if (!Number.isFinite(jumlah) || jumlah <= 0) return { ok: false, code: "INVALID_AMOUNT" };
   if (!input.deskripsi.trim()) return { ok: false, code: "INVALID_INPUT" };

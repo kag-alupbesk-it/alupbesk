@@ -8,7 +8,6 @@ export interface ProductFormData {
   sku: string;
   price: string;
   stock: string;
-  badge: string;
   img: string;
   desc: string;
 }
@@ -19,7 +18,6 @@ export const EMPTY_PRODUCT_FORM: ProductFormData = {
   sku: "",
   price: "",
   stock: "0",
-  badge: "In Stock",
   img: "",
   desc: "",
 };

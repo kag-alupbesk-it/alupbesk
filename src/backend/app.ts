@@ -2,6 +2,7 @@ import express from "express";
 import { corsMiddleware } from "./middleware/cors";
 import { catalogRouter, checkoutRouter, portfolioRouter } from "./modules/(pelanggan)";
 import marketingRouter from "./modules/marketing/router";
+import { contentRouter } from "./modules/content";
 import customRouter from "./modules/custom/router";
 import gudangRouter from "./modules/gudang/router";
 import managerRouter from "./modules/manager/router";
@@ -20,6 +21,7 @@ app.use((_request, response, next) => {
 });
 app.use("/api/catalog", catalogRouter); app.use("/api/checkout", checkoutRouter); app.use("/api/portfolio", portfolioRouter);
 app.use("/api/marketing", marketingRouter);
+app.use("/api/content", contentRouter);
 app.use("/api/custom", customRouter);
 app.use("/api/gudang", gudangRouter);
 app.use("/api/manager", managerRouter); app.use("/api/owner", managerRouter);

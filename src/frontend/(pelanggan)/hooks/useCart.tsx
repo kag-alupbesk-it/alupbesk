@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useContext, useState, useCallback, useEffect, useMemo, type ReactNode } from "react";
-import { products, type Product } from "@/services/catalog";
+import type { Product } from "@/services/catalog";
 import type { CartItem } from "@/frontend/(pelanggan)/types";
 
 interface Toast {
@@ -52,7 +52,7 @@ function mergeVariants(current?: Record<string, string>, incoming?: Record<strin
 function normalizeCartItems(savedItems: CartItem[]): CartItem[] {
   const grouped = new Map<number, CartItem>();
   savedItems.forEach((item) => {
-    const product = products.find((catalogProduct) => catalogProduct.id === item.product.id);
+    const product = item.product;
     if (!product || item.quantity <= 0) return;
     const existing = grouped.get(product.id);
     if (!existing) {

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import type { MarketingProduct, ProductFormData } from "./types";
 import { EMPTY_PRODUCT_FORM } from "./types";
+import FileUploadInput from "../../shared/FileUploadInput";
 import * as s from "../style";
 
 interface ProdukFormModalProps {
@@ -19,7 +20,6 @@ function initialForm(editProduct: MarketingProduct | null): ProductFormData {
     sku: editProduct.sku,
     price: String(editProduct.price),
     stock: String(editProduct.stock),
-    badge: editProduct.badge,
     img: editProduct.img,
     desc: editProduct.desc,
   };
@@ -75,7 +75,7 @@ export default function ProdukFormModal({ editProduct, onClose, onSave }: Produk
               {errors.sku && <p className={s.modalError}>{errors.sku}</p>}
             </div>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className={s.modalLabel}>Harga (Rp) *</label>
               <input className={s.modalInput} type="number" min="0" placeholder="Contoh: 125000" value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} />
@@ -86,15 +86,14 @@ export default function ProdukFormModal({ editProduct, onClose, onSave }: Produk
               <input className={s.modalInput} type="number" min="0" value={form.stock} onChange={(e) => setForm({ ...form, stock: e.target.value })} />
               {errors.stock && <p className={s.modalError}>{errors.stock}</p>}
             </div>
-            <div>
-              <label className={s.modalLabel}>Badge</label>
-              <input className={s.modalInput} placeholder="Contoh: In Stock" value={form.badge} onChange={(e) => setForm({ ...form, badge: e.target.value })} />
-            </div>
           </div>
           <div>
-            <label className={s.modalLabel}>URL Gambar *</label>
-            <input className={s.modalInput} placeholder="https://example.com/product.jpg" value={form.img} onChange={(e) => setForm({ ...form, img: e.target.value })} />
-            {errors.img && <p className={s.modalError}>{errors.img}</p>}
+            <FileUploadInput
+              label="Gambar Produk *"
+              value={form.img}
+              onChange={(img) => setForm({ ...form, img })}
+              error={errors.img}
+            />
           </div>
           <div>
             <label className={s.modalLabel}>Deskripsi *</label>

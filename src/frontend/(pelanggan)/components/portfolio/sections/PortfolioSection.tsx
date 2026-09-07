@@ -54,6 +54,14 @@ export default function PortfolioSection() {
               <div key={i} className="h-96 bg-white/5 rounded animate-pulse" />
             ))}
           </div>
+        ) : items.length === 0 && caseStudies.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-24 text-center">
+            <span className="material-symbols-outlined text-[64px] text-on-surface/20 mb-4">folder_open</span>
+            <p className="text-[16px] font-semibold text-on-surface/50 mb-2">Belum ada Proyek yang Kami Kerjakan</p>
+            <p className="text-[13px] text-on-surface/30 max-w-md">
+              Portofolio akan tampil setelah ada konten yang ditambahkan oleh tim kami.
+            </p>
+          </div>
         ) : (
           <>
             <section className={styles.grid}>
@@ -62,21 +70,23 @@ export default function PortfolioSection() {
               ))}
             </section>
 
-            <section className={styles.section}>
-              <header className={styles.sectionHeader}>
-                <span className={styles.eyebrow}>STUDI KASUS</span>
+            {caseStudies.length > 0 && (
+              <section className={styles.section}>
+                <header className={styles.sectionHeader}>
+                  <span className={styles.eyebrow}>STUDI KASUS</span>
 
-                <h2 className={styles.sectionTitle}>
-                  Dampak Nyata bagi Klien Kami
-                </h2>
-              </header>
+                  <h2 className={styles.sectionTitle}>
+                    Dampak Nyata bagi Klien Kami
+                  </h2>
+                </header>
 
-              <div className={styles.caseGrid}>
-                {caseStudies.map((study) => (
-                  <CaseStudyCard key={study.id} study={study} />
-                ))}
-              </div>
-            </section>
+                <div className={styles.caseGrid}>
+                  {caseStudies.map((study) => (
+                    <CaseStudyCard key={study.id} study={study} />
+                  ))}
+                </div>
+              </section>
+            )}
           </>
         )}
 

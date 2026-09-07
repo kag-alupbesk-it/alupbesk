@@ -1,4 +1,4 @@
-import { db, enqueueUpsert, supabaseEnabled } from "./supabase";
+import { db, supabaseEnabled } from "./supabase";
 import { products, type Product, type ProductVariant } from "./catalog/products";
 import { writeOrder } from "./orders/orderStore";
 import type { LocalOrder, OrderLine } from "./orders/types";
@@ -10,11 +10,18 @@ import { projectOrders } from "../backend/modules/gudang/projectOrders/store";
 import type { ProjectOrder, ProjectOrderItem } from "../backend/modules/gudang/projectOrders/types";
 import { customRequests } from "../backend/modules/custom/requests/store";
 import type { CustomRequest } from "../backend/modules/custom/requests/types";
-import { kasEntries, seedKasEntries } from "../backend/modules/keuangan/kas/store";
+import { kasEntries } from "../backend/modules/keuangan/kas/store";
 import { syncKasDariPesanan } from "../backend/modules/keuangan/kas/sync";
 import { pembayaran } from "../backend/modules/keuangan/penagihan/store";
 import { marketingBanners } from "../backend/modules/marketing/banners/store";
 import type { MarketingBanner } from "../backend/modules/marketing/types";
+import { partners } from "../backend/modules/content/partners/store";
+import type { Partner } from "../backend/modules/content/types";
+import { faqItems } from "../backend/modules/content/faq/store";
+import { customServices } from "../backend/modules/content/services/store";
+import { siteContent } from "../backend/modules/content/sitecontent/store";
+import { portfolioItems, caseStudies } from "./portfolio/store";
+import type { PortfolioItem, CaseStudy } from "./portfolio/data";
 
 let hydrated: Promise<void> | null = null;
 
@@ -63,26 +70,6 @@ function toProduct(row: ProductRow, variants: ProductVariant[]): Product {
   };
 }
 
-function productToRow(product: Product): Record<string, unknown> {
-  return {
-    id: product.id,
-    sku: product.sku,
-    badge: product.badge,
-    badge_bg: product.badgeBg,
-    category: product.category,
-    title: product.title,
-    description: product.desc,
-    price: product.price,
-    stock: product.stock,
-    img: product.img,
-    datasheet: product.datasheet ?? null,
-    best_seller: product.bestSeller ?? false,
-    sold_count: product.soldCount ?? 0,
-    highlights: product.highlights ?? [],
-    specs: product.specs ?? [],
-  };
-}
-
 type OrderLineRow = {
   product_id: number;
   quantity: number;
@@ -110,37 +97,6 @@ function gudangItemToRow(item: GudangItem): Record<string, unknown> {
   };
 }
 
-function projectOrderToRow(order: ProjectOrder): Record<string, unknown> {
-  return {
-    id: order.id,
-    request_id: order.requestId ?? null,
-    nama_proyek: order.namaProyek,
-    pelanggan: order.pelanggan,
-    perusahaan: order.perusahaan ?? null,
-    telepon: order.telepon ?? null,
-    catatan: order.catatan ?? null,
-    total_quantity: order.totalQuantity,
-    status: order.status,
-    processed_at: order.processedAt ?? null,
-    completed_at: order.completedAt ?? null,
-    created_at: order.createdAt,
-    updated_at: order.updatedAt,
-  };
-}
-
-function projectOrderItemToRow(orderId: string, item: ProjectOrderItem): Record<string, unknown> {
-  return {
-    project_order_id: orderId,
-    gudang_item_id: item.gudangItemId,
-    sku: item.sku,
-    jenis_barang: item.jenisBarang,
-    merek: item.merek ?? null,
-    warna: item.warna ?? null,
-    satuan: item.satuan ?? null,
-    quantity: item.quantity,
-  };
-}
-
 // ---------------------------------------------------------------------
 // Hydrasi per entitas
 // ---------------------------------------------------------------------
@@ -164,15 +120,7 @@ async function hydrateProducts(): Promise<void> {
   }
 
   if (!rows || rows.length === 0) {
-    for (const product of products) {
-      enqueueUpsert("products", productToRow(product), "id");
-      for (const variant of product.variants ?? []) {
-        enqueueUpsert(
-          "product_variants",
-          { product_id: product.id, name: variant.name, options: variant.options, colors: variant.colors ?? null },
-        );
-      }
-    }
+    products.splice(0, products.length);
     return;
   }
 
@@ -229,29 +177,23 @@ async function hydrateGudang(): Promise<void> {
   if (!db) return;
 
   const { data: itemRows } = await db.from("gudang_items").select("*");
-  if (itemRows && itemRows.length > 0) {
-    gudangItems.clear();
-    for (const row of itemRows) {
-      const item: GudangItem = {
-        id: row.id,
-        sku: row.sku,
-        jenisBarang: row.jenis_barang,
-        kategoriBarang: row.kategori_barang,
-        satuan: row.satuan,
-        merek: row.merek,
-        warna: row.warna ?? "",
-        seksiLokasi: row.seksi_lokasi ?? "",
-        stok: Number(row.stok),
-        minStok: Number(row.min_stok),
-        proyek: row.proyek ?? undefined,
-        catatan: row.catatan ?? undefined,
-      };
-      gudangItems.set(item.id, item);
-    }
-  } else {
-    for (const item of gudangItems.values()) {
-      enqueueUpsert("gudang_items", gudangItemToRow(item), "id");
-    }
+  gudangItems.clear();
+  for (const row of itemRows ?? []) {
+    const item: GudangItem = {
+      id: row.id,
+      sku: row.sku,
+      jenisBarang: row.jenis_barang,
+      kategoriBarang: row.kategori_barang,
+      satuan: row.satuan,
+      merek: row.merek,
+      warna: row.warna ?? "",
+      seksiLokasi: row.seksi_lokasi ?? "",
+      stok: Number(row.stok),
+      minStok: Number(row.min_stok),
+      proyek: row.proyek ?? undefined,
+      catatan: row.catatan ?? undefined,
+    };
+    gudangItems.set(item.id, item);
   }
 
   const { data: movementRows } = await db.from("gudang_movements").select("*");
@@ -319,13 +261,6 @@ async function hydrateProjectOrders(): Promise<void> {
       };
       projectOrders.set(order.id, order);
     }
-  } else {
-    for (const order of projectOrders.values()) {
-      enqueueUpsert("project_orders", projectOrderToRow(order), "id");
-      for (const item of order.items) {
-        enqueueUpsert("project_order_items", projectOrderItemToRow(order.id, item));
-      }
-    }
   }
 }
 
@@ -370,7 +305,6 @@ async function hydrateKas(): Promise<void> {
     });
   }
   if (rows && rows.length > 0) return;
-  seedKasEntries();
   syncKasDariPesanan();
 }
 
@@ -404,6 +338,108 @@ async function hydrateBanners(): Promise<void> {
   }
 }
 
+async function hydratePartners(): Promise<void> {
+  if (!db) return;
+  const { data: rows } = await db.from("partners").select("*");
+  partners.clear();
+  for (const row of rows ?? []) {
+    const partner: Partner = {
+      id: row.id,
+      name: row.name,
+      initials: row.initials,
+      logoUrl: row.logo_url ?? undefined,
+      sortOrder: row.sort_order,
+      active: row.active,
+      createdAt: row.created_at,
+    };
+    partners.set(partner.id, partner);
+  }
+}
+
+async function hydrateFaq(): Promise<void> {
+  if (!db) return;
+  const { data: rows } = await db.from("faq_items").select("*");
+  faqItems.clear();
+  for (const row of rows ?? []) {
+    faqItems.set(row.id, {
+      id: row.id,
+      question: row.question,
+      answer: row.answer,
+      sortOrder: row.sort_order,
+      active: row.active,
+      createdAt: row.created_at,
+    });
+  }
+}
+
+async function hydrateCustomServices(): Promise<void> {
+  if (!db) return;
+  const { data: rows } = await db.from("custom_services").select("*");
+  customServices.clear();
+  for (const row of rows ?? []) {
+    customServices.set(row.id, {
+      id: row.id,
+      icon: row.icon,
+      title: row.title,
+      description: row.description,
+      sortOrder: row.sort_order,
+      active: row.active,
+      createdAt: row.created_at,
+    });
+  }
+}
+
+async function hydrateSiteContent(): Promise<void> {
+  if (!db) return;
+  const { data: rows } = await db.from("site_content").select("key, value, updated_at");
+  siteContent.clear();
+  for (const row of rows ?? []) {
+    siteContent.set(row.key, {
+      key: row.key,
+      value: row.value as Record<string, unknown>,
+      updatedAt: row.updated_at,
+    });
+  }
+}
+
+async function hydratePortfolio(): Promise<void> {
+  if (!db) return;
+  const { data: itemRows } = await db.from("portfolio_items").select("*");
+  portfolioItems.clear();
+  for (const row of itemRows ?? []) {
+    const item: PortfolioItem = {
+      id: row.id,
+      client: row.client,
+      industry: row.industry,
+      title: row.title,
+      challenge: row.challenge,
+      solution: row.solution,
+      result: row.result,
+      img: row.img ?? "",
+      tags: Array.isArray(row.tags) ? row.tags.map(String) : [],
+      year: row.year ?? 0,
+    };
+    portfolioItems.set(item.id, item);
+  }
+
+  const { data: caseRows } = await db.from("case_studies").select("*");
+  caseStudies.clear();
+  for (const row of caseRows ?? []) {
+    const study: CaseStudy = {
+      id: row.id,
+      client: row.client,
+      logo: row.logo ?? "",
+      industry: row.industry,
+      title: row.title,
+      desc: row.description ?? "",
+      metrics: Array.isArray(row.metrics) ? (row.metrics as { label: string; value: string }[]) : [],
+      img: row.img ?? "",
+      year: row.year ?? 0,
+    };
+    caseStudies.set(study.id, study);
+  }
+}
+
 // ---------------------------------------------------------------------
 // Hydrasi utama: dipanggil sekali di awal setiap request API.
 // ---------------------------------------------------------------------
@@ -420,6 +456,11 @@ export function ensureHydrated(): Promise<void> {
         await hydrateKas();
         await hydratePenagihan();
         await hydrateBanners();
+        await hydratePartners();
+        await hydrateFaq();
+        await hydrateCustomServices();
+        await hydrateSiteContent();
+        await hydratePortfolio();
       } catch (error) {
         console.error("[supabase] gagal hydrate data:", error);
       }

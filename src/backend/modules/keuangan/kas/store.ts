@@ -26,31 +26,3 @@ export function persistKasEntry(entry: KasEntry): void {
   );
 }
 
-// Seed pengeluaran operasional awal (dijalankan sekali, idempotent).
-export function seedKasEntries(): void {
-  if (kasEntries.size > 0) return;
-  const now = Date.now();
-  const iso = (offsetMinutes: number): string =>
-    new Date(now - offsetMinutes * 60000).toISOString();
-
-  persistKasEntry({
-    id: "keu-keluar-1",
-    tipe: "keluar",
-    sumber: "Manual",
-    deskripsi: "Belanja bahan baku aluminium",
-    jumlah: 12500000,
-    kategori: "operasional",
-    tanggal: iso(60 * 24 * 3).slice(0, 10),
-    createdAt: iso(60 * 24 * 3),
-  });
-  persistKasEntry({
-    id: "keu-keluar-2",
-    tipe: "keluar",
-    sumber: "Manual",
-    deskripsi: "Operasional gudang (listrik & gudang)",
-    jumlah: 2000000,
-    kategori: "operasional",
-    tanggal: iso(60 * 24).slice(0, 10),
-    createdAt: iso(60 * 24),
-  });
-}

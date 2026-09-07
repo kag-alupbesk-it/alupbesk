@@ -45,7 +45,7 @@ export default function ProdukSection() {
   async function handleSave(form: ProductFormData, id?: number) {
     setError("");
     const input = {
-      badge: form.badge.trim() || "In Stock",
+      badge: "In Stock",
       category: form.category.trim().toUpperCase(),
       title: form.title.trim(),
       desc: form.desc.trim(),
@@ -106,14 +106,13 @@ export default function ProdukSection() {
                   <th scope="col" className={s.thHiddenMd}>Kategori</th>
                   <th scope="col" className={s.thRight}>Harga</th>
                   <th scope="col" className={s.thRight}>Stok</th>
-                  <th scope="col" className={s.thHiddenSm}>Status</th>
                   <th scope="col" className={s.thRight}>Aksi</th>
                 </tr>
               </thead>
               <tbody className={s.tbody}>
                 {products.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className={s.emptyCell}>
+                    <td colSpan={6} className={s.emptyCell}>
                       Belum ada produk. Klik &quot;Upload Produk&quot; untuk menambahkan.
                     </td>
                   </tr>
@@ -141,11 +140,6 @@ export default function ProdukSection() {
                       <td className={s.tdRight}>
                         <span className={product.stock === 0 ? s.stockLow : s.stockText}>
                           {product.stock}
-                        </span>
-                      </td>
-                      <td className={s.tdHiddenSm}>
-                        <span className={`${s.badgeChip} ${product.badge.toLowerCase().includes("stock") ? "text-secondary" : "text-on-surface-variant"}`}>
-                          {product.badge}
                         </span>
                       </td>
                       <td className={s.tdRight}>

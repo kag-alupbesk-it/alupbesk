@@ -2,13 +2,13 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { catalogApi } from "@/services/api";
-import { products, type Product } from "@/services/catalog";
+import type { Product } from "@/services/catalog";
 import { ProductCard } from "../../product/ProductCard";
 
 export function CatalogPreview() {
-  const [catalogProducts, setCatalogProducts] = useState<Product[]>(products);
+  const [catalogProducts, setCatalogProducts] = useState<Product[]>([]);
   useEffect(() => {
-    catalogApi.getProducts().then(setCatalogProducts).catch(() => setCatalogProducts(products));
+    catalogApi.getProducts().then(setCatalogProducts).catch(() => setCatalogProducts([]));
   }, []);
   return (
     <section className="py-section-gap-desktop bg-primary-container" id="katalog">
@@ -25,11 +25,21 @@ export function CatalogPreview() {
             Lihat selengkapnya
           </Link>
         </div>
-        <div className="grid grid-cols-2 gap-3 sm:gap-6 lg:grid-cols-4">
-          {catalogProducts.slice(0, 8).map((product) => (
-            <ProductCard key={product.id} product={product} />
-          ))}
-        </div>
+        {catalogProducts.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-24 text-center">
+            <span className="material-symbols-outlined text-[64px] text-on-surface/20 mb-4">inventory_2</span>
+            <p className="text-[16px] font-semibold text-on-surface/50 mb-2">Produk masih kosong</p>
+            <p className="text-[13px] text-on-surface/30 mb-6">
+              Belum ada produk yang ditambahkan. Katalog akan tampil setelah produk tersedia.
+            </p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 gap-3 sm:gap-6 lg:grid-cols-4">
+            {catalogProducts.slice(0, 8).map((product) => (
+              <ProductCard key={product.id} product={product} />
+            ))}
+          </div>
+        )}
       </div>
     </section>
   );
