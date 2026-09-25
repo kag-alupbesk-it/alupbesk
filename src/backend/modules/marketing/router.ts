@@ -17,8 +17,6 @@ import {
 const router = Router();
 
 const productSchema = z.object({
-  badge: z.string().trim().min(1, "Badge wajib diisi."),
-  badgeBg: z.string().trim().optional(),
   category: z.string().trim().min(1, "Kategori wajib diisi."),
   title: z.string().trim().min(1, "Nama produk wajib diisi."),
   desc: z.string().trim().min(1, "Deskripsi wajib diisi."),

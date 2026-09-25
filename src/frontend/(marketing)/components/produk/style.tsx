@@ -28,7 +28,6 @@ export const skuText = "font-mono text-xs font-bold text-secondary";
 export const priceText = "text-sm font-bold text-secondary";
 export const stockText = "text-xs font-semibold text-on-surface";
 export const stockLow = "text-xs font-semibold text-error";
-export const badgeChip = "inline-block rounded-full px-2.5 py-1 text-[10px] font-bold border border-outline/20";
 export const aksiWrapper = "flex items-center justify-end gap-1";
 export const actionButton = "flex items-center justify-center w-7 h-7 rounded-lg text-on-surface-variant hover:text-secondary hover:bg-secondary/10 transition-all";
 export const actionDelete = "flex items-center justify-center w-7 h-7 rounded-lg text-on-surface-variant hover:text-error hover:bg-error/10 transition-all";

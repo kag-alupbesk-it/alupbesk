@@ -45,7 +45,6 @@ export default function ProdukSection() {
   async function handleSave(form: ProductFormData, id?: number) {
     setError("");
     const input = {
-      badge: "In Stock",
       category: form.category.trim().toUpperCase(),
       title: form.title.trim(),
       desc: form.desc.trim(),

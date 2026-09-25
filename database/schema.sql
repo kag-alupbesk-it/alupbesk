@@ -27,8 +27,6 @@ create table users (
 create table products (
     id          serial primary key,
     sku         text unique not null,          -- dipakai sebagai kunci relasi ke gudang_items
-    badge       text,
-    badge_bg    text default 'bg-success',
     category    text not null,
     title       text not null,
     description text,

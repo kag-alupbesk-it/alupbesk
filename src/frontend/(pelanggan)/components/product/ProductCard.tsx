@@ -20,15 +20,6 @@ export function ProductCard({ product }: { product: Product }) {
         <div className="absolute inset-0 bg-gradient-to-t from-primary-container/60 via-transparent to-transparent" />
       </div>
 
-      {/* Badge */}
-      {product.badge && (
-        <span
-          className={`absolute top-3 left-3 ${product.badgeBg} text-white px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider shadow-lg`}
-        >
-          {product.badge}
-        </span>
-      )}
-
       {/* Content */}
       <div className="flex flex-1 flex-col p-4 gap-2">
         <p className="text-[11px] font-bold text-secondary uppercase tracking-widest">

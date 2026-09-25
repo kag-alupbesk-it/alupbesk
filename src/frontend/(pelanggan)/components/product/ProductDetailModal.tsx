@@ -38,9 +38,6 @@ export default function ProductDetailModal() {
           style={{ backgroundImage: `url('${product.img}')` }}
         />
         <div className="p-8 space-y-5">
-          <span className={`inline-block ${product.badgeBg} text-white px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider`}>
-            {product.badge}
-          </span>
           <p className="text-[12px] font-bold text-secondary uppercase tracking-widest">
             {product.category}
           </p>
