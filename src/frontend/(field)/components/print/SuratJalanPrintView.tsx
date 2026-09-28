@@ -33,6 +33,7 @@ function TabelBarang({ delivery }: { delivery: FieldDelivery }) {
       <thead>
         <tr>
           <th className={`${s.thCenter} w-8`}>No</th>
+          <th className={`${s.thCenter} w-20`}>Kode</th>
           <th className={s.th}>Nama Barang</th>
           <th className={s.th}>Detail</th>
           <th className={`${s.thCenter} w-24`}>Jumlah</th>
@@ -42,15 +43,14 @@ function TabelBarang({ delivery }: { delivery: FieldDelivery }) {
         {delivery.items.map((item, index) => (
           <tr key={item.id}>
             <td className={s.tdCenter}>{index + 1}</td>
-            <td className={s.td}>
-              {item.id} &mdash; {item.namaBarang}
-            </td>
+            <td className={s.tdCenter}>{item.id}</td>
+            <td className={s.td}>{item.namaBarang}</td>
             <td className={s.td}>{item.spesifikasi ?? "-"}</td>
             <td className={s.tdCenter}>{item.kuantitas}</td>
           </tr>
         ))}
         <tr>
-          <td colSpan={3} className={`${s.td} font-bold`}>
+          <td colSpan={4} className={`${s.td} font-bold`}>
             TOTAL
           </td>
           <td className={`${s.tdCenter} font-bold`}>{totalJumlah}</td>
@@ -161,7 +161,7 @@ export function SuratJalanPrintView({ deliveryId }: Props) {
           <div className={s.ttdCol}>
             <div className={s.ttdLabel}>Pengirim</div>
             <div className={s.ttdBlank} />
-            <div className={s.ttdName}>CV Ma Karya Artha Graha</div>
+            <div className={s.ttdName}>CV ALUPBESK</div>
           </div>
           <div className={s.ttdCol}>
             <div className={s.ttdLabel}>Sopir</div>
