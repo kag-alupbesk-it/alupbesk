@@ -20,15 +20,6 @@ export function ProductCard({ product }: { product: Product }) {
         <div className="absolute inset-0 bg-gradient-to-t from-primary-container via-transparent to-transparent" />
       </div>
 
-      {/* Badge */}
-      {product.badge && (
-        <span
-          className={`absolute top-3 left-3 ${product.badgeBg} text-white px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider shadow-lg`}
-        >
-          {product.badge}
-        </span>
-      )}
-
       {/* Content */}
       <div className="p-5">
         <p className="text-[11px] text-on-surface/40 mb-2 uppercase tracking-widest font-semibold">
@@ -52,15 +43,10 @@ export function ProductCard({ product }: { product: Product }) {
             }).format(product.price)}
           </span>
           <button
-
             onClick={() => addToCart(product, 1)}
             title="Tambah ke keranjang"
             aria-label="Tambah ke keranjang"
             className="flex h-9 w-9 items-center justify-center rounded-full bg-secondary/20 text-secondary transition-all hover:bg-secondary hover:text-primary active:scale-95"
-
-            onClick={() => setDetailProduct(product)}
-            className="inline-flex items-center gap-1.5 rounded-xl bg-secondary px-4 py-2 text-[12px] font-semibold text-primary shadow-sm shadow-secondary/20 transition-all hover:bg-secondary/90 active:scale-95"
-
           >
             <span className="material-symbols-outlined text-[18px]">add_shopping_cart</span>
           </button>

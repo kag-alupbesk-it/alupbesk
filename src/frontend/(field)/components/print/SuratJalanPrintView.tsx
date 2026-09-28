@@ -9,17 +9,17 @@ import * as s from "./style";
 
 const COMPOSER_TTJ = [
   "Barang sudah diterima dalam keadaan baik di lokasi proyek terkait.",
-  "Surat ini berlaku sebagai tanda terima (POD) antara CV Ma Karya Artha Graha dan kontraktor.",
+  "Surat ini berlaku sebagai tanda terima (POD) antara CV ALUPBESK dan kontraktor.",
 ];
 
 function KopSurat() {
   return (
     <div className={s.kopWrap}>
-      <div className={s.kopCompany}>CV Ma Karya Artha Graha</div>
+      <div className={s.kopCompany}>CV ALUPBESK</div>
       <div className={s.kopAddress}>
-        Jl. Raya Industri Pasuruan No. 18, Gempol, Pasuruan, Jawa Timur · Telp. 0343-521886
+        Karang Tengah Sitimulyo, Kec. Piyungan, Kab. Bantul, Daerah Istimewa Yogyakarta 55791
         <br />
-        Aluminium Fabrication · Jendela, Pintu, Fasad & Komponen Industrial
+        Specialis Contractor Aluminium
       </div>
       <div className={s.kopLine} />
     </div>
@@ -27,40 +27,33 @@ function KopSurat() {
 }
 
 function TabelBarang({ delivery }: { delivery: FieldDelivery }) {
-  const totalPesan = delivery.items.reduce((sum, item) => sum + item.kuantitas, 0);
-  const totalTerkirim = delivery.items.reduce((sum, item) => sum + item.kuantitasTerkirim, 0);
+  const totalJumlah = delivery.items.reduce((sum, item) => sum + item.kuantitas, 0);
   return (
     <table className={s.table}>
       <thead>
         <tr>
-          <th className={`${s.th} w-8`}>No</th>
+          <th className={`${s.thCenter} w-8`}>No</th>
           <th className={s.th}>Nama Barang</th>
-          <th className={s.th}>Spesifikasi</th>
-          <th className={`${s.thCenter} w-16`}>Satuan</th>
-          <th className={`${s.thCenter} w-16`}>Pesan</th>
-          <th className={`${s.thCenter} w-16`}>Terkirim</th>
-          <th className={`${s.thCenter} w-16`}>Sisa</th>
+          <th className={s.th}>Detail</th>
+          <th className={`${s.thCenter} w-24`}>Jumlah</th>
         </tr>
       </thead>
       <tbody>
         {delivery.items.map((item, index) => (
           <tr key={item.id}>
             <td className={s.tdCenter}>{index + 1}</td>
-            <td className={s.td}>{item.namaBarang}</td>
+            <td className={s.td}>
+              {item.id} &mdash; {item.namaBarang}
+            </td>
             <td className={s.td}>{item.spesifikasi ?? "-"}</td>
-            <td className={s.tdCenter}>{item.satuan}</td>
             <td className={s.tdCenter}>{item.kuantitas}</td>
-            <td className={s.tdCenter}>{item.kuantitasTerkirim}</td>
-            <td className={s.tdCenter}>{item.kuantitas - item.kuantitasTerkirim}</td>
           </tr>
         ))}
         <tr>
-          <td colSpan={4} className={`${s.td} font-bold`}>
-            Total Jumlah Barang
+          <td colSpan={3} className={`${s.td} font-bold`}>
+            TOTAL
           </td>
-          <td className={`${s.tdCenter} font-bold`}>{totalPesan}</td>
-          <td className={`${s.tdCenter} font-bold`}>{totalTerkirim}</td>
-          <td className={`${s.tdCenter} font-bold`}>{totalPesan - totalTerkirim}</td>
+          <td className={`${s.tdCenter} font-bold`}>{totalJumlah}</td>
         </tr>
       </tbody>
     </table>
@@ -134,13 +127,9 @@ export function SuratJalanPrintView({ deliveryId }: Props) {
 
         <div className={s.infoGrid}>
           <div>
-            <div className={s.infoBlockTitle}>Kode Produksi Kontraktor</div>
-            <div className={s.infoValue}>{delivery.kodeProduksi}</div>
-            <div className="mt-3">
-              <div className={s.infoBlockTitle}>Kontraktor</div>
-              <div className={s.infoValue}>{delivery.namaKontraktor}</div>
-              <div className={s.infoPlain}>Telepon: {delivery.telepon ?? "-"}</div>
-            </div>
+            <div className={s.infoBlockTitle}>Kontraktor</div>
+            <div className={s.infoValue}>{delivery.namaKontraktor}</div>
+            <div className={s.infoPlain}>Telepon: {delivery.telepon ?? "-"}</div>
             <div className="mt-3">
               <div className={s.infoBlockTitle}>Alamat Proyek</div>
               <div className={s.infoPlain}>{delivery.alamatProyek}</div>

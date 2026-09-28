@@ -7,6 +7,9 @@ export type FieldDeliveryStatus = "siap-kirim" | "dalam-pengiriman" | "selesai-k
 export interface FieldDeliveryItem {
   id: string;
   namaBarang: string;
+  // Kategori jenis barang (mis. "Aluminium", "Kaca", "Aksesoris"). Dipakai di
+  // kolom "Jenis Barang" pada tabel surat jalan cetak.
+  jenisBarang: string;
   spesifikasi?: string;
   satuan: string;
   // kuantitas total pesanan kontraktor; kuantitasTerkirim = akumulasi partial
