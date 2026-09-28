@@ -1,0 +1,10 @@
+import { PMOrderDetail } from "@/frontend/(pm)/components/PMOrderDetail";
+
+export const metadata = {
+  title: "Detail Proyek | Project Manager",
+};
+
+export default async function Page({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  return <PMOrderDetail orderId={id} />;
+}
