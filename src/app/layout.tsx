@@ -4,12 +4,15 @@ import { InlineScript } from "./InlineScript";
 import { themeInitScript } from "./theme-script";
 import ServiceWorkerRegistration from "./ServiceWorkerRegistration";
 
+export const viewport = {
+  themeColor: "#e94560",
+};
+
 export const metadata = {
   title: "ALUPBESK | Solusi Produk Aluminium & Komponen Industrial Terpercaya",
   description:
     "Solusi Produk Aluminium & Komponen Industrial Terpercaya - Katalog, Pemesanan, dan Manajemen",
   manifest: "/manifest.json",
-  themeColor: "#e94560",
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
