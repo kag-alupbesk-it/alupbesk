@@ -22,7 +22,9 @@ export function ProductCard({ product }: { product: Product }) {
 
       {/* Badge */}
       {product.badge && (
-        <span className="absolute top-3 left-3 inline-flex items-center rounded-full bg-secondary px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-primary shadow-lg shadow-secondary/20">
+        <span
+          className={`absolute top-3 left-3 ${product.badgeBg} text-white px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider shadow-lg`}
+        >
           {product.badge}
         </span>
       )}

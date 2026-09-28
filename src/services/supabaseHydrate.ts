@@ -32,8 +32,6 @@ let hydrated: Promise<void> | null = null;
 type ProductRow = {
   id: number;
   sku: string;
-  badge: string | null;
-  badge_bg: string | null;
   category: string;
   title: string;
   description: string | null;
@@ -50,8 +48,6 @@ type ProductRow = {
 function toProduct(row: ProductRow, variants: ProductVariant[]): Product {
   return {
     id: row.id,
-    badge: row.badge ?? "",
-    badgeBg: row.badge_bg ?? "bg-success",
     category: row.category,
     title: row.title,
     desc: row.description ?? "",

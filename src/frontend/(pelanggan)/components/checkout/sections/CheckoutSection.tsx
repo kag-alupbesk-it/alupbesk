@@ -83,11 +83,6 @@ function OrderItem({
               style={{ backgroundImage: `url('${p.img}')` }}
             />
             <div className="flex items-center gap-3 mb-3">
-              <span
-                className={`${p.badgeBg} text-on-surface px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider`}
-              >
-                {p.badge}
-              </span>
               <span className="text-secondary text-[12px] font-bold uppercase tracking-widest">
                 {p.category}
               </span>

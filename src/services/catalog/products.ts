@@ -8,8 +8,6 @@ export interface ProductVariant {
 
 export interface Product {
   id: number;
-  badge: string;
-  badgeBg: string;
   category: string;
   title: string;
   desc: string;
@@ -25,8 +23,7 @@ export interface Product {
   soldCount?: number;
 }
 
-export type ProductInput = Omit<Product, "id" | "badgeBg" | "highlights" | "specs" | "variants" | "datasheet" | "bestSeller" | "soldCount"> & {
-  badgeBg?: string;
+export type ProductInput = Omit<Product, "id" | "highlights" | "specs" | "variants" | "datasheet" | "bestSeller" | "soldCount"> & {
   highlights?: string[];
   specs?: { label: string; value: string }[];
   variants?: ProductVariant[];
@@ -54,8 +51,6 @@ export function createProduct(input: ProductInput): Product {
   const id = products.reduce((max, product) => Math.max(max, product.id), 0) + 1;
   const product: Product = {
     id,
-    badge: input.badge,
-    badgeBg: input.badgeBg ?? "bg-success",
     category: input.category,
     title: input.title,
     desc: input.desc,
@@ -76,8 +71,6 @@ export function createProduct(input: ProductInput): Product {
     {
       id: product.id,
       sku: product.sku,
-      badge: product.badge,
-      badge_bg: product.badgeBg,
       category: product.category,
       title: product.title,
       description: product.desc,
@@ -105,8 +98,6 @@ export function updateProduct(id: number, input: Partial<ProductInput>): Product
     {
       id: products[index].id,
       sku: products[index].sku,
-      badge: products[index].badge,
-      badge_bg: products[index].badgeBg,
       category: products[index].category,
       title: products[index].title,
       description: products[index].desc,

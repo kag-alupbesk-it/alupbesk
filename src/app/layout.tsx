@@ -1,5 +1,6 @@
 import "./globals.css";
 import Providers from "./Providers";
+import { InlineScript } from "./InlineScript";
 import { themeInitScript } from "./theme-script";
 import ServiceWorkerRegistration from "./ServiceWorkerRegistration";
 
@@ -38,20 +39,17 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    // suppressHydrationWarning: the inline script may change class="dark"
-    // before React hydrates, causing a class mismatch warning. This attr
-    // tells React to ignore attribute differences on <html> only.
+    // suppressHydrationWarning: script inline mengubah class="dark" pada <html>
+    // sebelum React hydrate, jadi React harus menerima nilai yang sudah ada di DOM
+    // alih-alih menandai perbedaan atribut sebagai error.
     <html lang="id" className="dark scroll-smooth" suppressHydrationWarning>
       <head>
         {/*
-         * Anti-flicker inline script.
-         * Runs synchronously before any CSS or React renders,
-         * reads localStorage and sets/removes class="dark" on <html>.
-         * Imported from theme-script.ts (NOT a "use client" module)
-         * so Next.js treats this layout as a Server Component.
+         * Script anti-flicker tema: jalan sebelum CSS pertama dirender sehingga
+         * class="dark" pada <html> sudah sesuai localStorage sejak frame pertama,
+         * tanpa perlukilau saat React hydrate.
          */}
-        {/* eslint-disable-next-line @next/next/no-sync-scripts */}
-        <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
+        <InlineScript html={themeInitScript} />
 
         <link
           href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600&display=swap"

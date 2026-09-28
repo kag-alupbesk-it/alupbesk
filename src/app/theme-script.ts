@@ -12,7 +12,9 @@
 export const THEME_STORAGE_KEY = "alupbesk-theme";
 
 /**
- * Stringified IIFE to inject into <head> via dangerouslySetInnerHTML.
+ * Stringified IIFE to inject into <head> via InlineScript.
  * Must NOT reference any runtime imports — plain JS only.
+ * The storage key is interpolated from THEME_STORAGE_KEY so the script and
+ * ThemeContext can never drift apart.
  */
-export const themeInitScript = `(function(){try{var t=localStorage.getItem('alupbesk-theme');if(t==='light'){document.documentElement.classList.remove('dark')}else{document.documentElement.classList.add('dark')}}catch(e){}})();`;
+export const themeInitScript = `(function(){try{var t=localStorage.getItem('${THEME_STORAGE_KEY}');if(t==='light'){document.documentElement.classList.remove('dark')}else{document.documentElement.classList.add('dark')}}catch(e){}})();`;
