@@ -1,4 +1,4 @@
-import { LaporanSection as LaporanPage } from "@/frontend/(keuangan)/components/laporan";
+import { LaporanSection as LaporanPage } from "@/frontend/Manager/(keuangan)/components/laporan";
 
 export const metadata = {
   title: "Laporan Keuangan | ALUPBESK",

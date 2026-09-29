@@ -1,4 +1,4 @@
-import { PodSection } from "@/frontend/(field)/components";
+import { PodSection } from "@/frontend/Manager/(field)/components";
 
 export const metadata = {
   title: "POD, Geotagging & E-Signature | ALUPBESK",

@@ -1,4 +1,4 @@
-import { UsersSection as UsersPage } from "@/frontend/(manager)/components/users";
+import { UsersSection as UsersPage } from "@/frontend/Manager/(manager)/components/users";
 
 export const metadata = { title: "User Management | ALUPBESK Manager" };
 

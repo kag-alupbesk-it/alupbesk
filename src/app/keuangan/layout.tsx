@@ -1,9 +1,9 @@
 "use client";
 
 import { useTheme } from "@/app/ThemeContext";
-import { SidebarProvider } from "@/frontend/(keuangan)/components/layout/SidebarProvider";
-import Sidebar from "@/frontend/(keuangan)/components/layout/Sidebar";
-import KeuanganShell from "@/frontend/(keuangan)/components/layout/KeuanganShell";
+import { SidebarProvider } from "@/frontend/Manager/(keuangan)/components/layout/SidebarProvider";
+import Sidebar from "@/frontend/Manager/(keuangan)/components/layout/Sidebar";
+import KeuanganShell from "@/frontend/Manager/(keuangan)/components/layout/KeuanganShell";
 
 function KeuanganLayoutInner({ children }: { children: React.ReactNode }) {
   const { theme } = useTheme();

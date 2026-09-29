@@ -1,4 +1,4 @@
-import { FinancialsSection as FinancialsPage } from "@/frontend/(manager)/components/financials";
+import { FinancialsSection as FinancialsPage } from "@/frontend/Manager/(manager)/components/financials";
 
 export const metadata = { title: "Financials | ALUPBESK Manager" };
 

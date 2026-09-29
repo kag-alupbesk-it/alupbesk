@@ -1,4 +1,4 @@
-import { FieldAntrianSection } from "@/frontend/(field)/components";
+import { FieldAntrianSection } from "@/frontend/Manager/(field)/components";
 
 export const metadata = {
   title: "Dashboard Antrean Manajer Lapangan | ALUPBESK",

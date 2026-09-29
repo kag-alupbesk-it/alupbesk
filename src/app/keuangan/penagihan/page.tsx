@@ -1,4 +1,4 @@
-import { PenagihanSection as PenagihanPage } from "@/frontend/(keuangan)/components/penagihan";
+import { PenagihanSection as PenagihanPage } from "@/frontend/Manager/(keuangan)/components/penagihan";
 
 export const metadata = {
   title: "Penagihan & Piutang | ALUPBESK",

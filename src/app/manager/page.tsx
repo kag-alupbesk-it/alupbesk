@@ -1,4 +1,4 @@
-import { DashboardSection as DashboardPage } from "@/frontend/(manager)/components/dashboard";
+import { DashboardSection as DashboardPage } from "@/frontend/Manager/(manager)/components/dashboard";
 
 export const metadata = { title: "Overview | ALUPBESK Manager" };
 

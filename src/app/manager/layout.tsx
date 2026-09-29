@@ -1,7 +1,7 @@
 "use client";
 
 import { useTheme } from "@/app/ThemeContext";
-import { Sidebar, SidebarProvider, ManagerShell } from "@/frontend/(manager)/components/layout";
+import { Sidebar, SidebarProvider, ManagerShell } from "@/frontend/Manager/(manager)/components/layout";
 
 function ManagerLayoutInner({ children }: { children: React.ReactNode }) {
   const { theme } = useTheme();
