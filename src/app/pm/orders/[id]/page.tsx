@@ -1,4 +1,4 @@
-import { PMOrderDetail } from "@/frontend/(pm)/components/PMOrderDetail";
+import { PMOrderDetail } from "@/frontend/Manager/(pm)/components/PMOrderDetail";
 
 export const metadata = {
   title: "Detail Proyek | Project Manager",

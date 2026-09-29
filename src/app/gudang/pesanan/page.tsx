@@ -1,4 +1,4 @@
-import { GudangOrdersSection } from "@/frontend/(gudang)/components";
+import { GudangOrdersSection } from "@/frontend/Manager/(gudang)/components";
 
 export const metadata = {
   title: "Pesanan Gudang | ALUPBESK",

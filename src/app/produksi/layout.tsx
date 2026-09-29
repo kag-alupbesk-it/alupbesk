@@ -1,10 +1,10 @@
 "use client";
 
 import { useTheme } from "@/app/ThemeContext";
-import { ProduksiSidebarProvider } from "@/frontend/(produksi)/components/layout/ProduksiSidebarProvider";
-import { ProduksiSidebar } from "@/frontend/(produksi)/components/layout/ProduksiSidebar";
-import { ProduksiShell } from "@/frontend/(produksi)/components/layout/ProduksiShell";
-import { ProduksiProvider } from "@/frontend/(produksi)/context/ProduksiContext";
+import { ProduksiSidebarProvider } from "@/frontend/Manager/(produksi)/components/layout/ProduksiSidebarProvider";
+import { ProduksiSidebar } from "@/frontend/Manager/(produksi)/components/layout/ProduksiSidebar";
+import { ProduksiShell } from "@/frontend/Manager/(produksi)/components/layout/ProduksiShell";
+import { ProduksiProvider } from "@/frontend/Manager/(produksi)/context/ProduksiContext";
 
 function ProduksiLayoutContent({ children }: { children: React.ReactNode }) {
   const { theme } = useTheme();

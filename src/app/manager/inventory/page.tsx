@@ -1,4 +1,4 @@
-import { InventorySection as InventoryPage } from "@/frontend/(manager)/components/inventory";
+import { InventorySection as InventoryPage } from "@/frontend/Manager/(manager)/components/inventory";
 
 export const metadata = { title: "Inventory | ALUPBESK Manager" };
 

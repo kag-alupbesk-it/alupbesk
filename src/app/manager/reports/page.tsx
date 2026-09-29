@@ -1,4 +1,4 @@
-import { ReportsSection } from "@/frontend/(manager)/components/reports";
+import { ReportsSection } from "@/frontend/Manager/(manager)/components/reports";
 
 export const metadata = { title: "Reports | ALUPBESK Manager" };
 

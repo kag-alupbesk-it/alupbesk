@@ -1,4 +1,4 @@
-import { PMApprovalPage } from "@/frontend/(pm)/components/PMApprovalPage";
+import { PMApprovalPage } from "@/frontend/Manager/(pm)/components/PMApprovalPage";
 
 export const metadata = {
   title: "Approval Gambar | Project Manager",

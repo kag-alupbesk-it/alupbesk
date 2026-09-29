@@ -1,4 +1,4 @@
-import { UploadGambarTeknik } from "@/frontend/(produksi)/components/UploadGambarTeknik";
+import { UploadGambarTeknik } from "@/frontend/Manager/(produksi)/components/UploadGambarTeknik";
 
 export const metadata = {
   title: "Upload Gambar Teknik | Manajer Produksi",

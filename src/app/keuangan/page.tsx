@@ -1,4 +1,4 @@
-import { KasSection as KasPage } from "@/frontend/(keuangan)/components/kas";
+import { KasSection as KasPage } from "@/frontend/Manager/(keuangan)/components/kas";
 
 export const metadata = {
   title: "Kas Masuk & Keluar | ALUPBESK",

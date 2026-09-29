@@ -1,4 +1,4 @@
-import { SuratJalanPrintView } from "@/frontend/(field)/components";
+import { SuratJalanPrintView } from "@/frontend/Manager/(field)/components";
 
 export const metadata = {
   title: "Cetak Surat Jalan | ALUPBESK",

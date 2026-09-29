@@ -1,4 +1,4 @@
-import { SuratJalanSection } from "@/frontend/(field)/components";
+import { SuratJalanSection } from "@/frontend/Manager/(field)/components";
 
 export const metadata = {
   title: "Surat Jalan & Partial Shipment | ALUPBESK",

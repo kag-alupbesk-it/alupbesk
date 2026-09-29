@@ -1,4 +1,4 @@
-import { ProjectOrdersSection } from "@/frontend/(gudang)/components";
+import { ProjectOrdersSection } from "@/frontend/Manager/(gudang)/components";
 
 export const metadata = {
   title: "Pesanan Proyek | ALUPBESK",

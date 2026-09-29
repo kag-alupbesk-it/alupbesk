@@ -1,4 +1,4 @@
-import { PMDashboard } from "@/frontend/(pm)/components/PMDashboard";
+import { PMDashboard } from "@/frontend/Manager/(pm)/components/PMDashboard";
 
 export const metadata = {
   title: "Project Manager | ALUPBESK",
