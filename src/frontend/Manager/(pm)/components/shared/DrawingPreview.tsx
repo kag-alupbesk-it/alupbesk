@@ -6,10 +6,13 @@ export function DrawingPreview({
   order,
   kind,
   className = "",
+  scopeId,
 }: {
   order: PMOrder;
   kind: "raw" | "production";
   className?: string;
+  // Dipakai fitur unduh untuk menemukan elemen gambar di dalam pratinjau ini.
+  scopeId?: string;
 }) {
   const source = kind === "raw" ? order.rawImage : order.productionImage;
   const name = kind === "raw" ? order.rawImageName : order.productionImageName;
@@ -17,7 +20,10 @@ export function DrawingPreview({
 
   if (source) {
     return (
-      <div className={`relative h-full w-full overflow-hidden bg-slate-100 ${className}`}>
+      <div
+        id={scopeId}
+        className={`relative h-full w-full overflow-hidden bg-slate-100 ${className}`}
+      >
         <Image
           src={source}
           alt={alt}
@@ -35,5 +41,14 @@ export function DrawingPreview({
     );
   }
 
-  return <TechnicalDrawing variant={order.drawingVariant} mode={kind} revision={kind === "raw" ? 1 : order.revisionCount + 1} className={className} />;
+  return (
+    <div id={scopeId} className={`h-full w-full ${className}`}>
+      <TechnicalDrawing
+        variant={order.drawingVariant}
+        mode={kind}
+        revision={kind === "raw" ? 1 : order.revisionCount + 1}
+        className="h-full w-full"
+      />
+    </div>
+  );
 }
