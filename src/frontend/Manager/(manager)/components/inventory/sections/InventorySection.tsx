@@ -153,7 +153,61 @@ export default function InventorySection() {
             ))}
           </div>
         </div>
-        <div className={styles.tableScroll}>
+        <div className={styles.mobileList}>
+          {filteredItems.length === 0 && (
+            <div className={`${styles.card} py-10 text-center text-xs text-on-surface-variant`}>
+              Tidak ada SKU yang cocok.
+            </div>
+          )}
+          {filteredItems.map((item, i) => {
+            const pct = item.threshold > 0 ? Math.round((item.stock / item.threshold) * 100) : 0;
+            return (
+              <div key={item.sku} className={styles.card}>
+                <div className={styles.cardTop}>
+                  <div className="flex items-center gap-4 min-w-0">
+                    <div className={styles.productIconBox}><span className={styles.productIconFont}>{item.icon}</span></div>
+                    <div className="min-w-0">
+                      <div className={`${styles.productName} truncate`}>{item.name}</div>
+                      <div className={`${styles.productVariant} truncate`}>{item.variant}</div>
+                    </div>
+                  </div>
+                  <div className={`${styles.statusRow} shrink-0 ${item.status === "Critical" ? `${item.statusColor} ${styles.statusCriticalRow}` : item.statusColor}`}>
+                    <div className={`${styles.statusDot} ${item.barColor} ${item.status === "Critical" ? styles.statusDotPulse : ""}`} />
+                    <span className={styles.statusText}>{item.status}</span>
+                  </div>
+                </div>
+                <div className={styles.cardInfo}>
+                  <div className="font-mono font-bold text-secondary">{item.sku}</div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] font-bold uppercase tracking-widest">Kategori</span>
+                    <span className={styles.categoryBadgePill}>{item.category}</span>
+                  </div>
+                </div>
+                <div className={styles.cardMeta}>
+                  <span className={styles.stockLabel}>
+                    {item.stock.toLocaleString()} / {item.threshold.toLocaleString()} units
+                  </span>
+                  <span className={`${styles.pctText} ${pct < 30 ? item.statusColor : styles.pctNormal}`}>{pct}%</span>
+                </div>
+                <div className={`${styles.progressTrack} mt-2`}>
+                  <div className={`${styles.progressFill} ${item.barColor}`} style={{ width: `${Math.max(pct, 2)}%` }} />
+                </div>
+                <div className={`${styles.cardActions} gap-2`}>
+                  <button onClick={() => handleOpenEdit(i)} className={`${styles.iconButton} w-full`}><span className={`${styles.iconAction} ${styles.iconInline}`}>edit</span></button>
+                  <button onClick={() => setShowMoreMenu(showMoreMenu === i ? null : i)} className={`${styles.iconButton} w-full`}><span className={`${styles.iconAction} ${styles.iconInline}`}>more_vert</span></button>
+                </div>
+                {showMoreMenu === i && (
+                  <div className={`${styles.moreMenuFade} mt-2 space-y-1`}>
+                    <button onClick={() => handleOpenEdit(i)} className={`${styles.menuItem} min-h-11 rounded-lg bg-surface-variant/40`}><span className={`${styles.iconAction} ${styles.iconMedium}`}>edit</span> Edit SKU</button>
+                    <button onClick={() => handleRestock(i)} className={`${styles.menuItem} min-h-11 rounded-lg bg-surface-variant/40`}><span className={`${styles.iconAction} ${styles.iconMedium}`}>add_box</span> Restock</button>
+                    <button onClick={() => handleDelete(i)} className={`${styles.menuItemDanger} min-h-11 rounded-lg bg-surface-variant/40`}><span className={`${styles.iconAction} ${styles.iconMedium}`}>delete</span> Hapus</button>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+        <div className={`${styles.tableScroll} ${styles.desktopOnly}`}>
           <table className={styles.table}>
             <thead>
               <tr className={styles.tableHeadRow}>

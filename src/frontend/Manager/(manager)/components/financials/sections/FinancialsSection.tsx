@@ -176,7 +176,48 @@ export default function FinancialsSection() {
             <span className={styles.downloadIcon}>download</span> DOWNLOAD ALL
           </button>
         </div>
-        <div className={styles.tableWrapper}>
+        <div className={styles.mobileList}>
+          {statements.length === 0 && (
+            <div className={`${styles.card} py-10 text-center text-xs text-on-surface-variant`}>
+              Belum ada financial statement.
+            </div>
+          )}
+          {statements.map((s) => (
+            <div key={s.period} className={styles.card}>
+              <div className={styles.cardTop}>
+                <div className="flex items-center gap-2 min-w-0">
+                  <span className={styles.iconFont}>description</span>
+                  <span className={`${styles.tableCellText} truncate`}>{s.period}</span>
+                </div>
+                <span className={styles.statusBadge}>Finalized</span>
+              </div>
+              <div className={styles.cardInfo}>
+                <div className="flex items-center justify-between">
+                  <span>Total Revenue</span>
+                  <span className="font-bold text-on-surface">{s.revenue}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span>Net Profit</span>
+                  <span className={styles.tableCellHighlight}>{s.profit}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span>Margin</span>
+                  <span className="font-bold text-on-surface">{s.margin}</span>
+                </div>
+              </div>
+              <div className={styles.cardActions}>
+                <button
+                  onClick={() => handleDownloadRow(s.period)}
+                  className={`${styles.actionButton} w-full px-4 border border-outline/30 rounded-pill`}
+                  title="Download"
+                >
+                  <span className={styles.iconFont}>download</span>
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+        <div className={`${styles.tableWrapper} ${styles.desktopOnly}`}>
           <table className={styles.table}>
             <thead>
               <tr className={styles.tableHeadRow}>

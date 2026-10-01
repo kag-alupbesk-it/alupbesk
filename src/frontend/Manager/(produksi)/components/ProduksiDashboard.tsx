@@ -197,7 +197,7 @@ export function ProduksiDashboard() {
           {spkFokus && (
             <Link
               href={`/produksi/orders/${spkFokus.nomor}`}
-              className="inline-flex items-center gap-2 rounded-xl border border-outline/40 bg-surface-container px-4 py-2.5 text-xs font-bold text-on-surface transition-all hover:border-secondary/50 hover:text-secondary"
+              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-outline/40 bg-surface-container px-4 py-2.5 text-xs font-bold text-on-surface transition-all hover:border-secondary/50 hover:text-secondary md:min-h-0"
             >
               <ClipboardList size={15} />
               Detail SPK &amp; Progress
@@ -323,9 +323,10 @@ export function ProduksiDashboard() {
           </div>
         </div>
 
-        <div className="space-y-3 p-4 lg:hidden">
+        {/* Kartu untuk layar kecil (Android) menggantikan tabel yang perlu scroll horizontal. */}
+        <div className="md:hidden space-y-3 p-4">
           {spkTersaring.length === 0 ? (
-            <div className="px-6 py-12 text-center">
+            <div className="rounded-xl border border-outline/30 bg-primary-container px-4 py-12 text-center shadow-lg">
               <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-surface-variant text-on-surface-variant">
                 <Search size={20} />
               </div>
@@ -342,7 +343,7 @@ export function ProduksiDashboard() {
                     setSearch("");
                     setFilter("all");
                   }}
-                  className="mt-5 rounded-xl border border-outline/40 px-4 py-3 text-xs font-bold text-on-surface transition-colors hover:border-secondary/50 hover:text-secondary"
+                  className="mt-5 inline-flex min-h-11 w-full items-center justify-center rounded-xl border border-outline/40 px-4 py-3 text-xs font-bold text-on-surface transition-colors hover:border-secondary/50 hover:text-secondary md:min-h-0"
                 >
                   Tampilkan Semua SPK
                 </button>
@@ -352,60 +353,51 @@ export function ProduksiDashboard() {
             spkTersaring.map((item) => {
               const alur = alurSPK(item);
               return (
-                <Link
+                <div
                   key={item.nomor}
-                  href={`/produksi/orders/${item.nomor}`}
-                  className="block rounded-2xl border border-outline/30 bg-surface p-4 transition-colors active:border-secondary/50"
+                  className="rounded-xl border border-outline/30 bg-primary-container p-4 shadow-lg"
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
                       <p className="font-mono text-xs font-bold text-secondary">{item.nomor}</p>
                       <p className="mt-1 truncate text-sm font-bold text-on-surface">{item.namaKontraktor}</p>
                     </div>
-                    <ChevronRight size={18} className="mt-1 shrink-0 text-on-surface-variant/40" />
+                    <div className="flex shrink-0 flex-col items-end gap-1.5">
+                      <AlurBadge alur={alur} className="[&>p]:hidden" />
+                      <StatusGambarBadge status={item.statusGambar} />
+                    </div>
                   </div>
 
-                  <div className="mt-3 flex flex-wrap items-center gap-2">
-                    <AlurBadge alur={alur} />
-                    <StatusGambarBadge status={item.statusGambar} />
+                  <div className="mt-3 space-y-1 text-xs text-on-surface-variant">
+                    <p className="truncate">Kode Produksi: {item.kodeProduksi ?? "Belum ada kode"}</p>
+                    <p className="truncate">{item.item.length} item spesifikasi</p>
+                    <p>Masuk {formatTanggal(item.tanggalMasuk)}</p>
+                    <p>Target {formatTanggal(item.targetDeadline)}</p>
+                    <p className="text-[10px] leading-snug text-on-surface-variant/75">{alurMeta[alur].tindakan}</p>
                   </div>
-                  <p className="mt-2 text-[10px] leading-snug text-on-surface-variant/75">
-                    {alurMeta[alur].tindakan}
-                  </p>
-
-                  <dl className="mt-3 grid grid-cols-2 gap-2 border-t border-outline/20 pt-3 text-[10px]">
-                    <div>
-                      <dt className="text-on-surface-variant/60">Kode Produksi</dt>
-                      <dd className="mt-0.5 font-mono font-bold text-on-surface">
-                        {item.kodeProduksi ?? "Belum ada kode"}
-                      </dd>
-                    </div>
-                    <div>
-                      <dt className="text-on-surface-variant/60">Target</dt>
-                      <dd className="mt-0.5 font-bold text-on-surface">{formatTanggal(item.targetDeadline)}</dd>
-                    </div>
-                    <div>
-                      <dt className="text-on-surface-variant/60">Item</dt>
-                      <dd className="mt-0.5 font-bold text-on-surface">{item.item.length} item</dd>
-                    </div>
-                    <div>
-                      <dt className="text-on-surface-variant/60">Masuk</dt>
-                      <dd className="mt-0.5 font-bold text-on-surface">{formatTanggal(item.tanggalMasuk)}</dd>
-                    </div>
-                  </dl>
 
                   {terlewat.includes(item) && (
                     <p className="mt-2 flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-[0.1em] text-red-300">
                       <AlertTriangle size={11} /> Lewat deadline
                     </p>
                   )}
-                </Link>
+
+                  <div className="mt-4 flex">
+                    <Link
+                      href={`/produksi/orders/${item.nomor}`}
+                      className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-secondary px-4 py-2.5 text-xs font-extrabold text-primary shadow-lg shadow-secondary/15 transition-colors hover:brightness-105 md:min-h-0"
+                    >
+                      <ChevronRight size={15} />
+                      Buka Detail SPK
+                    </Link>
+                  </div>
+                </div>
               );
             })
           )}
         </div>
 
-        <div className="hidden overflow-x-auto lg:block">
+        <div className="hidden overflow-x-auto md:block">
           <table className="w-full min-w-[1040px] text-left">
             <thead className="bg-surface-variant/35 text-[9px] font-bold uppercase tracking-[0.14em] text-on-surface-variant/70">
               <tr>
@@ -440,7 +432,7 @@ export function ProduksiDashboard() {
                           setSearch("");
                           setFilter("all");
                         }}
-                        className="mt-5 rounded-xl border border-outline/40 px-4 py-2.5 text-xs font-bold text-on-surface transition-colors hover:border-secondary/50 hover:text-secondary"
+                        className="mt-5 inline-flex min-h-11 items-center justify-center rounded-xl border border-outline/40 px-4 py-2.5 text-xs font-bold text-on-surface transition-colors hover:border-secondary/50 hover:text-secondary md:min-h-0"
                       >
                         Tampilkan Semua SPK
                       </button>

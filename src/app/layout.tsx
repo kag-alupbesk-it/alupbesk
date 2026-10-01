@@ -5,6 +5,10 @@ import { themeInitScript } from "./theme-script";
 import ServiceWorkerRegistration from "./ServiceWorkerRegistration";
 
 export const viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
+  userScalable: true,
   themeColor: "#e94560",
 };
 

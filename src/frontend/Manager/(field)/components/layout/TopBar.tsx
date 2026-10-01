@@ -41,7 +41,7 @@ export default function TopBar({ title }: { title: string }) {
           </span>
           <input
             className="bg-surface-variant border border-outline/50 rounded-pill pl-9 pr-3 py-1.5 w-36 lg:w-64 text-xs text-on-surface placeholder:text-on-surface-variant focus:ring-1 focus:ring-secondary focus:border-secondary transition-all outline-none"
-            placeholder="Search..."
+            placeholder="Cari..."
             type="text"
           />
         </div>

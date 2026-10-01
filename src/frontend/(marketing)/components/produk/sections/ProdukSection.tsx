@@ -18,6 +18,32 @@ function LoadingSkeleton() {
   );
 }
 
+function ProdukActions({
+  product,
+  full = false,
+  onEdit,
+  onDelete,
+}: {
+  product: MarketingProduct;
+  full?: boolean;
+  onEdit: (product: MarketingProduct) => void;
+  onDelete: (product: MarketingProduct) => void;
+}) {
+  const extra = full ? " w-full" : "";
+  return (
+    <>
+      <button onClick={() => onEdit(product)} title="Edit harga / produk" className={`${s.actionButton}${extra}`}>
+        <span className={s.iconSm}>edit</span>
+        {full && <span className="text-xs font-bold uppercase tracking-wide">Edit</span>}
+      </button>
+      <button onClick={() => onDelete(product)} title="Hapus produk" className={`${s.actionDelete}${extra}`}>
+        <span className={s.iconSm}>delete</span>
+        {full && <span className="text-xs font-bold uppercase tracking-wide">Hapus</span>}
+      </button>
+    </>
+  );
+}
+
 export default function ProdukSection() {
   const [products, setProducts] = useState<MarketingProduct[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -95,7 +121,42 @@ export default function ProdukSection() {
 
         {error && <p className="mb-4 text-sm text-red-400">{error}</p>}
 
-        <div className={s.tableCard}>
+        <div className={s.mobileList}>
+          {products.length === 0 ? (
+            <div className={`${s.card} py-10 text-center text-xs text-on-surface-variant`}>
+              Belum ada produk. Klik &quot;Upload Produk&quot; untuk menambahkan.
+            </div>
+          ) : (
+            products.map((product) => (
+              <div key={product.id} className={s.card}>
+                <div className={s.cardTop}>
+                  <div className={s.productInfo}>
+                    <img src={product.img} alt={product.title} className={s.productImg} />
+                    <div className="min-w-0">
+                      <p className={s.productTitle}>{product.title}</p>
+                      <p className={s.productCategory}>{product.category}</p>
+                    </div>
+                  </div>
+                  <span className={s.skuText}>SKU: {product.sku}</span>
+                </div>
+                <div className={s.cardInfo}>
+                  <div className="truncate">Kategori: {product.category}</div>
+                </div>
+                <div className={s.cardMeta}>
+                  <span className={s.priceText}>{formatPrice(product.price)}</span>
+                  <span className={product.stock === 0 ? s.stockLow : s.stockText}>
+                    Stok: {product.stock}
+                  </span>
+                </div>
+                <div className={`${s.cardActions} gap-2`}>
+                  <ProdukActions product={product} full onEdit={handleEdit} onDelete={handleDelete} />
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+
+        <div className={`${s.tableCard} ${s.desktopOnly}`}>
           <div className={s.tableWrapper}>
             <table className={s.table}>
               <thead className={s.tableHead}>
@@ -143,12 +204,7 @@ export default function ProdukSection() {
                       </td>
                       <td className={s.tdRight}>
                         <div className={s.aksiWrapper}>
-                          <button onClick={() => handleEdit(product)} title="Edit harga / produk" className={s.actionButton}>
-                            <span className={s.iconSm}>edit</span>
-                          </button>
-                          <button onClick={() => handleDelete(product)} title="Hapus produk" className={s.actionDelete}>
-                            <span className={s.iconSm}>delete</span>
-                          </button>
+                          <ProdukActions product={product} onEdit={handleEdit} onDelete={handleDelete} />
                         </div>
                       </td>
                     </tr>

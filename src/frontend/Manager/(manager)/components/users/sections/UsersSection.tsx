@@ -105,7 +105,40 @@ export default function UsersSection() {
         </div>
       </div>
 
-      <div className={styles.tableContainer}>
+      <div className={styles.mobileList}>
+        {paginatedUsers.length === 0 && (
+          <div className={`${styles.card} py-10 text-center text-xs text-on-surface-variant`}>
+            Tidak ada user yang cocok.
+          </div>
+        )}
+        {paginatedUsers.map((u, i) => (
+          <div key={u.email} className={styles.card}>
+            <div className={styles.cardTop}>
+              <div className="flex items-center gap-3 min-w-0">
+                <div className={styles.avatar}><span className={`${styles.icon} ${styles.avatarIcon}`}>account_circle</span></div>
+                <div className="min-w-0">
+                  <p className={`${styles.userName} truncate`}>{u.name}</p>
+                  <p className={`${styles.userEmail} truncate`}>{u.email}</p>
+                </div>
+              </div>
+              <span className={`${styles.roleBadge} shrink-0 ${getRoleColor(u.role)}`}>{u.role}</span>
+            </div>
+            <div className={styles.cardInfo}>
+              <div className="truncate">{u.dept}</div>
+              <div className={`${styles.statusBadge} ${statusInfo(u.status).statusColor}`}>
+                {u.active ? <span className={`${styles.statusDot} ${styles.statusDotActive}`} /> : u.status === "SUSPENDED" ? <span className={`${styles.statusDot} ${styles.statusDotSuspended}`} /> : <span className={`${styles.statusDot} ${styles.statusDotPending}`} />}
+                {u.status}
+              </div>
+            </div>
+            <div className={`${styles.cardActions} gap-2`}>
+              <button onClick={() => handleOpenEdit(i)} className={`${styles.editButton} w-full`} title="Edit"><span className={styles.icon}>edit</span></button>
+              <button onClick={() => handleDelete(i)} className={`${styles.deleteButton} w-full`} title="Hapus"><span className={styles.icon}>delete</span></button>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div className={`${styles.tableContainer} ${styles.desktopOnly}`}>
         <table className={styles.table}>
           <thead>
             <tr className={styles.tableHeaderRow}>

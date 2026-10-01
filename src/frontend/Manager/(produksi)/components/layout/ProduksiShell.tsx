@@ -1,11 +1,17 @@
 "use client";
 
 import type { ReactNode } from "react";
+import MobileBottomNav from "@/app/MobileBottomNav";
 import { ProduksiTopBar } from "./ProduksiTopBar";
 import { useProduksiSidebar } from "./ProduksiSidebarProvider";
 
+const BOTTOM_NAV = [
+  { href: "/produksi", label: "Produksi", icon: "precision_manufacturing" },
+  { href: "/produksi/drawings", label: "Gambar", icon: "upload_file" },
+];
+
 export function ProduksiShell({ children }: { children: ReactNode }) {
-  const { desktopOpen } = useProduksiSidebar();
+  const { desktopOpen, toggle } = useProduksiSidebar();
 
   return (
     <div
@@ -14,7 +20,8 @@ export function ProduksiShell({ children }: { children: ReactNode }) {
       }`}
     >
       <ProduksiTopBar />
-      <main className="min-h-screen flex-1 px-4 pb-12 pt-[104px] sm:px-6 lg:px-8">{children}</main>
+      <main className="min-h-screen flex-1 px-4 pb-24 pt-[104px] sm:px-6 lg:px-8 lg:pb-12">{children}</main>
+      <MobileBottomNav items={BOTTOM_NAV} onMore={toggle} />
     </div>
   );
 }

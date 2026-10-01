@@ -51,7 +51,7 @@ export function SuratJalanFormModal({ delivery, onClose, onSaved }: Props) {
   const handleSubmit = async () => {
     setError(null);
     if (!namaSopir.trim() || !platNomor.trim() || !jenisArmada.trim()) {
-      setError("Lengkapi data armada: nama sopir, plat nomor, dan jenis armada.");
+      setError("Lengkapi data kendaraan: nama sopir, plat nomor, dan jenis kendaraan.");
       return;
     }
     const kirim = delivery.items.map((item) => ({
@@ -92,7 +92,7 @@ export function SuratJalanFormModal({ delivery, onClose, onSaved }: Props) {
         </div>
 
         <div className={s.formField}>
-          <label className={s.formLabel}>Input Armada</label>
+          <label className={s.formLabel}>Data Kendaraan</label>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div>
               <input
@@ -112,7 +112,7 @@ export function SuratJalanFormModal({ delivery, onClose, onSaved }: Props) {
             </div>
             <div>
               <select className={s.formInput} value={jenisArmada} onChange={(e) => setJenisArmada(e.target.value)}>
-                <option value="">Pilih jenis armada...</option>
+                <option value="">Pilih jenis kendaraan...</option>
                 {JENIS_ARMADA.map((jenis) => (
                   <option key={jenis} value={jenis}>
                     {jenis}
@@ -129,7 +129,7 @@ export function SuratJalanFormModal({ delivery, onClose, onSaved }: Props) {
               Pengiriman Bertahap
             </div>
             <div className="text-[10px] text-on-surface-variant mt-0.5">
-              Aktifkan untuk mengubah jumlah barang pada surat jalan ini (partial shipment).
+              Aktifkan untuk mengubah jumlah barang pada surat jalan ini.
             </div>
           </div>
           <button
@@ -151,7 +151,7 @@ export function SuratJalanFormModal({ delivery, onClose, onSaved }: Props) {
 
         <div className={s.sectionCard}>
           <div className={s.sectionTitle}>
-            <span className={s.sectionIcon}>inventory_2</span> Rincian Barang — Sesuaikan Kuantitas
+            <span className={s.sectionIcon}>inventory_2</span> Rincian Barang — Sesuaikan Jumlah
           </div>
           <div className="space-y-2">
             {delivery.items.map((item) => {
@@ -205,7 +205,7 @@ export function SuratJalanFormModal({ delivery, onClose, onSaved }: Props) {
                   </div>
                   {melebihi && (
                     <div className="w-full text-[10px] text-error">
-                      Kuantitas melebihi sisa — akan dipotong ke {sisa} {item.satuan}.
+                      Jumlah melebihi sisa — akan dipotong ke {sisa} {item.satuan}.
                     </div>
                   )}
                 </div>

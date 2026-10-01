@@ -129,7 +129,7 @@ export function PMDashboard() {
         <div className="flex flex-wrap items-center gap-3">
           <Link
             href="/pm/approval"
-            className="inline-flex items-center gap-2 rounded-xl border border-outline/40 bg-surface-container px-4 py-2.5 text-xs font-bold text-on-surface transition-all hover:border-secondary/50 hover:text-secondary"
+            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-outline/40 bg-surface-container px-4 py-2.5 text-xs font-bold text-on-surface transition-all hover:border-secondary/50 hover:text-secondary md:min-h-0"
           >
             <ClipboardCheck size={15} />
             Review Gambar
@@ -137,7 +137,7 @@ export function PMDashboard() {
           </Link>
           <Link
             href="/pm/orders/create"
-            className="inline-flex items-center gap-2 rounded-xl bg-secondary px-4 py-2.5 text-xs font-extrabold text-primary shadow-lg shadow-secondary/15 transition-all hover:-translate-y-0.5 hover:brightness-105"
+            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-secondary px-4 py-2.5 text-xs font-extrabold text-primary shadow-lg shadow-secondary/15 transition-all hover:-translate-y-0.5 hover:brightness-105 md:min-h-0"
           >
             <FilePlus2 size={15} strokeWidth={2.5} />
             Tambah Order Baru
@@ -207,7 +207,52 @@ export function PMDashboard() {
             </div>
           </div>
 
-          <div className="overflow-x-auto">
+          {/* Kartu untuk layar kecil (Android) menggantikan tabel yang perlu scroll horizontal. */}
+          <div className="md:hidden space-y-3 p-4">
+            {filteredOrders.length === 0 ? (
+              <div className="rounded-xl border border-outline/30 bg-primary-container px-4 py-12 text-center shadow-lg">
+                <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-surface-variant text-on-surface-variant">
+                  <Search size={20} />
+                </div>
+                <p className="mt-4 text-sm font-bold text-on-surface">Order tidak ditemukan</p>
+                <p className="mt-1 text-xs text-on-surface-variant">Coba ubah kata kunci atau filter status.</p>
+              </div>
+            ) : (
+              filteredOrders.map((order) => (
+                <div key={order.id} className="rounded-xl border border-outline/30 bg-primary-container p-4 shadow-lg">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="font-mono text-xs font-bold text-secondary">{order.contractorCode}</p>
+                      <p className="mt-1 truncate text-sm font-bold text-on-surface">{order.contractorName}</p>
+                    </div>
+                    <ProjectStatusBadge status={order.projectStatus} />
+                  </div>
+
+                  <div className="mt-3 space-y-1 text-xs text-on-surface-variant">
+                    <p className="truncate">Order ID {order.id}</p>
+                    <p className="truncate">{order.items.length} item spesifikasi</p>
+                    <p>Masuk {formatPMDate(order.enteredAt)}</p>
+                    <p>Target {formatPMDate(order.targetDate)}</p>
+                    <div className="pt-1.5">
+                      <DrawingStatusBadge status={order.drawingStatus} />
+                    </div>
+                  </div>
+
+                  <div className="mt-4 flex">
+                    <Link
+                      href={`/pm/orders/${order.id}`}
+                      className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-secondary px-4 py-2.5 text-xs font-extrabold text-primary shadow-lg shadow-secondary/15 transition-colors hover:brightness-105 md:min-h-0"
+                    >
+                      <ArrowUpRight size={15} />
+                      Buka Detail Order
+                    </Link>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+
+          <div className="hidden overflow-x-auto md:block">
             <table className="w-full min-w-[980px] text-left">
               <thead className="bg-surface-variant/35 text-[9px] font-bold uppercase tracking-[0.14em] text-on-surface-variant/70">
                 <tr>

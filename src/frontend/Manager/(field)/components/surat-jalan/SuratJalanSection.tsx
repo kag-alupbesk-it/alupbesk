@@ -57,7 +57,7 @@ export function SuratJalanSection() {
   const handleSaved = async () => {
     setFormTarget(null);
     await load();
-    setNotice("Surat jalan diterbitkan — armada dicatat dan sisa kuantitas dihitung ulang.");
+    setNotice("Surat jalan diterbitkan — kendaraan dicatat dan sisa jumlah barang dihitung ulang.");
   };
 
   return (
@@ -67,10 +67,10 @@ export function SuratJalanSection() {
           <div>
             <div className={s.headerLeft}>
               <h1 className={s.headerTitle}>Surat Jalan</h1>
-              <span className={s.badge}>Delivery Note</span>
+              <span className={s.badge}>Dokumen Pengiriman</span>
             </div>
             <p className={s.headerSubtitle}>
-              Terbitkan surat jalan untuk pengiriman ke proyek — isi armada dan sesuaikan kuantitas bila dikirim bertahap.
+              Terbitkan surat jalan untuk pengiriman ke proyek — isi data kendaraan dan sesuaikan jumlah barang bila dikirim bertahap.
             </p>
           </div>
         </div>
