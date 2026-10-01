@@ -23,6 +23,7 @@ import {
 import { usePMOrders } from "../context/PMOrderContext";
 import { formatPMDate, getPMInitials } from "./shared/date";
 import { DrawingPreview } from "./shared/DrawingPreview";
+import { DownloadDrawingButton } from "./shared/DownloadDrawingButton";
 import { DrawingStatusBadge, PMBadge, ProjectStatusBadge } from "./shared/PMBadge";
 import type { PMOrder } from "../types";
 import { needsDrawingApproval } from "../orderStatus";
@@ -209,17 +210,30 @@ export function PMApprovalPage() {
                 <div className="overflow-hidden rounded-xl border border-blue-400/25 bg-slate-100">
                   <div className="flex items-center justify-between border-b border-blue-400/20 bg-blue-400/8 px-3.5 py-3">
                     <div className="flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-blue-400" /><p className="text-[10px] font-extrabold uppercase tracking-[0.1em] text-blue-300">Gambar Mentah (Kontraktor)</p></div>
-                    <span className="text-[9px] font-bold text-blue-300/70">REV 01</span>
+                    <div className="flex items-center gap-2">
+                      <DownloadDrawingButton
+                        scopeId={`pm-approval-raw-${selectedOrder.id}`}
+                        fileName={selectedOrder.rawImageName || `gambar-mentah-${selectedOrder.id}.svg`}
+                        className="border-blue-400/40 bg-blue-400/10 text-blue-300 hover:bg-blue-400/20"
+                      />
+                      <span className="text-[9px] font-bold text-blue-300/70">REV 01</span>
+                    </div>
                   </div>
-                  <div className="h-[280px] overflow-hidden sm:h-[360px]"><div className="h-full w-full" style={{ transform: `scale(${zoom})`, transformOrigin: "center" }}><DrawingPreview order={selectedOrder} kind="raw" /></div></div>
+                  <div className="h-[280px] overflow-hidden sm:h-[360px]"><div className="h-full w-full" style={{ transform: `scale(${zoom})`, transformOrigin: "center" }}><DrawingPreview order={selectedOrder} kind="raw" scopeId={`pm-approval-raw-${selectedOrder.id}`} /></div></div>
                   <div className="border-t border-blue-400/15 bg-blue-400/5 px-3.5 py-2.5 text-[9px] text-on-surface-variant">{selectedOrder.rawImageName ?? "Sketsa/design awal kontraktor"}</div>
                 </div>
                 <div className="overflow-hidden rounded-xl border border-secondary/30 bg-slate-100">
                   <div className="flex items-center justify-between border-b border-secondary/25 bg-secondary/8 px-3.5 py-3">
                     <div className="flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-secondary" /><p className="text-[10px] font-extrabold uppercase tracking-[0.1em] text-secondary">Gambar Produksi (Tim Teknis)</p></div>
-                    <span className="text-[9px] font-bold text-secondary/70">REV {String(getRevisionNumber(selectedOrder)).padStart(2, "0")}</span>
+                    <div className="flex items-center gap-2">
+                      <DownloadDrawingButton
+                        scopeId={`pm-approval-production-${selectedOrder.id}`}
+                        fileName={selectedOrder.productionImageName || `gambar-matang-${selectedOrder.id}.svg`}
+                      />
+                      <span className="text-[9px] font-bold text-secondary/70">REV {String(getRevisionNumber(selectedOrder)).padStart(2, "0")}</span>
+                    </div>
                   </div>
-                  <div className="h-[280px] overflow-hidden sm:h-[360px]"><div className="h-full w-full" style={{ transform: `scale(${zoom})`, transformOrigin: "center" }}><DrawingPreview order={selectedOrder} kind="production" /></div></div>
+                  <div className="h-[280px] overflow-hidden sm:h-[360px]"><div className="h-full w-full" style={{ transform: `scale(${zoom})`, transformOrigin: "center" }}><DrawingPreview order={selectedOrder} kind="production" scopeId={`pm-approval-production-${selectedOrder.id}`} /></div></div>
                   <div className="border-t border-secondary/20 bg-secondary/5 px-3.5 py-2.5 text-[9px] text-on-surface-variant">{selectedOrder.productionImageName ?? "Draft gambar produksi tim teknis"}</div>
                 </div>
               </div>

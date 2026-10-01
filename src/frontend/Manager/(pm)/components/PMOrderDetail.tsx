@@ -21,6 +21,7 @@ import {
 import { usePMOrders } from "../context/PMOrderContext";
 import { formatPMDate } from "./shared/date";
 import { DrawingPreview } from "./shared/DrawingPreview";
+import { DownloadDrawingButton } from "./shared/DownloadDrawingButton";
 import { DrawingStatusBadge, PMBadge, ProjectStatusBadge } from "./shared/PMBadge";
 import type { PMOrder, ProjectStatus } from "../types";
 
@@ -178,13 +179,26 @@ export function PMOrderDetail({ orderId }: { orderId: string }) {
             <div className="mt-5 grid grid-cols-1 gap-4 md:grid-cols-2">
               <div className="overflow-hidden rounded-xl border border-blue-400/20">
                 <div className="flex items-center gap-2 border-b border-blue-400/20 bg-blue-400/8 px-3.5 py-3"><span className="h-2 w-2 rounded-full bg-blue-400" /><p className="text-[10px] font-bold uppercase tracking-[0.1em] text-blue-300">Gambar Mentah (Kontraktor)</p></div>
-                <div className="h-64"><DrawingPreview order={order} kind="raw" /></div>
-                <div className="border-t border-blue-400/15 px-3.5 py-2.5 text-[9px] text-on-surface-variant">{order.rawImageName ?? "Sketsa/design awal kontraktor"}</div>
+                <div className="h-64"><DrawingPreview order={order} kind="raw" scopeId={`pm-detail-raw-${order.id}`} /></div>
+                <div className="flex items-center justify-between gap-2 border-t border-blue-400/15 px-3.5 py-2.5 text-[9px] text-on-surface-variant">
+                  <span>{order.rawImageName ?? "Sketsa/design awal kontraktor"}</span>
+                  <DownloadDrawingButton
+                    scopeId={`pm-detail-raw-${order.id}`}
+                    fileName={order.rawImageName || `gambar-mentah-${order.id}.svg`}
+                    className="border-blue-400/40 bg-blue-400/10 text-blue-300 hover:bg-blue-400/20"
+                  />
+                </div>
               </div>
               <div className="overflow-hidden rounded-xl border border-secondary/20">
                 <div className="flex items-center gap-2 border-b border-secondary/20 bg-secondary/8 px-3.5 py-3"><span className="h-2 w-2 rounded-full bg-secondary" /><p className="text-[10px] font-bold uppercase tracking-[0.1em] text-secondary">Gambar Produksi (Tim Teknis)</p></div>
-                <div className="h-64"><DrawingPreview order={order} kind="production" /></div>
-                <div className="border-t border-secondary/15 px-3.5 py-2.5 text-[9px] text-on-surface-variant">{order.productionImageName ?? "Belum ada gambar produksi"}</div>
+                <div className="h-64"><DrawingPreview order={order} kind="production" scopeId={`pm-detail-production-${order.id}`} /></div>
+                <div className="flex items-center justify-between gap-2 border-t border-secondary/15 px-3.5 py-2.5 text-[9px] text-on-surface-variant">
+                  <span>{order.productionImageName ?? "Belum ada gambar produksi"}</span>
+                  <DownloadDrawingButton
+                    scopeId={`pm-detail-production-${order.id}`}
+                    fileName={order.productionImageName || `gambar-matang-${order.id}.svg`}
+                  />
+                </div>
               </div>
             </div>
           </section>
