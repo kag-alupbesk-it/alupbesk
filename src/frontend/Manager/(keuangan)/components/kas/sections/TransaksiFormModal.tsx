@@ -22,14 +22,17 @@ export function TransaksiFormModal({ entry, onClose, onSave }: Props) {
   const [jumlah, setJumlah] = useState(String(entry.jumlah));
   const [kategori, setKategori] = useState<KasKategori>(entry.kategori);
   const [tanggal, setTanggal] = useState(entry.tanggal);
-  const [error, setError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
 
   const handleSave = async () => {
-    setError(null);
-    if (!deskripsi.trim()) return setError("Deskripsi wajib diisi.");
+    const errors: Record<string, string> = {};
+    if (!deskripsi.trim()) errors.deskripsi = "Deskripsi wajib diisi.";
     const jumlahValue = Number(jumlah);
-    if (!Number.isFinite(jumlahValue) || jumlahValue <= 0) return setError("Jumlah harus lebih dari nol.");
+    if (!Number.isInteger(jumlahValue) || jumlahValue <= 0) errors.jumlah = "Nominal harus berupa angka positif.";
+    setFieldErrors(errors);
+    if (Object.keys(errors).length) return;
+
     setSaving(true);
     try {
       await onSave({
@@ -41,7 +44,7 @@ export function TransaksiFormModal({ entry, onClose, onSave }: Props) {
       });
       onClose();
     } catch (reason) {
-      setError(reason instanceof Error ? reason.message : "Gagal menyimpan transaksi.");
+      setFieldErrors({ form: reason instanceof Error ? reason.message : "Gagal menyimpan transaksi." });
       setSaving(false);
     }
   };
@@ -79,8 +82,9 @@ export function TransaksiFormModal({ entry, onClose, onSave }: Props) {
           id="modal-deskripsi"
           className={`${s.input} mb-4`}
           value={deskripsi}
-          onChange={(event) => setDeskripsi(event.target.value)}
+          onChange={(event) => { setDeskripsi(event.target.value); setFieldErrors((current) => ({ ...current, deskripsi: "" })); }}
         />
+        {fieldErrors.deskripsi && <p role="alert" className="-mt-3 mb-4 text-xs text-error">{fieldErrors.deskripsi}</p>}
 
         <div className="grid grid-cols-2 gap-4 mb-4">
           <div>
@@ -90,10 +94,13 @@ export function TransaksiFormModal({ entry, onClose, onSave }: Props) {
               className={s.input}
               type="number"
               min="1"
-              step="1000"
+              step="1"
+              inputMode="numeric"
               value={jumlah}
-              onChange={(event) => setJumlah(event.target.value)}
+              onKeyDown={(event) => { if (["-", "+", "e", "E", "."].includes(event.key)) event.preventDefault(); }}
+              onChange={(event) => { setJumlah(event.target.value); setFieldErrors((current) => ({ ...current, jumlah: "" })); }}
             />
+            {fieldErrors.jumlah && <p role="alert" className="mt-1 text-xs text-error">{fieldErrors.jumlah}</p>}
           </div>
           <div>
             <label className={`${s.fieldLabel} mb-1`} htmlFor="modal-tanggal">Tanggal</label>
@@ -114,7 +121,7 @@ export function TransaksiFormModal({ entry, onClose, onSave }: Props) {
           ))}
         </select>
 
-        {error && <p className="mb-4 text-xs text-error">{error}</p>}
+        {fieldErrors.form && <p role="alert" className="mb-4 text-xs text-error">{fieldErrors.form}</p>}
 
         <div className={s.actionsWrapper}>
           <button className={s.secondaryButton} onClick={onClose} disabled={saving}>

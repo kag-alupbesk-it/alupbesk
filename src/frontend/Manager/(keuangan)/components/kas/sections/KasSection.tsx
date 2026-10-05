@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useApi } from "@/frontend/Manager/(keuangan)/hooks/useApi";
 import { fetchKas, createKasEntry, updateKasEntry, deleteKasEntry } from "@/frontend/Manager/(keuangan)/services/kas";
+import { useKeuangan } from "../../keuangan/KeuanganContext";
 import type { KasEntry, KasEntryInput, KasTipe, KasKategori } from "./types";
-import { formatRp, formatTanggal, combineEntries, kategoriBadge } from "./helpers";
+import { formatRp, formatTanggal, kategoriBadge } from "./helpers";
 import * as s from "../style";
 import { TransaksiFormModal } from "./TransaksiFormModal";
 
@@ -15,8 +16,10 @@ const KATEGORI_LABELS: Record<KasKategori, string> = {
 };
 
 export function KasSection() {
-  const { data: kas, error, refetch } = useApi(fetchKas, { interval: 30000 });
+  const { data: kas, error, loading, refetch } = useApi(fetchKas, { interval: 30000 });
+  const { globalSaldo, totalMasuk, totalKeluar, listKasEntries, setKasSnapshot, updateSimulatedEntry, deleteSimulatedEntry } = useKeuangan();
   const [errorMsg, setErrorMsg] = useState("");
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [notice, setNotice] = useState<string | null>(null);
 
   const [tipe, setTipe] = useState<KasTipe>("keluar");
@@ -28,6 +31,10 @@ export function KasSection() {
   const [editing, setEditing] = useState<KasEntry | null>(null);
   const [deleting, setDeleting] = useState<KasEntry | null>(null);
   const [pending, setPending] = useState(false);
+
+  useEffect(() => {
+    if (kas) setKasSnapshot(kas);
+  }, [kas, setKasSnapshot]);
 
   const flash = (message: string) => {
     setNotice(message);
@@ -42,6 +49,12 @@ export function KasSection() {
   async function handleCreate(event: React.FormEvent) {
     event.preventDefault();
     setErrorMsg("");
+    const errors: Record<string, string> = {};
+    if (!deskripsi.trim()) errors.deskripsi = "Deskripsi wajib diisi.";
+    if (!Number.isInteger(Number(jumlah)) || Number(jumlah) <= 0) errors.jumlah = "Nominal harus berupa angka positif.";
+    setFormErrors(errors);
+    if (Object.keys(errors).length) return;
+
     setSaving(true);
     try {
       const entry = await createKasEntry({
@@ -54,6 +67,7 @@ export function KasSection() {
       flash(`Transaksi ${entry.tipe === "masuk" ? "masuk" : "keluar"} dicatat.`);
       setDeskripsi("");
       setJumlah("");
+      setFormErrors({});
       refetch();
     } catch (reason) {
       setErrorMsg(reason instanceof Error ? reason.message : "Gagal mencatat transaksi.");
@@ -64,6 +78,11 @@ export function KasSection() {
 
   async function handleEdit(input: KasEntryInput) {
     if (!editing) return;
+    if (editing.id.startsWith("sim-")) {
+      updateSimulatedEntry({ ...editing, ...input });
+      flash("Transaksi simulasi diperbarui.");
+      return;
+    }
     await updateKasEntry(editing.id, input);
     flash("Transaksi kas diperbarui.");
     refetch();
@@ -74,6 +93,12 @@ export function KasSection() {
     setErrorMsg("");
     setPending(true);
     try {
+      if (deleting.id.startsWith("sim-")) {
+        deleteSimulatedEntry(deleting.id);
+        flash("Transaksi simulasi dihapus.");
+        setDeleting(null);
+        return;
+      }
       await deleteKasEntry(deleting.id);
       flash("Transaksi kas dihapus.");
       setDeleting(null);
@@ -85,7 +110,7 @@ export function KasSection() {
     }
   }
 
-  const entries = kas ? combineEntries(kas) : [];
+  const entries = listKasEntries;
   const jenisBadge = (entry: KasEntry) => (entry.tipe === "masuk" ? s.masukBadge : s.keluarBadge);
   const jumlahClass = (entry: KasEntry) => (entry.tipe === "masuk" ? s.jumlahMasuk : s.jumlahKeluar);
   const shownError = errorMsg || error;
@@ -111,7 +136,7 @@ export function KasSection() {
             </div>
             <div>
               <p className={s.metricLabel}>Saldo Kas</p>
-              <p className={s.metricValue}>{kas ? formatRp(kas.saldo) : "…"}</p>
+              <p className={s.metricValue}>{loading && !kas ? "…" : formatRp(globalSaldo)}</p>
             </div>
           </div>
           <div className={s.metricCard}>
@@ -120,7 +145,7 @@ export function KasSection() {
             </div>
             <div>
               <p className={s.metricLabel}>Total Pemasukan</p>
-              <p className={s.metricValue}>{kas ? formatRp(kas.totalMasuk) : "…"}</p>
+              <p className={s.metricValue}>{loading && !kas ? "…" : formatRp(totalMasuk)}</p>
             </div>
           </div>
           <div className={s.metricCard}>
@@ -129,7 +154,7 @@ export function KasSection() {
             </div>
             <div>
               <p className={s.metricLabel}>Total Pengeluaran</p>
-              <p className={s.metricValue}>{kas ? formatRp(kas.totalKeluar) : "…"}</p>
+              <p className={s.metricValue}>{loading && !kas ? "…" : formatRp(totalKeluar)}</p>
             </div>
           </div>
         </div>
@@ -155,9 +180,9 @@ export function KasSection() {
               className={`${s.input} mb-4`}
               placeholder="cth: Pembayaran proyek / belanja bahan baku"
               value={deskripsi}
-              onChange={(event) => setDeskripsi(event.target.value)}
-              required
+              onChange={(event) => { setDeskripsi(event.target.value); setFormErrors((current) => ({ ...current, deskripsi: "" })); }}
             />
+            {formErrors.deskripsi && <p role="alert" className="-mt-3 mb-4 text-xs text-error">{formErrors.deskripsi}</p>}
 
             <div className="grid grid-cols-2 gap-4 mb-4">
               <div>
@@ -167,12 +192,14 @@ export function KasSection() {
                   className={s.input}
                   type="number"
                   min="1"
-                  step="1000"
+                  step="1"
+                  inputMode="numeric"
                   placeholder="cth: 500000"
                   value={jumlah}
-                  onChange={(event) => setJumlah(event.target.value)}
-                  required
+                  onKeyDown={(event) => { if (["-", "+", "e", "E", "."].includes(event.key)) event.preventDefault(); }}
+                  onChange={(event) => { setJumlah(event.target.value); setFormErrors((current) => ({ ...current, jumlah: "" })); }}
                 />
+                {formErrors.jumlah && <p role="alert" className="mt-1 text-xs text-error">{formErrors.jumlah}</p>}
               </div>
               <div>
                 <label className={`${s.fieldLabel} mb-1`} htmlFor="kategori">Kategori</label>
@@ -185,7 +212,7 @@ export function KasSection() {
             </div>
 
             <button type="submit" className={s.submitButton} disabled={saving}>
-              <span className="material-symbols-outlined text-[18px]">playlist_add</span>
+              <span className={`material-symbols-outlined text-[18px] ${saving ? "animate-spin" : ""}`}>{saving ? "progress_activity" : "playlist_add"}</span>
               {saving ? "Menyimpan…" : "Simpan Transaksi"}
             </button>
           </form>

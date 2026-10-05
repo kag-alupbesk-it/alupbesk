@@ -1,10 +1,10 @@
-import { KasSection as KasPage } from "@/frontend/Manager/(keuangan)/components/kas";
+import { KeuanganDashboard } from "@/frontend/Manager/(keuangan)/components/finance";
 
 export const metadata = {
-  title: "Kas Masuk & Keluar | ALUPBESK",
-  description: "Manajemen kas masuk, pengeluaran, dan saldo ALUPBESK",
+  title: "Keuangan | ALUPBESK",
+  description: "Dashboard keuangan dengan tab kas, approval, petty cash, termin, dan payroll",
 };
 
 export default function Page() {
-  return <KasPage />;
+  return <KeuanganDashboard />;
 }
