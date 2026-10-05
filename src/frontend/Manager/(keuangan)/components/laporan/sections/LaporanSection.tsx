@@ -122,7 +122,38 @@ export function LaporanSection() {
           <div className={s.tableHeader}>
             <h4 className={s.tableTitle}>Financial Statements</h4>
           </div>
-          <div className={s.tableWrapper}>
+
+          <div className={`${s.mobileList} p-3`}>
+            {dataNow.statements.length === 0 && !loading && (
+              <div className={`${s.card} py-10 text-center text-xs text-on-surface-variant`}>
+                Belum ada laporan.
+              </div>
+            )}
+            {dataNow.statements.map((statement) => (
+              <div key={statement.period} className={s.card}>
+                <div className={s.cardTop}>
+                  <span className="text-sm font-medium text-on-surface">{statement.period}</span>
+                  <span className={s.statusBadge}>Finalized</span>
+                </div>
+                <div className={s.cardMeta}>
+                  <span className="text-[9px] font-bold uppercase tracking-widest text-on-surface-variant">Total Revenue</span>
+                  <span className="text-sm font-bold text-on-surface">{statement.revenue}</span>
+                </div>
+                <div className={s.cardInfo}>
+                  <div className="flex items-center justify-between gap-3">
+                    <span>Net Profit</span>
+                    <span className={`text-sm font-bold ${s.tableCellHighlight}`}>{statement.profit}</span>
+                  </div>
+                  <div className="flex items-center justify-between gap-3">
+                    <span>Margin</span>
+                    <span className={`font-bold text-on-surface ${s.tableCellSecondary}`}>{statement.margin}</span>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className={`${s.tableWrapper} ${s.desktopOnly}`}>
             <table className={s.table}>
               <thead className={s.tableHead}>
                 <tr>

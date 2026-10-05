@@ -66,8 +66,8 @@ export const lowStockBadge = "rounded bg-error/10 px-1.5 py-0.5 text-[9px] font-
 export const catatanText = "rounded bg-surface-variant px-2 py-1 text-[10px] text-on-surface-variant border border-outline/20"
 export const noCatatan = "text-on-surface-variant/30 text-xs"
 export const aksiWrapper = "flex items-center justify-end gap-1"
-export const editButton = "flex items-center justify-center w-7 h-7 rounded-lg text-on-surface-variant hover:text-secondary hover:bg-secondary/10 transition-all"
-export const deleteButton = "flex items-center justify-center w-7 h-7 rounded-lg text-on-surface-variant hover:text-error hover:bg-error/10 transition-all"
+export const editButton = "flex items-center justify-center w-7 h-7 min-w-11 min-h-11 md:min-w-0 md:min-h-0 rounded-lg text-on-surface-variant hover:text-secondary hover:bg-secondary/10 transition-all"
+export const deleteButton = "flex items-center justify-center w-7 h-7 min-w-11 min-h-11 md:min-w-0 md:min-h-0 rounded-lg text-on-surface-variant hover:text-error hover:bg-error/10 transition-all"
 export const iconSm = "material-symbols-outlined text-[16px]"
 export const tableFooter = "border-t border-outline/20 px-4 lg:px-6 py-3 bg-surface-variant/30 flex items-center justify-between"
 export const footerText = "text-[10px] text-on-surface-variant"
@@ -75,6 +75,15 @@ export const footerHint = "text-[10px] text-on-surface-variant/40"
 export const footerAccent = "font-bold text-secondary"
 export const footerEdit = "text-secondary"
 export const footerDelete = "text-error"
+
+// Kartu untuk layar kecil (Android) — menggantikan tabel yang perlu scroll horizontal.
+export const mobileList = "md:hidden space-y-3"
+export const card = "rounded-xl border border-outline/30 bg-primary-container p-4 shadow-lg"
+export const cardTop = "flex items-start justify-between gap-3"
+export const cardInfo = "mt-3 space-y-1 text-xs text-on-surface-variant"
+export const cardMeta = "mt-3 flex items-center justify-between text-xs"
+export const cardActions = "mt-4 flex"
+export const desktopOnly = "hidden md:block"
 
 // --- ProjectStockSummary ---
 export const projectSummaryCard = "mb-6 rounded-xl border border-outline/30 bg-primary-container shadow-2xl overflow-hidden"
@@ -90,8 +99,8 @@ export const projectSummaryCount = "rounded-full bg-surface-variant px-2 py-0.5 
 export const formHint = "text-[10px] text-tertiary mt-1"
 
 // --- GudangFormModal ---
-export const modalBackdrop = "fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4"
-export const modalContent = "bg-primary-container border border-outline/30 rounded-2xl p-6 shadow-2xl max-w-lg w-full text-on-surface max-h-[90vh] overflow-y-auto"
+export const modalBackdrop = "fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-3"
+export const modalContent = "bg-primary-container border border-outline/30 rounded-2xl p-5 sm:p-6 shadow-2xl max-w-lg w-full text-on-surface max-h-[92vh] overflow-y-auto"
 export const modalHeader = "flex items-center justify-between mb-6"
 export const modalTitle = "text-base font-extrabold text-on-surface uppercase tracking-tight font-headline"
 export const modalSubtitle = "text-[10px] text-on-surface-variant mt-0.5"

@@ -3,12 +3,13 @@
 import { clsx } from "clsx";
 import { usePathname } from "next/navigation";
 import TopBar from "./TopBar";
+import BottomNav from "./BottomNav";
 import { useSidebar } from "./SidebarProvider";
 
 const TITLES: Record<string, string> = {
-  "/field": "Dashboard Antrean",
-  "/field/surat-jalan": "Surat Jalan & Partial Shipment",
-  "/field/pod": "POD, Geotagging & E-Signature",
+  "/field": "Daftar Pengiriman",
+  "/field/surat-jalan": "Surat Jalan & Pengiriman Bertahap",
+  "/field/pod": "Bukti Terima",
 };
 
 export default function FieldShell({ children }: { children: React.ReactNode }) {
@@ -25,7 +26,8 @@ export default function FieldShell({ children }: { children: React.ReactNode }) 
       )}
     >
       <TopBar title={title} />
-      <main className="flex-1 pt-12 lg:pt-16">{children}</main>
+      <main className="flex-1 pt-12 pb-24 lg:pt-16 lg:pb-0">{children}</main>
+      <BottomNav />
     </div>
   );
 }

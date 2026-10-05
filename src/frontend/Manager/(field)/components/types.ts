@@ -1,7 +1,7 @@
 // Manajer Lapangan: pengiriman order "Siap Kirim" ke lokasi proyek kontraktor.
 // Status alur: siap-kirim (dibuatkan surat jalan) -> dalam-pengiriman (armada
-// berangkat, boleh partial shipment) -> selesai-kirim (POD lengkap: e-signature,
-// geotag, dan foto bukti).
+// berangkat, boleh partial shipment) -> selesai-kirim (bukti terima lengkap:
+// foto tanda tangan penerima di surat jalan dan foto bukti proyek yang sampai).
 export type FieldDeliveryStatus = "siap-kirim" | "dalam-pengiriman" | "selesai-kirim";
 
 export interface FieldDeliveryItem {
@@ -26,12 +26,6 @@ export interface FieldArmada {
   jenisArmada: string;
 }
 
-export interface FieldGeotag {
-  latitude: number;
-  longitude: number;
-  timestamp: string;
-}
-
 export interface FieldDelivery {
   id: string;
   kodeProduksi: string;
@@ -42,9 +36,11 @@ export interface FieldDelivery {
   items: FieldDeliveryItem[];
   status: FieldDeliveryStatus;
   armada?: FieldArmada;
-  geotag?: FieldGeotag;
-  signatureDataUrl?: string;
-  podPath?: string;
+  // Dua gambar bukti terima yang wajib diunggah saat menyelesaikan pengiriman.
+  // signatureImagePath: foto tanda tangan penerima pada surat jalan.
+  // projectImagePath: foto bukti barang/proyek yang sudah sampai di lokasi.
+  signatureImagePath?: string;
+  projectImagePath?: string;
   cetakCount: number;
   createdAt: string;
   updatedAt: string;
@@ -57,11 +53,11 @@ export interface SuratJalanInput {
   kirim: { itemId: string; kuantitas: number }[];
 }
 
-// Input untuk menyelesaikan POD: geotag + e-signature + path foto bukti.
+// Input untuk menyelesaikan bukti terima: path foto tanda tangan penerima pada
+// surat jalan + path foto bukti proyek yang sudah sampai.
 export interface PodInput {
-  geotag: FieldGeotag;
-  signatureDataUrl: string;
-  podPath: string;
+  signatureImagePath: string;
+  projectImagePath: string;
 }
 
 export type FieldDeliveryResult =

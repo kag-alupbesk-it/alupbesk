@@ -9,6 +9,41 @@ import * as s from "../style";
 
 type StatusFilter = "ALL" | "belum_bayar" | "lunas";
 
+function PenagihanAction({
+  item,
+  loading,
+  onLunas,
+  full = false,
+}: {
+  item: PenagihanItem;
+  loading: boolean;
+  onLunas: (item: PenagihanItem) => void;
+  full?: boolean;
+}) {
+  if (item.status === "lunas") {
+    return (
+      <span className={full ? `${s.lunasDone} w-full` : s.lunasDone}>
+        <span className="material-symbols-outlined text-[16px]">check_circle</span>
+        Lunas
+      </span>
+    );
+  }
+  return (
+    <button
+      className={full ? `${s.lunasButton} w-full` : s.lunasButton}
+      onClick={() => onLunas(item)}
+      disabled={loading}
+    >
+      {loading ? (
+        <span className="material-symbols-outlined text-[14px] animate-spin">progress_activity</span>
+      ) : (
+        <span className="material-symbols-outlined text-[14px]">how_to_reg</span>
+      )}
+      Tandai Lunas
+    </button>
+  );
+}
+
 export function PenagihanSection() {
   const { data, error, refetch } = useApi(fetchPenagihan, { interval: 30000 });
   const [errorMsg, setErrorMsg] = useState("");
@@ -92,7 +127,48 @@ export function PenagihanSection() {
               </select>
             </div>
           </div>
-          <div className={s.tableWrapper}>
+          <div className={`${s.mobileList} p-3`}>
+            {filtered.length === 0 && (
+              <div className={`${s.card} py-10 text-center text-xs text-on-surface-variant`}>
+                Belum ada tagihan.
+              </div>
+            )}
+            {filtered.map((item) => (
+              <div key={item.id} className={s.card}>
+                <div className={s.cardTop}>
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium text-on-surface">{item.id}</p>
+                    <p className="truncate text-[10px] text-on-surface-variant">{item.pelanggan}</p>
+                  </div>
+                  <span className={`${s.badgeBase} ${item.status === "lunas" ? s.lunasBadge : s.belumBadge}`}>
+                    {item.status === "lunas" ? "Lunas" : "Belum Bayar"}
+                  </span>
+                </div>
+                <div className={s.cardInfo}>
+                  <div className="flex items-center gap-2">
+                    Kategori
+                    <span className={`${s.badgeBase} ${s.kategoriBadge[item.kategori]}`}>{item.kategori}</span>
+                  </div>
+                  <div className="truncate">{item.sumber}</div>
+                  <div>{formatTanggal(item.tanggal)}</div>
+                </div>
+                <div className={s.cardMeta}>
+                  <span className="text-[9px] font-bold uppercase tracking-widest text-on-surface-variant">Nilai</span>
+                  <span className="text-sm font-bold text-on-surface">{formatRp(item.nilai)}</span>
+                </div>
+                <div className={s.cardActions}>
+                  <PenagihanAction
+                    item={item}
+                    loading={loadingId === item.id}
+                    onLunas={handleLunas}
+                    full
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className={`${s.tableWrapper} ${s.desktopOnly}`}>
             <table className={s.table}>
               <thead className={s.tableHead}>
                 <tr>
@@ -123,24 +199,11 @@ export function PenagihanSection() {
                       </span>
                     </td>
                     <td className={s.tableCell}>
-                      {item.status === "lunas" ? (
-                        <span className={s.lunasDone}>
-                          <span className="material-symbols-outlined text-[16px]">check_circle</span>
-                        </span>
-                      ) : (
-                        <button
-                          className={s.lunasButton}
-                          onClick={() => handleLunas(item)}
-                          disabled={loadingId === item.id}
-                        >
-                          {loadingId === item.id ? (
-                            <span className="material-symbols-outlined text-[14px] animate-spin">progress_activity</span>
-                          ) : (
-                            <span className="material-symbols-outlined text-[14px]">how_to_reg</span>
-                          )}
-                          Tandai Lunas
-                        </button>
-                      )}
+                      <PenagihanAction
+                        item={item}
+                        loading={loadingId === item.id}
+                        onLunas={handleLunas}
+                      />
                     </td>
                   </tr>
                 ))}

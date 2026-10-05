@@ -64,11 +64,11 @@ export function FieldAntrianSection() {
         <div className={s.header}>
           <div>
             <div className={s.headerLeft}>
-              <h1 className={s.headerTitle}>Dashboard Antrean</h1>
-              <span className={s.badge}>Field Ops</span>
+              <h1 className={s.headerTitle}>Daftar Pengiriman</h1>
+              <span className={s.badge}>Operasional Lapangan</span>
             </div>
             <p className={s.headerSubtitle}>
-              Antrean order siap kirim ke lokasi proyek kontraktor — pantau status sampai POD diterima.
+              Daftar pesanan siap kirim ke lokasi proyek kontraktor — pantau status sampai bukti terima lengkap.
             </p>
           </div>
         </div>
@@ -126,7 +126,7 @@ export function FieldAntrianSection() {
         </div>
 
         {loading ? (
-          <div className={`${s.tableCard} ${s.emptyCell}`}>Memuat antrean...</div>
+          <div className={`${s.tableCard} ${s.emptyCell}`}>Memuat pengiriman...</div>
         ) : (
           <FieldAntrianTable deliveries={pageItems} onOpenDetail={setDetail} />
         )}
@@ -138,7 +138,7 @@ export function FieldAntrianSection() {
               {filtered.length === 0 ? 0 : safePage * PAGE_SIZE + 1}–
               {Math.min((safePage + 1) * PAGE_SIZE, filtered.length)}
             </span>{" "}
-            dari {filtered.length} order
+            dari {filtered.length} pesanan
           </span>
           <div className={s.paginationButtons}>
             <button

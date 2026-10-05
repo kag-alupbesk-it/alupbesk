@@ -27,10 +27,19 @@ export const tableCell = "px-4 py-3 text-xs text-on-surface"
 export const badgeBase = "inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[9px] font-bold uppercase tracking-widest"
 export const belumBadge = "bg-error/10 text-error border-error/20"
 export const lunasBadge = "bg-success/10 text-success border-success/20"
-export const lunasButton = "flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-success/10 hover:bg-success/20 text-success text-[10px] font-bold uppercase tracking-widest transition-all disabled:opacity-40 disabled:cursor-default disabled:hover:bg-success/10"
-export const lunasDone = "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-on-surface-variant text-[10px] font-bold uppercase tracking-widest"
+export const lunasButton = "flex items-center justify-center gap-1.5 px-3 py-1.5 min-h-11 md:min-h-0 rounded-lg bg-success/10 hover:bg-success/20 text-success text-[10px] font-bold uppercase tracking-widest transition-all disabled:opacity-40 disabled:cursor-default disabled:hover:bg-success/10"
+export const lunasDone = "flex items-center justify-center gap-1.5 px-3 py-1.5 min-h-11 md:min-h-0 rounded-lg text-on-surface-variant text-[10px] font-bold uppercase tracking-widest"
 export const kategoriBadge: Record<string, string> = {
   eceran: "bg-secondary/10 text-secondary border-secondary/20",
   proyek: "bg-tertiary/10 text-tertiary border-tertiary/20",
 }
 export const emptyState = "px-4 py-10 text-center text-xs text-on-surface-variant"
+
+// --- Kartu untuk layar kecil (Android) — menggantikan tabel yang perlu scroll horizontal. ---
+export const mobileList = "md:hidden space-y-3"
+export const card = "rounded-xl border border-outline/30 bg-primary-container p-4 shadow-lg"
+export const cardTop = "flex items-start justify-between gap-3"
+export const cardInfo = "mt-3 space-y-1 text-xs text-on-surface-variant"
+export const cardMeta = "mt-3 flex items-center justify-between text-xs"
+export const cardActions = "mt-4 flex"
+export const desktopOnly = "hidden md:block"

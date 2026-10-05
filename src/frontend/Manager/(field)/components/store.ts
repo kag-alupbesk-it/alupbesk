@@ -2,7 +2,6 @@ import type {
   FieldDelivery,
   FieldDeliveryItem,
   FieldDeliveryResult,
-  FieldGeotag,
   FieldDeliveryStatus,
   PodInput,
   SuratJalanInput,
@@ -69,8 +68,8 @@ const seeds: FieldDelivery[] = [
     ],
     status: "selesai-kirim",
     armada: { namaSopir: "Hendra Gunawan", platNomor: "N 1928 ABC", jenisArmada: "Pickup Engkel" },
-    geotag: { latitude: -7.834461, longitude: 112.69088, timestamp: daysAgo(2, 10) },
-    podPath: "/media/pod/SJ-2026-003.jpg",
+    signatureImagePath: "/media/pod/SJ-2026-003-tanda-tangan.jpg",
+    projectImagePath: "/media/pod/SJ-2026-003-bukti-proyek.jpg",
     cetakCount: 2,
     createdAt: daysAgo(5),
     updatedAt: daysAgo(2),
@@ -142,7 +141,7 @@ function saveSuratJalan(id: string, input: SuratJalanInput): FieldDeliveryResult
       return {
         ok: false,
         code: "STATUS_INVALID",
-        message: `Kuantitas pengiriman tidak valid. Sisa terkirim hanya ${sisa} di salah satu item.`,
+        message: `Jumlah pengiriman tidak valid. Sisa terkirim hanya ${sisa} di salah satu item.`,
       };
   }
 
@@ -165,10 +164,11 @@ function saveSuratJalan(id: string, input: SuratJalanInput): FieldDeliveryResult
   return { ok: true, delivery: updated };
 }
 
-// Menyelesaikan POD (Proof of Delivery): menyimpan hasil geotagging, e-signature
-// penerima, dan path foto bukti kirim. Status menjadi "selesai-kirim" hanya
-// ketika seluruh kuantitas item sudah terkirim; jika masih ada sisa, status
-// tetap "dalam-pengiriman" menunggu pengiriman berikutnya.
+// Menyelesaikan bukti terima: menyimpan path foto tanda tangan penerima pada
+// surat jalan dan foto bukti proyek yang sudah sampai. Status menjadi
+// "selesai-kirim" hanya ketika seluruh kuantitas item sudah terkirim; jika
+// masih ada sisa, status tetap "dalam-pengiriman" menunggu pengiriman
+// berikutnya.
 function submitPod(id: string, input: PodInput): FieldDeliveryResult {
   const current = ensureStore().get(id);
   if (!current)
@@ -179,9 +179,8 @@ function submitPod(id: string, input: PodInput): FieldDeliveryResult {
 
   const updated: FieldDelivery = {
     ...current,
-    geotag: input.geotag,
-    signatureDataUrl: input.signatureDataUrl,
-    podPath: input.podPath,
+    signatureImagePath: input.signatureImagePath,
+    projectImagePath: input.projectImagePath,
     status: (allTerkirim ? "selesai-kirim" : "dalam-pengiriman") as typeof current.status,
     updatedAt: now,
   };
@@ -206,10 +205,8 @@ export const fieldStore = {
   },
   saveSuratJalan: (id: string, input: SuratJalanInput): Promise<FieldDelivery> =>
     unwrap(saveSuratJalan(id, input)),
-  submitPod: (
-    id: string,
-    input: { geotag: FieldGeotag; signatureDataUrl: string; podPath: string },
-  ): Promise<FieldDelivery> => unwrap(submitPod(id, input)),
+  submitPod: (id: string, input: PodInput): Promise<FieldDelivery> =>
+    unwrap(submitPod(id, input)),
 };
 
-export type { FieldDelivery, FieldGeotag, FieldDeliveryStatus };
+export type { FieldDelivery, FieldDeliveryStatus };
