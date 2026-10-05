@@ -4,20 +4,20 @@ import { useRef, useState } from "react";
 import * as s from "./style";
 
 interface Props {
-  deliveryId: string;
+  // Path tujuan foto yang disimpan, mis. `/media/pod/SJ-2026-003-tanda-tangan.jpg`.
+  targetPath: string;
   currentPath?: string;
   onPathChange: (path: string) => void;
+  emptyText: string;
+  uploadLabel: string;
 }
 
-// Upload foto bukti kirim. Pratinjau memakai format URL internal ringkas
-// `/media/pod/SJ-[ID].jpg`; saat memilih berkas, preview lokal dibuat lewat
-// object URL dan path tujuan dibangun dari ID surat jalan.
-export function PodPhotoPreview({ deliveryId, currentPath, onPathChange }: Props) {
+// Unggah satu foto bukti terima. Pratinjau memakai object URL saat berkas baru
+// dipilih, lalu beralih ke path tujuan yang dibangun dari targetPath.
+export function PodPhotoPreview({ targetPath, currentPath, onPathChange, emptyText, uploadLabel }: Props) {
   const inputRef = useRef<HTMLInputElement | null>(null);
   const [objectUrl, setObjectUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-
-  const target = `/media/pod/${deliveryId}.jpg`;
 
   const handleFile = (file: File | undefined) => {
     if (!file) return;
@@ -28,7 +28,7 @@ export function PodPhotoPreview({ deliveryId, currentPath, onPathChange }: Props
     setError(null);
     if (objectUrl) URL.revokeObjectURL(objectUrl);
     setObjectUrl(URL.createObjectURL(file));
-    onPathChange(target);
+    onPathChange(targetPath);
   };
 
   return (
@@ -39,7 +39,7 @@ export function PodPhotoPreview({ deliveryId, currentPath, onPathChange }: Props
           <img
             className={s.photoImg}
             src={objectUrl ?? currentPath}
-            alt="Pratinjau bukti kirim"
+            alt="Pratinjau bukti terima"
             onError={(e) => {
               if (!objectUrl) e.currentTarget.style.display = "none";
             }}
@@ -47,18 +47,18 @@ export function PodPhotoPreview({ deliveryId, currentPath, onPathChange }: Props
         ) : (
           <div className={s.photoEmpty}>
             <span className={s.photoIcon}>photo_camera</span>
-            <span className={s.photoLabel}>
-              Belum ada foto bukti kirim.
-              <br />Unggah foto saat barang tiba di lokasi proyek.
-            </span>
+            <span className={s.photoLabel}>{emptyText}</span>
           </div>
         )}
       </div>
 
       <div className="mt-3 flex flex-wrap items-center gap-3">
-        <button className={s.tertiaryButton} onClick={() => inputRef.current?.click()}>
-          <span className="material-symbols-outlined text-[13px] align-middle mr-1">upload</span>
-          {currentPath || objectUrl ? "Ganti Foto" : "Unggah Foto POD"}
+        <button
+          className={`${s.tertiaryButton} w-full sm:w-auto`}
+          onClick={() => inputRef.current?.click()}
+        >
+          <span className={s.actionIcon}>{currentPath || objectUrl ? "sync" : "add_a_photo"}</span>
+          {currentPath || objectUrl ? "Ganti Foto" : uploadLabel}
         </button>
         <input
           ref={inputRef}
@@ -72,7 +72,7 @@ export function PodPhotoPreview({ deliveryId, currentPath, onPathChange }: Props
 
       {error && <p className="text-[10px] text-error mt-2">{error}</p>}
 
-      <div className={s.photoPath}>→ {target}</div>
+      <div className={s.photoPath}>→ {targetPath}</div>
     </div>
   );
 }

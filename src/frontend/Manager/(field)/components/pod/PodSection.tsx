@@ -3,19 +3,16 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { fieldStore } from "../store";
-import type { FieldDelivery, FieldGeotag } from "../types";
+import type { FieldDelivery } from "../types";
 import * as s from "./style";
-import { SignatureCanvas } from "./SignatureCanvas";
-import { GeotagPanel } from "./GeotagPanel";
 import { PodPhotoPreview } from "./PodPhotoPreview";
 
 export function PodSection() {
   const [deliveries, setDeliveries] = useState<FieldDelivery[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [geo, setGeo] = useState<FieldGeotag | null>(null);
-  const [signature, setSignature] = useState("");
-  const [podPath, setPodPath] = useState("");
+  const [signatureImagePath, setSignatureImagePath] = useState("");
+  const [projectImagePath, setProjectImagePath] = useState("");
   const [pending, setPending] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -27,7 +24,7 @@ export function PodSection() {
       setNotice(null);
     } catch {
       setDeliveries([]);
-      setNotice("Gagal memuat data POD.");
+      setNotice("Gagal memuat data bukti terima.");
     } finally {
       setLoading(false);
     }
@@ -56,35 +53,30 @@ export function PodSection() {
   const handleSelect = (id: string) => {
     setSelectedId(id);
     const delivery = deliveries.find((d) => d.id === id);
-    setGeo(delivery?.geotag ?? null);
-    setSignature(delivery?.signatureDataUrl ?? "");
-    setPodPath(delivery?.podPath ?? "");
+    setSignatureImagePath(delivery?.signatureImagePath ?? "");
+    setProjectImagePath(delivery?.projectImagePath ?? "");
     setError(null);
   };
 
   const handleSubmit = async () => {
     if (!selected) return;
     setError(null);
-    if (!geo) {
-      setError("Ambil lokasi pengiriman terlebih dahulu.");
+    if (!signatureImagePath) {
+      setError("Unggah foto tanda tangan penerima pada surat jalan terlebih dahulu.");
       return;
     }
-    if (!signature) {
-      setError("Tanda tangan penerima belum ditulis.");
-      return;
-    }
-    if (!podPath) {
-      setError("Unggah foto bukti kirim terlebih dahulu.");
+    if (!projectImagePath) {
+      setError("Unggah foto bukti proyek yang sudah sampai terlebih dahulu.");
       return;
     }
     setPending(true);
     try {
-      await fieldStore.submitPod(selected.id, { geotag: geo, signatureDataUrl: signature, podPath });
+      await fieldStore.submitPod(selected.id, { signatureImagePath, projectImagePath });
       await load();
-      setNotice("POD tersimpan — status pengiriman diperbarui dan siap dicetak.");
+      setNotice("Bukti terima tersimpan — status pengiriman diperbarui dan siap dicetak.");
       setPending(false);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Gagal menyimpan POD.");
+      setError(err instanceof Error ? err.message : "Gagal menyimpan bukti terima.");
       setPending(false);
     }
   };
@@ -95,11 +87,11 @@ export function PodSection() {
         <div className={s.header}>
           <div>
             <div className={s.headerLeft}>
-              <h1 className={s.headerTitle}>POD, Geotagging & E-Signature</h1>
-              <span className={s.badge}>Proof of Delivery</span>
+              <h1 className={s.headerTitle}>Bukti Terima</h1>
+              <span className={s.badge}>Bukti Terima</span>
             </div>
             <p className={s.headerSubtitle}>
-              Lengkapi bukti terima barang: foto POD, titik lokasi, dan tanda tangan digital penerima.
+              Wajib unggah 2 foto: tanda tangan penerima pada surat jalan dan bukti proyek yang sudah sampai.
             </p>
           </div>
         </div>
@@ -119,7 +111,7 @@ export function PodSection() {
                 >
                   <div className="flex items-center justify-between">
                     <span className={s.selectSJ}>{delivery.id}</span>
-                    {delivery.status === "selesai-kirim" && <span className={s.badgeDone}>POD lengkap</span>}
+                    {delivery.status === "selesai-kirim" && <span className={s.badgeDone}>Bukti terima lengkap</span>}
                   </div>
                   <div className={s.selectKontraktor}>{delivery.kodeProduksi}</div>
                   <div className={s.selectSub}>{delivery.namaKontraktor}</div>
@@ -132,39 +124,42 @@ export function PodSection() {
               <div className={s.grid}>
                 <div className={`${s.panel} ${s.panelBody}`}>
                   <div className={s.panelTitle}>
-                    <span className={s.panelIcon}>document_scanner</span> E-Signature Penerima
+                    <span className={s.panelIcon}>draw</span> Foto Tanda Tangan Penerima
                   </div>
-                  <p className="text-[10px] text-on-surface-variant mt-1">
-                    Tanda tangan diterapkan pada kolom TTD Penerima saat surat jalan dicetak.
+                  <p className="text-[10px] text-on-surface-variant mt-1 mb-1">
+                    Unggah foto surat jalan yang sudah ditandatangani penerima/kontraktor.
                   </p>
-                  <SignatureCanvas value={signature} onChange={setSignature} />
+                  <PodPhotoPreview
+                    targetPath={`/media/pod/${selected.id}-tanda-tangan.jpg`}
+                    currentPath={selected.signatureImagePath}
+                    onPathChange={setSignatureImagePath}
+                    emptyText="Belum ada foto tanda tangan penerima."
+                    uploadLabel="Unggah Foto Tanda Tangan"
+                  />
 
-                  <div className="mt-6">
+                  <div className="mt-8">
                     <div className={s.panelTitle}>
-                      <span className={s.panelIcon}>my_location</span> Geotagging
+                      <span className={s.panelIcon}>photo_camera</span> Foto Bukti Proyek Sampai
                     </div>
-                    <p className="text-[10px] text-on-surface-variant mt-1 mb-2">
-                      Titik lokasi & waktu diambil dari Browser Geolocation API.
+                    <p className="text-[10px] text-on-surface-variant mt-1 mb-1">
+                      Unggah foto barang/proyek yang sudah sampai di lokasi proyek.
                     </p>
-                    <GeotagPanel value={geo} onChange={setGeo} />
+                    <PodPhotoPreview
+                      targetPath={`/media/pod/${selected.id}-bukti-proyek.jpg`}
+                      currentPath={selected.projectImagePath}
+                      onPathChange={setProjectImagePath}
+                      emptyText="Belum ada foto bukti proyek."
+                      uploadLabel="Unggah Foto Bukti Proyek"
+                    />
                   </div>
                 </div>
 
                 <div className={`${s.panel} ${s.panelBody}`}>
-                  <div className={s.panelTitle}>
-                    <span className={s.panelIcon}>photo_camera</span> Upload Foto POD
+                  <div className={`${s.panelTitle}`}>
+                    <span className={s.panelIcon}>receipt_long</span> Ringkasan Pengiriman
                   </div>
-                  <p className="text-[10px] text-on-surface-variant mt-1 mb-1">
-                    Pratinjau foto bukti kirim — tersimpan pada URL internal{" "}
-                    <code className="text-secondary">/media/pod/SJ-[ID].jpg</code>.
-                  </p>
-                  <PodPhotoPreview
-                    deliveryId={selected.id}
-                    currentPath={selected.podPath}
-                    onPathChange={setPodPath}
-                  />
 
-                  <div className="mt-8 rounded-xl border border-outline/20 bg-surface-variant/40 px-4 py-3">
+                  <div className="mt-4 rounded-xl border border-outline/20 bg-surface-variant/40 px-4 py-3">
                     <div className={s.infoRow}>
                       <span className={s.infoLabel}>Surat Jalan</span>
                       <span className={s.infoValue}>{selected.id}</span>
@@ -179,7 +174,7 @@ export function PodSection() {
                     </div>
                     {selected.armada && (
                       <div className={s.infoRow}>
-                        <span className={s.infoLabel}>Armada</span>
+                        <span className={s.infoLabel}>Kendaraan</span>
                         <span className={s.infoValue}>
                           {selected.armada.namaSopir} · {selected.armada.platNomor}
                         </span>
@@ -200,11 +195,11 @@ export function PodSection() {
                   {isSelesai ? (
                     <div className={`${s.doneBox} mt-5`}>
                       <div className={s.doneLabel}>
-                        <span className="material-symbols-outlined text-[16px]">verified</span> POD Lengkap
+                        <span className="material-symbols-outlined text-[16px]">verified</span> Bukti Terima Lengkap
                       </div>
                       <p className={s.doneText}>
-                        Geotag, tanda tangan, dan foto bukti sudah tersimpan. Cetak surat jalan untuk arsip
-                        maupun serah terima kontraktor.
+                        Kedua foto bukti sudah tersimpan. Cetak surat jalan untuk arsip maupun serah terima
+                        kontraktor.
                       </p>
                     </div>
                   ) : (
@@ -221,14 +216,14 @@ export function PodSection() {
                         <span className="material-symbols-outlined text-[16px]">
                           {pending ? "progress_activity" : "save"}
                         </span>
-                        {pending ? "Menyimpan..." : "Simpan POD"}
+                        {pending ? "Menyimpan..." : "Simpan Bukti Terima"}
                       </button>
                     </div>
                   )}
                 </div>
               </div>
             ) : (
-              <div className={`${s.panel} ${s.emptyCell}`}>Tidak ada data pengiriman untuk di-POD-kan.</div>
+              <div className={`${s.panel} ${s.emptyCell}`}>Tidak ada data pengiriman untuk dilengkapi bukti terimanya.</div>
             )}
           </>
         )}

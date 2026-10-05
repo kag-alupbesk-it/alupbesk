@@ -116,11 +116,11 @@ export function PMOrderDetail({ orderId }: { orderId: string }) {
         </div>
         <div className="flex flex-wrap items-center gap-2.5">
           {order.projectStatus === "menunggu_acc" ? (
-            <Link href="/pm/approval" className="inline-flex items-center gap-2 rounded-xl bg-secondary px-4 py-2.5 text-xs font-extrabold text-primary shadow-lg shadow-secondary/15 transition-colors hover:brightness-105">
+            <Link href="/pm/approval" className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-secondary px-4 py-2.5 text-xs font-extrabold text-primary shadow-lg shadow-secondary/15 transition-colors hover:brightness-105 md:min-h-0">
               <Clock3 size={14} /> Review Gambar
             </Link>
           ) : nextAction ? (
-            <button type="button" onClick={() => advanceOrder(order.id)} className="inline-flex items-center gap-2 rounded-xl bg-secondary px-4 py-2.5 text-xs font-extrabold text-primary shadow-lg shadow-secondary/15 transition-colors hover:brightness-105">
+            <button type="button" onClick={() => advanceOrder(order.id)} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-secondary px-4 py-2.5 text-xs font-extrabold text-primary shadow-lg shadow-secondary/15 transition-colors hover:brightness-105 md:min-h-0">
               {order.projectStatus === "siap_produksi" ? <Play size={14} /> : order.projectStatus === "produksi" ? <PackageCheck size={14} /> : <CheckCircle2 size={14} />}
               {nextAction}
             </button>
@@ -156,7 +156,28 @@ export function PMOrderDetail({ orderId }: { orderId: string }) {
               </div>
               <span className="rounded-full bg-surface-variant px-2.5 py-1 text-[10px] font-bold text-on-surface-variant">{order.items.length} item</span>
             </div>
-            <div className="overflow-x-auto">
+            {/* Kartu untuk layar kecil (Android) menggantikan tabel yang perlu scroll horizontal. */}
+            <div className="md:hidden space-y-3 p-4">
+              {order.items.map((item, index) => (
+                <div key={item.id} className="rounded-xl border border-outline/30 bg-primary-container p-4 shadow-lg">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="font-mono text-[10px] font-extrabold text-secondary">{String(index + 1).padStart(2, "0")}</p>
+                      <p className="mt-1 text-sm font-bold text-on-surface">{item.name}</p>
+                    </div>
+                    <span className="shrink-0 rounded-lg bg-surface-variant px-2.5 py-1 text-center">
+                      <span className="font-headline text-sm font-extrabold text-on-surface">{item.quantity}</span>
+                      <span className="ml-1 text-[10px] text-on-surface-variant">{item.unit}</span>
+                    </span>
+                  </div>
+                  <div className="mt-3 space-y-1 text-xs text-on-surface-variant">
+                    <p>Catatan Teknis</p>
+                    <p className="text-[11px] leading-relaxed">{item.technicalNote || "—"}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="hidden overflow-x-auto md:block">
               <table className="w-full min-w-[650px] text-left">
                 <thead className="bg-surface-variant/35 text-[9px] font-bold uppercase tracking-[0.12em] text-on-surface-variant/70"><tr><th className="px-5 py-3.5 sm:px-6">Nama Item</th><th className="px-5 py-3.5">Kuantitas</th><th className="px-5 py-3.5">Satuan</th><th className="px-5 py-3.5 sm:px-6">Catatan Teknis</th></tr></thead>
                 <tbody className="divide-y divide-outline/15">

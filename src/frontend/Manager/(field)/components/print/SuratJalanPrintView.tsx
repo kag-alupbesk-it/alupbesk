@@ -9,7 +9,7 @@ import * as s from "./style";
 
 const COMPOSER_TTJ = [
   "Barang sudah diterima dalam keadaan baik di lokasi proyek terkait.",
-  "Surat ini berlaku sebagai tanda terima (POD) antara CV ALUPBESK dan kontraktor.",
+  "Surat ini berlaku sebagai tanda terima antara CV ALUPBESK dan kontraktor.",
 ];
 
 function KopSurat() {
@@ -83,7 +83,7 @@ export function SuratJalanPrintView({ deliveryId }: Props) {
       <div className="p-10 text-center">
         <div className="text-xs text-error mb-4">{error ?? "Data tidak ditemukan."}</div>
         <Link href="/field" className="text-xs font-bold text-secondary uppercase tracking-wide">
-          ← Kembali ke Dashboard Antrean
+          ← Kembali ke Daftar Pengiriman
         </Link>
       </div>
     );
@@ -143,13 +143,13 @@ export function SuratJalanPrintView({ deliveryId }: Props) {
               <div className={s.infoValue}>{formatTanggal(delivery.tanggalKirim)}</div>
             </div>
             <div className="mt-3">
-              <div className={s.infoBlockTitle}>Detail Armada</div>
+              <div className={s.infoBlockTitle}>Detail Kendaraan</div>
               <div className={s.infoPlain}>
                 Sopir: {delivery.armada?.namaSopir ?? "-"}
                 <br />
                 Plat Nomor: {delivery.armada?.platNomor ?? "-"}
                 <br />
-                Jenis Armada: {delivery.armada?.jenisArmada ?? "-"}
+                Jenis Kendaraan: {delivery.armada?.jenisArmada ?? "-"}
               </div>
             </div>
           </div>
@@ -171,11 +171,11 @@ export function SuratJalanPrintView({ deliveryId }: Props) {
           <div className={s.ttdCol}>
             <div className={s.ttdLabel}>Penerima</div>
             <div className={s.ttdSig}>
-              {delivery.signatureDataUrl ? (
+              {delivery.signatureImagePath ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
-                  src={delivery.signatureDataUrl}
-                  alt="Tanda tangan penerima"
+                  src={delivery.signatureImagePath}
+                  alt="Foto tanda tangan penerima"
                   className="max-h-full max-w-full object-contain"
                 />
               ) : (

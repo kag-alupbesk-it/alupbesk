@@ -62,7 +62,66 @@ export function GudangTable({
         </div>
       </div>
 
-      <div className={s.tableWrapper}>
+      <div className={s.mobileList}>
+        {items.length === 0 ? (
+          <div className={`${s.card} py-10 text-center text-xs text-on-surface-variant`}>
+            Tidak ada barang yang cocok dengan pencarian atau filter yang dipilih.
+          </div>
+        ) : (
+          items.map((item) => {
+            const isLowStock = item.stok <= item.minStok;
+            return (
+              <div key={item.id} className={s.card}>
+                <div className={s.cardTop}>
+                  <div className="min-w-0">
+                    <div className={s.skuText}>{item.sku}</div>
+                    <div className={`${s.jenisText} truncate`}>{item.jenisBarang}</div>
+                  </div>
+                  <span className={item.kategoriBarang === "proyek" ? s.kategoriProyekBadge : s.kategoriEceranBadge}>
+                    {item.kategoriBarang === "proyek" ? "Proyek" : "Eceran"}
+                  </span>
+                </div>
+                <div className={s.cardInfo}>
+                  <div className="truncate">
+                    <span className={s.merekBadge}>{item.merek}</span>{" "}
+                    <span className={s.warnaText}>{item.warna}</span>
+                  </div>
+                  <div className={s.lokasiWrapper}>
+                    <span className={s.lokasiDot} />
+                    {item.seksiLokasi}
+                  </div>
+                  {item.proyek && <div className="truncate">{item.proyek}</div>}
+                  {item.catatan && <div className="truncate">{item.catatan}</div>}
+                </div>
+                <div className={s.cardMeta}>
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">Stok</span>
+                  <span className={s.stokWrapper}>
+                    <span className={isLowStock ? s.stokValueError : s.stokValue}>{item.stok}</span>
+                    <span className={s.satuanText}>{item.satuan}</span>
+                    {isLowStock && <span className={s.lowStockBadge}>Low Stock</span>}
+                  </span>
+                </div>
+                <div className={`${s.cardActions} flex-col gap-2`}>
+                  <button onClick={() => onMasuk(item)} className={`${s.editButton} w-full`}>
+                    <span className={s.iconSm}>login</span>
+                    <span className="ml-1 text-[10px] font-bold uppercase tracking-wide">Masuk</span>
+                  </button>
+                  <button onClick={() => onKeluar(item)} className={`${s.editButton} w-full`}>
+                    <span className={s.iconSm}>logout</span>
+                    <span className="ml-1 text-[10px] font-bold uppercase tracking-wide">Keluar</span>
+                  </button>
+                  <button onClick={() => onStock(item)} className={`${s.editButton} w-full`}>
+                    <span className={s.iconSm}>inventory</span>
+                    <span className="ml-1 text-[10px] font-bold uppercase tracking-wide">Kelola Stok</span>
+                  </button>
+                </div>
+              </div>
+            );
+          })
+        )}
+      </div>
+
+      <div className={`${s.tableWrapper} ${s.desktopOnly}`}>
         <table className={s.table}>
           <thead className={s.tableHead}>
             <tr>

@@ -53,3 +53,12 @@ export const tableCellHighlight = "font-bold text-success"
 export const tableCellSecondary = "text-on-surface-variant"
 export const statusBadge = "inline-flex items-center gap-1 rounded-full border border-secondary/20 bg-secondary/10 px-2 py-0.5 text-[9px] font-bold uppercase tracking-widest text-secondary"
 export const emptyState = "px-4 py-10 text-center text-xs text-on-surface-variant"
+
+// --- Kartu untuk layar kecil (Android) — menggantikan tabel yang perlu scroll horizontal. ---
+export const mobileList = "md:hidden space-y-3"
+export const card = "rounded-xl border border-outline/30 bg-primary-container p-4 shadow-lg"
+export const cardTop = "flex items-start justify-between gap-3"
+export const cardInfo = "mt-3 space-y-1 text-xs text-on-surface-variant"
+export const cardMeta = "mt-3 flex items-center justify-between text-xs"
+export const cardActions = "mt-4 flex"
+export const desktopOnly = "hidden md:block"

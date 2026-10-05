@@ -99,7 +99,7 @@ export function DetailSpkProgress({ nomor }: { nomor: string }) {
           {bisaUnggahUlang && (
             <Link
               href="/produksi/drawings"
-              className="inline-flex w-fit items-center gap-2 rounded-xl bg-secondary px-4 py-2.5 text-xs font-extrabold text-primary shadow-lg shadow-secondary/15 transition-all hover:-translate-y-0.5 hover:brightness-105"
+              className="inline-flex min-h-11 w-fit items-center justify-center gap-2 rounded-xl bg-secondary px-4 py-2.5 text-xs font-extrabold text-primary shadow-lg shadow-secondary/15 transition-all hover:-translate-y-0.5 hover:brightness-105 md:min-h-0"
             >
               <FileUp size={15} strokeWidth={2.5} />
               Upload Gambar Teknik
@@ -198,13 +198,17 @@ export function DetailSpkProgress({ nomor }: { nomor: string }) {
             <StatusBadge tone="slate">{totalItem} item</StatusBadge>
           </div>
 
-          <div className="space-y-3 p-4 lg:hidden">
+          {/* Kartu untuk layar kecil (Android) menggantikan tabel yang perlu scroll horizontal. */}
+          <div className="md:hidden space-y-3 p-4">
             {spk.item.map((barang) => (
-              <div key={barang.kode} className="rounded-2xl border border-outline/30 bg-surface p-4">
+              <div
+                key={barang.kode}
+                className="rounded-xl border border-outline/30 bg-primary-container p-4 shadow-lg"
+              >
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
                     <p className="font-mono text-[11px] font-bold text-secondary">{barang.kode}</p>
-                    <p className="mt-1 text-sm font-bold text-on-surface">{barang.nama}</p>
+                    <p className="mt-1 truncate text-sm font-bold text-on-surface">{barang.nama}</p>
                   </div>
                   <span className="shrink-0 rounded-lg bg-surface-variant px-2.5 py-1 text-center">
                     <span className="font-headline text-sm font-extrabold text-on-surface">
@@ -213,14 +217,15 @@ export function DetailSpkProgress({ nomor }: { nomor: string }) {
                     <span className="ml-1 text-[10px] text-on-surface-variant">{barang.satuan}</span>
                   </span>
                 </div>
-                <p className="mt-2.5 border-t border-outline/20 pt-2.5 text-[11px] leading-relaxed text-on-surface-variant">
-                  {barang.catatanSpesifikasi}
-                </p>
+                <div className="mt-3 space-y-1 text-xs text-on-surface-variant">
+                  <p>Catatan Spesifikasi</p>
+                  <p className="text-[11px] leading-relaxed">{barang.catatanSpesifikasi}</p>
+                </div>
               </div>
             ))}
           </div>
 
-          <div className="hidden overflow-x-auto lg:block">
+          <div className="hidden overflow-x-auto md:block">
             <table className="w-full min-w-[820px] text-left">
               <thead className="bg-surface-variant/35 text-[9px] font-bold uppercase tracking-[0.14em] text-on-surface-variant/70">
                 <tr>

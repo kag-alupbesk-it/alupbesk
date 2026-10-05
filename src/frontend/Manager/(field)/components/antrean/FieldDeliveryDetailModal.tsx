@@ -59,7 +59,7 @@ export function FieldDeliveryDetailModal({ delivery, onClose }: Props) {
         </div>
         {delivery.armada && (
           <div className="mt-4 rounded-lg border border-outline/20 bg-surface-variant/40 px-4 py-3">
-            <div className={s.infoLabel}>Armada</div>
+            <div className={s.infoLabel}>Kendaraan</div>
             <div className="text-xs text-on-surface font-bold mt-1">
               {delivery.armada.namaSopir} · {delivery.armada.platNomor}
             </div>

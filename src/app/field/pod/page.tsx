@@ -1,9 +1,9 @@
 import { PodSection } from "@/frontend/Manager/(field)/components";
 
 export const metadata = {
-  title: "POD, Geotagging & E-Signature | ALUPBESK",
+  title: "Bukti Terima | ALUPBESK",
   description:
-    "Proof of Delivery: foto bukti kirim, geotagging lokasi proyek, dan tanda tangan digital penerima - Manajer Lapangan ALUPBESK Industrial Precision",
+    "Unggah foto tanda tangan penerima pada surat jalan dan foto bukti proyek yang sudah sampai - Manajer Lapangan ALUPBESK Industrial Precision",
 };
 
 export default function Page() {

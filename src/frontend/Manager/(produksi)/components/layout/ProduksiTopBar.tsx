@@ -3,6 +3,7 @@
 import { usePathname } from "next/navigation";
 import { Menu, PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import { useProduksiSidebar } from "./ProduksiSidebarProvider";
+import ThemeToggle from "@/app/ThemeToggle";
 
 function getPageTitle(pathname: string) {
   if (pathname === "/produksi") return "Antrean Produksi";
@@ -49,6 +50,7 @@ export function ProduksiTopBar() {
       </div>
 
       <div className="ml-auto flex items-center gap-3">
+        <ThemeToggle />
         <div className="flex items-center gap-2.5">
           <span className="flex h-8 w-8 items-center justify-center rounded-full bg-secondary/15 text-[10px] font-extrabold text-secondary">
             MP

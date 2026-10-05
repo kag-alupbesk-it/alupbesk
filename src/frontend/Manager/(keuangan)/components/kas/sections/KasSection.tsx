@@ -15,6 +15,32 @@ const KATEGORI_LABELS: Record<KasKategori, string> = {
   operasional: "Operasional",
 };
 
+function KasActions({
+  entry,
+  onEdit,
+  onDelete,
+  full = false,
+}: {
+  entry: KasEntry;
+  onEdit: (entry: KasEntry) => void;
+  onDelete: (entry: KasEntry) => void;
+  full?: boolean;
+}) {
+  const extra = full ? " w-full" : "";
+  return (
+    <div className="flex items-center gap-1.5">
+      <button className={`${s.actionButton}${extra}`} onClick={() => onEdit(entry)} title="Ubah">
+        <span className="material-symbols-outlined text-[16px]">edit</span>
+        {full && <span>Ubah</span>}
+      </button>
+      <button className={`${s.actionButtonDanger}${extra}`} onClick={() => onDelete(entry)} title="Hapus">
+        <span className="material-symbols-outlined text-[16px]">delete</span>
+        {full && <span>Hapus</span>}
+      </button>
+    </div>
+  );
+}
+
 export function KasSection() {
   const { data: kas, error, loading, refetch } = useApi(fetchKas, { interval: 30000 });
   const { globalSaldo, totalMasuk, totalKeluar, listKasEntries, setKasSnapshot, updateSimulatedEntry, deleteSimulatedEntry } = useKeuangan();
@@ -221,7 +247,51 @@ export function KasSection() {
             <div className={s.tableToolbar}>
               <h2 className={s.tableTitle}>Riwayat Transaksi</h2>
             </div>
-            <div className={s.tableWrapper}>
+
+            <div className={`${s.mobileList} p-3`}>
+              {entries.length === 0 && (
+                <div className={`${s.card} py-10 text-center text-xs text-on-surface-variant`}>
+                  Belum ada transaksi kas.
+                </div>
+              )}
+              {entries.map((entry) => (
+                <div key={entry.id} className={s.card}>
+                  <div className={s.cardTop}>
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-on-surface">{entry.deskripsi}</p>
+                      <p className="text-[10px] text-on-surface-variant">{entry.sumber}</p>
+                    </div>
+                    <span className={`${s.badgeBase} ${jenisBadge(entry)}`}>
+                      {entry.tipe === "masuk" ? "Masuk" : "Keluar"}
+                    </span>
+                  </div>
+                  <div className={s.cardInfo}>
+                    <div>{formatTanggal(entry.tanggal)}</div>
+                    <div className="flex items-center gap-2">
+                      Kategori
+                      <span className={`${s.badgeBase} ${kategoriBadge[entry.kategori]}`}>{entry.kategori}</span>
+                    </div>
+                  </div>
+                  <div className={s.cardMeta}>
+                    <span className="text-[9px] font-bold uppercase tracking-widest text-on-surface-variant">Jumlah</span>
+                    <span className={`text-sm ${jumlahClass(entry)}`}>
+                      {entry.tipe === "masuk" ? "+" : "-"}
+                      {formatRp(entry.jumlah)}
+                    </span>
+                  </div>
+                  <div className={s.cardActions}>
+                    <KasActions
+                      entry={entry}
+                      onEdit={setEditing}
+                      onDelete={setDeleting}
+                      full
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className={`${s.tableWrapper} ${s.desktopOnly}`}>
               <table className={s.table}>
                 <thead className={s.tableHead}>
                   <tr>
@@ -251,14 +321,7 @@ export function KasSection() {
                         {entry.tipe === "masuk" ? "+" : "-"}{formatRp(entry.jumlah)}
                       </td>
                       <td className={s.tableCell}>
-                        <div className="flex items-center gap-1.5">
-                          <button className={s.actionButton} onClick={() => setEditing(entry)} title="Ubah">
-                            <span className="material-symbols-outlined text-[16px]">edit</span>
-                          </button>
-                          <button className={s.actionButtonDanger} onClick={() => setDeleting(entry)} title="Hapus">
-                            <span className="material-symbols-outlined text-[16px]">delete</span>
-                          </button>
-                        </div>
+                        <KasActions entry={entry} onEdit={setEditing} onDelete={setDeleting} />
                       </td>
                     </tr>
                   ))}

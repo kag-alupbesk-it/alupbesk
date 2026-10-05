@@ -29,15 +29,24 @@ export const priceText = "text-sm font-bold text-secondary";
 export const stockText = "text-xs font-semibold text-on-surface";
 export const stockLow = "text-xs font-semibold text-error";
 export const aksiWrapper = "flex items-center justify-end gap-1";
-export const actionButton = "flex items-center justify-center w-7 h-7 rounded-lg text-on-surface-variant hover:text-secondary hover:bg-secondary/10 transition-all";
-export const actionDelete = "flex items-center justify-center w-7 h-7 rounded-lg text-on-surface-variant hover:text-error hover:bg-error/10 transition-all";
+export const actionButton = "flex items-center justify-center w-11 h-11 md:w-7 md:h-7 min-h-11 md:min-h-0 rounded-lg text-on-surface-variant hover:text-secondary hover:bg-secondary/10 transition-all";
+export const actionDelete = "flex items-center justify-center w-11 h-11 md:w-7 md:h-7 min-h-11 md:min-h-0 rounded-lg text-on-surface-variant hover:text-error hover:bg-error/10 transition-all";
 export const iconSm = "material-symbols-outlined text-[16px]";
 export const tableFooter = "border-t border-outline/20 px-4 lg:px-6 py-3 bg-surface-variant/30 flex items-center justify-between";
 export const footerText = "text-[10px] text-on-surface-variant";
 export const footerAccent = "font-bold text-secondary";
 
-export const modalOverlay = "fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 animate-fadeIn";
-export const modalContent = "bg-primary-container border border-outline/30 rounded-2xl p-8 w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl animate-scaleIn";
+/* Kartu untuk layar kecil (Android) — menggantikan tabel yang perlu scroll horizontal. */
+export const mobileList = "md:hidden space-y-3";
+export const card = "rounded-xl border border-outline/30 bg-primary-container p-4 shadow-lg";
+export const cardTop = "flex items-start justify-between gap-3";
+export const cardInfo = "mt-3 space-y-1 text-xs text-on-surface-variant";
+export const cardMeta = "mt-3 flex items-center justify-between text-xs";
+export const cardActions = "mt-4 flex";
+export const desktopOnly = "hidden md:block";
+
+export const modalOverlay = "fixed inset-0 bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-3 z-50 animate-fadeIn";
+export const modalContent = "bg-primary-container border border-outline/30 rounded-2xl p-5 sm:p-6 w-full max-w-2xl max-h-[92vh] overflow-y-auto shadow-2xl animate-scaleIn";
 export const modalTitle = "text-xl font-bold text-on-surface mb-6 font-headline";
 export const modalForm = "space-y-4";
 export const modalLabel = "block text-xs font-bold text-on-surface-variant uppercase tracking-wider mb-1.5";

@@ -16,7 +16,7 @@ function LoadingSkeleton() {
       <div className={styles.mainContent}>
         <section className={styles.cardGrid}>
           {[1, 2, 3].map((i) => (
-            <div key={i} className={styles.card}>
+            <div key={i} className={styles.metricCard}>
               <div className="h-3 w-24 bg-white/5 rounded animate-pulse mb-2" />
               <div className="h-6 w-28 bg-white/5 rounded animate-pulse" />
             </div>
@@ -106,7 +106,7 @@ export default function DashboardSection() {
       <div className={styles.mainContent}>
         <section className={styles.cardGrid}>
           {financialCards.map((card) => (
-            <div key={card.label} className={styles.card}>
+            <div key={card.label} className={styles.metricCard}>
               <p className={styles.cardLabel}>{card.label}</p>
               <h3 className={styles.cardValue}>{card.value}</h3>
               <div className={styles.cardChangeWrapper}>
@@ -157,7 +157,41 @@ export default function DashboardSection() {
             <h4 className={styles.registrationTitle}>Pendaftaran Baru</h4>
             <button onClick={() => router.push("/manager/users")} className={styles.viewAllButton}>Lihat Semua</button>
           </div>
-          <div className={styles.tableWrapper}>
+          <div className={styles.mobileList}>
+            {displayRegistrations.length === 0 && (
+              <div className={`${styles.card} py-10 text-center text-xs text-on-surface-variant`}>
+                Belum ada pendaftaran baru.
+              </div>
+            )}
+            {displayRegistrations.map((r) => (
+              <div key={r.name} className={styles.card}>
+                <div className={styles.cardTop}>
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className={styles.avatar}>{r.initial}</div>
+                    <span className={`${styles.nameText} truncate`}>{r.name}</span>
+                  </div>
+                  {r.status === "pending" ? (
+                    <span className={styles.statusPending}>Menunggu</span>
+                  ) : r.status === "approved" ? (
+                    <span className={styles.statusApproved}>Disetujui</span>
+                  ) : (
+                    <span className={styles.statusRejected}>Ditolak</span>
+                  )}
+                </div>
+                <div className={styles.cardInfo}>
+                  <div className="truncate">{r.dept}</div>
+                  <div>Terdaftar: {r.date}</div>
+                </div>
+                {r.status === "pending" && (
+                  <div className={`${styles.cardActions} gap-2`}>
+                    <button onClick={() => handleApprove(r.name)} className={`${styles.approveButton} w-full`}>Approve</button>
+                    <button onClick={() => handleReject(r.name)} className={`${styles.rejectButton} w-full`}>Tolak</button>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+          <div className={`${styles.tableWrapper} ${styles.desktopOnly}`}>
             <table className={styles.table}>
               <thead>
                 <tr className={styles.tableHeaderRow}>
@@ -205,7 +239,36 @@ export default function DashboardSection() {
               {actionError}
             </p>
           )}
-          <div className={styles.tableWrapper}>
+          <div className={styles.mobileList}>
+            {pendingOrders.length === 0 && (
+              <div className={`${styles.card} py-10 text-center text-xs text-on-surface-variant`}>
+                Tidak ada pesanan yang menunggu persetujuan.
+              </div>
+            )}
+            {pendingOrders.map((order) => (
+              <div key={order.id} className={styles.card}>
+                <div className={styles.cardTop}>
+                  <span className={styles.orderIdText}>{order.id}</span>
+                  <span className="text-xs text-on-surface-variant whitespace-nowrap">{order.items.length} item</span>
+                </div>
+                <div className={styles.cardInfo}>
+                  <div className="truncate font-bold text-on-surface">{order.customer.name}</div>
+                  <div className="truncate">{order.customer.phone}</div>
+                </div>
+                <div className={styles.cardMeta}>
+                  <span className="text-xs text-on-surface-variant">Total</span>
+                  <span className="text-xs font-bold text-secondary">
+                    {new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", minimumFractionDigits: 0 }).format(order.total)}
+                  </span>
+                </div>
+                <div className={`${styles.cardActions} gap-2`}>
+                  <button onClick={() => handleApproveOrder(order.id)} className={`${styles.approveButton} w-full`}>Setujui</button>
+                  <button onClick={() => setRejectTarget(order)} className={`${styles.rejectButton} w-full`}>Tolak</button>
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className={`${styles.tableWrapper} ${styles.desktopOnly}`}>
             <table className={styles.table}>
               <thead>
                 <tr className={styles.tableHeaderRow}>

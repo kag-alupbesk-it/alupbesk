@@ -70,28 +70,28 @@ export default function LaporanSection() {
       </div>
 
       <div className={s.cardGrid}>
-        <div className={s.card}>
+        <div className={s.statCard}>
           <div className={`${s.cardIcon} bg-secondary/10`}>
             <span className="material-symbols-outlined text-secondary">receipt_long</span>
           </div>
           <p className={s.cardLabel}>Total Pesanan</p>
           <p className={`${s.cardValue} text-on-surface`}>{rekap.totalPesanan}</p>
         </div>
-        <div className={s.card}>
+        <div className={s.statCard}>
           <div className={`${s.cardIcon} bg-secondary/10`}>
             <span className="material-symbols-outlined text-secondary">check_circle</span>
           </div>
           <p className={s.cardLabel}>Disetujui</p>
           <p className={`${s.cardValue} text-secondary`}>{rekap.disetujui}</p>
         </div>
-        <div className={s.card}>
+        <div className={s.statCard}>
           <div className={`${s.cardIcon} bg-red-400/10`}>
             <span className="material-symbols-outlined text-red-400">cancel</span>
           </div>
           <p className={s.cardLabel}>Ditolak</p>
           <p className={`${s.cardValue} text-red-400`}>{rekap.ditolak}</p>
         </div>
-        <div className={s.card}>
+        <div className={s.statCard}>
           <div className={`${s.cardIcon} bg-blue-400/10`}>
             <span className="material-symbols-outlined text-blue-400">hourglass_top</span>
           </div>
@@ -119,42 +119,75 @@ export default function LaporanSection() {
         <div className={s.tableHeader}>
           <h4 className={s.tableSectionTitle}>Riwayat Pesanan</h4>
         </div>
-        <table className={s.table}>
-          <thead>
-            <tr className={s.tableHeaderRow}>
-              <th className={s.tableHeaderCell}>ID</th>
-              <th className={s.tableHeaderCell}>Pelanggan</th>
-              <th className={s.tableHeaderCell}>Tanggal</th>
-              <th className={s.tableHeaderCell}>Status</th>
-              <th className={s.tableHeaderCellRight}>Total</th>
-            </tr>
-          </thead>
-          <tbody className={s.tableBody}>
-            {filteredOrders.map((order) => (
-              <tr key={order.id} className={s.tableRow}>
-                <td className={s.tableCell}><span className="font-bold text-on-surface">{order.id}</span></td>
-                <td className={s.tableCell}>
-                  <p className="font-bold text-on-surface">{order.customer.name}</p>
-                  <p className="text-[10px] text-on-surface-variant">{order.customer.phone}</p>
-                </td>
-                <td className={s.tableCell}>{formatDate(order.createdAt)}</td>
-                <td className={s.tableCell}>
-                  <span className={`${s.statusBadge} ${statusBg(order.status)}`}>
-                    <span className={`${s.statusDot} ${statusColor(order.status)}`} />
-                    {STATUS_LABELS[order.status] ?? order.status}
+        <div className={`${s.mobileList} p-4`}>
+          {loading && (
+            <div className={`${s.card} py-10 text-center text-xs text-on-surface-variant`}>Memuat data...</div>
+          )}
+          {!loading && filteredOrders.length === 0 && (
+            <div className={`${s.card} py-10 text-center text-xs text-on-surface-variant`}>Belum ada data pesanan</div>
+          )}
+          {!loading &&
+            filteredOrders.map((order) => (
+              <div key={order.id} className={s.card}>
+                <div className={s.cardTop}>
+                  <span className="font-bold text-on-surface text-sm">{order.id}</span>
+                  <span className="min-w-0 max-w-[45%] shrink-0">
+                    <span className={`${s.statusBadge} ${statusBg(order.status)}`}>
+                      <span className={`${s.statusDot} ${statusColor(order.status)}`} />
+                      {STATUS_LABELS[order.status] ?? order.status}
+                    </span>
                   </span>
-                </td>
-                <td className={s.tableCellRight}><span className="font-bold text-secondary">{formatCurrency(order.total)}</span></td>
-              </tr>
+                </div>
+                <div className={s.cardInfo}>
+                  <div className="font-bold text-on-surface">{order.customer.name}</div>
+                  <div className="truncate">{order.customer.phone}</div>
+                  <div>{formatDate(order.createdAt)}</div>
+                </div>
+                <div className={s.cardMeta}>
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">Total</span>
+                  <span className="font-bold text-secondary">{formatCurrency(order.total)}</span>
+                </div>
+              </div>
             ))}
-            {loading && (
-              <tr><td colSpan={5} className="text-center py-10 text-on-surface-variant">Memuat data...</td></tr>
-            )}
-            {!loading && filteredOrders.length === 0 && (
-              <tr><td colSpan={5} className="text-center py-10 text-on-surface-variant">Belum ada data pesanan</td></tr>
-            )}
-          </tbody>
-        </table>
+        </div>
+        <div className={`${s.tableWrap} ${s.desktopOnly}`}>
+          <table className={s.table}>
+            <thead>
+              <tr className={s.tableHeaderRow}>
+                <th className={s.tableHeaderCell}>ID</th>
+                <th className={s.tableHeaderCell}>Pelanggan</th>
+                <th className={s.tableHeaderCell}>Tanggal</th>
+                <th className={s.tableHeaderCell}>Status</th>
+                <th className={s.tableHeaderCellRight}>Total</th>
+              </tr>
+            </thead>
+            <tbody className={s.tableBody}>
+              {filteredOrders.map((order) => (
+                <tr key={order.id} className={s.tableRow}>
+                  <td className={s.tableCell}><span className="font-bold text-on-surface">{order.id}</span></td>
+                  <td className={s.tableCell}>
+                    <p className="font-bold text-on-surface">{order.customer.name}</p>
+                    <p className="text-[10px] text-on-surface-variant">{order.customer.phone}</p>
+                  </td>
+                  <td className={s.tableCell}>{formatDate(order.createdAt)}</td>
+                  <td className={s.tableCell}>
+                    <span className={`${s.statusBadge} ${statusBg(order.status)}`}>
+                      <span className={`${s.statusDot} ${statusColor(order.status)}`} />
+                      {STATUS_LABELS[order.status] ?? order.status}
+                    </span>
+                  </td>
+                  <td className={s.tableCellRight}><span className="font-bold text-secondary">{formatCurrency(order.total)}</span></td>
+                </tr>
+              ))}
+              {loading && (
+                <tr><td colSpan={5} className="text-center py-10 text-on-surface-variant">Memuat data...</td></tr>
+              )}
+              {!loading && filteredOrders.length === 0 && (
+                <tr><td colSpan={5} className="text-center py-10 text-on-surface-variant">Belum ada data pesanan</td></tr>
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );

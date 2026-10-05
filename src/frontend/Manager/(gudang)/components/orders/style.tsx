@@ -46,10 +46,19 @@ export const jumlahBaris = "text-xs text-on-surface-variant"
 export const totalText = "text-sm font-bold text-on-surface whitespace-nowrap"
 
 export const aksiWrapper = "flex items-center justify-end gap-1"
-export const actionButton = "px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wide transition-all"
+export const actionButton = "inline-flex items-center justify-center min-h-11 md:min-h-0 px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wide transition-all"
 export const processButton = "bg-secondary text-on-secondary hover:brightness-110 shadow-lg shadow-secondary/20"
 export const completeButton = "bg-success/10 text-success border border-success/20 hover:bg-success/20"
-export const doneBadge = "text-[10px] font-bold text-success uppercase tracking-wide"
+export const doneBadge = "inline-flex items-center justify-center min-h-11 md:min-h-0 text-[10px] font-bold text-success uppercase tracking-wide"
+
+/* Kartu untuk layar kecil (Android) — menggantikan tabel yang perlu scroll horizontal. */
+export const mobileList = "md:hidden space-y-3"
+export const card = "rounded-xl border border-outline/30 bg-primary-container p-4 shadow-lg"
+export const cardTop = "flex items-start justify-between gap-3"
+export const cardInfo = "mt-3 space-y-1 text-xs text-on-surface-variant"
+export const cardMeta = "mt-3 flex items-center justify-between text-xs"
+export const cardActions = "mt-4 flex"
+export const desktopOnly = "hidden md:block"
 
 export const pagination = "flex flex-col gap-3 sm:flex-row items-center justify-between mt-6"
 export const paginationText = "text-[10px] text-on-surface-variant"
@@ -62,8 +71,8 @@ export const inactivePage = "border border-outline/30 hover:border-secondary"
 
 export const icon = "material-symbols-outlined"
 
-export const modalOverlay = "fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 animate-fadeIn"
-export const modalContent = "bg-primary-container border border-outline/30 rounded-2xl p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto shadow-2xl"
+export const modalOverlay = "fixed inset-0 bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-3 z-50 animate-fadeIn"
+export const modalContent = "bg-primary-container border border-outline/30 rounded-2xl p-5 sm:p-6 w-full max-w-lg max-h-[92vh] overflow-y-auto shadow-2xl"
 export const modalHeader = "flex items-center justify-between mb-5"
 export const modalTitle = "text-base font-extrabold text-on-surface uppercase tracking-tight font-headline"
 export const modalSubtitle = "text-[10px] text-on-surface-variant mt-0.5"

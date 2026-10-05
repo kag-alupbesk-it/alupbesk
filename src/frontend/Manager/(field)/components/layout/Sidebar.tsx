@@ -6,9 +6,9 @@ import { clsx } from "clsx";
 import { useSidebar } from "./SidebarProvider";
 
 const navItems = [
-  { href: "/field", label: "Dashboard Antrean", icon: "local_shipping" },
+  { href: "/field", label: "Daftar Pengiriman", icon: "local_shipping" },
   { href: "/field/surat-jalan", label: "Surat Jalan", icon: "description" },
-  { href: "/field/pod", label: "POD & E-Sign", icon: "document_scanner" },
+  { href: "/field/pod", label: "Bukti Terima", icon: "document_scanner" },
 ];
 
 export default function Sidebar() {
@@ -45,7 +45,7 @@ export default function Sidebar() {
             href={item.href}
             onClick={close}
             className={clsx(
-              "flex items-center gap-3 px-3 lg:px-4 py-2.5 lg:py-3 rounded-lg transition-all text-xs lg:text-sm",
+              "flex items-center gap-3 px-3 lg:px-4 py-3 rounded-lg transition-all text-sm lg:text-sm",
               isActive(item.href)
                 ? "bg-secondary text-on-secondary font-bold shadow-lg shadow-secondary/20"
                 : "text-on-surface-variant hover:text-on-surface hover:bg-surface-variant"
@@ -65,7 +65,7 @@ export default function Sidebar() {
             Alur Pengiriman
           </div>
           <div className="text-[10px] text-on-surface-variant mt-1 leading-relaxed">
-            Siap Kirim → Surat Jalan → POD & E-Signature
+            Siap Kirim → Surat Jalan → Bukti Terima
           </div>
         </div>
       </div>

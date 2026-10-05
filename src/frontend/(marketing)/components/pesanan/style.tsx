@@ -25,6 +25,15 @@ export const tableRow = "hover:bg-surface-variant/30 transition-colors cursor-po
 export const tableCell = "px-6 py-5";
 export const tableCellRight = "px-6 py-5 text-right";
 
+/* Kartu untuk layar kecil (Android) — menggantikan tabel yang perlu scroll horizontal. */
+export const mobileList = "md:hidden space-y-3";
+export const card = "rounded-xl border border-outline/30 bg-primary-container p-4 shadow-lg";
+export const cardTop = "flex items-start justify-between gap-3";
+export const cardInfo = "mt-3 space-y-1 text-xs text-on-surface-variant";
+export const cardMeta = "mt-3 flex items-center justify-between text-xs";
+export const cardActions = "mt-4 flex";
+export const desktopOnly = "hidden md:block";
+
 export const newBadge = "ml-2 px-1.5 py-0.5 bg-secondary/20 text-secondary text-[9px] font-bold uppercase rounded-pill animate-pulse";
 export const statusBadge = "inline-flex items-center gap-1.5 px-3 py-1 rounded-pill text-[11px] font-bold uppercase tracking-wider";
 export const statusDot = "w-1.5 h-1.5 rounded-full";
@@ -40,8 +49,8 @@ export const inactivePage = "border border-outline/30 hover:border-secondary";
 
 export const icon = "material-symbols-outlined";
 
-export const modalOverlay = "fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 animate-fadeIn";
-export const modalContent = "bg-primary-container border border-outline/30 rounded-2xl p-8 w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl animate-scaleIn";
+export const modalOverlay = "fixed inset-0 bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-3 z-50 animate-fadeIn";
+export const modalContent = "bg-primary-container border border-outline/30 rounded-2xl p-5 sm:p-6 w-full max-w-2xl max-h-[92vh] overflow-y-auto shadow-2xl animate-scaleIn";
 export const modalTitle = "text-xl font-bold text-on-surface mb-2 font-headline";
 export const modalSubtitle = "text-sm text-on-surface-variant mb-6";
 export const modalCloseButton = "absolute top-4 right-4 text-on-surface-variant hover:text-on-surface transition-colors";
@@ -66,8 +75,8 @@ export const totalValue = "text-xl font-bold text-secondary font-headline";
 
 export const actionsWrapper = "flex gap-3 mt-8 pt-6 border-t border-outline/20";
 export const primaryButton = "flex-1 py-3 bg-secondary text-primary font-bold rounded-pill text-sm hover:brightness-110 transition-all flex items-center justify-center gap-2";
-export const secondaryButton = "flex-1 py-3 border border-outline/30 rounded-pill text-on-surface-variant font-bold text-sm hover:bg-surface-variant transition-colors";
-export const dangerButton = "flex-1 py-3 border border-red-400/30 text-red-400 font-bold rounded-pill text-sm hover:bg-red-400/10 transition-colors";
+export const secondaryButton = "flex-1 py-3 min-h-11 md:min-h-0 flex items-center justify-center border border-outline/30 rounded-pill text-on-surface-variant font-bold text-sm hover:bg-surface-variant transition-colors";
+export const dangerButton = "flex-1 py-3 min-h-11 md:min-h-0 flex items-center justify-center border border-red-400/30 text-red-400 font-bold rounded-pill text-sm hover:bg-red-400/10 transition-colors";
 
 export const confirmIcon = "w-16 h-16 rounded-full bg-secondary/10 flex items-center justify-center mx-auto mb-4";
 export const confirmTitle = "text-lg font-bold text-on-surface text-center mb-2 font-headline";

@@ -41,10 +41,11 @@ export const photoIcon = "material-symbols-outlined text-[28px] text-on-surface-
 export const photoLabel = "text-[10px] text-center"
 export const photoPath = "mt-2 rounded-lg bg-surface-variant/40 px-3 py-2 text-[10px] font-mono text-secondary break-all"
 
-export const actionsWrapper = "flex gap-3 mt-6"
-export const primaryButton = "flex-1 py-2.5 bg-secondary text-on-secondary font-bold rounded-lg text-xs uppercase tracking-wide hover:brightness-110 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
-export const secondaryButton = "flex-1 py-2.5 border border-outline/30 rounded-lg text-on-surface-variant font-bold text-xs uppercase tracking-wide hover:bg-surface-variant transition-colors disabled:opacity-50"
-export const tertiaryButton = "px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wide transition-all bg-tertiary/10 text-tertiary border border-tertiary/20 hover:bg-tertiary/20"
+export const actionsWrapper = "flex flex-col sm:flex-row gap-3 mt-6"
+export const primaryButton = "w-full sm:flex-1 py-3 min-h-12 bg-gradient-to-r from-secondary to-secondary/80 text-on-secondary font-bold rounded-pill text-xs uppercase tracking-wide shadow-lg shadow-secondary/25 hover:shadow-xl hover:shadow-secondary/40 hover:brightness-110 hover:-translate-y-0.5 active:translate-y-0 transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:hover:translate-y-0 disabled:hover:shadow-lg"
+export const secondaryButton = "w-full sm:flex-1 py-3 min-h-12 border border-outline/40 rounded-pill text-on-surface-variant font-bold text-xs uppercase tracking-wide hover:bg-surface-variant hover:text-on-surface transition-colors disabled:opacity-50"
+export const tertiaryButton = "group inline-flex items-center justify-center gap-1.5 px-4 py-2.5 min-h-11 rounded-pill text-[10px] font-bold uppercase tracking-wide transition-all duration-200 bg-gradient-to-r from-tertiary-fixed to-tertiary-fixed-dim text-on-tertiary-fixed shadow-lg shadow-tertiary/25 hover:shadow-xl hover:shadow-tertiary/40 hover:brightness-105 hover:-translate-y-0.5 active:translate-y-0"
+export const actionIcon = "material-symbols-outlined text-[14px] leading-none transition-transform duration-200 group-hover:scale-110"
 
 export const infoRow = "flex justify-between py-1.5 text-xs"
 export const infoLabel = "text-on-surface-variant"
