@@ -5,6 +5,7 @@ import { useApi } from "@/frontend/Manager/(keuangan)/hooks/useApi";
 import { fetchPenagihan, setLunas } from "@/frontend/Manager/(keuangan)/services/penagihan";
 import type { PenagihanItem } from "./types";
 import { formatRp, formatTanggal, computeTotals } from "./helpers";
+import { FeedbackToast } from "../../finance/ui/FeedbackToast";
 import * as s from "../style";
 
 type StatusFilter = "ALL" | "belum_bayar" | "lunas";
@@ -39,7 +40,7 @@ function PenagihanAction({
       ) : (
         <span className="material-symbols-outlined text-[14px]">how_to_reg</span>
       )}
-      Tandai Lunas
+      {loading ? "Memproses..." : "Tandai Lunas"}
     </button>
   );
 }
@@ -47,6 +48,7 @@ function PenagihanAction({
 export function PenagihanSection() {
   const { data, error, refetch } = useApi(fetchPenagihan, { interval: 30000 });
   const [errorMsg, setErrorMsg] = useState("");
+  const [toast, setToast] = useState("");
   const [filter, setFilter] = useState<StatusFilter>("ALL");
   const [loadingId, setLoadingId] = useState<string | null>(null);
   const items = useMemo(() => data ?? [], [data]);
@@ -62,8 +64,12 @@ export function PenagihanSection() {
     setErrorMsg("");
     setLoadingId(item.id);
     try {
-      await setLunas(item.id);
+      await Promise.all([
+        setLunas(item.id),
+        new Promise((resolve) => window.setTimeout(resolve, 1000)),
+      ]);
       refetch();
+      setToast(`Tagihan ${item.id} berhasil ditandai lunas.`);
     } catch (reason) {
       setErrorMsg(reason instanceof Error ? reason.message : "Gagal menandai lunas.");
     } finally {
@@ -217,6 +223,7 @@ export function PenagihanSection() {
           </div>
         </div>
       </div>
+      <FeedbackToast message={toast} onDismiss={() => setToast("")} />
     </div>
   );
 }
