@@ -8,3 +8,6 @@ export * from "./kas/deleteKasEntry";
 export * from "./penagihan/getPenagihan";
 export * from "./penagihan/setPembayaranLunas";
 export * from "./laporan/getLaporanKeuangan";
+export * from "./operasional/types";
+export * from "./operasional/store";
+export * from "./operasional/schemas";

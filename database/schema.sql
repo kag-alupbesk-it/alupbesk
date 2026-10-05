@@ -238,6 +238,17 @@ create table penagihan (
     updated_at  timestamptz not null default now()
 );
 
+-- Data operasional keuangan yang dikelola admin (approval, kas kecil,
+-- termin, dan payroll). Payload disimpan sebagai JSONB agar tiap jenis
+-- data dapat berkembang tanpa mencampur skema tabel buku kas.
+create table keuangan_records (
+    id          text primary key,
+    jenis       text not null check (jenis in ('approval', 'petty_cash', 'termin', 'payroll')),
+    data        jsonb not null,
+    created_at  timestamptz not null default now(),
+    updated_at  timestamptz not null default now()
+);
+
 -- ---------------------------------------------------------------------
 -- 8. MARKETING — banner promo
 -- ---------------------------------------------------------------------
@@ -338,6 +349,7 @@ create index idx_gudang_items_kategori on gudang_items(kategori_barang);
 create index idx_gudang_items_sku on gudang_items(sku);
 create index idx_gudang_movements_item_id on gudang_movements(item_id);
 create index idx_kas_entries_tanggal on kas_entries(tanggal);
+create index idx_keuangan_records_jenis on keuangan_records(jenis);
 create index idx_custom_requests_status on custom_requests(status);
 create index idx_project_orders_status on project_orders(status);
 

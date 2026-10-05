@@ -8,7 +8,7 @@ export function createKasEntry(input: KasEntryInput): KasResult {
 
   const createdAt = new Date().toISOString();
   const entry: KasEntry = {
-    id: `keu-${input.tipe === "masuk" ? "masuk" : "keluar"}-${Date.now()}`,
+    id: `keu-${input.tipe}-${crypto.randomUUID()}`,
     tipe: input.tipe,
     sumber: input.tipe === "masuk" ? "Pencatatan manual" : "Manual",
     deskripsi: input.deskripsi.trim(),

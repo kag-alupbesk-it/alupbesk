@@ -6,20 +6,14 @@ import { CurrencyInput } from "./ui/CurrencyInput";
 import { FeedbackToast } from "./ui/FeedbackToast";
 import { FinancialStatCard } from "./ui/FinancialStatCard";
 import { StatusBadge } from "./ui/StatusBadge";
+import { useApi } from "@/frontend/Manager/(keuangan)/hooks/useApi";
+import { createKeuanganTerminSchedule, deleteKeuanganRecord, fetchKeuanganRecords, updateKeuanganRecord, updateKeuanganStatus } from "@/frontend/Manager/(keuangan)/services/operasional";
+import { fetchKas } from "@/frontend/Manager/(keuangan)/services/kas";
+import type { TerminRecord } from "@/backend/modules/keuangan";
+import { useKeuangan } from "../keuangan/KeuanganContext";
 
-type MilestoneStatus = "paid" | "unpaid";
-
-type ProjectMilestone = {
-  id: string;
-  name: string;
-  amount: number;
-  progress: number;
-  status: MilestoneStatus;
-  projectName?: string;
-  clientName?: string;
-  dueDate?: string;
-  percentage?: number;
-};
+type ProjectMilestone = TerminRecord;
+type MilestoneStatus = ProjectMilestone["status"];
 
 type MilestoneDraft = {
   id: string;
@@ -29,18 +23,16 @@ type MilestoneDraft = {
   dueDate: string;
 };
 
-const initialMilestones: ProjectMilestone[] = [
-  { id: "dp", name: "DP (Down Payment)", amount: 500000000, progress: 25, status: "paid" },
-  { id: "termin-1", name: "Termin 1 (Progress 50%)", amount: 350000000, progress: 50, status: "paid" },
-  { id: "termin-2", name: "Termin 2 (Progress 100%)", amount: 300000000, progress: 100, status: "unpaid" },
-  { id: "retensi", name: "Retensi (5%)", amount: 75000000, progress: 100, status: "unpaid" },
-];
-
 const formatRp = (value: number) =>
   new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(value);
 
 export function TerminSection() {
-  const [milestones, setMilestones] = useState<ProjectMilestone[]>(initialMilestones);
+  const { setKasSnapshot } = useKeuangan();
+  const { data, error, refetch } = useApi(() => fetchKeuanganRecords("termin"), { interval: 30000 });
+  const milestones = useMemo(
+    () => (data ?? []).flatMap((record) => record.kind === "termin" ? [record.data] : []),
+    [data],
+  );
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | MilestoneStatus>("all");
   const [toast, setToast] = useState("");
@@ -50,6 +42,8 @@ export function TerminSection() {
   const [contractValue, setContractValue] = useState(0);
   const [saving, setSaving] = useState(false);
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [editingMilestone, setEditingMilestone] = useState<ProjectMilestone | null>(null);
+  const [operationError, setOperationError] = useState("");
   const [nextStageId, setNextStageId] = useState(2);
   const [stageDrafts, setStageDrafts] = useState<MilestoneDraft[]>([
     { id: "stage-1", name: "", amount: "", percentage: "", dueDate: "" },
@@ -65,13 +59,13 @@ export function TerminSection() {
   ) / 100;
   const isNominalBalanced = contractValue > 0 && totalDraftAmount === contractValue;
   const isPercentageBalanced = totalDraftPercentage === 100;
-  const isTotalBalanced = isNominalBalanced && isPercentageBalanced;
   const areDraftFieldsValid = Boolean(
     projectName.trim() &&
       clientName.trim() &&
       stageDrafts.length > 0 &&
       stageDrafts.every((stage) => stage.name.trim() && stage.dueDate && Number(stage.amount) > 0 && Number(stage.percentage) >= 0 && Number(stage.percentage) <= 100),
   );
+  const isTotalBalanced = editingMilestone ? areDraftFieldsValid : isNominalBalanced && isPercentageBalanced;
 
   const filteredMilestones = useMemo(() => {
     const query = search.trim().toLowerCase();
@@ -90,10 +84,52 @@ export function TerminSection() {
   const markPaid = async (id: string) => {
     if (busyId) return;
     setBusyId(id);
-    await new Promise((resolve) => window.setTimeout(resolve, 1000));
-    setMilestones((current) => current.map((item) => (item.id === id ? { ...item, status: "paid" } : item)));
-    setBusyId(null);
-    setToast("Termin berhasil ditandai sudah dibayar.");
+    setOperationError("");
+    try {
+      await updateKeuanganStatus(id, "paid");
+      refetch();
+      setToast("Termin berhasil ditandai dibayar dan dicatat di buku Kas.");
+      try {
+        setKasSnapshot(await fetchKas());
+      } catch (reason) {
+        const detail = reason instanceof Error ? reason.message : "Terjadi kesalahan.";
+        setOperationError(`Termin berhasil dibayar, tetapi saldo Kas gagal dimuat ulang: ${detail}`);
+      }
+    } catch (reason) {
+      setOperationError(reason instanceof Error ? reason.message : "Gagal memperbarui status termin.");
+    } finally {
+      setBusyId(null);
+    }
+  };
+
+  const beginEdit = (milestone: ProjectMilestone) => {
+    setEditingMilestone(milestone);
+    setProjectName(milestone.projectName);
+    setClientName(milestone.clientName);
+    setContractValue(milestone.contractValue);
+    setStageDrafts([{
+      id: milestone.id,
+      name: milestone.name,
+      amount: String(milestone.amount),
+      percentage: String(milestone.percentage),
+      dueDate: milestone.dueDate,
+    }]);
+    setIsSchemaModalOpen(true);
+  };
+
+  const handleDelete = async (milestone: ProjectMilestone) => {
+    if (milestone.status !== "unpaid" || busyId) return;
+    setBusyId(milestone.id);
+    setOperationError("");
+    try {
+      await deleteKeuanganRecord(milestone.id);
+      refetch();
+      setToast("Tahap termin dihapus.");
+    } catch (reason) {
+      setOperationError(reason instanceof Error ? reason.message : "Gagal menghapus tahap termin.");
+    } finally {
+      setBusyId(null);
+    }
   };
 
   const updateContractValue = (value: number) => {
@@ -142,37 +178,55 @@ export function TerminSection() {
     event.preventDefault();
     if (!isTotalBalanced || !areDraftFieldsValid || saving) return;
     setSaving(true);
-    await new Promise((resolve) => window.setTimeout(resolve, 1000));
-
-    const projectMilestones = stageDrafts.map((stage): ProjectMilestone => ({
-      id: `custom-${Date.now()}-${stage.id}`,
-      name: stage.name.trim(),
-      amount: Number(stage.amount),
-      progress: Number(stage.percentage) || 0,
-      percentage: contractValue > 0 ? (Number(stage.amount) / contractValue) * 100 : 0,
-      status: "unpaid",
-      projectName: projectName.trim(),
-      clientName: clientName.trim(),
-      dueDate: stage.dueDate,
-    }));
-
-    setMilestones((current) => [...projectMilestones, ...current]);
-    setSearch(projectName.trim());
-    setStatusFilter("all");
-    setToast(`Skema termin untuk ${projectName.trim()} berhasil ditambahkan.`);
-    setProjectName("");
-    setClientName("");
-    setContractValue(0);
-    setStageDrafts([{ id: `stage-${nextStageId}`, name: "", amount: "", percentage: "", dueDate: "" }]);
-    setNextStageId((current) => current + 1);
-    setIsSchemaModalOpen(false);
-    setSaving(false);
+    setOperationError("");
+    try {
+      if (editingMilestone) {
+        const stage = stageDrafts[0];
+        await updateKeuanganRecord("termin", editingMilestone.id, {
+          name: stage.name.trim(),
+          amount: Number(stage.amount),
+          progress: Number(stage.percentage) || 0,
+          percentage: Number(stage.percentage),
+          contractValue,
+          projectName: projectName.trim(),
+          clientName: clientName.trim(),
+          dueDate: stage.dueDate,
+        });
+        setToast("Termin diperbarui.");
+      } else {
+        await createKeuanganTerminSchedule(stageDrafts.map((stage) => ({
+          name: stage.name.trim(),
+          amount: Number(stage.amount),
+          progress: Number(stage.percentage) || 0,
+          percentage: contractValue > 0 ? (Number(stage.amount) / contractValue) * 100 : 0,
+          contractValue,
+          projectName: projectName.trim(),
+          clientName: clientName.trim(),
+          dueDate: stage.dueDate,
+        })));
+        setSearch(projectName.trim());
+        setStatusFilter("all");
+        setToast(`Skema termin untuk ${projectName.trim()} berhasil ditambahkan.`);
+      }
+      refetch();
+      setProjectName("");
+      setClientName("");
+      setContractValue(0);
+      setStageDrafts([{ id: `stage-${nextStageId}`, name: "", amount: "", percentage: "", dueDate: "" }]);
+      setNextStageId((current) => current + 1);
+      setEditingMilestone(null);
+      setIsSchemaModalOpen(false);
+    } catch (reason) {
+      setOperationError(reason instanceof Error ? reason.message : "Gagal menyimpan skema termin.");
+    } finally {
+      setSaving(false);
+    }
   };
 
   const totalPaid = milestones.filter((item) => item.status === "paid").reduce((sum, item) => sum + item.amount, 0);
   const totalUnpaid = milestones.filter((item) => item.status === "unpaid").reduce((sum, item) => sum + item.amount, 0);
   const paidCount = milestones.filter((item) => item.status === "paid").length;
-  const percentage = (paidCount / milestones.length) * 100;
+  const percentage = milestones.length ? (paidCount / milestones.length) * 100 : 0;
   const retentionTotal = milestones
     .filter((item) => item.name.toLowerCase().includes("retensi"))
     .reduce((sum, item) => sum + item.amount, 0);
@@ -189,7 +243,7 @@ export function TerminSection() {
             <span className="rounded-full border border-secondary/30 bg-secondary/10 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.2em] text-secondary">
               {Math.round(percentage)}% selesai
             </span>
-            <button type="button" onClick={() => setIsSchemaModalOpen(true)} className="inline-flex items-center justify-center gap-2 rounded-lg bg-secondary px-3 py-2 text-[10px] font-bold uppercase tracking-[0.12em] text-on-secondary transition hover:brightness-110">
+            <button type="button" onClick={() => { setEditingMilestone(null); setProjectName(""); setClientName(""); setContractValue(0); setStageDrafts([{ id: `stage-${nextStageId}`, name: "", amount: "", percentage: "", dueDate: "" }]); setOperationError(""); setIsSchemaModalOpen(true); }} className="inline-flex items-center justify-center gap-2 rounded-lg bg-secondary px-3 py-2 text-[10px] font-bold uppercase tracking-[0.12em] text-on-secondary transition hover:brightness-110">
               <Plus size={14} aria-hidden="true" />
               Buat Skema Termin Baru
             </button>
@@ -208,6 +262,8 @@ export function TerminSection() {
             <option value="unpaid">Belum dibayar</option>
           </select>
         </div>
+
+        {(error || operationError) && <p role="alert" className="mb-3 text-xs text-error">{operationError || error}</p>}
 
         <div className="grid gap-4 lg:grid-cols-2">
           {filteredMilestones.map((milestone) => (
@@ -230,15 +286,19 @@ export function TerminSection() {
                 <span className="text-[10px] text-on-surface-variant">
                   {milestone.percentage !== undefined ? `Porsi kontrak ${milestone.percentage.toFixed(2).replace(/\.00$/, "")}%` : `Progress ${milestone.progress}%`}
                 </span>
-                <button
-                  type="button"
-                  onClick={() => void markPaid(milestone.id)}
-                  disabled={milestone.status === "paid" || busyId !== null}
-                  className="inline-flex items-center gap-1.5 rounded-lg border border-secondary/30 bg-secondary/10 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.15em] text-secondary disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  {busyId === milestone.id && <Loader2 size={13} className="animate-spin" />}
-                  {busyId === milestone.id ? "Memproses..." : "Tandai Lunas"}
-                </button>
+                <div className="flex flex-wrap justify-end gap-2">
+                  <button type="button" onClick={() => beginEdit(milestone)} disabled={milestone.status === "paid" || busyId !== null} className="rounded-lg border border-outline/30 px-2 py-1.5 text-[10px] text-on-surface disabled:opacity-50">Ubah</button>
+                  <button type="button" onClick={() => void handleDelete(milestone)} disabled={milestone.status === "paid" || busyId !== null} aria-label={`Hapus ${milestone.name}`} className="rounded-lg border border-red-500/30 px-2 py-1.5 text-[10px] text-red-700 disabled:opacity-50 dark:text-red-300"><Trash2 size={13} aria-hidden="true" /></button>
+                  <button
+                    type="button"
+                    onClick={() => void markPaid(milestone.id)}
+                    disabled={milestone.status === "paid" || busyId !== null}
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-secondary/30 bg-secondary/10 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.15em] text-secondary disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    {busyId === milestone.id && <Loader2 size={13} className="animate-spin" />}
+                    {busyId === milestone.id ? "Memproses..." : "Tandai Lunas"}
+                  </button>
+                </div>
               </div>
             </div>
           ))}
@@ -271,10 +331,10 @@ export function TerminSection() {
               <div className="sticky top-0 z-10 flex items-start justify-between gap-4 border-b border-outline/20 bg-primary-container px-4 py-4 sm:px-6">
                 <div>
                   <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-secondary">Perjanjian proyek</p>
-                  <h3 id="termin-modal-title" className="mt-1 text-lg font-black text-on-surface">Buat Skema Termin Baru</h3>
+                  <h3 id="termin-modal-title" className="mt-1 text-lg font-black text-on-surface">{editingMilestone ? "Ubah Tahap Termin" : "Buat Skema Termin Baru"}</h3>
                   <p className="mt-1 text-xs text-on-surface-variant">Atur jumlah, porsi, dan tanggal pembayaran sesuai kesepakatan.</p>
                 </div>
-                <button type="button" onClick={() => setIsSchemaModalOpen(false)} aria-label="Tutup form" className="rounded-lg p-2 text-on-surface-variant hover:bg-surface-variant hover:text-on-surface">
+                <button type="button" onClick={() => { setIsSchemaModalOpen(false); setEditingMilestone(null); }} aria-label="Tutup form" className="rounded-lg p-2 text-on-surface-variant hover:bg-surface-variant hover:text-on-surface">
                   <X size={18} aria-hidden="true" />
                 </button>
               </div>
@@ -305,9 +365,9 @@ export function TerminSection() {
                       <h4 className="text-xs font-bold uppercase tracking-[0.16em] text-on-surface">Tahap pembayaran</h4>
                       <p className="mt-1 text-[10px] text-on-surface-variant">Jumlah tahap bebas. Nominal dan persentase saling mengikuti.</p>
                     </div>
-                    <button type="button" onClick={addStage} className="inline-flex items-center justify-center gap-2 self-start rounded-lg border border-secondary/30 bg-secondary/10 px-3 py-2 text-[10px] font-bold uppercase tracking-[0.12em] text-secondary hover:bg-secondary/15 sm:self-auto">
+                    {!editingMilestone && <button type="button" onClick={addStage} className="inline-flex items-center justify-center gap-2 self-start rounded-lg border border-secondary/30 bg-secondary/10 px-3 py-2 text-[10px] font-bold uppercase tracking-[0.12em] text-secondary hover:bg-secondary/15 sm:self-auto">
                       <Plus size={14} aria-hidden="true" /> Tambah Tahap Pembayaran
-                    </button>
+                    </button>}
                   </div>
 
                   <div className="space-y-3">
@@ -333,9 +393,9 @@ export function TerminSection() {
                           Jatuh tempo
                           <input required type="date" value={stage.dueDate} onChange={(event) => updateStage(stage.id, { dueDate: event.target.value })} className="mt-2 w-full rounded-lg border border-outline/30 bg-surface-variant px-3 py-2.5 text-xs text-on-surface outline-none focus:border-secondary" />
                         </label>
-                        <button type="button" onClick={() => removeStage(stage.id)} disabled={stageDrafts.length === 1} aria-label={`Hapus tahap ${index + 1}`} title="Hapus tahap" className="inline-flex h-10 w-10 items-center justify-center justify-self-end rounded-lg border border-red-500/30 text-red-600 transition hover:bg-red-500/10 disabled:cursor-not-allowed disabled:opacity-35">
+                        {!editingMilestone && <button type="button" onClick={() => removeStage(stage.id)} disabled={stageDrafts.length === 1} aria-label={`Hapus tahap ${index + 1}`} title="Hapus tahap" className="inline-flex h-10 w-10 items-center justify-center justify-self-end rounded-lg border border-red-500/30 text-red-600 transition hover:bg-red-500/10 disabled:cursor-not-allowed disabled:opacity-35">
                           <Trash2 size={16} aria-hidden="true" />
-                        </button>
+                        </button>}
                       </div>
                     ))}
                   </div>
@@ -344,6 +404,13 @@ export function TerminSection() {
                 <div className={`rounded-xl border p-4 ${isTotalBalanced ? "border-emerald-500/30 bg-emerald-500/10" : "border-amber-500/30 bg-amber-500/10"}`}>
                   <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
                     <div>
+                      {editingMilestone ? (
+                        <>
+                          <p className="text-xs font-bold text-emerald-700 dark:text-emerald-300">Perubahan tahap termin</p>
+                          {!areDraftFieldsValid && <p role="alert" className="mt-1 text-xs text-error">Lengkapi nama proyek, klien, tahap, nominal, dan tanggal jatuh tempo.</p>}
+                        </>
+                      ) : (
+                        <>
                       {isTotalBalanced ? (
                         <p className="text-xs font-bold text-emerald-700 dark:text-emerald-300">Status: Total Sesuai 100% ✅</p>
                       ) : contractValue === 0 && totalDraftAmount === 0 ? (
@@ -357,10 +424,12 @@ export function TerminSection() {
                       {!areDraftFieldsValid && <p role="alert" className="mt-1 text-xs text-error">Lengkapi nama proyek, klien, nama tahap, nominal, dan tanggal jatuh tempo.</p>}
                       {contractValue > 0 && !isNominalBalanced && <p role="alert" className="mt-1 text-xs text-error">Total nominal tahap harus sama dengan nilai kontrak. Selisih: {formatRp(Math.abs(contractValue - totalDraftAmount))}.</p>}
                       {contractValue > 0 && !isPercentageBalanced && <p role="alert" className="mt-1 text-xs text-error">Total persentase tahap harus tepat 100% (saat ini {totalDraftPercentage.toFixed(2)}%).</p>}
+                        </>
+                      )}
                     </div>
                     <button type="submit" disabled={!isTotalBalanced || !areDraftFieldsValid || saving} className="inline-flex shrink-0 items-center gap-2 rounded-lg bg-secondary px-5 py-2.5 text-xs font-bold uppercase tracking-[0.12em] text-on-secondary transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-45">
                       {saving && <Loader2 size={14} className="animate-spin" />}
-                      {saving ? "Menyimpan..." : "Simpan Skema"}
+                      {saving ? "Menyimpan..." : editingMilestone ? "Simpan Perubahan" : "Simpan Skema"}
                     </button>
                   </div>
                 </div>

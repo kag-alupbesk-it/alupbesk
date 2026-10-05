@@ -43,7 +43,7 @@ function KasActions({
 
 export function KasSection() {
   const { data: kas, error, loading, refetch } = useApi(fetchKas, { interval: 30000 });
-  const { globalSaldo, totalMasuk, totalKeluar, listKasEntries, setKasSnapshot, updateSimulatedEntry, deleteSimulatedEntry } = useKeuangan();
+  const { globalSaldo, totalMasuk, totalKeluar, listKasEntries, setKasSnapshot } = useKeuangan();
   const [errorMsg, setErrorMsg] = useState("");
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [notice, setNotice] = useState<string | null>(null);
@@ -104,14 +104,15 @@ export function KasSection() {
 
   async function handleEdit(input: KasEntryInput) {
     if (!editing) return;
-    if (editing.id.startsWith("sim-")) {
-      updateSimulatedEntry({ ...editing, ...input });
-      flash("Transaksi simulasi diperbarui.");
-      return;
+    setErrorMsg("");
+    try {
+      await updateKasEntry(editing.id, input);
+      flash("Transaksi kas diperbarui.");
+      refetch();
+    } catch (reason) {
+      setErrorMsg(reason instanceof Error ? reason.message : "Gagal memperbarui transaksi.");
+      throw reason;
     }
-    await updateKasEntry(editing.id, input);
-    flash("Transaksi kas diperbarui.");
-    refetch();
   }
 
   async function handleDelete() {
@@ -119,12 +120,6 @@ export function KasSection() {
     setErrorMsg("");
     setPending(true);
     try {
-      if (deleting.id.startsWith("sim-")) {
-        deleteSimulatedEntry(deleting.id);
-        flash("Transaksi simulasi dihapus.");
-        setDeleting(null);
-        return;
-      }
       await deleteKasEntry(deleting.id);
       flash("Transaksi kas dihapus.");
       setDeleting(null);

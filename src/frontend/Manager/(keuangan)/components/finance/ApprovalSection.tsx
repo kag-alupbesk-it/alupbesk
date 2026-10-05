@@ -6,14 +6,33 @@ import { useKeuangan } from "../keuangan/KeuanganContext";
 import { FeedbackToast } from "./ui/FeedbackToast";
 import { FinancialStatCard } from "./ui/FinancialStatCard";
 import { StatusBadge } from "./ui/StatusBadge";
-import type { ApprovalStatus, ExpenseApproval } from "../keuangan/KeuanganContext";
+import { useApi } from "@/frontend/Manager/(keuangan)/hooks/useApi";
+import { createKeuanganRecord, deleteKeuanganRecord, fetchKeuanganRecords, updateKeuanganRecord, updateKeuanganStatus } from "@/frontend/Manager/(keuangan)/services/operasional";
+import { fetchKas } from "@/frontend/Manager/(keuangan)/services/kas";
+import type { ApprovalRecord } from "@/backend/modules/keuangan";
+
+type ApprovalStatus = ApprovalRecord["status"];
 
 const formatRp = (value: number) =>
   new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(value);
 
 export function ApprovalSection() {
-  const { globalSaldo, pendingApprovals: expenses, approveExpense, rejectExpense } = useKeuangan();
-  const [rejectTarget, setRejectTarget] = useState<ExpenseApproval | null>(null);
+  const { globalSaldo, setKasSnapshot } = useKeuangan();
+  const { data, error, refetch } = useApi(() => fetchKeuanganRecords("approval"), { interval: 30000 });
+  const expenses = useMemo(
+    () => (data ?? []).flatMap((record) => record.kind === "approval" ? [record.data] : []),
+    [data],
+  );
+  const [rejectTarget, setRejectTarget] = useState<ApprovalRecord | null>(null);
+  const [editing, setEditing] = useState<ApprovalRecord | null>(null);
+  const [formOpen, setFormOpen] = useState(false);
+  const [title, setTitle] = useState("");
+  const [vendor, setVendor] = useState("");
+  const [amount, setAmount] = useState("");
+  const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
+  const [category, setCategory] = useState("Material");
+  const [formError, setFormError] = useState("");
+  const [operationError, setOperationError] = useState("");
   const [reason, setReason] = useState("");
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | ApprovalStatus>("all");
@@ -38,35 +57,102 @@ export function ApprovalSection() {
     return () => window.clearTimeout(timer);
   }, [toast]);
 
-  const handleApprove = async (expense: ExpenseApproval) => {
+  const handleApprove = async (expense: ApprovalRecord) => {
     if (expense.status !== "pending" || busyId) return;
     setBusyId(expense.id);
-    await new Promise((resolve) => window.setTimeout(resolve, 1000));
-    const now = new Date();
-    approveExpense(expense.id, {
-      id: `sim-approval-${expense.id}-${now.getTime()}`,
-      tipe: "keluar",
-      sumber: "Simulasi approval",
-      deskripsi: `${expense.title} · ${expense.vendor}`,
-      jumlah: expense.amount,
-      kategori: "operasional",
-      tanggal: now.toISOString().slice(0, 10),
-      createdAt: now.toISOString(),
-      relatedId: expense.id,
-    });
-    setBusyId(null);
-    setToast("Pengajuan disetujui; saldo dan riwayat Kas diperbarui.");
+    setOperationError("");
+    try {
+      await updateKeuanganStatus(expense.id, "approved");
+      refetch();
+      setToast("Pengajuan disetujui; pengeluaran dicatat di buku Kas.");
+      try {
+        setKasSnapshot(await fetchKas());
+      } catch (reason) {
+        const detail = reason instanceof Error ? reason.message : "Terjadi kesalahan.";
+        setOperationError(`Pengajuan disetujui, tetapi saldo Kas gagal dimuat ulang: ${detail}`);
+      }
+    } catch (reason) {
+      setOperationError(reason instanceof Error ? reason.message : "Gagal menyetujui pengajuan.");
+    } finally {
+      setBusyId(null);
+    }
   };
 
   const handleReject = async () => {
     if (!rejectTarget) return;
     setBusyId(rejectTarget.id);
-    await new Promise((resolve) => window.setTimeout(resolve, 1000));
-    rejectExpense(rejectTarget.id);
-    setBusyId(null);
-    setRejectTarget(null);
-    setReason("");
-    setToast("Pengajuan pengeluaran ditolak.");
+    setOperationError("");
+    try {
+      await updateKeuanganStatus(rejectTarget.id, "rejected", reason);
+      refetch();
+      setRejectTarget(null);
+      setReason("");
+      setToast("Pengajuan pengeluaran ditolak.");
+    } catch (reason) {
+      setOperationError(reason instanceof Error ? reason.message : "Gagal menolak pengajuan.");
+    } finally {
+      setBusyId(null);
+    }
+  };
+
+  const beginEdit = (item: ApprovalRecord) => {
+    setEditing(item);
+    setTitle(item.title);
+    setVendor(item.vendor);
+    setAmount(String(item.amount));
+    setDate(item.date);
+    setCategory(item.category);
+    setFormOpen(true);
+    setFormError("");
+  };
+
+  const closeForm = () => {
+    setFormOpen(false);
+    setEditing(null);
+    setTitle("");
+    setVendor("");
+    setAmount("");
+    setDate(new Date().toISOString().slice(0, 10));
+    setCategory("Material");
+    setFormError("");
+  };
+
+  const saveExpense = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const parsedAmount = Number(amount);
+    if (!title.trim() || !vendor.trim() || !category.trim() || !date || !Number.isFinite(parsedAmount) || parsedAmount <= 0) {
+      setFormError("Lengkapi seluruh data dan pastikan nominal lebih dari nol.");
+      return;
+    }
+    setBusyId(editing?.id ?? "new-approval");
+    setFormError("");
+    try {
+      const input = { title, vendor, amount: parsedAmount, date, category };
+      if (editing) await updateKeuanganRecord("approval", editing.id, input);
+      else await createKeuanganRecord("approval", input);
+      refetch();
+      closeForm();
+      setToast(editing ? "Pengajuan diperbarui." : "Pengajuan berhasil ditambahkan.");
+    } catch (reason) {
+      setFormError(reason instanceof Error ? reason.message : "Gagal menyimpan pengajuan.");
+    } finally {
+      setBusyId(null);
+    }
+  };
+
+  const handleDelete = async (item: ApprovalRecord) => {
+    if (item.status !== "pending" || busyId) return;
+    setBusyId(item.id);
+    setOperationError("");
+    try {
+      await deleteKeuanganRecord(item.id);
+      refetch();
+      setToast("Pengajuan dihapus.");
+    } catch (reason) {
+      setOperationError(reason instanceof Error ? reason.message : "Gagal menghapus pengajuan.");
+    } finally {
+      setBusyId(null);
+    }
   };
 
   return (
@@ -78,16 +164,42 @@ export function ApprovalSection() {
         <FinancialStatCard label="Saldo Kas" value={formatRp(globalSaldo)} icon="Rp" trend="Saldo setelah simulasi approval" tone="blue" />
       </div>
 
+      {operationError && <p role="alert" className="text-sm text-error">{operationError}</p>}
+
       <div className="rounded-2xl border border-outline/30 bg-primary-container p-4 shadow-xl">
         <div className="mb-4 flex items-center justify-between gap-3">
           <div>
             <h2 className="text-sm font-bold uppercase tracking-[0.2em] text-on-surface">Approval Pengeluaran</h2>
-            <p className="mt-1 text-[11px] text-on-surface-variant">Persetujuan khusus untuk pengajuan di atas Rp 5.000.000</p>
+            <p className="mt-1 text-[11px] text-on-surface-variant">Kelola pengajuan pengeluaran dan persetujuan admin keuangan.</p>
           </div>
-          <span className="rounded-full border border-amber-500/30 bg-amber-500/10 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.2em] text-amber-700 dark:text-amber-300">
-            {expenses.filter((item) => item.status === "pending").length} menunggu
-          </span>
+          <div className="flex items-center gap-2">
+            <span className="rounded-full border border-amber-500/30 bg-amber-500/10 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.2em] text-amber-700 dark:text-amber-300">
+              {expenses.filter((item) => item.status === "pending").length} menunggu
+            </span>
+            <button type="button" onClick={() => { closeForm(); setFormOpen(true); }} className="rounded-lg bg-secondary px-3 py-2 text-[10px] font-bold uppercase tracking-[0.12em] text-on-secondary">
+              Tambah Pengajuan
+            </button>
+          </div>
         </div>
+
+        {error && <p role="alert" className="mb-3 text-xs text-error">{error}</p>}
+
+        {formOpen && (
+          <form onSubmit={(event) => void saveExpense(event)} className="mb-4 grid gap-3 rounded-xl border border-outline/20 bg-surface-variant/30 p-3 md:grid-cols-5">
+            <input aria-label="Keterangan" placeholder="Keterangan" value={title} onChange={(event) => setTitle(event.target.value)} className="rounded-lg border border-outline/30 bg-surface-variant px-3 py-2 text-xs text-on-surface" />
+            <input aria-label="Vendor" placeholder="Vendor" value={vendor} onChange={(event) => setVendor(event.target.value)} className="rounded-lg border border-outline/30 bg-surface-variant px-3 py-2 text-xs text-on-surface" />
+            <input aria-label="Kategori" placeholder="Kategori" value={category} onChange={(event) => setCategory(event.target.value)} className="rounded-lg border border-outline/30 bg-surface-variant px-3 py-2 text-xs text-on-surface" />
+            <input aria-label="Nominal" type="number" min="1" step="1" placeholder="Nominal" value={amount} onChange={(event) => setAmount(event.target.value)} className="rounded-lg border border-outline/30 bg-surface-variant px-3 py-2 text-xs text-on-surface" />
+            <input aria-label="Tanggal" type="date" value={date} onChange={(event) => setDate(event.target.value)} className="rounded-lg border border-outline/30 bg-surface-variant px-3 py-2 text-xs text-on-surface" />
+            {formError && <p role="alert" className="text-xs text-error md:col-span-5">{formError}</p>}
+            <div className="flex justify-end gap-2 md:col-span-5">
+              <button type="button" onClick={closeForm} disabled={busyId !== null} className="rounded-lg border border-outline/30 px-3 py-2 text-xs text-on-surface">Batal</button>
+              <button type="submit" disabled={busyId !== null} className="rounded-lg bg-secondary px-3 py-2 text-xs font-bold text-on-secondary">
+                {busyId === (editing?.id ?? "new-approval") ? <Loader2 size={14} className="animate-spin" /> : editing ? "Simpan Perubahan" : "Simpan Pengajuan"}
+              </button>
+            </div>
+          </form>
+        )}
 
         <div className="mb-3 flex flex-col gap-2 sm:flex-row">
           <input type="search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Cari ID, keterangan, vendor..." aria-label="Cari pengajuan" className="min-w-0 flex-1 rounded-lg border border-outline/30 bg-surface-variant px-3 py-2 text-xs text-on-surface outline-none focus:border-secondary" />
@@ -144,6 +256,12 @@ export function ApprovalSection() {
                       >
                         Tolak
                       </button>
+                      {item.status === "pending" && (
+                        <>
+                          <button type="button" onClick={() => beginEdit(item)} disabled={busyId !== null} aria-label={`Ubah ${item.title}`} className="rounded-lg border border-outline/30 px-2 py-1.5 text-[10px] text-on-surface disabled:opacity-50">Ubah</button>
+                          <button type="button" onClick={() => void handleDelete(item)} disabled={busyId !== null} aria-label={`Hapus ${item.title}`} className="rounded-lg border border-red-500/30 px-2 py-1.5 text-[10px] text-red-700 disabled:opacity-50 dark:text-red-300">Hapus</button>
+                        </>
+                      )}
                     </div>
                   </td>
                 </tr>

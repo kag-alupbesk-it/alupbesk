@@ -3,7 +3,10 @@
 import { useEffect, useMemo, useState, type KeyboardEvent } from "react";
 import { Loader2 } from "lucide-react";
 import { useKeuangan } from "../keuangan/KeuanganContext";
-import type { PayrollItem } from "../keuangan/KeuanganContext";
+import { useApi } from "@/frontend/Manager/(keuangan)/hooks/useApi";
+import { createKeuanganRecord, deleteKeuanganRecord, fetchKeuanganRecords, updateKeuanganRecord, updateKeuanganStatus } from "@/frontend/Manager/(keuangan)/services/operasional";
+import { fetchKas } from "@/frontend/Manager/(keuangan)/services/kas";
+import type { PayrollRecord } from "@/backend/modules/keuangan";
 import { CurrencyInput } from "./ui/CurrencyInput";
 import { FeedbackToast } from "./ui/FeedbackToast";
 import { FinancialStatCard } from "./ui/FinancialStatCard";
@@ -13,18 +16,25 @@ const formatRp = (value: number) =>
   new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(value);
 
 export function PayrollSection() {
-  const { globalSaldo, payrollItems: items, addPayroll, disbursePayroll } = useKeuangan();
+  const { globalSaldo, setKasSnapshot } = useKeuangan();
+  const { data, error, refetch } = useApi(() => fetchKeuanganRecords("payroll"), { interval: 30000 });
+  const items = useMemo(
+    () => (data ?? []).flatMap((record) => record.kind === "payroll" ? [record.data] : []),
+    [data],
+  );
   const [name, setName] = useState("Tim Kuli Proyek Baru");
   const [role, setRole] = useState("Pekerja Lapangan");
   const [workers, setWorkers] = useState("8");
   const [days, setDays] = useState("15");
   const [rate, setRate] = useState(180000);
-  const [type, setType] = useState<PayrollItem["type"]>("harian");
+  const [type, setType] = useState<PayrollRecord["type"]>("harian");
   const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState<"all" | PayrollItem["status"]>("all");
+  const [statusFilter, setStatusFilter] = useState<"all" | PayrollRecord["status"]>("all");
   const [toast, setToast] = useState("");
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [editing, setEditing] = useState<PayrollRecord | null>(null);
+  const [operationError, setOperationError] = useState("");
 
   const totalPayroll = useMemo(
     () => items.reduce((sum, item) => sum + item.workers * item.days * item.rate, 0),
@@ -58,48 +68,81 @@ export function PayrollSection() {
     setFormErrors(errors);
     if (Object.keys(errors).length) return;
 
-    const nextItem: PayrollItem = {
-      id: `P-${Date.now()}`,
+    const input = {
       name: name.trim(),
       role: role.trim(),
       workers: Number(workers),
       days: Number(days),
       rate,
       type,
-      status: "unpaid",
     };
-    setBusyId("new-payroll");
-    await new Promise((resolve) => window.setTimeout(resolve, 1000));
-    addPayroll(nextItem);
-    setName("");
-    setRole("Pekerja Lapangan");
-    setWorkers("8");
-    setDays("15");
-    setRate(180000);
-    setType("harian");
-    setFormErrors({});
-    setBusyId(null);
-    setToast("Data payroll berhasil ditambahkan.");
+    setBusyId(editing?.id ?? "new-payroll");
+    setOperationError("");
+    try {
+      if (editing) await updateKeuanganRecord("payroll", editing.id, input);
+      else await createKeuanganRecord("payroll", input);
+      refetch();
+      setEditing(null);
+      setName("");
+      setRole("Pekerja Lapangan");
+      setWorkers("8");
+      setDays("15");
+      setRate(180000);
+      setType("harian");
+      setFormErrors({});
+      setToast(editing ? "Data payroll diperbarui." : "Data payroll berhasil ditambahkan.");
+    } catch (reason) {
+      setOperationError(reason instanceof Error ? reason.message : "Gagal menyimpan data payroll.");
+    } finally {
+      setBusyId(null);
+    }
   };
 
-  const handleDisburse = async (item: PayrollItem) => {
+  const handleDisburse = async (item: PayrollRecord) => {
     if (item.status !== "unpaid" || busyId) return;
     setBusyId(item.id);
-    await new Promise((resolve) => window.setTimeout(resolve, 1000));
-    const now = new Date();
-    disbursePayroll(item.id, {
-      id: `sim-payroll-${item.id}-${now.getTime()}`,
-      tipe: "keluar",
-      sumber: "Simulasi payroll",
-      deskripsi: `Pencairan gaji ${item.name}`,
-      jumlah: item.workers * item.days * item.rate,
-      kategori: "operasional",
-      tanggal: now.toISOString().slice(0, 10),
-      createdAt: now.toISOString(),
-      relatedId: item.id,
-    });
-    setBusyId(null);
-    setToast(`Gaji ${item.name} dicairkan; saldo dan riwayat Kas diperbarui.`);
+    setOperationError("");
+    try {
+      await updateKeuanganStatus(item.id, "paid");
+      refetch();
+      setToast(`Gaji ${item.name} dicairkan dan dicatat di buku Kas.`);
+      try {
+        setKasSnapshot(await fetchKas());
+      } catch (reason) {
+        const detail = reason instanceof Error ? reason.message : "Terjadi kesalahan.";
+        setOperationError(`Payroll berhasil dicairkan, tetapi saldo Kas gagal dimuat ulang: ${detail}`);
+      }
+    } catch (reason) {
+      setOperationError(reason instanceof Error ? reason.message : "Gagal mencairkan payroll.");
+    } finally {
+      setBusyId(null);
+    }
+  };
+
+  const beginEdit = (item: PayrollRecord) => {
+    setEditing(item);
+    setName(item.name);
+    setRole(item.role);
+    setWorkers(String(item.workers));
+    setDays(String(item.days));
+    setRate(item.rate);
+    setType(item.type);
+    setFormErrors({});
+  };
+
+  const handleDelete = async (item: PayrollRecord) => {
+    if (item.status !== "unpaid" || busyId) return;
+    setBusyId(item.id);
+    setOperationError("");
+    try {
+      await deleteKeuanganRecord(item.id);
+      refetch();
+      setToast("Data payroll dihapus.");
+    } catch (reason) {
+      setOperationError(reason instanceof Error ? reason.message : "Gagal menghapus payroll.");
+    } finally {
+      setBusyId(null);
+    }
   };
 
   const clearError = (field: string) => {
@@ -148,7 +191,7 @@ export function PayrollSection() {
 
             <label className="block text-[10px] font-bold uppercase tracking-[0.2em] text-on-surface-variant">
               Tipe Pembayaran
-              <select value={type} onChange={(event) => setType(event.target.value as PayrollItem["type"])} className="mt-2 w-full rounded-xl border border-outline/30 bg-surface-variant px-3 py-2 text-xs text-on-surface outline-none focus:border-secondary">
+              <select value={type} onChange={(event) => setType(event.target.value as PayrollRecord["type"])} className="mt-2 w-full rounded-xl border border-outline/30 bg-surface-variant px-3 py-2 text-xs text-on-surface outline-none focus:border-secondary">
                 <option value="harian">Harian</option>
                 <option value="borongan">Borongan</option>
               </select>
@@ -157,17 +200,19 @@ export function PayrollSection() {
 
           <div className="mt-5 flex justify-end">
             <button type="button" onClick={() => void submitPayroll()} disabled={busyId !== null} className="inline-flex items-center gap-2 rounded-xl bg-secondary px-4 py-2 text-xs font-bold uppercase tracking-[0.15em] text-on-secondary disabled:cursor-wait disabled:opacity-60">
-              {busyId === "new-payroll" && <Loader2 size={14} className="animate-spin" />}
-              {busyId === "new-payroll" ? "Menyimpan..." : "Simpan Payroll"}
+              {(busyId === "new-payroll" || (editing && busyId === editing.id)) && <Loader2 size={14} className="animate-spin" />}
+              {busyId === "new-payroll" || (editing && busyId === editing.id) ? "Menyimpan..." : editing ? "Simpan Perubahan" : "Simpan Payroll"}
             </button>
+            {editing && <button type="button" onClick={() => { setEditing(null); setName(""); setRole("Pekerja Lapangan"); setWorkers("8"); setDays("15"); setRate(180000); setType("harian"); }} className="rounded-xl border border-outline/30 px-4 py-2 text-xs font-bold text-on-surface">Batal ubah</button>}
           </div>
+          {(error || operationError) && <p role="alert" className="mt-3 text-xs text-error">{operationError || error}</p>}
         </div>
 
         <div className="space-y-3">
           <FinancialStatCard label="Total payroll" value={formatRp(totalPayroll)} icon="Rp" trend={`${items.length} kelompok pekerja`} tone="blue" />
           <FinancialStatCard label="Belum dibayar" value={formatRp(unpaidTotal)} icon="◷" trend="Total kewajiban payroll" tone="amber" />
           <FinancialStatCard label="Jumlah pekerja" value={String(items.reduce((sum, item) => sum + item.workers, 0))} icon="♙" trend="Dalam seluruh kelompok payroll" tone="emerald" />
-          <FinancialStatCard label="Saldo Kas" value={formatRp(globalSaldo)} icon="Rp" trend="Setelah simulasi pencairan" tone="blue" />
+          <FinancialStatCard label="Saldo Kas" value={formatRp(globalSaldo)} icon="Rp" trend="Setelah pencairan payroll" tone="blue" />
           <div className="mt-5 space-y-3">
             <div className="rounded-xl border border-outline/20 bg-surface-variant/40 p-3">
               <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-on-surface-variant">Mingguan</p>
@@ -192,7 +237,7 @@ export function PayrollSection() {
 
         <div className="mb-3 flex flex-col gap-2 sm:flex-row">
           <input type="search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Cari nama, peran, tipe..." aria-label="Cari data payroll" className="min-w-0 flex-1 rounded-lg border border-outline/30 bg-surface-variant px-3 py-2 text-xs text-on-surface outline-none focus:border-secondary" />
-          <select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value as "all" | PayrollItem["status"])} aria-label="Filter status payroll" className="rounded-lg border border-outline/30 bg-surface-variant px-3 py-2 text-xs text-on-surface outline-none focus:border-secondary">
+          <select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value as "all" | PayrollRecord["status"])} aria-label="Filter status payroll" className="rounded-lg border border-outline/30 bg-surface-variant px-3 py-2 text-xs text-on-surface outline-none focus:border-secondary">
             <option value="all">Semua status</option>
             <option value="paid">Dibayar</option>
             <option value="unpaid">Belum dibayar</option>
@@ -225,7 +270,13 @@ export function PayrollSection() {
                   <td className="px-4 py-3 text-xs text-on-surface-variant capitalize">{item.type}</td>
                   <td className="px-4 py-3 text-xs font-bold text-on-surface">{formatRp(item.workers * item.days * item.rate)}</td>
                   <td className="px-4 py-3"><StatusBadge status={item.status} /></td>
-                  <td className="px-4 py-3 text-right"><button type="button" onClick={() => void handleDisburse(item)} disabled={item.status === "paid" || busyId !== null} className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-secondary/30 bg-secondary/10 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.12em] text-secondary disabled:cursor-not-allowed disabled:opacity-50">{busyId === item.id && <Loader2 size={13} className="animate-spin" />}{item.status === "paid" ? "Sudah cair" : busyId === item.id ? "Memproses..." : "Cairkan Gaji"}</button></td>
+                  <td className="px-4 py-3 text-right">
+                    <div className="flex justify-end gap-2">
+                      <button type="button" onClick={() => beginEdit(item)} disabled={item.status === "paid" || busyId !== null} className="rounded-lg border border-outline/30 px-2 py-1.5 text-[10px] text-on-surface disabled:opacity-50">Ubah</button>
+                      <button type="button" onClick={() => void handleDelete(item)} disabled={item.status === "paid" || busyId !== null} className="rounded-lg border border-red-500/30 px-2 py-1.5 text-[10px] text-red-700 disabled:opacity-50 dark:text-red-300">Hapus</button>
+                      <button type="button" onClick={() => void handleDisburse(item)} disabled={item.status === "paid" || busyId !== null} className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-secondary/30 bg-secondary/10 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.12em] text-secondary disabled:cursor-not-allowed disabled:opacity-50">{busyId === item.id && <Loader2 size={13} className="animate-spin" />}{item.status === "paid" ? "Sudah cair" : busyId === item.id ? "Memproses..." : "Cairkan Gaji"}</button>
+                    </div>
+                  </td>
                 </tr>
               ))}
               {filteredItems.length === 0 && <tr><td colSpan={9} className="px-4 py-8 text-center text-xs text-on-surface-variant">Tidak ada data payroll yang cocok dengan pencarian.</td></tr>}

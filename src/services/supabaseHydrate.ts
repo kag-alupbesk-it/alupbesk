@@ -13,6 +13,9 @@ import type { CustomRequest } from "../backend/modules/custom/requests/types";
 import { kasEntries } from "../backend/modules/keuangan/kas/store";
 import { syncKasDariPesanan } from "../backend/modules/keuangan/kas/sync";
 import { pembayaran } from "../backend/modules/keuangan/penagihan/store";
+import { keuanganRecords } from "../backend/modules/keuangan/operasional/store";
+import { isKeuanganRecord } from "../backend/modules/keuangan/operasional/types";
+import type { KeuanganRecord } from "../backend/modules/keuangan/operasional/types";
 import { marketingBanners } from "../backend/modules/marketing/banners/store";
 import type { MarketingBanner } from "../backend/modules/marketing/types";
 import { partners } from "../backend/modules/content/partners/store";
@@ -313,6 +316,36 @@ async function hydratePenagihan(): Promise<void> {
   }
 }
 
+async function hydrateKeuanganRecords(): Promise<void> {
+  if (!db) return;
+  const { data: rows, error } = await db.from("keuangan_records").select("id, jenis, data, created_at");
+  if (error) {
+    console.error(`[supabase] gagal memuat keuangan_records: ${error.message}`);
+    return;
+  }
+  keuanganRecords.clear();
+  for (const row of rows ?? []) {
+    const record = { kind: row.jenis, data: row.data };
+    if (isKeuanganRecord(record) && record.data.id === row.id) {
+      keuanganRecords.set(row.id, withCreatedAt(record, row.created_at));
+    }
+  }
+}
+
+function withCreatedAt(record: KeuanganRecord, createdAt: string | null): KeuanganRecord {
+  const timestamp = record.data.createdAt ?? createdAt ?? undefined;
+  switch (record.kind) {
+    case "approval":
+      return { kind: "approval", data: { ...record.data, createdAt: timestamp } };
+    case "petty_cash":
+      return { kind: "petty_cash", data: { ...record.data, createdAt: timestamp } };
+    case "termin":
+      return { kind: "termin", data: { ...record.data, createdAt: timestamp } };
+    case "payroll":
+      return { kind: "payroll", data: { ...record.data, createdAt: timestamp } };
+  }
+}
+
 async function hydrateBanners(): Promise<void> {
   if (!db) return;
   const { data: rows } = await db.from("marketing_banners").select("*");
@@ -451,6 +484,7 @@ export function ensureHydrated(): Promise<void> {
         await hydrateCustomRequests();
         await hydrateKas();
         await hydratePenagihan();
+        await hydrateKeuanganRecords();
         await hydrateBanners();
         await hydratePartners();
         await hydrateFaq();
