@@ -40,7 +40,7 @@ function PenagihanAction({
       ) : (
         <span className="material-symbols-outlined text-[14px]">how_to_reg</span>
       )}
-      Tandai Lunas
+      {loading ? "Memproses..." : "Tandai Lunas"}
     </button>
   );
 }
@@ -205,32 +205,11 @@ export function PenagihanSection() {
                       </span>
                     </td>
                     <td className={s.tableCell}>
-<<<<<<< HEAD
-                      {item.status === "lunas" ? (
-                        <span className={s.lunasDone}>
-                          <span className="material-symbols-outlined text-[16px]">check_circle</span>
-                        </span>
-                      ) : (
-                        <button
-                          className={s.lunasButton}
-                          onClick={() => handleLunas(item)}
-                          disabled={loadingId === item.id}
-                        >
-                          {loadingId === item.id ? (
-                            <span className="material-symbols-outlined text-[14px] animate-spin">progress_activity</span>
-                          ) : (
-                            <span className="material-symbols-outlined text-[14px]">how_to_reg</span>
-                          )}
-                          {loadingId === item.id ? "Memproses..." : "Tandai Lunas"}
-                        </button>
-                      )}
-=======
                       <PenagihanAction
                         item={item}
                         loading={loadingId === item.id}
                         onLunas={handleLunas}
                       />
->>>>>>> 90be3dd65645e7de893169c161203964b02b17a1
                     </td>
                   </tr>
                 ))}

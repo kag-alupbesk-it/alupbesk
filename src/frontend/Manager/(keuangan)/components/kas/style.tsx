@@ -57,13 +57,8 @@ export const cardActions = "mt-4 flex"
 export const desktopOnly = "hidden md:block"
 
 // --- Modal (tambah/ubah/hapus transaksi) ---
-<<<<<<< HEAD
-export const modalOverlay = "fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-3 sm:p-4 animate-fadeIn"
-export const modalContent = "w-full max-w-md rounded-2xl border border-outline/30 bg-primary-container p-4 sm:p-6 shadow-2xl max-h-[calc(100dvh-1.5rem)] sm:max-h-[90vh] overflow-y-auto"
-=======
-export const modalOverlay = "fixed inset-0 bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-3 z-50 animate-fadeIn"
-export const modalContent = "w-full max-w-md rounded-2xl border border-outline/30 bg-primary-container p-5 sm:p-6 max-h-[92vh] overflow-y-auto shadow-2xl"
->>>>>>> 90be3dd65645e7de893169c161203964b02b17a1
+export const modalOverlay = "fixed inset-0 z-50 flex items-end justify-center bg-black/60 p-3 backdrop-blur-sm animate-fadeIn sm:items-center sm:p-4"
+export const modalContent = "w-full max-w-md max-h-[calc(100dvh-1.5rem)] overflow-y-auto rounded-2xl border border-outline/30 bg-primary-container p-4 shadow-2xl sm:max-h-[90vh] sm:p-6"
 export const modalHeader = "mb-5 flex items-start justify-between"
 export const modalTitle = "text-sm font-bold text-on-surface uppercase tracking-wider font-headline"
 export const modalSubtitle = "text-[11px] text-on-surface-variant"

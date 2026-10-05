@@ -24,7 +24,6 @@ export default function KeuanganShell({ children }: { children: React.ReactNode 
   const pathname = usePathname();
 
   return (
-<<<<<<< HEAD
     <KeuanganProvider>
       <div
         className={clsx(
@@ -33,20 +32,9 @@ export default function KeuanganShell({ children }: { children: React.ReactNode 
         )}
       >
         <TopBar title={pageTitles[pathname] ?? "Keuangan"} />
-        <main className="flex-1 pt-12 lg:pt-16">{children}</main>
+        <main className="flex-1 pt-12 pb-24 lg:pt-16 lg:pb-0">{children}</main>
+        <MobileBottomNav items={BOTTOM_NAV} onMore={toggle} />
       </div>
     </KeuanganProvider>
-=======
-    <div
-      className={clsx(
-        "flex-1 flex flex-col min-w-0 transition-all duration-300",
-        desktopOpen ? "lg:ml-64" : "lg:ml-0"
-      )}
-    >
-      <TopBar title={pageTitles[pathname] ?? "Keuangan"} />
-      <main className="flex-1 pt-12 pb-24 lg:pt-16 lg:pb-0">{children}</main>
-      <MobileBottomNav items={BOTTOM_NAV} onMore={toggle} />
-    </div>
->>>>>>> 90be3dd65645e7de893169c161203964b02b17a1
   );
 }
