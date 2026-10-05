@@ -253,7 +253,7 @@ export function PMDashboard() {
           </div>
 
           <div className="hidden overflow-x-auto md:block">
-            <table className="w-full min-w-[980px] text-left">
+            <table className="w-full min-w-[1080px] text-left">
               <thead className="bg-surface-variant/35 text-[9px] font-bold uppercase tracking-[0.14em] text-on-surface-variant/70">
                 <tr>
                   <th className="px-5 py-4 font-bold sm:px-6">Kode Produksi</th>
@@ -262,12 +262,13 @@ export function PMDashboard() {
                   <th className="px-5 py-4 font-bold">Target Selesai</th>
                   <th className="px-5 py-4 font-bold">Status Gambar</th>
                   <th className="px-5 py-4 font-bold sm:px-6">Status Proyek</th>
+                  <th className="w-px whitespace-nowrap px-5 py-4 text-right font-bold sm:px-6">Aksi</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-outline/15">
                 {filteredOrders.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="px-6 py-16 text-center">
+                    <td colSpan={7} className="px-6 py-16 text-center">
                       <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-surface-variant text-on-surface-variant">
                         <Search size={20} />
                       </div>
@@ -279,9 +280,9 @@ export function PMDashboard() {
                   filteredOrders.map((order) => (
                     <tr key={order.id} className="group transition-colors hover:bg-surface-variant/25">
                       <td className="px-5 py-4 sm:px-6">
-                        <Link href={`/pm/orders/${order.id}`} className="font-mono text-xs font-bold text-secondary hover:underline">
+                        <p className="font-mono text-xs font-bold text-secondary">
                           {order.contractorCode}
-                        </Link>
+                        </p>
                         <p className="mt-1 text-[9px] font-medium text-on-surface-variant/60">{order.id}</p>
                       </td>
                       <td className="px-5 py-4">
@@ -299,6 +300,16 @@ export function PMDashboard() {
                       <td className="whitespace-nowrap px-5 py-4 text-xs text-on-surface-variant">{formatPMDate(order.targetDate)}</td>
                       <td className="px-5 py-4"><DrawingStatusBadge status={order.drawingStatus} /></td>
                       <td className="px-5 py-4 sm:px-6"><ProjectStatusBadge status={order.projectStatus} /></td>
+                      <td className="whitespace-nowrap px-5 py-4 text-right sm:px-6">
+                        <Link
+                          href={`/pm/orders/${order.id}`}
+                          aria-label={`Buka detail order ${order.contractorCode}`}
+                          className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-xl border border-outline/40 px-3 py-2 text-[10px] font-bold text-on-surface transition-colors hover:border-secondary/50 hover:text-secondary md:min-h-0"
+                        >
+                          <ArrowUpRight size={14} />
+                          Detail
+                        </Link>
+                      </td>
                     </tr>
                   ))
                 )}
