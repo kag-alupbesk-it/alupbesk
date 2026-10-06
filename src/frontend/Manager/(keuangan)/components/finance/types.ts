@@ -120,7 +120,24 @@ export type Karyawan = {
   metodeBayar: string;
 };
 
+export const JABATAN_AWAL = [
+  "Mandor Proyek",
+  "Staff Keuangan",
+  "Admin Proyek",
+  "Operator Alat Berat",
+  "Tukang Bangunan",
+  "Driver",
+  "Surveyor",
+] as const;
+
 export type PeriodeGaji = string;
+
+export const periodeBerikutnya = (dari: string): string => {
+  const [tahun, bulan] = dari.split("-").map(Number);
+  if (!tahun || !bulan) return dari;
+  const date = new Date(tahun, bulan, 1);
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+};
 
 export const REKAP_TRANSAKSI = (transaksi: TransaksiKas[]) => {
   const totalMasuk = transaksi

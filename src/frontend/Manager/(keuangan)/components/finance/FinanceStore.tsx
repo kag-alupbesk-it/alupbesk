@@ -13,10 +13,12 @@ import {
   invoiceAwal,
   transaksiKasAwal,
 } from "./mockData";
+
 import {
   KATEGORI_BIAYA,
   PIHAK,
   POS_PROYEK,
+  JABATAN_AWAL,
   REKAP_TRANSAKSI,
   hitungGaji,
   hitungInvoice,
@@ -34,11 +36,13 @@ export type FinanceState = {
   transaksi: TransaksiKas[];
   invoice: Invoice[];
   karyawan: Karyawan[];
+  opsiJabatan: string[];
   opsiPerson: string[];
   opsiKategori: KategoriBiaya[];
   opsiPos: PosProyek[];
   toast: string;
   seq: number;
+  seqKaryawan: number;
 };
 
 type FinanceAction =
@@ -46,8 +50,12 @@ type FinanceAction =
   | { type: "hapus-transaksi"; id: string }
   | { type: "tambah-bukti"; id: string; bukti: string }
   | { type: "tambah-opsi"; field: FieldOpsi; nilai: string }
+  | { type: "tambah-opsi-jabatan"; nilai: string }
   | { type: "lunas-termin"; invoiceId: string; terminId: string }
   | { type: "bayar-gaji"; id: string; tanggal: string }
+  | { type: "tambah-karyawan"; payload: Omit<Karyawan, "id" | "statusBayar" | "tanggalBayar"> }
+  | { type: "ubah-karyawan"; payload: Karyawan }
+  | { type: "hapus-karyawan"; id: string }
   | { type: "toast"; message: string }
   | { type: "bersihkan-toast" };
 
@@ -60,11 +68,13 @@ const initialState: FinanceState = {
   transaksi: transaksiKasAwal,
   invoice: invoiceAwal,
   karyawan: karyawanAwal,
+  opsiJabatan: [],
   opsiPerson: [],
   opsiKategori: [],
   opsiPos: [],
   toast: "",
   seq: 1,
+  seqKaryawan: karyawanAwal.length + 1,
 };
 
 function buatTransaksi(payload: Omit<TransaksiKas, "id">, urut: number): TransaksiKas {
@@ -191,6 +201,65 @@ function reducer(state: FinanceState, action: FinanceAction): FinanceState {
         toast: `Gaji ${karyawan.nama} ditandai terbayar dan tercatat di Kas Keluar.`,
       };
     }
+    case "tambah-karyawan": {
+      const nama = action.payload.nama.trim();
+      if (!nama) return state;
+      const karyawan: Karyawan = {
+        ...action.payload,
+        nama,
+        id: `PGW-${String(state.seqKaryawan).padStart(3, "0")}`,
+        statusBayar: "belum",
+        tanggalBayar: "",
+      };
+
+      return {
+        ...state,
+        seqKaryawan: state.seqKaryawan + 1,
+        karyawan: [...state.karyawan, karyawan],
+        toast: `${nama} ditambahkan ke daftar karyawan.`,
+      };
+    }
+    case "ubah-karyawan": {
+      const ada = state.karyawan.some((item) => item.id === action.payload.id);
+      if (!ada) return state;
+      const nama = action.payload.nama.trim();
+      if (!nama) return state;
+
+      const karyawan = state.karyawan.map((item) =>
+        item.id === action.payload.id ? { ...action.payload, nama } : item,
+      );
+      const namaLama = state.karyawan.find((item) => item.id === action.payload.id)?.nama ?? nama;
+
+      return {
+        ...state,
+        karyawan,
+        toast: `Data ${nama} diperbarui${nama === namaLama ? "" : ` (sebelumnya ${namaLama})`}.`,
+      };
+    }
+    case "hapus-karyawan": {
+      const karyawan = state.karyawan.find((item) => item.id === action.id);
+      if (!karyawan) return state;
+      const adaTransaksi = state.transaksi.some((item) => item.refId === action.id);
+
+      return {
+        ...state,
+        karyawan: state.karyawan.filter((item) => item.id !== action.id),
+        toast: adaTransaksi
+          ? `${karyawan.nama} dihapus. Transaksi Kas Keluar terkait tetap tersimpan.`
+          : `${karyawan.nama} dihapus dari daftar karyawan.`,
+      };
+    }
+    case "tambah-opsi-jabatan": {
+      const nilai = action.nilai.trim();
+      if (!nilai) return state;
+      if (state.opsiJabatan.some((item) => item.toLowerCase() === nilai.toLowerCase())) return state;
+
+      return {
+        ...state,
+        opsiJabatan: [...state.opsiJabatan, nilai],
+        toast: `"${nilai}" ditambahkan ke daftar jabatan.`,
+      };
+    }
     case "toast":
       return { ...state, toast: action.message };
     case "bersihkan-toast":
@@ -207,6 +276,7 @@ type FinanceContextValue = {
   invoiceRingkas: InvoiceRingkas[];
   totalGaji: number;
   gajiBelumDibayar: number;
+  opsiJabatan: string[];
   opsiPerson: string[];
   opsiKategori: KategoriBiaya[];
   opsiPos: PosProyek[];
@@ -216,6 +286,10 @@ type FinanceContextValue = {
   tambahBukti: (id: string, bukti: string) => void;
   lunasTermin: (invoiceId: string, terminId: string) => void;
   bayarGaji: (id: string, tanggal: string) => void;
+  tambahKaryawan: (payload: Omit<Karyawan, "id" | "statusBayar" | "tanggalBayar">) => void;
+  ubahKaryawan: (payload: Karyawan) => void;
+  hapusKaryawan: (id: string) => void;
+  tambahOpsiJabatan: (nilai: string) => void;
   setToast: (message: string) => void;
   clearToast: () => void;
 };
@@ -247,6 +321,23 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
     (id: string, tanggal: string) => dispatch({ type: "bayar-gaji", id, tanggal }),
     [],
   );
+  const tambahKaryawan = useCallback(
+    (payload: Omit<Karyawan, "id" | "statusBayar" | "tanggalBayar">) =>
+      dispatch({ type: "tambah-karyawan", payload }),
+    [],
+  );
+  const ubahKaryawan = useCallback(
+    (payload: Karyawan) => dispatch({ type: "ubah-karyawan", payload }),
+    [],
+  );
+  const hapusKaryawan = useCallback(
+    (id: string) => dispatch({ type: "hapus-karyawan", id }),
+    [],
+  );
+  const tambahOpsiJabatan = useCallback(
+    (nilai: string) => dispatch({ type: "tambah-opsi-jabatan", nilai }),
+    [],
+  );
   const setToast = useCallback((message: string) => dispatch({ type: "toast", message }), []);
   const clearToast = useCallback(() => dispatch({ type: "bersihkan-toast" }), []);
 
@@ -273,12 +364,17 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
       opsiPerson: gabungOpsi(PIHAK, state.opsiPerson),
       opsiKategori: gabungOpsi(KATEGORI_BIAYA, state.opsiKategori),
       opsiPos: gabungOpsi(POS_PROYEK, state.opsiPos),
+      opsiJabatan: gabungOpsi(JABATAN_AWAL, state.opsiJabatan),
       tambahOpsi,
       tambahTransaksi,
       hapusTransaksi,
       tambahBukti,
       lunasTermin,
       bayarGaji,
+      tambahKaryawan,
+      ubahKaryawan,
+      hapusKaryawan,
+      tambahOpsiJabatan,
       setToast,
       clearToast,
     };
@@ -289,6 +385,10 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
     tambahBukti,
     lunasTermin,
     bayarGaji,
+    tambahKaryawan,
+    ubahKaryawan,
+    hapusKaryawan,
+    tambahOpsiJabatan,
     tambahOpsi,
     setToast,
     clearToast,
