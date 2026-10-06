@@ -33,13 +33,9 @@ function IsiTab({ tab }: { tab: TabKey }) {
     <div className="p-3 sm:p-4 md:p-6">
       <div className="mx-auto max-w-7xl space-y-5">
         <header className={s.pageHeader}>
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-            <div>
-              <p className={s.pageEyebrow}>Modul Keuangan</p>
-              <h1 className={s.pageTitle}>{tabAktif.label}</h1>
-              <p className={s.pageSubtitle}>{tabAktif.ringkasan}</p>
-            </div>
-          </div>
+          <p className={s.pageEyebrow}>Modul Keuangan</p>
+          <h1 className={s.pageTitle}>{tabAktif.label}</h1>
+          <p className={s.pageSubtitle}>{tabAktif.ringkasan}</p>
         </header>
 
         <div

@@ -127,7 +127,7 @@ export function TerminSection() {
         </div>
 
         <div className={`mt-4 ${s.tableWrap}`}>
-          <table className={`${s.table} min-w-[1180px]`}>
+          <table className={`${s.table} min-w-[880px] xl:min-w-0`}>
             <thead className={s.tableHead}>
               <tr>
                 <th scope="col" className={s.th}>

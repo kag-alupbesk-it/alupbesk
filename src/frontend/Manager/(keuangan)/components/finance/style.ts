@@ -70,7 +70,7 @@ export const tableWrap = "hidden w-full overflow-x-auto rounded-2xl border borde
 
 export const tableWrapModal = "w-full overflow-x-auto rounded-2xl border border-outline/20";
 
-export const table = "w-full min-w-[900px] text-left text-xs";
+export const table = "w-full text-left text-xs";
 
 export const cardListWrap = "flex flex-col gap-3 md:hidden";
 

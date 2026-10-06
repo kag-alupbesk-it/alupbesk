@@ -125,7 +125,7 @@ export function PayrollSection() {
         </div>
 
         <div className={`mt-4 ${s.tableWrap}`}>
-          <table className={`${s.table} min-w-[1120px]`}>
+          <table className={`${s.table} min-w-[860px] xl:min-w-0`}>
             <thead className={s.tableHead}>
               <tr>
                 <th scope="col" className={s.th}>

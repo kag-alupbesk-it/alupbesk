@@ -531,7 +531,7 @@ export function KasSection() {
         </div>
 
         <div className={`mt-4 ${s.tableWrap}`}>
-          <table className={s.table}>
+          <table className={`${s.table} min-w-[820px] xl:min-w-0`}>
             <thead className={s.tableHead}>
               <tr>
                 <th scope="col" className={s.th}>
