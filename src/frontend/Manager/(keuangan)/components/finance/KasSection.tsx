@@ -382,22 +382,34 @@ export function KasSection() {
   const { state, rekap, transaksiUrut, opsiKategori, clearToast } = useFinance();
   const [filterJenis, setFilterJenis] = useState<"all" | JenisTransaksi>("all");
   const [filterKategori, setFilterKategori] = useState<"all" | KategoriBiaya>("all");
+  const [periode, setPeriode] = useState<"hari" | "minggu" | "bulan" | "tahun">("hari");
   const [cari, setCari] = useState("");
   const [preview, setPreview] = useState<TransaksiKas | null>(null);
   const [hapus, setHapus] = useState<TransaksiKas | null>(null);
 
   const transaksi = useMemo(() => {
     const query = cari.trim().toLowerCase();
+    const now = new Date();
+    const hariIni = now.toISOString().slice(0, 10);
+    const mulaiMinggu = new Date(now);
+    mulaiMinggu.setDate(mulaiMinggu.getDate() - 6);
+    const mulaiBulan = new Date(now.getFullYear(), now.getMonth(), 1);
+    const mulaiTahun = new Date(now.getFullYear(), 0, 1);
     return transaksiUrut.filter((item) => {
+      let cocokPeriode = true;
+      if (periode === "hari") cocokPeriode = item.tanggal === hariIni;
+      if (periode === "minggu") cocokPeriode = new Date(item.tanggal) >= mulaiMinggu;
+      if (periode === "bulan") cocokPeriode = new Date(item.tanggal) >= mulaiBulan;
+      if (periode === "tahun") cocokPeriode = new Date(item.tanggal) >= mulaiTahun;
       const cocokJenis = filterJenis === "all" || item.jenis === filterJenis;
       const cocokKategori = filterKategori === "all" || item.kategori === filterKategori;
       const cocokCari =
         !query ||
         `${item.uraian} ${item.person}`.toLowerCase().includes(query) ||
         (item.noNota || "").toLowerCase().includes(query);
-      return cocokJenis && cocokKategori && cocokCari;
+      return cocokPeriode && cocokJenis && cocokKategori && cocokCari;
     });
-  }, [transaksiUrut, filterJenis, filterKategori, cari]);
+  }, [transaksiUrut, filterJenis, filterKategori, cari, periode]);
 
   return (
     <div className="space-y-5">
@@ -442,9 +454,27 @@ export function KasSection() {
               Preview bukti nota dan hapus transaksi yang tidak sesuai pencatatan.
             </p>
           </div>
-          <span className={s.dataCounter}>
-            {transaksi.length} dari {transaksiUrut.length} transaksi
-          </span>
+          <div className="flex flex-wrap gap-2">
+            <div className="inline-flex rounded-lg border border-outline/30 bg-surface-variant p-1">
+              {(["hari","minggu","bulan","tahun"] as const).map((p) => {
+                const aktif = periode === p;
+                const label = p === "hari" ? "Harian" : p === "minggu" ? "Mingguan" : p === "bulan" ? "Bulanan" : "Tahunan";
+                return (
+                  <button
+                    key={p}
+                    type="button"
+                    onClick={() => setPeriode(p)}
+                    className={`px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.12em] rounded-md transition-colors ${aktif ? "bg-secondary text-on-secondary" : "text-on-surface-variant hover:text-on-surface"}`}
+                  >
+                    {label}
+                  </button>
+                );
+              })}
+            </div>
+            <span className={s.dataCounter}>
+              {transaksi.length} dari {transaksiUrut.length} transaksi
+            </span>
+          </div>
         </div>
 
         <div className={`mt-4 ${s.toolbarRow}`}>
