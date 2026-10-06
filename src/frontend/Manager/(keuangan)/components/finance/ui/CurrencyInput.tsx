@@ -11,7 +11,9 @@ export function CurrencyInput({ value, onChange, className = "", ...props }: Cur
   const formattedValue = value > 0 ? numberFormatter.format(value) : "";
 
   return (
-    <div className={`mt-2 flex items-center rounded-xl border border-outline/30 bg-surface-variant px-3 focus-within:border-secondary ${className}`}>
+    <div
+      className={`mt-2 flex items-center rounded-xl border border-outline/30 bg-surface-variant px-3 transition-colors focus-within:border-secondary ${className}`}
+    >
       <span className="mr-2 text-xs font-semibold text-on-surface-variant">Rp</span>
       <input
         {...props}

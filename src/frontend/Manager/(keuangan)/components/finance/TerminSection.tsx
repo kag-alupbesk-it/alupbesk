@@ -58,28 +58,28 @@ export function TerminSection() {
         <FinancialStatCard
           label="Total Tagihan"
           value={formatRp(totalTagihan)}
-          icon={<span className="material-symbols-outlined text-[20px]">receipt_long</span>}
+          icon="receipt_long"
           trend={`${invoiceRingkas.length} invoice aktif`}
           tone="gold"
         />
         <FinancialStatCard
           label="Terbayar"
           value={formatRp(totalTerbayar)}
-          icon={<span className="material-symbols-outlined text-[20px]">paid</span>}
+          icon="paid"
           trend="Termin yang sudah lunas"
           tone="success"
         />
         <FinancialStatCard
           label="Sisa Tagihan"
           value={formatRp(totalSisa)}
-          icon={<span className="material-symbols-outlined text-[20px]">pending_actions</span>}
+          icon="pending_actions"
           trend={`${invoiceRingkas.filter((item) => item.status === "dp").length} invoice masih DP`}
           tone="error"
         />
         <FinancialStatCard
           label="Overdue"
           value={String(overdue.length)}
-          icon={<span className="material-symbols-outlined text-[20px]">warning</span>}
+          icon="warning"
           trend={overdue[0] ? `Terlambat: ${overdue[0].invoice.nama}` : "Tidak ada invoice terlambat"}
           tone="neutral"
         />
@@ -164,18 +164,18 @@ export function TerminSection() {
                 <tr key={item.invoice.id} className={s.tr}>
                   <td className={s.tdStrong}>
                     <p>{item.invoice.nomor}</p>
-                    <p className="mt-0.5 text-[10px] font-normal text-on-surface-variant">
+                    <p className={`${s.metaText} mt-0.5`}>
                       {formatTanggal(item.invoice.tanggal)} · {item.invoice.pihak}
                     </p>
                   </td>
                   <td className={s.tdStrong}>{item.invoice.nama}</td>
                   <td className={s.tdMuted}>
                     <p>{item.invoice.proyek}</p>
-                    <p className="mt-0.5 text-[10px]">{item.invoice.posProyek}</p>
+                    <p className={`${s.metaText} mt-0.5`}>{item.invoice.posProyek}</p>
                   </td>
-                  <td className={`${s.td} text-right font-bold text-on-surface`}>{formatRp(item.totalTagihan)}</td>
+                  <td className={`${s.td} ${s.amountStrong} text-on-surface`}>{formatRp(item.totalTagihan)}</td>
                   <td className={`${s.td} text-right text-success`}>{formatRp(item.terbayarDp)}</td>
-                  <td className={`${s.td} text-right font-bold text-error`}>{formatRp(item.sisaTagihan)}</td>
+                  <td className={`${s.td} ${s.amountStrong} text-error`}>{formatRp(item.sisaTagihan)}</td>
                   <td className={s.tdMuted}>{formatTanggal(item.jatuhTempo)}</td>
                   <td className={s.td}>
                     <StatusBadge tone={TONE_STATUS[item.status]} label={LABEL_STATUS[item.status]} icon={IKON_STATUS[item.status]} />
@@ -188,7 +188,7 @@ export function TerminSection() {
                         aria-label={`Preview invoice ${item.invoice.nomor}`}
                         className={s.ghostButton}
                       >
-                        <span aria-hidden="true" className="material-symbols-outlined text-[15px] leading-none">
+                        <span aria-hidden="true" className={s.iconSm}>
                           visibility
                         </span>
                         Preview
@@ -201,7 +201,7 @@ export function TerminSection() {
                           title={`Catat ${item.terminBerikutnya.label} sebagai Kas Masuk`}
                           className={s.actionButton}
                         >
-                          <span aria-hidden="true" className="material-symbols-outlined text-[16px] leading-none">
+                          <span aria-hidden="true" className={s.iconSm}>
                             paid
                           </span>
                         </button>

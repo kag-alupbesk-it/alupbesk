@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import * as s from "./style";
 import { FinanceProvider, useFinance } from "./FinanceStore";
 import { FinancialChartsSection } from "./FinancialChartsSection";
 import { KasSection } from "./KasSection";
@@ -31,14 +32,12 @@ function IsiTab({ tab }: { tab: TabKey }) {
   return (
     <div className="p-3 sm:p-4 md:p-6">
       <div className="mx-auto max-w-7xl space-y-5">
-        <header className="rounded-2xl border border-outline/30 bg-primary-container p-4 shadow-xl">
+        <header className={s.pageHeader}>
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div>
-              <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-on-surface-variant">
-                Modul Keuangan
-              </p>
-              <h1 className="mt-2 text-2xl font-black text-on-surface">{tabAktif.label}</h1>
-              <p className="mt-1 text-xs text-on-surface-variant">{tabAktif.ringkasan}</p>
+              <p className={s.pageEyebrow}>Modul Keuangan</p>
+              <h1 className={s.pageTitle}>{tabAktif.label}</h1>
+              <p className={s.pageSubtitle}>{tabAktif.ringkasan}</p>
             </div>
           </div>
         </header>

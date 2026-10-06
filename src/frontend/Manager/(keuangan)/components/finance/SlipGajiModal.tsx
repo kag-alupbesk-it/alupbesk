@@ -25,26 +25,26 @@ export function SlipGajiModal({ karyawan, onTutup }: { karyawan: Karyawan; onTut
         <header className={s.modalHeader}>
           <div className="min-w-0">
             <p className={s.fieldLabel}>Slip Gaji · Periode {karyawan.periode}</p>
-            <h3 id="slip-judul" className="mt-1 text-base font-bold text-on-surface">
+            <h3 id="slip-judul" className={s.modalTitle}>
               {karyawan.nama}
             </h3>
-            <p className="mt-1 text-[10px] text-on-surface-variant">
+            <p className={`${s.metaText} mt-1`}>
               {karyawan.jabatan} · {karyawan.lokasi} · {karyawan.id}
             </p>
           </div>
           <button type="button" onClick={onTutup} aria-label="Tutup slip gaji" className={s.modalClose}>
-            <span aria-hidden="true" className="material-symbols-outlined text-[18px] leading-none">
+            <span aria-hidden="true" className={s.iconMd}>
               close
             </span>
           </button>
         </header>
 
         <div className="space-y-4 px-4 py-4 sm:px-6">
-          <div className="flex items-center justify-between gap-3 rounded-xl border border-secondary/30 bg-secondary/10 px-3 py-2.5">
-            <span className="text-[10px] font-bold uppercase tracking-[0.16em] text-on-surface-variant">
+          <div className={s.summaryStrip}>
+            <span className={s.fieldLabel}>
               Gaji diterima (netto)
             </span>
-            <span className="text-lg font-black text-secondary">{formatRp(netto)}</span>
+            <span className={`${s.modalTitle} text-lg text-secondary`}>{formatRp(netto)}</span>
           </div>
 
           <div className={s.tableWrap}>
@@ -75,15 +75,15 @@ export function SlipGajiModal({ karyawan, onTutup }: { karyawan: Karyawan; onTut
                 ))}
                 <tr className={s.tr}>
                   <td className={s.tdStrong}>Total pendapatan</td>
-                  <td className={`${s.td} text-right font-bold text-success`}>{formatRp(pendapatan)}</td>
+                  <td className={`${s.td} ${s.amountStrong} text-success`}>{formatRp(pendapatan)}</td>
                 </tr>
                 <tr className={s.tr}>
                   <td className={s.tdStrong}>Total potongan</td>
-                  <td className={`${s.td} text-right font-bold text-error`}>{formatRp(potongan)}</td>
+                  <td className={`${s.td} ${s.amountStrong} text-error`}>{formatRp(potongan)}</td>
                 </tr>
                 <tr className={`${s.tr} border-t-2 border-secondary/40`}>
                   <td className={`${s.tdStrong} text-secondary`}>Gaji diterima (netto)</td>
-                  <td className={`${s.td} text-right font-black text-secondary`}>{formatRp(netto)}</td>
+                  <td className={`${s.td} ${s.amountStrong} text-secondary`}>{formatRp(netto)}</td>
                 </tr>
               </tbody>
             </table>
@@ -91,18 +91,18 @@ export function SlipGajiModal({ karyawan, onTutup }: { karyawan: Karyawan; onTut
 
           <dl className="grid gap-3 sm:grid-cols-3">
             <div className={s.cardCompact}>
-              <dt className="text-[10px] uppercase tracking-[0.14em] text-on-surface-variant">Status pembayaran</dt>
-              <dd className="mt-1 text-xs font-bold text-on-surface">
+              <dt className={s.detailLabel}>Status pembayaran</dt>
+              <dd className={s.detailValue}>
                 {sudahBayar ? `Terbayar ${formatTanggalPanjang(karyawan.tanggalBayar)}` : "Belum dibayar"}
               </dd>
             </div>
             <div className={s.cardCompact}>
-              <dt className="text-[10px] uppercase tracking-[0.14em] text-on-surface-variant">Metode pembayaran</dt>
-              <dd className="mt-1 text-xs font-bold text-on-surface">{karyawan.metodeBayar}</dd>
+              <dt className={s.detailLabel}>Metode pembayaran</dt>
+              <dd className={s.detailValue}>{karyawan.metodeBayar}</dd>
             </div>
             <div className={s.cardCompact}>
-              <dt className="text-[10px] uppercase tracking-[0.14em] text-on-surface-variant">Potongan bon + kasbon</dt>
-              <dd className="mt-1 text-xs font-bold text-error">{formatRp(potongan)}</dd>
+              <dt className={s.detailLabel}>Potongan bon + kasbon</dt>
+              <dd className={`${s.detailValue} text-error`}>{formatRp(potongan)}</dd>
             </div>
           </dl>
 
@@ -115,7 +115,7 @@ export function SlipGajiModal({ karyawan, onTutup }: { karyawan: Karyawan; onTut
               }}
               className={s.secondaryButton}
             >
-              <span aria-hidden="true" className="material-symbols-outlined text-[16px] leading-none">
+              <span aria-hidden="true" className={s.iconSm}>
                 print
               </span>
               Cetak Slip
@@ -129,7 +129,7 @@ export function SlipGajiModal({ karyawan, onTutup }: { karyawan: Karyawan; onTut
               }}
               className={s.primaryButton}
             >
-              <span aria-hidden="true" className="material-symbols-outlined text-[16px] leading-none">
+              <span aria-hidden="true" className={s.iconSm}>
                 {sudahBayar ? "task_alt" : "paid"}
               </span>
               {sudahBayar ? "Sudah Terbayar" : "Tandai Terbayar"}

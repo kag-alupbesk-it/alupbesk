@@ -186,28 +186,28 @@ export function FinancialChartsSection() {
         <FinancialStatCard
           label="Pemasukan"
           value={formatRp(totalMasuk)}
-          icon={<span className="material-symbols-outlined text-[20px]">south_west</span>}
+          icon="south_west"
           trend="Kas masuk pada rentang terpilih"
           tone="success"
         />
         <FinancialStatCard
           label="Pengeluaran"
           value={formatRp(totalPengeluaran)}
-          icon={<span className="material-symbols-outlined text-[20px]">north_east</span>}
+          icon="north_east"
           trend={`${keluar.length} transaksi keluar`}
           tone="error"
         />
         <FinancialStatCard
           label="Arus Kas Bersih"
           value={formatRp(bersih)}
-          icon={<span className="material-symbols-outlined text-[20px]">account_balance</span>}
+          icon="account_balance"
           trend={bersih >= 0 ? "Surplus pada rentang ini" : "Defisit pada rentang ini"}
           tone="gold"
         />
         <FinancialStatCard
           label="Rata-rata Bulanan"
           value={formatRp(Math.round(totalKeluar / Math.max(perPos.length, 1)))}
-          icon={<span className="material-symbols-outlined text-[20px]">insights</span>}
+          icon="insights"
           trend="Rata-rata belanja per pos/proyek"
           tone="neutral"
         />
@@ -221,7 +221,7 @@ export function FinancialChartsSection() {
               Garis pemasukan dan pengeluaran kas. Arahkan kursor atau gunakan keyboard untuk melihat detail periode.
             </p>
           </div>
-          <div role="group" aria-label="Pilih rentang grafik" className="flex flex-wrap gap-1 rounded-lg bg-surface-variant p-1">
+          <div role="group" aria-label="Pilih rentang grafik" className={s.segmentedTrack}>
             {RENTANG.map((item) => (
               <button
                 key={item.key}
@@ -232,8 +232,8 @@ export function FinancialChartsSection() {
                   setPilih(null);
                   setHover(null);
                 }}
-                className={`min-h-11 rounded-md px-3 py-2 text-xs font-semibold transition-colors md:min-h-0 ${
-                  rentang === item.key ? "bg-secondary text-on-secondary" : "text-on-surface-variant hover:text-on-surface"
+                className={`${s.segmentedItem} px-3 py-2 text-xs normal-case tracking-normal ${
+                  rentang === item.key ? s.segmentedItemActive : s.segmentedItemIdle
                 }`}
               >
                 {item.label}
@@ -242,7 +242,7 @@ export function FinancialChartsSection() {
           </div>
         </div>
 
-        <div className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-2 text-[10px] font-semibold text-on-surface-variant">
+        <div className={`${s.metaText} mt-3 flex flex-wrap items-center gap-x-5 gap-y-2 font-semibold`}>
           <span className="inline-flex items-center gap-1.5">
             <i className="h-2 w-2 rounded-full" style={{ backgroundColor: WARNA.pemasukan }} />Pemasukan
           </span>
@@ -341,25 +341,25 @@ export function FinancialChartsSection() {
         {titikAktif && (
           <dl
             aria-live="polite"
-            className="mt-3 grid grid-cols-2 gap-3 rounded-xl border border-outline/20 bg-surface-variant/50 p-3 sm:grid-cols-4"
+            className={`${s.panelMuted} mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4`}
           >
             <div className="col-span-2 sm:col-span-1">
-              <dt className="text-[10px] text-on-surface-variant">Detail {titikAktif.label}</dt>
-              <dd className="mt-1 text-xs font-bold text-on-surface">
+              <dt className={s.metaText}>Detail {titikAktif.label}</dt>
+              <dd className={s.detailValue}>
                 Arus kas {titikAktif.pemasukan - titikAktif.pengeluaran >= 0 ? "surplus" : "defisit"}
               </dd>
             </div>
             <div>
-              <dt className="text-[10px] text-on-surface-variant">Pemasukan</dt>
-              <dd className="mt-1 text-xs font-bold text-success">{formatRp(titikAktif.pemasukan)}</dd>
+              <dt className={s.metaText}>Pemasukan</dt>
+              <dd className={`${s.detailValue} text-success`}>{formatRp(titikAktif.pemasukan)}</dd>
             </div>
             <div>
-              <dt className="text-[10px] text-on-surface-variant">Pengeluaran</dt>
-              <dd className="mt-1 text-xs font-bold text-secondary">{formatRp(titikAktif.pengeluaran)}</dd>
+              <dt className={s.metaText}>Pengeluaran</dt>
+              <dd className={`${s.detailValue} text-secondary`}>{formatRp(titikAktif.pengeluaran)}</dd>
             </div>
             <div>
-              <dt className="text-[10px] text-on-surface-variant">Selisih</dt>
-              <dd className="mt-1 text-xs font-bold text-on-surface">
+              <dt className={s.metaText}>Selisih</dt>
+              <dd className={s.detailValue}>
                 {formatRp(titikAktif.pemasukan - titikAktif.pengeluaran)}
               </dd>
             </div>

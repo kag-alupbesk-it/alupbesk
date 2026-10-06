@@ -23,6 +23,17 @@ const IKON_JENIS: Record<JenisTransaksi, string> = {
   kas_beredar: "handshake",
 };
 
+type PeriodeKas = "hari" | "minggu" | "bulan" | "tahun";
+
+const PERIODE_LIST: PeriodeKas[] = ["hari", "minggu", "bulan", "tahun"];
+
+const LABEL_PERIODE: Record<PeriodeKas, string> = {
+  hari: "Harian",
+  minggu: "Mingguan",
+  bulan: "Bulanan",
+  tahun: "Tahunan",
+};
+
 function badgeJenis(jenis: JenisTransaksi) {
   if (jenis === "kas_masuk") return s.badgeMasuk;
   if (jenis === "kas_keluar") return s.badgeKeluar;
@@ -94,13 +105,9 @@ const submit = (event: React.FormEvent<HTMLFormElement>) => {
                 type="button"
                 aria-pressed={aktif}
                 onClick={() => gantiJenis(item)}
-                className={`inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border px-3 py-2.5 text-[10px] font-bold uppercase tracking-[0.12em] transition-colors md:min-h-0 ${
-                  aktif
-                    ? "border-secondary bg-secondary text-on-secondary shadow-lg shadow-secondary/20"
-                    : "border-outline/30 bg-surface-variant text-on-surface-variant hover:border-secondary/50 hover:text-secondary"
-                }`}
+                className={`${s.choiceButton} ${aktif ? s.choiceButtonActive : s.choiceButtonIdle}`}
               >
-                <span aria-hidden="true" className="material-symbols-outlined text-[16px] leading-none">
+                <span aria-hidden="true" className={s.iconSm}>
                   {IKON_JENIS[item]}
                 </span>
                 {LABEL_JENIS_TRANSAKSI[item]}
@@ -216,7 +223,7 @@ const submit = (event: React.FormEvent<HTMLFormElement>) => {
 
       <div className="mt-5 flex justify-end">
         <button type="submit" className={s.primaryButton}>
-          <span aria-hidden="true" className="material-symbols-outlined text-[18px] leading-none">
+          <span aria-hidden="true" className={s.iconMd}>
             playlist_add
           </span>
           Simpan Transaksi
@@ -246,15 +253,15 @@ function ModalBukti({
         <header className={s.modalHeader}>
           <div className="min-w-0">
             <p className={s.fieldLabel}>Preview Bukti Nota</p>
-            <h3 id="bukti-judul" className="mt-1 truncate text-base font-bold text-on-surface">
+            <h3 id="bukti-judul" className={`${s.modalTitle} truncate`}>
               {transaksi.uraian}
             </h3>
-            <p className="mt-1 text-[10px] text-on-surface-variant">
+            <p className={`${s.metaText} mt-1`}>
               {transaksi.noNota ? `No. nota ${transaksi.noNota}` : "Tanpa nomor nota"} · {formatTanggal(transaksi.tanggal)}
             </p>
           </div>
           <button type="button" onClick={onTutup} aria-label="Tutup preview bukti" className={s.modalClose}>
-            <span aria-hidden="true" className="material-symbols-outlined text-[18px] leading-none">
+            <span aria-hidden="true" className={s.iconMd}>
               close
             </span>
           </button>
@@ -263,44 +270,44 @@ function ModalBukti({
         <div className="space-y-4 px-4 py-4 sm:px-6">
           <dl className="grid grid-cols-2 gap-3 sm:grid-cols-4">
             <div className={s.cardCompact}>
-              <dt className="text-[10px] uppercase tracking-[0.14em] text-on-surface-variant">Jenis</dt>
-              <dd className="mt-1 text-xs font-bold text-on-surface">{LABEL_JENIS_TRANSAKSI[transaksi.jenis]}</dd>
+              <dt className={s.detailLabel}>Jenis</dt>
+              <dd className={s.detailValue}>{LABEL_JENIS_TRANSAKSI[transaksi.jenis]}</dd>
             </div>
             <div className={s.cardCompact}>
-              <dt className="text-[10px] uppercase tracking-[0.14em] text-on-surface-variant">Nominal</dt>
-              <dd className="mt-1 text-xs font-bold text-on-surface">{formatRp(transaksi.nominal)}</dd>
+              <dt className={s.detailLabel}>Nominal</dt>
+              <dd className={s.detailValue}>{formatRp(transaksi.nominal)}</dd>
             </div>
             <div className={s.cardCompact}>
-              <dt className="text-[10px] uppercase tracking-[0.14em] text-on-surface-variant">Kategori</dt>
-              <dd className="mt-1 text-xs font-bold text-on-surface">{transaksi.kategori}</dd>
+              <dt className={s.detailLabel}>Kategori</dt>
+              <dd className={s.detailValue}>{transaksi.kategori}</dd>
             </div>
             <div className={s.cardCompact}>
-              <dt className="text-[10px] uppercase tracking-[0.14em] text-on-surface-variant">Pos/Proyek</dt>
-              <dd className="mt-1 text-xs font-bold text-on-surface">{transaksi.posProyek}</dd>
+              <dt className={s.detailLabel}>Pos/Proyek</dt>
+              <dd className={s.detailValue}>{transaksi.posProyek}</dd>
             </div>
           </dl>
 
           {transaksi.bukti ? (
             <div className={`${s.cardCompact} flex items-center gap-3`}>
-              <span aria-hidden="true" className="material-symbols-outlined text-[28px] text-secondary">
+              <span aria-hidden="true" className={`${s.iconHero} text-secondary`}>
                 image
               </span>
               <div className="min-w-0">
-                <p className="text-[10px] uppercase tracking-[0.14em] text-on-surface-variant">Bukti terlampir</p>
+                <p className={s.detailLabel}>Bukti terlampir</p>
                 <p className="truncate text-xs font-bold text-on-surface">{transaksi.bukti}</p>
               </div>
             </div>
           ) : (
-            <div className="flex flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-outline/40 bg-surface-variant/40 px-4 py-10 text-center">
-              <span aria-hidden="true" className="material-symbols-outlined text-[34px] text-on-surface-variant">
+            <div className={s.emptyState}>
+              <span aria-hidden="true" className={s.emptyStateIcon}>
                 no_photography
               </span>
               <p className="text-xs font-bold text-on-surface">Bukti nota belum dilampirkan</p>
-              <p className="max-w-sm text-[11px] text-on-surface-variant">
+              <p className={`${s.sectionSubtitle} max-w-sm`}>
                 Unggah foto atau scan nota kas agar mudah diaudit saat pemeriksaan.
               </p>
               <label className={`${s.secondaryButton} mt-1 cursor-pointer`}>
-                <span aria-hidden="true" className="material-symbols-outlined text-[16px] leading-none">
+                <span aria-hidden="true" className={s.iconSm}>
                   upload
                 </span>
                 Unggah Bukti
@@ -337,12 +344,12 @@ function ModalHapus({
         <header className={s.modalHeader}>
           <div className="min-w-0">
             <p className={s.fieldLabel}>Hapus Transaksi</p>
-            <h3 id="hapus-judul" className="mt-1 text-base font-bold text-on-surface">
+            <h3 id="hapus-judul" className={s.modalTitle}>
               {transaksi.id}
             </h3>
           </div>
           <button type="button" onClick={onTutup} aria-label="Batal hapus transaksi" className={s.modalClose}>
-            <span aria-hidden="true" className="material-symbols-outlined text-[18px] leading-none">
+            <span aria-hidden="true" className={s.iconMd}>
               close
             </span>
           </button>
@@ -366,7 +373,7 @@ function ModalHapus({
               }}
               className={s.dangerButton}
             >
-              <span aria-hidden="true" className="material-symbols-outlined text-[16px] leading-none">
+              <span aria-hidden="true" className={s.iconSm}>
                 delete
               </span>
               Hapus
@@ -382,7 +389,7 @@ export function KasSection() {
   const { state, rekap, transaksiUrut, opsiKategori, clearToast } = useFinance();
   const [filterJenis, setFilterJenis] = useState<"all" | JenisTransaksi>("all");
   const [filterKategori, setFilterKategori] = useState<"all" | KategoriBiaya>("all");
-  const [periode, setPeriode] = useState<"hari" | "minggu" | "bulan" | "tahun">("hari");
+  const [periode, setPeriode] = useState<PeriodeKas>("hari");
   const [cari, setCari] = useState("");
   const [preview, setPreview] = useState<TransaksiKas | null>(null);
   const [hapus, setHapus] = useState<TransaksiKas | null>(null);
@@ -417,28 +424,28 @@ export function KasSection() {
         <FinancialStatCard
           label="Saldo Kas Utama"
           value={formatRp(rekap.saldo)}
-          icon={<span className="material-symbols-outlined text-[20px]">account_balance_wallet</span>}
+          icon="account_balance_wallet"
           trend="Kas masuk dikurangi kas keluar"
           tone="gold"
         />
         <FinancialStatCard
           label="Total Pemasukan"
           value={formatRp(rekap.totalMasuk)}
-          icon={<span className="material-symbols-outlined text-[20px]">south_west</span>}
+          icon="south_west"
           trend={`${transaksiUrut.filter((item) => item.jenis === "kas_masuk").length} transaksi masuk`}
           tone="success"
         />
         <FinancialStatCard
           label="Total Pengeluaran"
           value={formatRp(rekap.totalKeluar)}
-          icon={<span className="material-symbols-outlined text-[20px]">north_east</span>}
+          icon="north_east"
           trend={`${transaksiUrut.filter((item) => item.jenis === "kas_keluar").length} transaksi keluar`}
           tone="error"
         />
         <FinancialStatCard
           label="Kas Beredar"
           value={formatRp(rekap.totalBeredar)}
-          icon={<span className="material-symbols-outlined text-[20px]">handshake</span>}
+          icon="handshake"
           trend={`Bon ke ${new Set(transaksiUrut.filter((item) => item.jenis === "kas_beredar").map((item) => item.person)).size} person`}
           tone="neutral"
         />
@@ -455,18 +462,18 @@ export function KasSection() {
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
-            <div className="inline-flex rounded-lg border border-outline/30 bg-surface-variant p-1">
-              {(["hari","minggu","bulan","tahun"] as const).map((p) => {
+            <div className={s.segmentedTrack}>
+              {PERIODE_LIST.map((p) => {
                 const aktif = periode === p;
-                const label = p === "hari" ? "Harian" : p === "minggu" ? "Mingguan" : p === "bulan" ? "Bulanan" : "Tahunan";
                 return (
                   <button
                     key={p}
                     type="button"
+                    aria-pressed={aktif}
                     onClick={() => setPeriode(p)}
-                    className={`px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.12em] rounded-md transition-colors ${aktif ? "bg-secondary text-on-secondary" : "text-on-surface-variant hover:text-on-surface"}`}
+                    className={`${s.segmentedItem} ${aktif ? s.segmentedItemActive : s.segmentedItemIdle}`}
                   >
-                    {label}
+                    {LABEL_PERIODE[p]}
                   </button>
                 );
               })}
@@ -562,7 +569,7 @@ export function KasSection() {
                   <td className={s.tdMuted}>{formatTanggal(item.tanggal)}</td>
                   <td className={s.td}>
                     <span className={`${s.badgeBase} ${badgeJenis(item.jenis)}`}>
-                      <span aria-hidden="true" className="material-symbols-outlined text-[12px] leading-none">
+                      <span aria-hidden="true" className={s.iconXs}>
                         {IKON_JENIS[item.jenis]}
                       </span>
                       {LABEL_JENIS_TRANSAKSI[item.jenis]}
@@ -570,7 +577,7 @@ export function KasSection() {
                   </td>
                   <td className={s.tdStrong}>
                     <p className="font-semibold text-on-surface">{item.uraian}</p>
-                    <p className="mt-0.5 text-[10px] text-on-surface-variant">
+                    <p className={`${s.metaText} mt-0.5`}>
                       {item.noNota ? `${item.noNota} · ` : ""}
                       {item.id}
                     </p>
@@ -602,7 +609,7 @@ export function KasSection() {
                         title="Preview bukti"
                         className={s.actionButton}
                       >
-                        <span aria-hidden="true" className="material-symbols-outlined text-[16px] leading-none">
+                        <span aria-hidden="true" className={s.iconSm}>
                           visibility
                         </span>
                       </button>
@@ -613,7 +620,7 @@ export function KasSection() {
                         title="Hapus transaksi"
                         className={s.actionButtonDanger}
                       >
-                        <span aria-hidden="true" className="material-symbols-outlined text-[16px] leading-none">
+                        <span aria-hidden="true" className={s.iconSm}>
                           delete
                         </span>
                       </button>

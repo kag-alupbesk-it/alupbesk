@@ -27,10 +27,10 @@ export function InvoicePreviewModal({
         <header className={s.modalHeader}>
           <div className="min-w-0">
             <p className={s.fieldLabel}>Preview Invoice</p>
-            <h3 id="invoice-judul" className="mt-1 text-base font-bold text-on-surface">
+            <h3 id="invoice-judul" className={s.modalTitle}>
               {invoice.nama}
             </h3>
-            <p className="mt-1 text-[10px] text-on-surface-variant">
+            <p className={`${s.metaText} mt-1`}>
               No. {invoice.nomor} · {formatTanggalPanjang(invoice.tanggal)}
             </p>
           </div>
@@ -43,13 +43,13 @@ export function InvoicePreviewModal({
               }}
               className={s.secondaryButton}
             >
-              <span aria-hidden="true" className="material-symbols-outlined text-[16px] leading-none">
+              <span aria-hidden="true" className={s.iconSm}>
                 print
               </span>
               Cetak
             </button>
             <button type="button" onClick={onTutup} aria-label="Tutup preview invoice" className={s.modalClose}>
-              <span aria-hidden="true" className="material-symbols-outlined text-[18px] leading-none">
+              <span aria-hidden="true" className={s.iconMd}>
                 close
               </span>
             </button>
@@ -59,21 +59,21 @@ export function InvoicePreviewModal({
         <div className="space-y-4 px-4 py-4 sm:px-6">
           <div className="grid gap-3 sm:grid-cols-3">
             <div className={s.cardCompact}>
-              <p className="text-[10px] uppercase tracking-[0.14em] text-on-surface-variant">Penerima tagihan</p>
-              <p className="mt-1 text-xs font-bold text-on-surface">{invoice.pihak}</p>
+              <p className={s.detailLabel}>Penerima tagihan</p>
+              <p className={s.detailValue}>{invoice.pihak}</p>
             </div>
             <div className={s.cardCompact}>
-              <p className="text-[10px] uppercase tracking-[0.14em] text-on-surface-variant">Proyek</p>
-              <p className="mt-1 text-xs font-bold text-on-surface">{invoice.proyek}</p>
+              <p className={s.detailLabel}>Proyek</p>
+              <p className={s.detailValue}>{invoice.proyek}</p>
             </div>
             <div className={s.cardCompact}>
-              <p className="text-[10px] uppercase tracking-[0.14em] text-on-surface-variant">Pos/Proyek</p>
-              <p className="mt-1 text-xs font-bold text-on-surface">{invoice.posProyek}</p>
+              <p className={s.detailLabel}>Pos/Proyek</p>
+              <p className={s.detailValue}>{invoice.posProyek}</p>
             </div>
           </div>
 
-          <div className="rounded-xl border border-outline/20 bg-surface-variant/30 p-3 sm:p-4">
-            <p className="text-[10px] uppercase tracking-[0.16em] text-on-surface-variant">Uraian pekerjaan</p>
+          <div className={s.panelMuted}>
+            <p className={s.fieldLabel}>Uraian pekerjaan</p>
             <p className="mt-1 text-xs leading-relaxed text-on-surface">{invoice.uraian}</p>
           </div>
 
@@ -107,7 +107,7 @@ export function InvoicePreviewModal({
                     <td className={s.tdStrong}>{termin.label}</td>
                     <td className={s.tdMuted}>{formatTanggalPanjang(termin.tanggal)}</td>
                     <td className={s.tdMuted}>{formatTanggalPanjang(termin.jatuhTempo)}</td>
-                    <td className={`${s.td} text-right font-bold text-on-surface`}>{formatRp(termin.nominal)}</td>
+                    <td className={`${s.td} ${s.amountStrong} text-on-surface`}>{formatRp(termin.nominal)}</td>
                     <td className={s.td}>
                       {termin.lunas ? (
                         <StatusBadge tone="approved" label="Lunas" icon="check" />
@@ -123,7 +123,7 @@ export function InvoicePreviewModal({
                         aria-label={`Tandai lunas ${termin.label} invoice ${invoice.nomor}`}
                         className={s.ghostButton}
                       >
-                        <span aria-hidden="true" className="material-symbols-outlined text-[15px] leading-none">
+                        <span aria-hidden="true" className={s.iconSm}>
                           {termin.lunas ? "task_alt" : "paid"}
                         </span>
                         {termin.lunas ? "Lunas" : "Tandai Lunas"}
@@ -135,26 +135,26 @@ export function InvoicePreviewModal({
             </table>
           </div>
 
-          <dl className="grid gap-2 rounded-xl border border-secondary/30 bg-secondary/10 p-3 sm:grid-cols-4 sm:p-4">
+          <dl className={`${s.panelHighlight} grid gap-2 sm:grid-cols-4`}>
             <div>
-              <dt className="text-[10px] uppercase tracking-[0.14em] text-on-surface-variant">Total tagihan</dt>
-              <dd className="mt-1 text-xs font-bold text-on-surface">{formatRp(totalTagihan)}</dd>
+              <dt className={s.detailLabel}>Total tagihan</dt>
+              <dd className={s.detailValue}>{formatRp(totalTagihan)}</dd>
             </div>
             <div>
-              <dt className="text-[10px] uppercase tracking-[0.14em] text-on-surface-variant">Terbayar</dt>
-              <dd className="mt-1 text-xs font-bold text-success">{formatRp(terbayar)}</dd>
+              <dt className={s.detailLabel}>Terbayar</dt>
+              <dd className={`${s.detailValue} text-success`}>{formatRp(terbayar)}</dd>
             </div>
             <div>
-              <dt className="text-[10px] uppercase tracking-[0.14em] text-on-surface-variant">Sisa tagihan</dt>
-              <dd className="mt-1 text-xs font-bold text-error">{formatRp(sisaTagihan)}</dd>
+              <dt className={s.detailLabel}>Sisa tagihan</dt>
+              <dd className={`${s.detailValue} text-error`}>{formatRp(sisaTagihan)}</dd>
             </div>
             <div>
-              <dt className="text-[10px] uppercase tracking-[0.14em] text-on-surface-variant">Jatuh tempo</dt>
-              <dd className="mt-1 text-xs font-bold text-on-surface">{formatTanggalPanjang(jatuhTempo)}</dd>
+              <dt className={s.detailLabel}>Jatuh tempo</dt>
+              <dd className={s.detailValue}>{formatTanggalPanjang(jatuhTempo)}</dd>
             </div>
           </dl>
 
-          <p className="text-[10px] leading-relaxed text-on-surface-variant">
+          <p className={s.metaText}>
             Mohon ditandatangani oleh {invoice.pihak} pada kolom tanda tangan, lalu konfirmasi oleh Finance,
             QA/QC, dan General Manager. Retensi 0,5% dari sisa tagihan:{" "}
             {formatRp(Math.round(sisaTagihan * 0.005))}.

@@ -41,28 +41,28 @@ export function PayrollSection() {
         <FinancialStatCard
           label="Total Gaji Bulan Ini"
           value={formatRp(totalGaji)}
-          icon={<span className="material-symbols-outlined text-[20px]">payments</span>}
+          icon="payments"
           trend={`${state.karyawan.length} karyawan · periode ${state.karyawan[0]?.periode ?? "-"}`}
           tone="gold"
         />
         <FinancialStatCard
           label="Belum Dibayar"
           value={formatRp(gajiBelumDibayar)}
-          icon={<span className="material-symbols-outlined text-[20px]">schedule</span>}
+          icon="schedule"
           trend={`${state.karyawan.length - sudahBayar} karyawan menunggu`}
           tone="error"
         />
         <FinancialStatCard
           label="Tunjangan + Lembur"
           value={formatRp(totalTunjangan)}
-          icon={<span className="material-symbols-outlined text-[20px]">add_circle</span>}
+          icon="add_circle"
           trend="Komponen tambahan payroll"
           tone="success"
         />
         <FinancialStatCard
           label="Potongan Bon + Kasbon"
           value={formatRp(totalPotongan)}
-          icon={<span className="material-symbols-outlined text-[20px]">remove_circle</span>}
+          icon="remove_circle"
           trend="Potongan dari gaji karyawan"
           tone="neutral"
         />
@@ -161,23 +161,23 @@ export function PayrollSection() {
                   <tr key={item.id} className={s.tr}>
                     <td className={s.tdStrong}>
                       <p>{item.nama}</p>
-                      <p className="mt-0.5 text-[10px] font-normal text-on-surface-variant">{item.lokasi}</p>
+                      <p className={`${s.metaText} mt-0.5`}>{item.lokasi}</p>
                     </td>
                     <td className={s.tdMuted}>{item.jabatan}</td>
                     <td className={`${s.td} text-right text-on-surface`}>{formatRp(item.gajiPokok)}</td>
                     <td className={`${s.td} text-right text-success`}>
                       +{formatRp(item.tunjangan + item.lembur)}
-                      <span className="block text-[10px] text-on-surface-variant">
+                      <span className={`${s.metaText} block`}>
                         {formatRp(item.tunjangan)} tunj · {formatRp(item.lembur)} lembur
                       </span>
                     </td>
                     <td className={`${s.td} text-right text-error`}>
                       -{formatRp(item.potonganBon + item.potonganKasbon)}
-                      <span className="block text-[10px] text-on-surface-variant">
+                      <span className={`${s.metaText} block`}>
                         {formatRp(item.potonganBon)} bon · {formatRp(item.potonganKasbon)} kasbon
                       </span>
                     </td>
-                    <td className={`${s.td} text-right font-black text-secondary`}>{formatRp(netto)}</td>
+                    <td className={`${s.td} ${s.amountStrong} text-secondary`}>{formatRp(netto)}</td>
                     <td className={s.td}>
                       {item.statusBayar === "terbayar" ? (
                         <StatusBadge tone="approved" label={`Terbayar ${formatTanggal(item.tanggalBayar)}`} icon="check" />
@@ -193,7 +193,7 @@ export function PayrollSection() {
                           aria-label={`Buka slip gaji ${item.nama}`}
                           className={s.ghostButton}
                         >
-                          <span aria-hidden="true" className="material-symbols-outlined text-[15px] leading-none">
+                          <span aria-hidden="true" className={s.iconSm}>
                             receipt_long
                           </span>
                           Slip Gaji
@@ -206,7 +206,7 @@ export function PayrollSection() {
                           title="Tandai terbayar"
                           className={s.actionButton}
                         >
-                          <span aria-hidden="true" className="material-symbols-outlined text-[16px] leading-none">
+                          <span aria-hidden="true" className={s.iconSm}>
                             paid
                           </span>
                         </button>

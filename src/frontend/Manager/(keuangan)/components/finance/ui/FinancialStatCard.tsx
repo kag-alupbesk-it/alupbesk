@@ -1,11 +1,11 @@
-import type { ReactNode } from "react";
+import { iconLg, statCard, statLabel, statTrend, statValue } from "../style";
 
 export type StatTone = "gold" | "success" | "error" | "neutral";
 
 type FinancialStatCardProps = {
   label: string;
   value: string;
-  icon: ReactNode;
+  icon: string;
   trend?: string;
   tone?: StatTone;
 };
@@ -26,15 +26,15 @@ const iconStyles: Record<StatTone, string> = {
 
 export function FinancialStatCard({ label, value, icon, trend, tone = "gold" }: FinancialStatCardProps) {
   return (
-    <article className={`rounded-2xl border p-4 shadow-lg ${toneStyles[tone]}`}>
+    <article className={`${statCard} ${toneStyles[tone]}`}>
       <div className="flex items-start justify-between gap-3">
-        <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-on-surface-variant">{label}</p>
-        <span aria-hidden="true" className={`text-base leading-none ${iconStyles[tone]}`}>
+        <p className={statLabel}>{label}</p>
+        <span aria-hidden="true" className={`${iconLg} ${iconStyles[tone]}`}>
           {icon}
         </span>
       </div>
-      <p className="mt-3 break-words text-xl font-black text-on-surface">{value}</p>
-      {trend && <p className="mt-1 text-[11px] text-on-surface-variant">{trend}</p>}
+      <p className={statValue}>{value}</p>
+      {trend && <p className={statTrend}>{trend}</p>}
     </article>
   );
 }
