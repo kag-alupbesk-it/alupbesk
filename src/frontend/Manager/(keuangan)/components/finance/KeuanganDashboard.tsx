@@ -1,13 +1,14 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { FinanceProvider, useFinance } from "./FinanceStore";
 import { FinancialChartsSection } from "./FinancialChartsSection";
 import { KasSection } from "./KasSection";
 import { PayrollSection } from "./PayrollSection";
 import { TerminSection } from "./TerminSection";
+import Sidebar from "@/frontend/Manager/(keuangan)/components/layout/Sidebar";
 
-type TabKey = "kas" | "grafik" | "termin" | "payroll";
+export type TabKey = "kas" | "grafik" | "termin" | "payroll";
 
 const TABS: { key: TabKey; label: string; ikon: string; ringkasan: string }[] = [
   { key: "kas", label: "Kas", ikon: "payments", ringkasan: "Saldo, pemasukan, pengeluaran, dan kas beredar" },
@@ -16,10 +17,8 @@ const TABS: { key: TabKey; label: string; ikon: string; ringkasan: string }[] = 
   { key: "payroll", label: "Payroll", ikon: "badge", ringkasan: "Gaji karyawan dan slip gaji" },
 ];
 
-function IsiTab() {
-  const [tab, setTab] = useState<TabKey>("kas");
+function IsiTab({ tab }: { tab: TabKey }) {
   const { state, clearToast } = useFinance();
-  const refs = useRef<Record<TabKey, HTMLButtonElement | null>>({} as Record<TabKey, HTMLButtonElement | null>);
 
   useEffect(() => {
     if (!state.toast) return;
@@ -38,61 +37,10 @@ function IsiTab() {
               <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-on-surface-variant">
                 Modul Keuangan
               </p>
-              <h1 className="mt-1 text-2xl font-black text-on-surface">Operasional Keuangan &amp; Finance</h1>
+              <h1 className="mt-2 text-2xl font-black text-on-surface">{tabAktif.label}</h1>
+              <p className="mt-1 text-xs text-on-surface-variant">{tabAktif.ringkasan}</p>
             </div>
-            <span className="inline-flex w-fit items-center gap-2 rounded-full border border-secondary/30 bg-secondary/10 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.18em] text-secondary">
-              <span aria-hidden="true" className="material-symbols-outlined text-[14px] leading-none">
-                calendar_month
-              </span>
-              Periode aktif
-            </span>
           </div>
-
-          <div role="tablist" aria-label="Sub-tab keuangan" className="mt-4 flex flex-wrap gap-2">
-            {TABS.map((item) => {
-              const aktif = tab === item.key;
-              return (
-                <button
-                  key={item.key}
-                  ref={(node) => {
-                    refs.current[item.key] = node;
-                  }}
-                  type="button"
-                  role="tab"
-                  id={`tab-${item.key}`}
-                  aria-selected={aktif}
-                  aria-controls={`panel-${item.key}`}
-                  tabIndex={aktif ? 0 : -1}
-                  onClick={() => setTab(item.key)}
-                  onKeyDown={(event) => {
-                    const index = TABS.findIndex((row) => row.key === tab);
-                    if (event.key === "ArrowRight" || event.key === "ArrowLeft") {
-                      event.preventDefault();
-                      const berikutnya =
-                        event.key === "ArrowRight"
-                          ? (index + 1) % TABS.length
-                          : (index - 1 + TABS.length) % TABS.length;
-                      const keyBerikutnya = TABS[berikutnya].key;
-                      setTab(keyBerikutnya);
-                      refs.current[keyBerikutnya]?.focus();
-                    }
-                  }}
-                  className={`inline-flex min-h-11 items-center gap-2 rounded-xl border px-3 py-2 text-[10px] font-bold uppercase tracking-[0.16em] transition-colors md:min-h-0 ${
-                    aktif
-                      ? "border-secondary bg-secondary text-on-secondary shadow-lg shadow-secondary/20"
-                      : "border-outline/30 bg-surface-variant text-on-surface-variant hover:border-secondary/50 hover:text-secondary"
-                  }`}
-                >
-                  <span aria-hidden="true" className="material-symbols-outlined text-[16px] leading-none">
-                    {item.ikon}
-                  </span>
-                  {item.label}
-                </button>
-              );
-            })}
-          </div>
-
-          <p className="mt-3 text-[11px] text-on-surface-variant">{tabAktif.ringkasan}</p>
         </header>
 
         <div
@@ -113,9 +61,15 @@ function IsiTab() {
 }
 
 export function KeuanganDashboard() {
+  const [tab, setTab] = useState<TabKey>("kas");
   return (
     <FinanceProvider>
-      <IsiTab />
+      <div className="flex min-h-screen">
+        <Sidebar activeTab={tab} onTabChange={setTab} />
+        <main className="flex-1 pl-0 lg:pl-64">
+          <IsiTab tab={tab} />
+        </main>
+      </div>
     </FinanceProvider>
   );
 }
