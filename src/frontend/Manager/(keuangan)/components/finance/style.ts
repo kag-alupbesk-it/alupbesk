@@ -117,7 +117,7 @@ export const modalHeader =
 export const modalClose =
   "inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-outline/30 text-on-surface-variant transition-colors hover:border-secondary/50 hover:text-secondary md:h-9 md:w-9";
 
-export const statGrid = "grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4";
+export const statGrid = "grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4";
 
 export const findingRow = "flex flex-col gap-1 py-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4";
 

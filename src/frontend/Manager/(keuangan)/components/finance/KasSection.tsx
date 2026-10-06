@@ -117,7 +117,7 @@ const submit = (event: React.FormEvent<HTMLFormElement>) => {
         </div>
       </fieldset>
 
-      <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-6">
         <label className={s.fieldLabel}>
           Tanggal
           <input
@@ -160,7 +160,7 @@ const submit = (event: React.FormEvent<HTMLFormElement>) => {
           onTambah={(value) => tambahOpsi("person", value)}
         />
 
-        <label className={`${s.fieldLabel} sm:col-span-2 lg:col-span-3`}>
+        <label className={`${s.fieldLabel} sm:col-span-2 lg:col-span-3 2xl:order-last 2xl:col-span-6`}>
           Deskripsi
           <input
             value={uraian}

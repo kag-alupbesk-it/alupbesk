@@ -31,7 +31,7 @@ function IsiTab({ tab }: { tab: TabKey }) {
 
   return (
     <div className="p-3 sm:p-4 md:p-6">
-      <div className="mx-auto max-w-7xl space-y-5">
+      <div className="w-full space-y-5">
         <header className={s.pageHeader}>
           <p className={s.pageEyebrow}>Modul Keuangan</p>
           <h1 className={s.pageTitle}>{tabAktif.label}</h1>
@@ -74,7 +74,7 @@ export function KeuanganDashboard() {
 
   return (
     <FinanceProvider>
-      <div className="flex min-h-dvh">
+      <div className="flex min-h-dvh w-full">
         <Sidebar activeTab={tab} onTabChange={setTab} open={navOpen} onClose={() => setNavOpen(false)} />
         <main className="min-w-0 flex-1 lg:pl-64">
           <div className={s.mobileBar}>
