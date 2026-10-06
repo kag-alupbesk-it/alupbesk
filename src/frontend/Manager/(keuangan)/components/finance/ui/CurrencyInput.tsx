@@ -19,7 +19,7 @@ export function CurrencyInput({ value, onChange, className = "", ...props }: Cur
         inputMode="numeric"
         value={formattedValue}
         onChange={(event) => onChange(Number(event.target.value.replace(/\D/g, "")) || 0)}
-        className="min-w-0 flex-1 bg-transparent py-2 text-base text-on-surface outline-none placeholder:text-on-surface-variant sm:text-xs"
+        className="min-h-11 min-w-0 flex-1 bg-transparent py-2 text-base text-on-surface outline-none placeholder:text-on-surface-variant sm:text-xs md:min-h-0"
       />
     </div>
   );

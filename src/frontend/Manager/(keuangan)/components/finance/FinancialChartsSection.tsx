@@ -1,264 +1,423 @@
 "use client";
 
-import { useState } from "react";
-import { useKeuangan, type KeuanganEntry } from "../keuangan/KeuanganContext";
+import { useMemo, useState } from "react";
+import { useFinance } from "./FinanceStore";
 import { FinancialStatCard } from "./ui/FinancialStatCard";
+import { formatRp, formatRpCompact } from "./format";
+import type { TransaksiKas } from "./types";
+import * as s from "./style";
 
-type Range = "hari" | "minggu" | "bulan" | "tahun";
-type CashFlowPoint = { label: string; income: number; expense: number };
+type Rentang = "hari" | "minggu" | "bulan" | "tahun";
+type Titik = { label: string; pemasukan: number; pengeluaran: number };
 
-const ranges: { key: Range; label: string }[] = [
-  { key: "hari", label: "7 hari" },
-  { key: "minggu", label: "8 minggu" },
-  { key: "bulan", label: "12 bulan" },
-  { key: "tahun", label: "5 tahun" },
+const RENTANG: { key: Rentang; label: string; jumlah: number; langkah: "hari" | "minggu" | "bulan" | "tahun" }[] = [
+  { key: "hari", label: "7 hari", jumlah: 7, langkah: "hari" },
+  { key: "minggu", label: "8 minggu", jumlah: 8, langkah: "minggu" },
+  { key: "bulan", label: "6 bulan", jumlah: 6, langkah: "bulan" },
+  { key: "tahun", label: "3 tahun", jumlah: 3, langkah: "tahun" },
 ];
 
-const categories = [
-  { key: "eceran", label: "Eceran", color: "#0f766e" },
-  { key: "proyek", label: "Proyek", color: "#4b83c3" },
-  { key: "operasional", label: "Operasional", color: "#e28a32" },
-] as const;
+const DAY_MS = 24 * 60 * 60 * 1000;
 
-const dayInMs = 24 * 60 * 60 * 1000;
-const formatRp = (value: number) => new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(value);
-const formatCompactRp = (value: number) => new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", notation: "compact", maximumFractionDigits: 1 }).format(value);
+const WARNA = {
+  pemasukan: "var(--color-success)",
+  pengeluaran: "var(--color-secondary)",
+  netral: "var(--color-outline)",
+};
 
-function getRangeStart(range: Range, now: Date) {
-  const today = Date.UTC(now.getFullYear(), now.getMonth(), now.getDate());
-  if (range === "hari") return new Date(today - 6 * dayInMs);
-  if (range === "minggu") {
-    const mondayOffset = (new Date(today).getUTCDay() + 6) % 7;
-    return new Date(today - (7 + mondayOffset) * dayInMs);
+function mulaiRentang(rentang: Rentang, sekarang: Date) {
+  const hariIni = Date.UTC(sekarang.getFullYear(), sekarang.getMonth(), sekarang.getDate());
+  if (rentang === "hari") return new Date(hariIni - 6 * DAY_MS);
+  if (rentang === "minggu") {
+    const senin = (new Date(hariIni).getUTCDay() + 6) % 7;
+    return new Date(hariIni - (7 + senin) * DAY_MS);
   }
-  if (range === "bulan") return new Date(Date.UTC(now.getFullYear(), now.getMonth() - 11, 1));
-  return new Date(Date.UTC(now.getFullYear() - 4, 0, 1));
+  if (rentang === "bulan") return new Date(Date.UTC(sekarang.getFullYear(), sekarang.getMonth() - 5, 1));
+  return new Date(Date.UTC(sekarang.getFullYear() - 2, 0, 1));
 }
 
-function buildCashFlow(entries: KeuanganEntry[], range: Range, now = new Date()): CashFlowPoint[] {
-  const today = Date.UTC(now.getFullYear(), now.getMonth(), now.getDate());
-  const start = getRangeStart(range, now);
-  const end = today + dayInMs;
-  let count: number;
-  let step: "day" | "week" | "month" | "year";
+function bangunGrafik(transaksi: TransaksiKas[], rentang: Rentang, sekarang = new Date()): Titik[] {
+  const konfigurasi = RENTANG.find((item) => item.key === rentang) ?? RENTANG[2];
+  const mulai = mulaiRentang(rentang, sekarang);
+  const akhir =
+    Date.UTC(sekarang.getFullYear(), sekarang.getMonth(), sekarang.getDate()) + DAY_MS;
 
-  if (range === "hari") {
-    count = 7;
-    step = "day";
-  } else if (range === "minggu") {
-    count = 8;
-    step = "week";
-  } else if (range === "bulan") {
-    count = 12;
-    step = "month";
-  } else {
-    count = 5;
-    step = "year";
-  }
-
-  const buckets = Array.from({ length: count }, (_, index) => {
-    const date = new Date(start);
-    if (step === "day") date.setUTCDate(date.getUTCDate() + index);
-    if (step === "week") date.setUTCDate(date.getUTCDate() + index * 7);
-    if (step === "month") date.setUTCMonth(date.getUTCMonth() + index);
-    if (step === "year") date.setUTCFullYear(date.getUTCFullYear() + index);
-    const label = step === "year"
-      ? new Intl.DateTimeFormat("id-ID", { year: "numeric", timeZone: "UTC" }).format(date)
-      : step === "month"
-        ? new Intl.DateTimeFormat("id-ID", { month: "short", timeZone: "UTC" }).format(date)
-        : new Intl.DateTimeFormat("id-ID", { day: "2-digit", month: "short", timeZone: "UTC" }).format(date);
-    return { label, income: 0, expense: 0 };
+  const ember = Array.from({ length: konfigurasi.jumlah }, (_, index) => {
+    const tanggal = new Date(mulai);
+    if (konfigurasi.langkah === "hari") tanggal.setUTCDate(tanggal.getUTCDate() + index);
+    if (konfigurasi.langkah === "minggu") tanggal.setUTCDate(tanggal.getUTCDate() + index * 7);
+    if (konfigurasi.langkah === "bulan") tanggal.setUTCMonth(tanggal.getUTCMonth() + index);
+    if (konfigurasi.langkah === "tahun") tanggal.setUTCFullYear(tanggal.getUTCFullYear() + index);
+    const label =
+      konfigurasi.langkah === "tahun"
+        ? String(tanggal.getUTCFullYear())
+        : konfigurasi.langkah === "bulan"
+          ? new Intl.DateTimeFormat("id-ID", { month: "short", timeZone: "UTC" }).format(tanggal)
+          : new Intl.DateTimeFormat("id-ID", { day: "2-digit", month: "short", timeZone: "UTC" }).format(tanggal);
+    return { label, pemasukan: 0, pengeluaran: 0 };
   });
 
-  for (const entry of entries) {
-    const timestamp = Date.parse(`${entry.tanggal}T00:00:00.000Z`);
-    if (!Number.isFinite(timestamp) || timestamp < start.getTime() || timestamp >= end) continue;
-    const date = new Date(timestamp);
-    let index: number;
-    if (step === "day") index = Math.floor((timestamp - start.getTime()) / dayInMs);
-    else if (step === "week") index = Math.floor((timestamp - start.getTime()) / (7 * dayInMs));
-    else if (step === "month") index = (date.getUTCFullYear() - start.getUTCFullYear()) * 12 + date.getUTCMonth() - start.getUTCMonth();
-    else index = date.getUTCFullYear() - start.getUTCFullYear();
-
-    const bucket = buckets[index];
-    if (!bucket) continue;
-    if (entry.tipe === "masuk") bucket.income += entry.jumlah;
-    else bucket.expense += entry.jumlah;
+  for (const item of transaksi) {
+    const waktu = Date.parse(`${item.tanggal}T00:00:00.000Z`);
+    if (!Number.isFinite(waktu) || waktu < mulai.getTime() || waktu >= akhir) continue;
+    const tanggal = new Date(waktu);
+    let index = 0;
+    if (konfigurasi.langkah === "hari") index = Math.round((waktu - mulai.getTime()) / DAY_MS);
+    if (konfigurasi.langkah === "minggu") index = Math.round((waktu - mulai.getTime()) / (7 * DAY_MS));
+    if (konfigurasi.langkah === "bulan")
+      index =
+        (tanggal.getUTCFullYear() - mulai.getUTCFullYear()) * 12 +
+        (tanggal.getUTCMonth() - mulai.getUTCMonth());
+    if (konfigurasi.langkah === "tahun") index = tanggal.getUTCFullYear() - mulai.getUTCFullYear();
+    const titik = ember[index];
+    if (!titik) continue;
+    if (item.jenis === "kas_masuk") titik.pemasukan += item.nominal;
+    else titik.pengeluaran += item.nominal;
   }
 
-  return buckets;
+  return ember;
 }
 
-function getChartPoints(points: CashFlowPoint[], key: "income" | "expense", maximum: number) {
-  return points.map((point, index) => {
-    const x = 78 + (index * 610) / Math.max(points.length - 1, 1);
-    const y = 222 - (point[key] / maximum) * 164;
-    return `${x},${y}`;
-  }).join(" ");
+const koordinat = (index: number, total: number) => 86 + (index * 596) / Math.max(total - 1, 1);
+const tinggi = (nilai: number, maksimal: number) => 224 - (nilai / maksimal) * 168;
+
+function titikGrafik(titik: Titik[], ambil: (item: Titik) => number, maksimal: number) {
+  return titik.map((item, index) => `${koordinat(index, titik.length)},${tinggi(ambil(item), maksimal)}`).join(" ");
+}
+
+function PanelRekap({
+  judul,
+  subjudul,
+  baris,
+  total,
+}: {
+  judul: string;
+  subjudul: string;
+  baris: { label: string; nilai: number }[];
+  total: number;
+}) {
+  return (
+    <section className={s.card}>
+      <h2 className={s.sectionTitle}>{judul}</h2>
+      <p className={s.sectionSubtitle}>{subjudul}</p>
+      <div className="mt-4 space-y-3">
+        {baris.map((item) => {
+          const persen = total > 0 ? (item.nilai / total) * 100 : 0;
+          return (
+            <div key={item.label}>
+              <div className="mb-1 flex items-center justify-between gap-3 text-xs">
+                <span className="truncate text-on-surface-variant">{item.label}</span>
+                <span className="shrink-0 font-semibold text-on-surface">
+                  {formatRp(item.nilai)} <span className="text-on-surface-variant">({persen.toFixed(0)}%)</span>
+                </span>
+              </div>
+              <div className="h-2 overflow-hidden rounded-full bg-surface-variant">
+                <div
+                  className="h-full rounded-full bg-secondary transition-all"
+                  style={{ width: `${Math.min(persen, 100)}%` }}
+                />
+              </div>
+            </div>
+          );
+        })}
+        {total === 0 && <p className="text-xs text-on-surface-variant">Belum ada pengeluaran pada rentang ini.</p>}
+      </div>
+    </section>
+  );
 }
 
 export function FinancialChartsSection() {
-  const { listKasEntries: entries } = useKeuangan();
-  const [range, setRange] = useState<Range>("bulan");
-  const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
-  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
-  const points = buildCashFlow(entries, range);
-  const rangeStart = getRangeStart(range, new Date());
-  const rangeEnd = Date.UTC(new Date().getFullYear(), new Date().getMonth(), new Date().getDate()) + dayInMs;
-  const rangeEntries = entries.filter((entry) => {
-    const timestamp = Date.parse(`${entry.tanggal}T00:00:00.000Z`);
-    return Number.isFinite(timestamp) && timestamp >= rangeStart.getTime() && timestamp < rangeEnd;
+  const { transaksiUrut, opsiKategori, opsiPos } = useFinance();
+  const [rentang, setRentang] = useState<Rentang>("bulan");
+  const [hover, setHover] = useState<number | null>(null);
+  const [pilih, setPilih] = useState<number | null>(null);
+
+  const titik = useMemo(() => bangunGrafik(transaksiUrut, rentang), [transaksiUrut, rentang]);
+  const rentangAwal = mulaiRentang(rentang, new Date());
+  const rentangAkhir =
+    Date.UTC(new Date().getFullYear(), new Date().getMonth(), new Date().getDate()) + DAY_MS;
+
+  const transaksiRentang = transaksiUrut.filter((item) => {
+    const waktu = Date.parse(`${item.tanggal}T00:00:00.000Z`);
+    return Number.isFinite(waktu) && waktu >= rentangAwal.getTime() && waktu < rentangAkhir;
   });
-  const incomeTotal = points.reduce((sum, point) => sum + point.income, 0);
-  const expenseTotal = points.reduce((sum, point) => sum + point.expense, 0);
-  const netTotal = incomeTotal - expenseTotal;
-  const maximum = Math.max(...points.flatMap((point) => [point.income, point.expense]), 1);
-  const categoryTotals = categories.map((category) => ({
-    ...category,
-    amount: rangeEntries.filter((entry) => entry.tipe === "keluar" && entry.kategori === category.key).reduce((sum, entry) => sum + entry.jumlah, 0),
-  }));
-  const topCategory = categoryTotals.reduce<(typeof categoryTotals)[number] | null>((top, category) => category.amount > (top?.amount ?? 0) ? category : top, null);
-  const bestPeriod = points.reduce<(CashFlowPoint & { net: number }) | null>((best, point) => {
-    const candidate = { ...point, net: point.income - point.expense };
-    return candidate.net > (best?.net ?? Number.NEGATIVE_INFINITY) ? candidate : best;
-  }, null);
-  const previousPoint = rangeEntries.length ? points.at(-2) : undefined;
-  const latestPoint = rangeEntries.length ? points.at(-1) : undefined;
-  const previousNet = (previousPoint?.income ?? 0) - (previousPoint?.expense ?? 0);
-  const latestNet = (latestPoint?.income ?? 0) - (latestPoint?.expense ?? 0);
-  const netDirection = latestNet >= previousNet ? "membaik" : "menurun";
-  const netChange = Math.abs(latestNet - previousNet);
-  const rangeDescription = ranges.find((item) => item.key === range)?.label.toLowerCase();
-  const activeIndex = hoveredIndex ?? selectedIndex ?? points.length - 1;
-  const activePoint = points[activeIndex];
+
+  const keluar = transaksiRentang.filter((item) => item.jenis !== "kas_masuk");
+  const totalKeluar = keluar.reduce((sum, item) => sum + item.nominal, 0);
+  const totalMasuk = titik.reduce((sum, item) => sum + item.pemasukan, 0);
+  const totalPengeluaran = titik.reduce((sum, item) => sum + item.pengeluaran, 0);
+  const bersih = totalMasuk - totalPengeluaran;
+  const maksimal = Math.max(...titik.flatMap((item) => [item.pemasukan, item.pengeluaran]), 1);
+
+  const perKategori = useMemo(
+    () =>
+      opsiKategori.map((kategori) => ({
+        label: kategori,
+        nilai: keluar
+          .filter((item) => item.kategori === kategori)
+          .reduce((sum, item) => sum + item.nominal, 0),
+      })).filter((item) => item.nilai > 0),
+    [keluar, opsiKategori],
+  );
+
+  const perPos = useMemo(
+    () =>
+      opsiPos.map((pos) => ({
+        label: pos,
+        nilai: keluar
+          .filter((item) => item.posProyek === pos)
+          .reduce((sum, item) => sum + item.nominal, 0),
+      })).filter((item) => item.nilai > 0),
+    [keluar, opsiPos],
+  );
+
+  const kategoriTerbesar = perKategori[0];
+  const posTerbesar = perPos[0];
+  const periodeTerbaik = titik.reduce<Titik | null>(
+    (terbaik, item) => (item.pemasukan - item.pengeluaran > (terbaik?.pemasukan ?? 0) - (terbaik?.pengeluaran ?? 0) ? item : terbaik),
+    null,
+  );
+  const aktif = hover ?? pilih ?? titik.length - 1;
+  const titikAktif = titik[aktif];
 
   return (
     <div className="space-y-5">
-      <div className="grid gap-3 sm:grid-cols-3">
-        <FinancialStatCard label="Pemasukan" value={formatRp(incomeTotal)} icon="↗" trend={`Total ${rangeDescription}`} tone="emerald" />
-        <FinancialStatCard label="Pengeluaran" value={formatRp(expenseTotal)} icon="↘" trend={`Total ${rangeDescription}`} tone="amber" />
-        <FinancialStatCard label="Arus kas bersih" value={formatRp(netTotal)} icon="＋" trend="Pemasukan dikurangi pengeluaran" tone="blue" />
+      <div className={s.statGrid}>
+        <FinancialStatCard
+          label="Pemasukan"
+          value={formatRp(totalMasuk)}
+          icon={<span className="material-symbols-outlined text-[20px]">south_west</span>}
+          trend="Kas masuk pada rentang terpilih"
+          tone="success"
+        />
+        <FinancialStatCard
+          label="Pengeluaran"
+          value={formatRp(totalPengeluaran)}
+          icon={<span className="material-symbols-outlined text-[20px]">north_east</span>}
+          trend={`${keluar.length} transaksi keluar`}
+          tone="error"
+        />
+        <FinancialStatCard
+          label="Arus Kas Bersih"
+          value={formatRp(bersih)}
+          icon={<span className="material-symbols-outlined text-[20px]">account_balance</span>}
+          trend={bersih >= 0 ? "Surplus pada rentang ini" : "Defisit pada rentang ini"}
+          tone="gold"
+        />
+        <FinancialStatCard
+          label="Rata-rata Bulanan"
+          value={formatRp(Math.round(totalKeluar / Math.max(perPos.length, 1)))}
+          icon={<span className="material-symbols-outlined text-[20px]">insights</span>}
+          trend="Rata-rata belanja per pos/proyek"
+          tone="neutral"
+        />
       </div>
 
-      <section className="rounded-xl border border-outline/30 bg-primary-container p-4 sm:p-5">
-        <div className="mb-4 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+      <section className={s.card}>
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div>
-            <h2 className="text-sm font-bold text-on-surface">Analisis arus kas</h2>
-            <p className="mt-1 text-[11px] text-on-surface-variant">Pemasukan dan pengeluaran berdasarkan transaksi kas aktual</p>
+            <h2 className={s.sectionTitle}>Grafik Arus Kas</h2>
+            <p className={s.sectionSubtitle}>
+              Garis pemasukan dan pengeluaran kas. Arahkan kursor atau gunakan keyboard untuk melihat detail periode.
+            </p>
           </div>
-          <div className="flex flex-wrap gap-1 rounded-lg bg-surface-variant p-1" aria-label="Pilih rentang grafik">
-            {ranges.map((item) => (
-              <button key={item.key} type="button" aria-pressed={range === item.key} onClick={() => { setRange(item.key); setSelectedIndex(null); setHoveredIndex(null); }} className={`rounded-md px-3 py-2 text-xs font-semibold transition-colors ${range === item.key ? "bg-secondary text-on-secondary" : "text-on-surface-variant hover:text-on-surface"}`}>
+          <div role="group" aria-label="Pilih rentang grafik" className="flex flex-wrap gap-1 rounded-lg bg-surface-variant p-1">
+            {RENTANG.map((item) => (
+              <button
+                key={item.key}
+                type="button"
+                aria-pressed={rentang === item.key}
+                onClick={() => {
+                  setRentang(item.key);
+                  setPilih(null);
+                  setHover(null);
+                }}
+                className={`min-h-11 rounded-md px-3 py-2 text-xs font-semibold transition-colors md:min-h-0 ${
+                  rentang === item.key ? "bg-secondary text-on-secondary" : "text-on-surface-variant hover:text-on-surface"
+                }`}
+              >
                 {item.label}
               </button>
             ))}
           </div>
         </div>
-        <div className="mb-3 flex flex-wrap items-center gap-x-5 gap-y-2 text-[10px] font-semibold text-on-surface-variant">
-          <span className="inline-flex items-center gap-1.5"><i className="h-2 w-2 rounded-full bg-teal-700" />Pemasukan</span>
-          <span className="inline-flex items-center gap-1.5"><i className="h-2 w-2 rounded-full bg-orange-500" />Pengeluaran</span>
+
+        <div className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-2 text-[10px] font-semibold text-on-surface-variant">
+          <span className="inline-flex items-center gap-1.5">
+            <i className="h-2 w-2 rounded-full" style={{ backgroundColor: WARNA.pemasukan }} />Pemasukan
+          </span>
+          <span className="inline-flex items-center gap-1.5">
+            <i className="h-2 w-2 rounded-full" style={{ backgroundColor: WARNA.pengeluaran }} />Pengeluaran
+          </span>
         </div>
-        <div className="w-full overflow-x-auto">
-          <svg viewBox="0 0 700 270" role="group" aria-label={`Grafik pemasukan dan pengeluaran untuk ${rangeDescription} terakhir`} className="h-auto min-w-[560px] w-full text-on-surface">
-            <title>Tren arus kas berdasarkan transaksi kas</title>
+
+        <div className="mt-2 w-full overflow-x-auto">
+          <svg
+            viewBox="0 0 700 260"
+            role="group"
+            aria-label="Grafik pemasukan dan pengeluaran kas"
+            className="h-auto min-w-[560px] w-full text-on-surface"
+          >
+            <title>Tren arus kas dari transaksi kas</title>
             {[0, 1, 2, 3, 4].map((tick) => {
-              const y = 222 - tick * 41;
+              const y = 224 - tick * 42;
               return (
                 <g key={tick}>
-                  <line x1="72" y1={y} x2="692" y2={y} stroke="currentColor" strokeOpacity="0.12" />
-                  <text x="4" y={y + 4} fill="currentColor" opacity="0.65" fontSize="9">{formatCompactRp((maximum * tick) / 4)}</text>
+                  <line x1="80" y1={y} x2="690" y2={y} stroke="currentColor" strokeOpacity="0.12" />
+                  <text x="4" y={y + 4} fill="currentColor" opacity="0.65" fontSize="9">
+                    {formatRpCompact((maksimal * tick) / 4)}
+                  </text>
                 </g>
               );
             })}
-            <polyline points={getChartPoints(points, "income", maximum)} fill="none" stroke="#0f766e" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
-            <polyline points={getChartPoints(points, "expense", maximum)} fill="none" stroke="#e28a32" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
-            {activePoint && <line x1={78 + (activeIndex * 610) / Math.max(points.length - 1, 1)} y1="42" x2={78 + (activeIndex * 610) / Math.max(points.length - 1, 1)} y2="228" stroke="currentColor" strokeOpacity="0.35" strokeDasharray="3 4" />}
-            {points.map((point, index) => {
-              const x = 78 + (index * 610) / Math.max(points.length - 1, 1);
-              const net = point.income - point.expense;
+            <polyline
+              points={titikGrafik(titik, (item) => item.pemasukan, maksimal)}
+              fill="none"
+              stroke={WARNA.pemasukan}
+              strokeWidth="3"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+            <polyline
+              points={titikGrafik(titik, (item) => item.pengeluaran, maksimal)}
+              fill="none"
+              stroke={WARNA.pengeluaran}
+              strokeWidth="3"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+            {titikAktif && (
+              <line
+                x1={koordinat(aktif, titik.length)}
+                y1="44"
+                x2={koordinat(aktif, titik.length)}
+                y2="230"
+                stroke="currentColor"
+                strokeOpacity="0.35"
+                strokeDasharray="3 4"
+              />
+            )}
+            {titik.map((item, index) => {
+              const x = koordinat(index, titik.length);
               return (
                 <g
-                  key={`${point.label}-${index}`}
+                  key={`${item.label}-${index}`}
                   role="button"
                   tabIndex={0}
-                  aria-pressed={selectedIndex === index}
-                  aria-label={`${point.label}: pemasukan ${formatRp(point.income)}, pengeluaran ${formatRp(point.expense)}, bersih ${formatRp(net)}`}
+                  aria-pressed={pilih === index}
+                  aria-label={`${item.label}: pemasukan ${formatRp(item.pemasukan)}, pengeluaran ${formatRp(item.pengeluaran)}`}
                   className="cursor-pointer outline-none"
-                  onMouseEnter={() => setHoveredIndex(index)}
-                  onMouseLeave={() => setHoveredIndex(null)}
-                  onFocus={() => setHoveredIndex(index)}
-                  onBlur={() => setHoveredIndex(null)}
-                  onClick={() => setSelectedIndex(index)}
+                  onMouseEnter={() => setHover(index)}
+                  onMouseLeave={() => setHover(null)}
+                  onFocus={() => setHover(index)}
+                  onBlur={() => setHover(null)}
+                  onClick={() => setPilih(index)}
                   onKeyDown={(event) => {
                     if (event.key === "Enter" || event.key === " ") {
                       event.preventDefault();
-                      setSelectedIndex(index);
+                      setPilih(index);
                     }
                   }}
                 >
-                  <title>{`${point.label} | Masuk ${formatRp(point.income)} | Keluar ${formatRp(point.expense)}`}</title>
-                  <rect x={x - 22} y="32" width="44" height="202" fill="transparent" />
-                  {activeIndex === index && <circle cx={x} cy={222 - (point.income / maximum) * 164} r="7" fill="none" stroke="#0f766e" strokeWidth="2" />}
-                  {activeIndex === index && <circle cx={x} cy={222 - (point.expense / maximum) * 164} r="7" fill="none" stroke="#e28a32" strokeWidth="2" />}
-                  <circle cx={x} cy={222 - (point.income / maximum) * 164} r="3.5" fill="#0f766e" />
-                  <circle cx={x} cy={222 - (point.expense / maximum) * 164} r="3.5" fill="#e28a32" />
-                  <text x={x} y="250" textAnchor="middle" fill="currentColor" opacity="0.7" fontSize="9">{point.label}</text>
+                  <title>{`${item.label} | Masuk ${formatRp(item.pemasukan)} | Keluar ${formatRp(item.pengeluaran)}`}</title>
+                  <rect x={x - 24} y="34" width="48" height="200" fill="transparent" />
+                  {aktif === index && (
+                    <circle cx={x} cy={tinggi(item.pemasukan, maksimal)} r="7" fill="none" stroke={WARNA.pemasukan} strokeWidth="2" />
+                  )}
+                  {aktif === index && (
+                    <circle cx={x} cy={tinggi(item.pengeluaran, maksimal)} r="7" fill="none" stroke={WARNA.pengeluaran} strokeWidth="2" />
+                  )}
+                  <circle cx={x} cy={tinggi(item.pemasukan, maksimal)} r="3.5" fill={WARNA.pemasukan} />
+                  <circle cx={x} cy={tinggi(item.pengeluaran, maksimal)} r="3.5" fill={WARNA.pengeluaran} />
+                  <text x={x} y="250" textAnchor="middle" fill="currentColor" opacity="0.7" fontSize="9">
+                    {item.label}
+                  </text>
                 </g>
               );
             })}
           </svg>
         </div>
-        {activePoint && (
-          <div aria-live="polite" className="mt-3 grid grid-cols-2 gap-3 rounded-lg border border-outline/20 bg-surface-variant/50 p-3 sm:grid-cols-4">
+
+        {titikAktif && (
+          <dl
+            aria-live="polite"
+            className="mt-3 grid grid-cols-2 gap-3 rounded-xl border border-outline/20 bg-surface-variant/50 p-3 sm:grid-cols-4"
+          >
             <div className="col-span-2 sm:col-span-1">
-              <p className="text-[10px] text-on-surface-variant">Detail {activePoint.label}</p>
-              <p className="mt-1 text-xs font-bold text-on-surface">Arus kas {activePoint.income - activePoint.expense >= 0 ? "surplus" : "defisit"}</p>
+              <dt className="text-[10px] text-on-surface-variant">Detail {titikAktif.label}</dt>
+              <dd className="mt-1 text-xs font-bold text-on-surface">
+                Arus kas {titikAktif.pemasukan - titikAktif.pengeluaran >= 0 ? "surplus" : "defisit"}
+              </dd>
             </div>
-            <div><p className="text-[10px] text-on-surface-variant">Pemasukan</p><p className="mt-1 text-xs font-bold text-teal-700">{formatRp(activePoint.income)}</p></div>
-            <div><p className="text-[10px] text-on-surface-variant">Pengeluaran</p><p className="mt-1 text-xs font-bold text-orange-600">{formatRp(activePoint.expense)}</p></div>
-            <div><p className="text-[10px] text-on-surface-variant">Selisih</p><p className="mt-1 text-xs font-bold text-on-surface">{formatRp(activePoint.income - activePoint.expense)}</p></div>
-          </div>
+            <div>
+              <dt className="text-[10px] text-on-surface-variant">Pemasukan</dt>
+              <dd className="mt-1 text-xs font-bold text-success">{formatRp(titikAktif.pemasukan)}</dd>
+            </div>
+            <div>
+              <dt className="text-[10px] text-on-surface-variant">Pengeluaran</dt>
+              <dd className="mt-1 text-xs font-bold text-secondary">{formatRp(titikAktif.pengeluaran)}</dd>
+            </div>
+            <div>
+              <dt className="text-[10px] text-on-surface-variant">Selisih</dt>
+              <dd className="mt-1 text-xs font-bold text-on-surface">
+                {formatRp(titikAktif.pemasukan - titikAktif.pengeluaran)}
+              </dd>
+            </div>
+          </dl>
         )}
-        {rangeEntries.length === 0 && <p className="mt-2 text-center text-xs text-on-surface-variant">Belum ada transaksi untuk dianalisis.</p>}
+
+        {transaksiRentang.length === 0 && (
+          <p className="mt-2 text-center text-xs text-on-surface-variant">Belum ada transaksi pada rentang ini.</p>
+        )}
       </section>
 
       <div className="grid gap-5 xl:grid-cols-2">
-        <section className="rounded-xl border border-outline/30 bg-primary-container p-4 sm:p-5">
-          <h2 className="text-sm font-bold text-on-surface">Pengeluaran per kategori</h2>
-          <p className="mt-1 text-[11px] text-on-surface-variant">Rincian transaksi keluar pada {rangeDescription} terpilih</p>
-          <div className="mt-5 space-y-4">
-            {categoryTotals.map((category) => {
-              const percent = expenseTotal ? (category.amount / expenseTotal) * 100 : 0;
-              return (
-                <div key={category.key}>
-                  <div className="mb-1.5 flex justify-between gap-3 text-xs"><span className="text-on-surface-variant">{category.label} · {percent.toFixed(0)}%</span><span className="font-semibold text-on-surface">{formatRp(category.amount)}</span></div>
-                  <div className="h-2 overflow-hidden rounded-sm bg-surface-variant"><div className="h-full rounded-sm" style={{ width: `${percent}%`, backgroundColor: category.color }} /></div>
-                </div>
-              );
-            })}
-            {expenseTotal === 0 && <p className="text-xs text-on-surface-variant">Belum ada pengeluaran pada rentang ini.</p>}
-          </div>
-        </section>
-
-        <section className="rounded-xl border border-outline/30 bg-primary-container p-4 sm:p-5">
-          <h2 className="text-sm font-bold text-on-surface">Temuan periode</h2>
-          <p className="mt-1 text-[11px] text-on-surface-variant">Ringkasan otomatis dari transaksi dalam rentang terpilih</p>
-          <dl className="mt-5 divide-y divide-outline/20">
-            <div className="flex items-start justify-between gap-4 py-3 first:pt-0">
-              <dt className="text-xs text-on-surface-variant">Perubahan arus kas terbaru</dt>
-              <dd className="max-w-[60%] text-right text-xs font-semibold text-on-surface">{latestPoint ? `Arus kas ${netDirection} ${formatRp(netChange)} dibanding periode sebelumnya` : "Belum ada data"}</dd>
-            </div>
-            <div className="flex items-start justify-between gap-4 py-3">
-              <dt className="text-xs text-on-surface-variant">Periode bersih terbaik</dt>
-              <dd className="max-w-[60%] text-right text-xs font-semibold text-on-surface">{bestPeriod && bestPeriod.net > 0 ? `${bestPeriod.label} · ${formatRp(bestPeriod.net)}` : "Belum ada periode surplus"}</dd>
-            </div>
-            <div className="flex items-start justify-between gap-4 py-3 last:pb-0">
-              <dt className="text-xs text-on-surface-variant">Kategori pengeluaran terbesar</dt>
-              <dd className="max-w-[60%] text-right text-xs font-semibold text-on-surface">{topCategory && topCategory.amount > 0 ? `${topCategory.label} · ${formatRp(topCategory.amount)}` : "Belum ada pengeluaran"}</dd>
-            </div>
-          </dl>
-        </section>
+        <PanelRekap
+          judul="Rekap Pengeluaran per Kategori Biaya"
+          subjudul="Dihitung otomatis dari transaksi kas keluar pada rentang terpilih."
+          baris={perKategori}
+          total={totalKeluar}
+        />
+        <PanelRekap
+          judul="Rekap Pengeluaran per Pos/Proyek"
+          subjudul="Distribusi belanja kas pada setiap lokasi kerja."
+          baris={perPos}
+          total={totalKeluar}
+        />
       </div>
+
+      <section className={s.card}>
+        <h2 className={s.sectionTitle}>Temuan Periode</h2>
+        <p className={s.sectionSubtitle}>Ringkasan otomatis dari transaksi dalam rentang terpilih.</p>
+        <dl className="mt-4 divide-y divide-outline/20">
+          <div className="flex items-start justify-between gap-4 py-3">
+            <dt className="text-xs text-on-surface-variant">Kategori pengeluaran terbesar</dt>
+            <dd className="max-w-[60%] text-right text-xs font-semibold text-on-surface">
+              {kategoriTerbesar ? `${kategoriTerbesar.label} · ${formatRp(kategoriTerbesar.nilai)}` : "-"}
+            </dd>
+          </div>
+          <div className="flex items-start justify-between gap-4 py-3">
+            <dt className="text-xs text-on-surface-variant">Pos/proyek paling besar</dt>
+            <dd className="max-w-[60%] text-right text-xs font-semibold text-on-surface">
+              {posTerbesar ? `${posTerbesar.label} · ${formatRp(posTerbesar.nilai)}` : "-"}
+            </dd>
+          </div>
+          <div className="flex items-start justify-between gap-4 py-3">
+            <dt className="text-xs text-on-surface-variant">Periode surplus terbaik</dt>
+            <dd className="max-w-[60%] text-right text-xs font-semibold text-on-surface">
+              {periodeTerbaik
+                ? `${periodeTerbaik.label} · ${formatRp(periodeTerbaik.pemasukan - periodeTerbaik.pengeluaran)}`
+                : "-"}
+            </dd>
+          </div>
+          <div className="flex items-start justify-between gap-4 py-3 last:pb-0">
+            <dt className="text-xs text-on-surface-variant">Jumlah transaksi di rentang</dt>
+            <dd className="max-w-[60%] text-right text-xs font-semibold text-on-surface">
+              {transaksiRentang.length} transaksi
+            </dd>
+          </div>
+        </dl>
+      </section>
     </div>
   );
 }

@@ -1,30 +1,54 @@
-export type FinancialStatus = "pending" | "approved" | "rejected" | "paid" | "unpaid";
+export type StatusTone =
+  | "pending"
+  | "checked"
+  | "approved"
+  | "rejected"
+  | "paid"
+  | "unpaid"
+  | "overdue"
+  | "netral";
 
-type StatusBadgeProps = {
-  status: FinancialStatus;
-  label?: string;
+const toneStyles: Record<StatusTone, string> = {
+  pending: "border-secondary/40 bg-secondary/10 text-secondary",
+  checked: "border-primary-100/40 bg-primary-100/10 text-primary",
+  approved: "border-success/30 bg-success/10 text-success",
+  rejected: "border-error/30 bg-error/10 text-error",
+  paid: "border-success/30 bg-success/10 text-success",
+  unpaid: "border-outline/40 bg-surface-variant text-on-surface-variant",
+  overdue: "border-error/40 bg-error/15 text-error",
+  netral: "border-outline/30 bg-surface-variant text-on-surface-variant",
 };
 
-const statusStyles: Record<FinancialStatus, string> = {
-  pending: "border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-300",
-  approved: "border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300",
-  rejected: "border-red-500/30 bg-red-500/10 text-red-700 dark:text-red-300",
-  paid: "border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300",
-  unpaid: "border-orange-500/30 bg-orange-500/10 text-orange-700 dark:text-orange-300",
-};
-
-const statusLabels: Record<FinancialStatus, string> = {
+const toneLabels: Record<StatusTone, string> = {
   pending: "Menunggu",
+  checked: "Sudah dicek",
   approved: "Disetujui",
   rejected: "Ditolak",
-  paid: "Dibayar",
-  unpaid: "Belum dibayar",
+  paid: "Terbayar",
+  unpaid: "Belum bayar",
+  overdue: "Jatuh tempo",
+  netral: "-",
 };
 
-export function StatusBadge({ status, label }: StatusBadgeProps) {
+type StatusBadgeProps = {
+  tone: StatusTone;
+  label?: string;
+  icon?: string;
+  title?: string;
+};
+
+export function StatusBadge({ tone, label, icon, title }: StatusBadgeProps) {
   return (
-    <span className={`inline-flex whitespace-nowrap rounded-full border px-2.5 py-1 text-[9px] font-bold uppercase tracking-[0.12em] ${statusStyles[status]}`}>
-      {label ?? statusLabels[status]}
+    <span
+      title={title}
+      className={`inline-flex items-center gap-1 whitespace-nowrap rounded-full border px-2.5 py-1 text-[9px] font-bold uppercase tracking-[0.12em] ${toneStyles[tone]}`}
+    >
+      {icon && (
+        <span aria-hidden="true" className="material-symbols-outlined text-[12px] leading-none">
+          {icon}
+        </span>
+      )}
+      {label ?? toneLabels[tone]}
     </span>
   );
 }
