@@ -77,7 +77,7 @@ export function InvoicePreviewModal({
             <p className="mt-1 text-xs leading-relaxed text-on-surface">{invoice.uraian}</p>
           </div>
 
-          <div className={s.tableWrap}>
+          <div className={s.tableWrapModal}>
             <table className={`${s.table} min-w-[720px]`}>
               <thead className={s.tableHead}>
                 <tr>

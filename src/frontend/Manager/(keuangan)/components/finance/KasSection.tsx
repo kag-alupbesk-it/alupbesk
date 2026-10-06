@@ -638,6 +638,84 @@ export function KasSection() {
             </tbody>
           </table>
         </div>
+
+        <div className={`mt-4 ${s.cardListWrap}`}>
+          {transaksi.length === 0 && <p className={s.emptyRow}>Tidak ada transaksi yang cocok dengan filter.</p>}
+          {transaksi.map((item) => (
+            <article key={item.id} className={s.cardListItem}>
+              <div className={s.cardListHead}>
+                <div className="min-w-0">
+                  <p className={`${s.cardListTitle} break-words`}>{item.uraian}</p>
+                  <p className={`${s.metaText} mt-0.5`}>
+                    {formatTanggal(item.tanggal)}
+                    {item.noNota ? ` · ${item.noNota}` : ""}
+                  </p>
+                </div>
+                <span className={`${s.badgeBase} ${badgeJenis(item.jenis)} shrink-0`}>
+                  <span aria-hidden="true" className={s.iconXs}>
+                    {IKON_JENIS[item.jenis]}
+                  </span>
+                  {LABEL_JENIS_TRANSAKSI[item.jenis]}
+                </span>
+              </div>
+
+              <div className={s.cardListGrid}>
+                <div>
+                  <p className={s.cardListLabel}>Kategori</p>
+                  <p className={s.cardListValue}>{item.kategori}</p>
+                </div>
+                <div>
+                  <p className={s.cardListLabel}>Pos/Proyek</p>
+                  <p className={s.cardListValue}>{item.posProyek}</p>
+                </div>
+                <div>
+                  <p className={s.cardListLabel}>Person</p>
+                  <p className={s.cardListValue}>{item.person}</p>
+                </div>
+                <div>
+                  <p className={s.cardListLabel}>Status</p>
+                  <p className={`${s.cardListValue} mt-1`}>
+                    {item.jenis === "kas_beredar" ? (
+                      <StatusBadge tone="pending" label="Kas Beredar" icon="handshake" />
+                    ) : (
+                      <StatusBadge tone="approved" label="Lunas" icon="check" />
+                    )}
+                  </p>
+                </div>
+              </div>
+
+              <p className={`mt-3 text-right text-base font-bold ${item.jenis === "kas_masuk" ? "text-success" : "text-error"}`}>
+                {item.jenis === "kas_masuk" ? "+" : "-"}
+                {formatRp(item.nominal)}
+              </p>
+
+              <div className={s.cardListActions}>
+                <button
+                  type="button"
+                  onClick={() => setPreview(item)}
+                  aria-label={`Preview bukti ${item.uraian}`}
+                  title="Preview bukti"
+                  className={s.actionButton}
+                >
+                  <span aria-hidden="true" className={s.iconSm}>
+                    visibility
+                  </span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setHapus(item)}
+                  aria-label={`Hapus transaksi ${item.uraian}`}
+                  title="Hapus transaksi"
+                  className={s.actionButtonDanger}
+                >
+                  <span aria-hidden="true" className={s.iconSm}>
+                    delete
+                  </span>
+                </button>
+              </div>
+            </article>
+          ))}
+        </div>
       </section>
 
       {preview && <ModalBukti transaksi={preview} onTutup={() => setPreview(null)} />}

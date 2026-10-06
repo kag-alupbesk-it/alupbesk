@@ -225,6 +225,83 @@ export function PayrollSection() {
             </tbody>
           </table>
         </div>
+
+        <div className={`mt-4 ${s.cardListWrap}`}>
+          {daftar.length === 0 && (
+            <p className={s.emptyRow}>Tidak ada data payroll yang cocok dengan filter.</p>
+          )}
+          {daftar.map((item) => {
+            const { netto } = hitungGaji(item);
+            return (
+              <article key={item.id} className={s.cardListItem}>
+                <div className={s.cardListHead}>
+                  <div className="min-w-0">
+                    <p className={`${s.cardListTitle} break-words`}>{item.nama}</p>
+                    <p className={`${s.metaText} mt-0.5`}>
+                      {item.jabatan} · {item.lokasi}
+                    </p>
+                  </div>
+                  {item.statusBayar === "terbayar" ? (
+                    <StatusBadge tone="approved" label={`Terbayar ${formatTanggal(item.tanggalBayar)}`} icon="check" />
+                  ) : (
+                    <StatusBadge tone="pending" label="Belum dibayar" icon="schedule" />
+                  )}
+                </div>
+
+                <div className={s.cardListGrid}>
+                  <div>
+                    <p className={s.cardListLabel}>Gaji Pokok</p>
+                    <p className={s.cardListValue}>{formatRp(item.gajiPokok)}</p>
+                  </div>
+                  <div>
+                    <p className={s.cardListLabel}>Netto</p>
+                    <p className={`${s.cardListValue} font-bold text-secondary`}>{formatRp(netto)}</p>
+                  </div>
+                  <div>
+                    <p className={s.cardListLabel}>Tunjangan + Lembur</p>
+                    <p className={`${s.cardListValue} text-success`}>+{formatRp(item.tunjangan + item.lembur)}</p>
+                    <p className={`${s.metaText} mt-0.5`}>
+                      {formatRp(item.tunjangan)} tunj · {formatRp(item.lembur)} lembur
+                    </p>
+                  </div>
+                  <div>
+                    <p className={s.cardListLabel}>Potongan Bon/Kasbon</p>
+                    <p className={`${s.cardListValue} text-error`}>-{formatRp(item.potonganBon + item.potonganKasbon)}</p>
+                    <p className={`${s.metaText} mt-0.5`}>
+                      {formatRp(item.potonganBon)} bon · {formatRp(item.potonganKasbon)} kasbon
+                    </p>
+                  </div>
+                </div>
+
+                <div className={s.cardListActions}>
+                  <button
+                    type="button"
+                    onClick={() => setSlip(item)}
+                    aria-label={`Buka slip gaji ${item.nama}`}
+                    className={s.ghostButton}
+                  >
+                    <span aria-hidden="true" className={s.iconSm}>
+                      receipt_long
+                    </span>
+                    Slip Gaji
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => bayarGaji(item.id, new Date().toISOString().slice(0, 10))}
+                    disabled={item.statusBayar === "terbayar"}
+                    aria-label={`Tandai terbayar gaji ${item.nama}`}
+                    title="Tandai terbayar"
+                    className={s.actionButton}
+                  >
+                    <span aria-hidden="true" className={s.iconSm}>
+                      paid
+                    </span>
+                  </button>
+                </div>
+              </article>
+            );
+          })}
+        </div>
       </section>
 
       {slip && <SlipGajiModal karyawan={slip} onTutup={() => setSlip(null)} />}

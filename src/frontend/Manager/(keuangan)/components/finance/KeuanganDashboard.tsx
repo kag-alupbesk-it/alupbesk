@@ -61,11 +61,40 @@ function IsiTab({ tab }: { tab: TabKey }) {
 
 export function KeuanganDashboard() {
   const [tab, setTab] = useState<TabKey>("kas");
+  const [navOpen, setNavOpen] = useState(false);
+
+  useEffect(() => {
+    if (!navOpen) return;
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setNavOpen(false);
+    };
+    document.body.style.overflow = "hidden";
+    window.addEventListener("keydown", onKey);
+    return () => {
+      document.body.style.overflow = "";
+      window.removeEventListener("keydown", onKey);
+    };
+  }, [navOpen]);
+
   return (
     <FinanceProvider>
-      <div className="flex min-h-screen">
-        <Sidebar activeTab={tab} onTabChange={setTab} />
-        <main className="flex-1 pl-0 lg:pl-64">
+      <div className="flex min-h-dvh">
+        <Sidebar activeTab={tab} onTabChange={setTab} open={navOpen} onClose={() => setNavOpen(false)} />
+        <main className="min-w-0 flex-1 lg:pl-64">
+          <div className={s.mobileBar}>
+            <button
+              type="button"
+              onClick={() => setNavOpen(true)}
+              aria-label="Buka menu navigasi"
+              aria-expanded={navOpen}
+              className={s.mobileBarButton}
+            >
+              <span aria-hidden="true" className={s.iconMd}>
+                menu
+              </span>
+            </button>
+            <p className={s.navTitleMobile}>{TABS.find((item) => item.key === tab)?.label ?? "Kas"}</p>
+          </div>
           <IsiTab tab={tab} />
         </main>
       </div>

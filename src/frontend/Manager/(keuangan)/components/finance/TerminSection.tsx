@@ -220,6 +220,82 @@ export function TerminSection() {
             </tbody>
           </table>
         </div>
+
+        <div className={`mt-4 ${s.cardListWrap}`}>
+          {daftar.length === 0 && <p className={s.emptyRow}>Tidak ada invoice yang cocok dengan filter.</p>}
+          {daftar.map((item) => (
+            <article key={item.invoice.id} className={s.cardListItem}>
+              <div className={s.cardListHead}>
+                <div className="min-w-0">
+                  <p className={`${s.cardListTitle} break-words`}>{item.invoice.nama}</p>
+                  <p className={`${s.metaText} mt-0.5`}>
+                    {item.invoice.nomor} · {formatTanggal(item.invoice.tanggal)}
+                  </p>
+                </div>
+                <StatusBadge
+                  tone={TONE_STATUS[item.status]}
+                  label={LABEL_STATUS[item.status]}
+                  icon={IKON_STATUS[item.status]}
+                />
+              </div>
+
+              <div className={s.cardListGrid}>
+                <div>
+                  <p className={s.cardListLabel}>Proyek</p>
+                  <p className={`${s.cardListValue} break-words`}>{item.invoice.proyek}</p>
+                </div>
+                <div>
+                  <p className={s.cardListLabel}>Pos/Proyek</p>
+                  <p className={`${s.cardListValue} break-words`}>{item.invoice.posProyek}</p>
+                </div>
+                <div>
+                  <p className={s.cardListLabel}>Jatuh Tempo</p>
+                  <p className={s.cardListValue}>{formatTanggal(item.jatuhTempo)}</p>
+                </div>
+                <div>
+                  <p className={s.cardListLabel}>Total Tagihan</p>
+                  <p className={`${s.cardListValue} font-bold`}>{formatRp(item.totalTagihan)}</p>
+                </div>
+                <div>
+                  <p className={s.cardListLabel}>Terbayar DP</p>
+                  <p className={`${s.cardListValue} text-success`}>{formatRp(item.terbayarDp)}</p>
+                </div>
+                <div>
+                  <p className={s.cardListLabel}>Sisa Tagihan</p>
+                  <p className={`${s.cardListValue} font-bold text-error`}>{formatRp(item.sisaTagihan)}</p>
+                </div>
+              </div>
+
+              <div className={s.cardListActions}>
+                {item.terminBerikutnya && (
+                  <button
+                    type="button"
+                    onClick={() => lunasTermin(item.invoice.id, item.terminBerikutnya.id)}
+                    aria-label={`Tandai lunas ${item.terminBerikutnya.label} invoice ${item.invoice.nomor}`}
+                    title={`Catat ${item.terminBerikutnya.label} sebagai Kas Masuk`}
+                    className={s.ghostButton}
+                  >
+                    <span aria-hidden="true" className={s.iconSm}>
+                      paid
+                    </span>
+                    {item.terminBerikutnya.label} Lunas
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={() => setPreview(item)}
+                  aria-label={`Preview invoice ${item.invoice.nomor}`}
+                  className={s.ghostButton}
+                >
+                  <span aria-hidden="true" className={s.iconSm}>
+                    visibility
+                  </span>
+                  Preview
+                </button>
+              </div>
+            </article>
+          ))}
+        </div>
       </section>
 
       {preview && <InvoicePreviewModal data={preview} onTutup={() => setPreview(null)} />}

@@ -33,7 +33,7 @@ export const searchInput =
   "min-h-11 min-w-0 flex-1 rounded-xl border border-outline/30 bg-surface-variant px-3 py-2 text-xs text-on-surface outline-none transition-colors placeholder:text-on-surface-variant/70 focus:border-secondary md:min-h-0";
 
 export const filterSelect =
-  "min-h-11 rounded-xl border border-outline/30 bg-surface-variant px-3 py-2 text-xs text-on-surface outline-none transition-colors focus:border-secondary md:min-h-0";
+  "w-full min-h-11 rounded-xl border border-outline/30 bg-surface-variant px-3 py-2 text-xs text-on-surface outline-none transition-colors focus:border-secondary sm:w-auto sm:flex-none md:min-h-0";
 
 export const primaryButton =
   "inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-secondary px-4 py-2 text-xs font-bold uppercase tracking-[0.14em] text-on-secondary transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-45 md:min-h-0";
@@ -66,9 +66,27 @@ export const badgeBonedar = "border-secondary/40 bg-secondary/10 text-secondary-
 
 export const badgeNetral = "border-outline/30 bg-surface-variant text-on-surface-variant";
 
-export const tableWrap = "w-full overflow-x-auto rounded-2xl border border-outline/20";
+export const tableWrap = "hidden w-full overflow-x-auto rounded-2xl border border-outline/20 md:block";
+
+export const tableWrapModal = "w-full overflow-x-auto rounded-2xl border border-outline/20";
 
 export const table = "w-full min-w-[900px] text-left text-xs";
+
+export const cardListWrap = "flex flex-col gap-3 md:hidden";
+
+export const cardListItem = "rounded-2xl border border-outline/20 bg-surface-variant/40 p-4";
+
+export const cardListHead = "flex items-start justify-between gap-3";
+
+export const cardListTitle = "text-sm font-bold text-on-surface";
+
+export const cardListGrid = "mt-3 grid grid-cols-2 gap-x-3 gap-y-2";
+
+export const cardListLabel = "text-[10px] font-bold uppercase tracking-[0.14em] text-on-surface-variant";
+
+export const cardListValue = "mt-0.5 text-xs text-on-surface";
+
+export const cardListActions = "mt-3 flex items-center justify-end gap-1.5 border-t border-outline/20 pt-3";
 
 export const tableHead = "bg-surface-variant/60 text-[10px] uppercase tracking-[0.2em] text-on-surface-variant";
 
@@ -86,8 +104,7 @@ export const emptyRow = "px-4 py-8 text-center text-xs text-on-surface-variant";
 
 export const modalTitle = "font-headline mt-1 text-base font-bold text-on-surface";
 
-export const brandTitle =
-  "font-headline text-2xl font-bold uppercase tracking-tight text-secondary";
+export const navTitle = "font-headline text-2xl font-bold uppercase tracking-tight text-secondary";
 
 export const modalOverlay = "fixed inset-0 z-50 flex items-center justify-center bg-black/65 p-3 sm:p-6";
 
@@ -100,7 +117,13 @@ export const modalHeader =
 export const modalClose =
   "inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-outline/30 text-on-surface-variant transition-colors hover:border-secondary/50 hover:text-secondary md:h-9 md:w-9";
 
-export const statGrid = "grid gap-3 sm:grid-cols-2 xl:grid-cols-4";
+export const statGrid = "grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4";
+
+export const findingRow = "flex flex-col gap-1 py-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4";
+
+export const findingValue = "text-xs font-semibold text-on-surface sm:max-w-[60%] sm:text-right";
+
+export const findingLabel = "text-xs text-on-surface-variant";
 
 export const statCard = "rounded-2xl border p-4 shadow-lg";
 
@@ -131,16 +154,25 @@ export const emptyStateIcon = `${iconHero} text-on-surface-variant`;
 export const toastPanel =
   "fixed bottom-5 right-5 z-[60] flex max-w-[calc(100vw-2.5rem)] items-center gap-3 rounded-xl border border-secondary/40 bg-primary-container px-4 py-3 text-xs font-semibold text-on-surface shadow-2xl";
 
-export const toolbarRow = "flex flex-col gap-2 sm:flex-row sm:items-center";
+export const toolbarRow = "flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center";
 
 export const dataCounter =
   "rounded-full border border-secondary/30 bg-secondary/10 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.2em] text-secondary";
 
 export const pageHeader = card;
 
-export const pageEyebrow = "text-[10px] font-bold uppercase tracking-[0.24em] text-on-surface-variant";
+export const pageEyebrow =
+  "hidden text-[10px] font-bold uppercase tracking-[0.24em] text-on-surface-variant lg:block";
 
-export const pageTitle = "font-headline mt-2 text-2xl font-bold text-on-surface";
+export const pageTitle = "font-headline mt-2 hidden text-2xl font-bold text-on-surface lg:block";
+
+export const navTitleMobile = "font-headline truncate text-lg font-bold text-on-surface";
+
+export const mobileBar =
+  "sticky top-0 z-30 flex items-center gap-3 border-b border-outline/30 bg-primary-container/95 px-3 py-3 backdrop-blur lg:hidden";
+
+export const mobileBarButton =
+  "inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-outline/30 text-on-surface-variant transition-colors hover:border-secondary/50 hover:text-secondary";
 
 export const pageSubtitle = "mt-1 text-xs text-on-surface-variant";
 

@@ -47,7 +47,7 @@ export function SlipGajiModal({ karyawan, onTutup }: { karyawan: Karyawan; onTut
             <span className={`${s.modalTitle} text-lg text-secondary`}>{formatRp(netto)}</span>
           </div>
 
-          <div className={s.tableWrap}>
+          <div className={s.tableWrapModal}>
             <table className={`${s.table} min-w-[520px]`}>
               <thead className={s.tableHead}>
                 <tr>

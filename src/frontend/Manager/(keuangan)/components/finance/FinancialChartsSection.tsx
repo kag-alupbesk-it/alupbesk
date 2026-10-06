@@ -120,7 +120,7 @@ function PanelRekap({
             </div>
           );
         })}
-        {total === 0 && <p className="text-xs text-on-surface-variant">Belum ada pengeluaran pada rentang ini.</p>}
+        {total === 0 && <p className={`${s.emptyRow} px-0`}>Belum ada pengeluaran pada rentang ini.</p>}
       </div>
     </section>
   );
@@ -256,7 +256,7 @@ export function FinancialChartsSection() {
             viewBox="0 0 700 260"
             role="group"
             aria-label="Grafik pemasukan dan pengeluaran kas"
-            className="h-auto min-w-[560px] w-full text-on-surface"
+            className="h-auto w-full min-w-[440px] text-on-surface"
           >
             <title>Tren arus kas dari transaksi kas</title>
             {[0, 1, 2, 3, 4].map((tick) => {
@@ -371,7 +371,7 @@ export function FinancialChartsSection() {
         )}
       </section>
 
-      <div className="grid gap-5 xl:grid-cols-2">
+      <div className="grid gap-4 sm:gap-5 xl:grid-cols-2">
         <PanelRekap
           judul="Rekap Pengeluaran per Kategori Biaya"
           subjudul="Dihitung otomatis dari transaksi kas keluar pada rentang terpilih."
@@ -390,29 +390,29 @@ export function FinancialChartsSection() {
         <h2 className={s.sectionTitle}>Temuan Periode</h2>
         <p className={s.sectionSubtitle}>Ringkasan otomatis dari transaksi dalam rentang terpilih.</p>
         <dl className="mt-4 divide-y divide-outline/20">
-          <div className="flex items-start justify-between gap-4 py-3">
-            <dt className="text-xs text-on-surface-variant">Kategori pengeluaran terbesar</dt>
-            <dd className="max-w-[60%] text-right text-xs font-semibold text-on-surface">
+          <div className={`${s.findingRow}`}>
+            <dt className={s.findingLabel}>Kategori pengeluaran terbesar</dt>
+            <dd className={s.findingValue}>
               {kategoriTerbesar ? `${kategoriTerbesar.label} · ${formatRp(kategoriTerbesar.nilai)}` : "-"}
             </dd>
           </div>
-          <div className="flex items-start justify-between gap-4 py-3">
-            <dt className="text-xs text-on-surface-variant">Pos/proyek paling besar</dt>
-            <dd className="max-w-[60%] text-right text-xs font-semibold text-on-surface">
+          <div className={`${s.findingRow}`}>
+            <dt className={s.findingLabel}>Pos/proyek paling besar</dt>
+            <dd className={s.findingValue}>
               {posTerbesar ? `${posTerbesar.label} · ${formatRp(posTerbesar.nilai)}` : "-"}
             </dd>
           </div>
-          <div className="flex items-start justify-between gap-4 py-3">
-            <dt className="text-xs text-on-surface-variant">Periode surplus terbaik</dt>
-            <dd className="max-w-[60%] text-right text-xs font-semibold text-on-surface">
+          <div className={`${s.findingRow}`}>
+            <dt className={s.findingLabel}>Periode surplus terbaik</dt>
+            <dd className={s.findingValue}>
               {periodeTerbaik
                 ? `${periodeTerbaik.label} · ${formatRp(periodeTerbaik.pemasukan - periodeTerbaik.pengeluaran)}`
                 : "-"}
             </dd>
           </div>
-          <div className="flex items-start justify-between gap-4 py-3 last:pb-0">
-            <dt className="text-xs text-on-surface-variant">Jumlah transaksi di rentang</dt>
-            <dd className="max-w-[60%] text-right text-xs font-semibold text-on-surface">
+          <div className={`${s.findingRow} last:pb-0`}>
+            <dt className={s.findingLabel}>Jumlah transaksi di rentang</dt>
+            <dd className={s.findingValue}>
               {transaksiRentang.length} transaksi
             </dd>
           </div>
