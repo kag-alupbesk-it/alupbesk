@@ -1,2 +1,4 @@
 import { getMarketingOrders } from "@/backend/modules/marketing";
-export async function GET() { return Response.json({ success: true, data: getMarketingOrders() }); }
+import { ensureHydrated } from "@/services/supabaseHydrate";
+export async function GET() {
+  await ensureHydrated(); return Response.json({ success: true, data: getMarketingOrders() }); }

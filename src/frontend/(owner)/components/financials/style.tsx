@@ -1,4 +1,4 @@
-export const container = "p-10 pb-24 min-h-screen flex flex-col"
+export const container = "flex min-h-screen flex-col p-4 pb-24 sm:p-6 lg:p-10"
 export const metricsGrid = "grid grid-cols-1 md:grid-cols-4 gap-6"
 export const metricCard = "bg-primary-container border border-outline/30 rounded-xl p-6 flex flex-col justify-between hover:border-secondary/50 transition-all"
 export const metricHeader = "flex justify-between items-start"

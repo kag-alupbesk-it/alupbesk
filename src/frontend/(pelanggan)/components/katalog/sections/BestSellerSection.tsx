@@ -1,11 +1,10 @@
 "use client";
 
-import { products } from "@/services/catalog";
+import type { Product } from "@/services/catalog";
 import { ProductCard } from "../../product/ProductCard";
 
-const bestSellerProducts = products.filter((p) => p.bestSeller);
-
-export default function BestSeller() {
+export default function BestSeller({ products }: { products: Product[] }) {
+  const bestSellerProducts = products.filter((product) => product.bestSeller);
   if (bestSellerProducts.length === 0) return null;
 
   return (

@@ -1,5 +1,6 @@
 import { persistGudangItem, gudangItems } from "./store";
-import { generateMovementId, persistGudangMovement } from "../movements/store";
+import { generateMovementId } from "../movements/generateMovementId";
+import { persistGudangMovement } from "../movements/persistGudangMovement";
 import type { GudangItem, KategoriBarang } from "./types";
 import type { GudangMovement } from "../movements/types";
 

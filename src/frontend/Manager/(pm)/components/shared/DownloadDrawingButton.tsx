@@ -9,6 +9,7 @@ interface DownloadDrawingButtonProps {
   fileName: string;
   label?: string;
   className?: string;
+  source?: string;
 }
 
 export function DownloadDrawingButton({
@@ -16,6 +17,7 @@ export function DownloadDrawingButton({
   fileName,
   label = "Download",
   className = "",
+  source,
 }: DownloadDrawingButtonProps) {
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -24,7 +26,7 @@ export function DownloadDrawingButton({
     setPending(true);
     setError(null);
     try {
-      await downloadDrawing(scopeId, fileName);
+      await downloadDrawing(scopeId, fileName, source);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Gagal mengunduh gambar.");
     } finally {

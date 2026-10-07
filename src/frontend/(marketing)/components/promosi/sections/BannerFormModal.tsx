@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import type { BannerFormData } from "../../../types";
 import { emptyBannerForm } from "../../../types";
 import { validateBannerForm } from "./helpers";
@@ -15,27 +15,17 @@ interface BannerFormModalProps {
 }
 
 export default function BannerFormModal({ isOpen, editBanner, onClose, onSave }: BannerFormModalProps) {
-  const [form, setForm] = useState<BannerFormData>(emptyBannerForm);
+  const [form, setForm] = useState<BannerFormData>(() => editBanner ? {
+    title: editBanner.title,
+    subtitle: editBanner.subtitle ?? "",
+    imageUrl: editBanner.imageUrl,
+    linkUrl: editBanner.linkUrl ?? "",
+    active: editBanner.active,
+    order: editBanner.order,
+    startDate: editBanner.startDate ?? "",
+    endDate: editBanner.endDate ?? "",
+  } : emptyBannerForm);
   const [errors, setErrors] = useState<Partial<Record<keyof BannerFormData, string>>>({});
-
-  useEffect(() => {
-    if (!isOpen) return;
-    if (editBanner) {
-      setForm({
-        title: editBanner.title,
-        subtitle: editBanner.subtitle ?? "",
-        imageUrl: editBanner.imageUrl,
-        linkUrl: editBanner.linkUrl ?? "",
-        active: editBanner.active,
-        order: editBanner.order,
-        startDate: editBanner.startDate ?? "",
-        endDate: editBanner.endDate ?? "",
-      });
-    } else {
-      setForm(emptyBannerForm);
-    }
-    setErrors({});
-  }, [isOpen, editBanner]);
 
   if (!isOpen) return null;
 

@@ -1,15 +1,18 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { customApi } from "@/services/api/custom";
 import type { CustomRequest } from "@/backend/modules/custom";
 import type { GudangItem } from "@/backend/modules/gudang";
 import { getProyekItems, createProjectOrder } from "@/frontend/Manager/(manager)/services/pesanan";
 import * as s from "../style";
+import { usePollingResource } from "@/frontend/shared/hooks/usePollingResource";
 
 export function PesananSection() {
-  const [requests, setRequests] = useState<CustomRequest[]>([]);
-  const [items, setItems] = useState<GudangItem[]>([]);
+  const loadRequests = useCallback(() => customApi.getRequests(), []);
+  const loadItems = useCallback(() => getProyekItems(), []);
+  const { data: requests } = usePollingResource<CustomRequest[]>(loadRequests, []);
+  const { data: items } = usePollingResource<GudangItem[]>(loadItems, []);
   const [requestId, setRequestId] = useState("");
   const [namaProyek, setNamaProyek] = useState("");
   const [pelanggan, setPelanggan] = useState("");
@@ -19,16 +22,6 @@ export function PesananSection() {
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-
-  useEffect(() => {
-    customApi
-      .getRequests()
-      .then(setRequests)
-      .catch(() => setRequests([]));
-    getProyekItems()
-      .then(setItems)
-      .catch(() => setItems([]));
-  }, []);
 
   const convertable = requests.filter(
     (request) => request.status !== "accepted" && request.status !== "rejected",

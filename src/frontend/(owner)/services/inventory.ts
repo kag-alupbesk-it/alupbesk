@@ -1,6 +1,7 @@
 import { request } from "@/services/api/request";
 
 export interface InventoryItem {
+  id: string;
   sku: string;
   name: string;
   variant: string;

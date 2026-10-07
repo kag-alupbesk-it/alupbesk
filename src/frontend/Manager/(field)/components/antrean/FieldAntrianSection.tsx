@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { fieldStore } from "../store";
+import { useMemo, useState } from "react";
 import type { FieldDelivery } from "../types";
+import { useFieldDeliveries } from "../../hooks/useFieldDeliveries";
 import { STATUS_FILTER_LABELS, totalKuantitas, totalTerkirim } from "./helpers";
 import type { FieldFilter } from "./types";
 import * as s from "./style";
@@ -12,21 +12,12 @@ import { FieldDeliveryDetailModal } from "./FieldDeliveryDetailModal";
 const PAGE_SIZE = 6;
 
 export function FieldAntrianSection() {
-  const [deliveries, setDeliveries] = useState<FieldDelivery[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { deliveries, loading } = useFieldDeliveries();
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<FieldFilter>("ALL");
   const [filterOpen, setFilterOpen] = useState(false);
   const [page, setPage] = useState(0);
   const [detail, setDetail] = useState<FieldDelivery | null>(null);
-
-  useEffect(() => {
-    fieldStore
-      .getDeliveries()
-      .then(setDeliveries)
-      .catch(() => setDeliveries([]))
-      .finally(() => setLoading(false));
-  }, []);
 
   const filtered = useMemo(() => {
     const needle = search.trim().toLowerCase();

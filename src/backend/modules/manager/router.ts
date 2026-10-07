@@ -18,8 +18,10 @@ router.get("/inventory", (_request, response) => {
   response.json({ success: true, data: getInventoryData() });
 });
 
-router.get("/users", (_request, response) => {
-  response.json({ success: true, data: getUsersData() });
+router.get("/users", async (_request, response) => {
+  const data = await getUsersData();
+  response.setHeader("Cache-Control", "no-store");
+  response.json({ success: true, data });
 });
 
 router.get("/orders", (_request, response) => {

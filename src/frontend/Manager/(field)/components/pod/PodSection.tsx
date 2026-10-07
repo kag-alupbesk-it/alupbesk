@@ -1,15 +1,14 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import Link from "next/link";
 import { fieldStore } from "../store";
-import type { FieldDelivery } from "../types";
+import { useFieldDeliveries } from "../../hooks/useFieldDeliveries";
 import * as s from "./style";
 import { PodPhotoPreview } from "./PodPhotoPreview";
 
 export function PodSection() {
-  const [deliveries, setDeliveries] = useState<FieldDelivery[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { deliveries, loading, refresh } = useFieldDeliveries();
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [signatureImagePath, setSignatureImagePath] = useState("");
   const [projectImagePath, setProjectImagePath] = useState("");
@@ -19,24 +18,12 @@ export function PodSection() {
 
   const load = useCallback(async () => {
     try {
-      const data = await fieldStore.getDeliveries();
-      setDeliveries(data);
+      await refresh();
       setNotice(null);
     } catch {
-      setDeliveries([]);
       setNotice("Gagal memuat data bukti terima.");
-    } finally {
-      setLoading(false);
     }
-  }, []);
-
-  useEffect(() => {
-    fieldStore
-      .getDeliveries()
-      .then(setDeliveries)
-      .catch(() => setDeliveries([]))
-      .finally(() => setLoading(false));
-  }, []);
+  }, [refresh]);
 
   const seleksi = useMemo(() => {
     const list = deliveries.filter((d) => d.status !== "selesai-kirim");

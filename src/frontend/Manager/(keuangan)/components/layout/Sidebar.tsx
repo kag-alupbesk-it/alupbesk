@@ -3,6 +3,8 @@
 import { clsx } from "clsx";
 import { iconLg, iconSm, metaText, navTitle, segmentedItemActive, segmentedItemIdle } from "../finance/style";
 import type { TabKey } from "../finance/KeuanganDashboard";
+import { LogoutButton } from "@/frontend/auth/LogoutButton";
+import ThemeToggle from "@/app/ThemeToggle";
 
 const TABS: { key: TabKey; label: string; icon: string }[] = [
   { key: "kas", label: "Kas", icon: "payments" },
@@ -43,6 +45,8 @@ export default function Sidebar({ activeTab, onTabChange, open, onClose }: Props
             <h1 className={navTitle}>ALUPBESK</h1>
             <p className={`${metaText} mt-1 uppercase tracking-[0.2em] font-bold`}>Admin Keuangan</p>
           </div>
+          <ThemeToggle />
+          <LogoutButton />
           <button
             type="button"
             onClick={onClose}

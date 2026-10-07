@@ -67,8 +67,10 @@ export function getFinancialsData(period = "monthly"): FinancialsData {
   const statements: Statement[] = [...grouped.entries()].sort(([left], [right]) => right.localeCompare(left)).map(([periodLabel, value]) => ({
     period: periodLabel,
     revenue: formatRp(value),
-    profit: formatRp(value),
-    margin: `${value > 0 ? 100 : 0}%`,
+    // Order revenue is not profit. Show no profit estimate until actual costs
+    // are linked to orders in the finance ledger.
+    profit: "—",
+    margin: "—",
   }));
 
   return { metrics, statements, expenses: [], barChart, donut };

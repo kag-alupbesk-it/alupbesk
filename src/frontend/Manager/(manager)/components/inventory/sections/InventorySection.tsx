@@ -1,35 +1,28 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useMemo, useState } from "react";
 import * as styles from "../style";
 import { useApi } from "@/frontend/Manager/(manager)/hooks/useApi";
 import { fetchInventoryData } from "@/frontend/Manager/(manager)/services/inventory";
+import { gudangApi } from "@/services/api";
 import { statusFromStock } from "./helpers";
 import { filters, defaultForm } from "./data";
 
 interface InventoryItem {
-  sku: string; name: string; variant: string; category: string; icon: string;
+  id: string; sku: string; name: string; variant: string; category: string; icon: string;
   stock: number; threshold: number; status: string; statusColor: string; barColor: string;
 }
 
 export default function InventorySection() {
-  const { data: apiData } = useApi(fetchInventoryData, { interval: 30000 });
-  const seeded = useRef(false);
+  const { data: apiData, refetch } = useApi(fetchInventoryData, { interval: 30000 });
   const [activeFilter, setActiveFilter] = useState("All Items");
   const [search, setSearch] = useState("");
-  const [items, setItems] = useState<InventoryItem[]>([]);
+  const items = useMemo<InventoryItem[]>(() => (apiData?.items ?? []).map((item) => ({
+    ...item,
+    ...statusFromStock(item.stock, item.threshold),
+  })), [apiData]);
+  const [error, setError] = useState("");
 
-  useEffect(() => {
-    if (apiData && !seeded.current) {
-      seeded.current = true;
-      setItems(
-        apiData.items.map((item) => {
-          const { statusColor, barColor } = statusFromStock(item.stock, item.threshold);
-          return { ...item, statusColor, barColor };
-        })
-      );
-    }
-  }, [apiData]);
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingIdx, setEditingIdx] = useState<number | null>(null);
@@ -42,12 +35,32 @@ export default function InventorySection() {
     return matchFilter && matchSearch;
   });
 
-  const handleAdd = () => {
+  const reloadInventory = async () => {
+    await refetch();
+  };
+
+  const handleAdd = async () => {
     if (!form.sku || !form.name) return;
-    const { status, statusColor, barColor } = statusFromStock(form.stock, form.threshold);
-    setItems((prev) => [...prev, { ...form, status, statusColor, barColor }]);
-    setShowAddModal(false);
-    setForm(defaultForm);
+    setError("");
+    try {
+      await gudangApi.createItem({
+        sku: form.sku,
+        jenisBarang: form.name,
+        kategoriBarang: form.category === "Proyek" ? "proyek" : "eceran",
+        satuan: "pcs",
+        merek: "",
+        warna: form.variant,
+        seksiLokasi: "Gudang Utama",
+        stokAwal: form.stock,
+        minStok: form.threshold,
+        catatan: form.variant,
+      });
+      await reloadInventory();
+      setShowAddModal(false);
+      setForm(defaultForm);
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : "Barang gagal ditambahkan.");
+    }
   };
 
   const handleOpenEdit = (idx: number) => {
@@ -58,28 +71,49 @@ export default function InventorySection() {
     setShowMoreMenu(null);
   };
 
-  const handleSaveEdit = () => {
+  const handleSaveEdit = async () => {
     if (editingIdx === null) return;
-    const { status, statusColor, barColor } = statusFromStock(form.stock, form.threshold);
-    setItems((prev) => prev.map((item, i) => i === editingIdx ? { ...item, ...form, status, statusColor, barColor } : item));
-    setShowEditModal(false);
-    setEditingIdx(null);
+    const item = items[editingIdx];
+    if (!item) return;
+    setError("");
+    try {
+      await gudangApi.updateStock(item.id, { stok: form.stock, minStok: form.threshold });
+      await reloadInventory();
+      setShowEditModal(false);
+      setEditingIdx(null);
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : "Stok gagal diperbarui.");
+    }
   };
 
-  const handleDelete = (idx: number) => {
+  const handleDelete = async (idx: number) => {
     const item = filteredItems[idx];
     if (!confirm(`Hapus ${item.name}?`)) return;
-    setItems((prev) => prev.filter((_, i) => items.indexOf(filteredItems[idx]) !== i));
-    setShowMoreMenu(null);
+    setError("");
+    try {
+      await gudangApi.deleteItem(item.id);
+      await reloadInventory();
+      setShowMoreMenu(null);
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : "Barang gagal dihapus.");
+    }
   };
 
-  const handleRestock = (idx: number) => {
+  const handleRestock = async (idx: number) => {
     const item = filteredItems[idx];
-    const originalIdx = items.indexOf(item);
-    const newStock = item.stock + item.threshold;
-    const { status, statusColor, barColor } = statusFromStock(newStock, item.threshold);
-    setItems((prev) => prev.map((item, i) => i === originalIdx ? { ...item, stock: newStock, status, statusColor, barColor } : item));
-    setShowMoreMenu(null);
+    setError("");
+    try {
+      await gudangApi.recordMasuk(item.id, {
+        jumlah: Math.max(1, item.threshold),
+        tanggal: new Date().toISOString().slice(0, 10),
+        sumber: "Restock Manajer",
+        catatan: "Restock dari halaman Manager",
+      });
+      await reloadInventory();
+      setShowMoreMenu(null);
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : "Stok gagal ditambah.");
+    }
   };
 
   const handleExport = () => {
@@ -112,6 +146,8 @@ export default function InventorySection() {
           </button>
         </div>
       </header>
+
+      {error && <p role="alert" className="mb-4 text-sm text-red-400">{error}</p>}
 
       <section className={styles.metricsGrid}>
         {[
@@ -266,7 +302,7 @@ export default function InventorySection() {
               <input className={styles.input} placeholder="Nama Produk" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
               <input className={styles.input} placeholder="Varian / Deskripsi" value={form.variant} onChange={(e) => setForm({ ...form, variant: e.target.value })} />
               <select className={styles.select} value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })}>
-                <option value="Extrusion">Extrusion</option><option value="Hardware">Hardware</option><option value="Fasteners">Fasteners</option><option value="Electronics">Electronics</option>
+                <option value="Hardware">Hardware</option><option value="Proyek">Proyek</option>
               </select>
               <div className={styles.formRow}>
                 <div><label className={styles.formLabel}>Stock</label><input className={styles.inputPlain} type="number" min="0" value={form.stock} onChange={(e) => setForm({ ...form, stock: Number(e.target.value) })} /></div>
@@ -275,7 +311,7 @@ export default function InventorySection() {
             </div>
             <div className={styles.formActions}>
               <button onClick={() => setShowAddModal(false)} className={styles.cancelButtonPill}>Batal</button>
-              <button onClick={handleAdd} className={styles.submitButtonPill}>Tambah</button>
+              <button onClick={() => void handleAdd()} className={styles.submitButtonPill}>Tambah</button>
             </div>
           </div>
         </div>
@@ -286,11 +322,11 @@ export default function InventorySection() {
           <div className={`${styles.modalContentScale} ${styles.modalContent}`} onClick={(e) => e.stopPropagation()}>
             <h4 className={`${styles.headline} ${styles.modalTitle}`}>Edit SKU</h4>
             <div className={styles.formGroup}>
-              <input className={styles.input} placeholder="SKU ID" value={form.sku} onChange={(e) => setForm({ ...form, sku: e.target.value })} />
-              <input className={styles.input} placeholder="Nama Produk" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
-              <input className={styles.input} placeholder="Varian / Deskripsi" value={form.variant} onChange={(e) => setForm({ ...form, variant: e.target.value })} />
-              <select className={styles.select} value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })}>
-                <option value="Extrusion">Extrusion</option><option value="Hardware">Hardware</option><option value="Fasteners">Fasteners</option><option value="Electronics">Electronics</option>
+              <input className={styles.input} placeholder="SKU ID" value={form.sku} readOnly />
+              <input className={styles.input} placeholder="Nama Produk" value={form.name} readOnly />
+              <input className={styles.input} placeholder="Varian / Deskripsi" value={form.variant} readOnly />
+              <select className={styles.select} value={form.category} disabled>
+                <option value="Hardware">Hardware</option><option value="Proyek">Proyek</option>
               </select>
               <div className={styles.formRow}>
                 <div><label className={styles.formLabel}>Stock</label><input className={styles.inputPlain} type="number" min="0" value={form.stock} onChange={(e) => setForm({ ...form, stock: Number(e.target.value) })} /></div>
@@ -299,7 +335,7 @@ export default function InventorySection() {
             </div>
             <div className={styles.formActions}>
               <button onClick={() => setShowEditModal(false)} className={styles.cancelButtonPill}>Batal</button>
-              <button onClick={handleSaveEdit} className={styles.submitButtonPill}>Simpan</button>
+              <button onClick={() => void handleSaveEdit()} className={styles.submitButtonPill}>Simpan</button>
             </div>
           </div>
         </div>

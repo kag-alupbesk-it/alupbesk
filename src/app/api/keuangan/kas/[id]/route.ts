@@ -1,6 +1,8 @@
 import { z } from "zod";
 import { deleteKasEntry, updateKasEntry } from "@/backend/modules/keuangan";
 import { flushWrites } from "@/services/supabase";
+import { readJsonBody } from "@/backend/http/readJsonBody";
+import { ensureHydrated } from "@/services/supabaseHydrate";
 
 const kasSchema = z.object({
   tipe: z.enum(["masuk", "keluar"], { message: "Tipe transaksi tidak valid." }),
@@ -18,8 +20,9 @@ function notFound(id: string) {
 }
 
 export async function PUT(request: Request, { params }: { params: Promise<{ id: string }> }) {
+  await ensureHydrated();
   const { id } = await params;
-  const parsed = kasSchema.safeParse(await request.json());
+  const parsed = kasSchema.safeParse(await readJsonBody(request));
   if (!parsed.success)
     return Response.json(
       { success: false, error: { code: "INVALID_KAS_ENTRY", message: parsed.error.issues[0]?.message ?? "Data transaksi tidak valid." } },
@@ -36,6 +39,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
 }
 
 export async function DELETE(_request: Request, { params }: { params: Promise<{ id: string }> }) {
+  await ensureHydrated();
   const { id } = await params;
   const result = deleteKasEntry(id);
   await flushWrites();

@@ -1,11 +1,13 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useCallback, useState } from "react";
+import Image from "next/image";
 import { marketingApi } from "@/services/api";
 import ProdukFormModal from "./ProdukFormModal";
 import type { MarketingProduct, ProductFormData } from "./types";
 import { formatPrice } from "./types";
 import * as s from "../style";
+import { usePollingResource } from "@/frontend/shared/hooks/usePollingResource";
 
 function LoadingSkeleton() {
   return (
@@ -45,18 +47,11 @@ function ProdukActions({
 }
 
 export default function ProdukSection() {
-  const [products, setProducts] = useState<MarketingProduct[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState("");
+  const loadProducts = useCallback(() => marketingApi.getProducts(), []);
+  const { data: products, loading: isLoading, error: loadError, refresh } = usePollingResource<MarketingProduct[]>(loadProducts, []);
+  const [actionError, setActionError] = useState("");
   const [showForm, setShowForm] = useState(false);
   const [editProduct, setEditProduct] = useState<MarketingProduct | null>(null);
-
-  useEffect(() => {
-    marketingApi.getProducts()
-      .then(setProducts)
-      .catch((reason) => setError(reason instanceof Error ? reason.message : "Data produk gagal dimuat."))
-      .finally(() => setIsLoading(false));
-  }, []);
 
   function handleTambah() {
     setEditProduct(null);
@@ -69,7 +64,7 @@ export default function ProdukSection() {
   }
 
   async function handleSave(form: ProductFormData, id?: number) {
-    setError("");
+    setActionError("");
     const input = {
       category: form.category.trim().toUpperCase(),
       title: form.title.trim(),
@@ -81,24 +76,23 @@ export default function ProdukSection() {
     };
     try {
       if (id) {
-        const updated = await marketingApi.updateProduct(id, input);
-        setProducts((prev) => prev.map((product) => (product.id === id ? updated : product)));
+        await marketingApi.updateProduct(id, input);
       } else {
-        const created = await marketingApi.createProduct(input);
-        setProducts((prev) => [...prev, created]);
+        await marketingApi.createProduct(input);
       }
+      refresh();
       setShowForm(false);
       setEditProduct(null);
-    } catch (reason) { setError(reason instanceof Error ? reason.message : "Produk gagal disimpan."); }
+    } catch (reason) { setActionError(reason instanceof Error ? reason.message : "Produk gagal disimpan."); }
   }
 
   async function handleDelete(product: MarketingProduct) {
     if (!confirm(`Hapus produk "${product.title}"?`)) return;
-    setError("");
+    setActionError("");
     try {
       await marketingApi.deleteProduct(product.id);
-      setProducts((prev) => prev.filter((item) => item.id !== product.id));
-    } catch (reason) { setError(reason instanceof Error ? reason.message : "Produk gagal dihapus."); }
+      refresh();
+    } catch (reason) { setActionError(reason instanceof Error ? reason.message : "Produk gagal dihapus."); }
   }
 
   if (isLoading) return <LoadingSkeleton />;
@@ -119,7 +113,7 @@ export default function ProdukSection() {
           </button>
         </div>
 
-        {error && <p className="mb-4 text-sm text-red-400">{error}</p>}
+        {(actionError || loadError) && <p className="mb-4 text-sm text-red-400">{actionError || loadError}</p>}
 
         <div className={s.mobileList}>
           {products.length === 0 ? (
@@ -131,7 +125,7 @@ export default function ProdukSection() {
               <div key={product.id} className={s.card}>
                 <div className={s.cardTop}>
                   <div className={s.productInfo}>
-                    <img src={product.img} alt={product.title} className={s.productImg} />
+                    <Image src={product.img} alt={product.title} width={64} height={64} unoptimized className={s.productImg} />
                     <div className="min-w-0">
                       <p className={s.productTitle}>{product.title}</p>
                       <p className={s.productCategory}>{product.category}</p>
@@ -181,7 +175,7 @@ export default function ProdukSection() {
                     <tr key={product.id} className={s.row}>
                       <td className={s.td}>
                         <div className={s.productInfo}>
-                          <img src={product.img} alt={product.title} className={s.productImg} />
+                          <Image src={product.img} alt={product.title} width={64} height={64} unoptimized className={s.productImg} />
                           <div>
                             <p className={s.productTitle}>{product.title}</p>
                             <p className={s.productCategory}>{product.category}</p>

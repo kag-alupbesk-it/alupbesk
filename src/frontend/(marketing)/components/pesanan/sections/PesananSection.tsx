@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useCallback, useState } from "react";
 import * as s from "../style";
 import PesananTable from "./PesananTable";
 import PesananDetailModal from "./PesananDetailModal";
@@ -10,10 +10,11 @@ import { marketingApi } from "@/services/api";
 import type { MarketingOrder } from "@/backend/modules/marketing";
 import { STATUS_LABELS, STATUS_OPTIONS } from "./data";
 import { isNewOrder } from "./helpers";
+import { usePollingResource } from "@/frontend/shared/hooks/usePollingResource";
 
 export default function PesananSection() {
-  const [orders, setOrders] = useState<MarketingOrder[]>([]);
-  const [loading, setLoading] = useState(true);
+  const loadOrders = useCallback(() => marketingApi.getOrders(), []);
+  const { data: orders, loading, error: loadError, refresh } = usePollingResource<MarketingOrder[]>(loadOrders, []);
   const [error, setError] = useState("");
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("ALL");
@@ -24,10 +25,6 @@ export default function PesananSection() {
   const [showConfirm, setShowConfirm] = useState(false);
   const [showRejected, setShowRejected] = useState(false);
   const [confirmOrder, setConfirmOrder] = useState<MarketingOrder | null>(null);
-
-  useEffect(() => {
-    marketingApi.getOrders().then(setOrders).catch((reason) => setError(reason instanceof Error ? reason.message : "Pesanan gagal dimuat.")).finally(() => setLoading(false));
-  }, []);
 
   const filtered = orders.filter((o) => {
     const matchSearch = search === "" || o.id.toLowerCase().includes(search.toLowerCase()) || o.customer.name.toLowerCase().includes(search.toLowerCase()) || o.customer.phone.includes(search);
@@ -57,8 +54,8 @@ export default function PesananSection() {
     if (!confirmOrder) return;
     setError("");
     try {
-      const updated = await marketingApi.submitOrder(confirmOrder.id);
-      setOrders((prev) => prev.map((o) => (o.id === updated.id ? updated : o)));
+      await marketingApi.submitOrder(confirmOrder.id);
+      refresh();
       setShowConfirm(false);
       setConfirmOrder(null);
       setPage(1);
@@ -83,7 +80,7 @@ export default function PesananSection() {
         </div>
       </div>
 
-      {error && <p className="mb-4 text-sm text-red-400">{error}</p>}
+      {(error || loadError) && <p className="mb-4 text-sm text-red-400">{error || loadError}</p>}
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
         <div className="bg-primary-container border border-outline/30 rounded-xl p-5">

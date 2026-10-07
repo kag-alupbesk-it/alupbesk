@@ -59,9 +59,10 @@ export function PMApprovalPage() {
     setFeedback(null);
   };
 
-  const handleApprove = () => {
+  const handleApprove = async () => {
     if (!selectedOrder) return;
-    approveOrder(selectedOrder.id);
+    const saved = await approveOrder(selectedOrder.id);
+    if (!saved) return;
     setFeedback({ type: "success", message: `Gambar ${selectedOrder.contractorCode} disetujui. Order masuk status Siap Produksi.` });
     if (listMode === "review") {
       const nextOrder = visibleOrders.find((order) => order.id !== selectedOrder.id);
@@ -74,12 +75,13 @@ export function PMApprovalPage() {
     });
   };
 
-  const handleRequestRevision = () => {
+  const handleRequestRevision = async () => {
     if (!selectedOrder || !revisionNote.trim()) {
       setFeedback({ type: "error", message: "Tambahkan catatan revisi sebelum mengirim ke kontraktor." });
       return;
     }
-    requestRevision(selectedOrder.id, revisionNote);
+    const saved = await requestRevision(selectedOrder.id, revisionNote);
+    if (!saved) return;
     setFeedback({ type: "success", message: `Catatan revisi untuk ${selectedOrder.contractorCode} siap dikirim melalui komunikasi internal.` });
     setRevisionNotes((currentNotes) => {
       const nextNotes = { ...currentNotes };
@@ -211,11 +213,14 @@ export function PMApprovalPage() {
                   <div className="flex items-center justify-between border-b border-blue-400/20 bg-blue-400/8 px-3.5 py-3">
                     <div className="flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-blue-400" /><p className="text-[10px] font-extrabold uppercase tracking-[0.1em] text-blue-300">Gambar Mentah (Kontraktor)</p></div>
                     <div className="flex items-center gap-2">
-                      <DownloadDrawingButton
-                        scopeId={`pm-approval-raw-${selectedOrder.id}`}
-                        fileName={selectedOrder.rawImageName || `gambar-mentah-${selectedOrder.id}.svg`}
-                        className="border-blue-400/40 bg-blue-400/10 text-blue-300 hover:bg-blue-400/20"
-                      />
+                      {selectedOrder.rawImage && (
+                        <DownloadDrawingButton
+                          scopeId={`pm-approval-raw-${selectedOrder.id}`}
+                          fileName={selectedOrder.rawImageName || `gambar-mentah-${selectedOrder.id}`}
+                          source={selectedOrder.rawImage}
+                          className="border-blue-400/40 bg-blue-400/10 text-blue-300 hover:bg-blue-400/20"
+                        />
+                      )}
                       <span className="text-[9px] font-bold text-blue-300/70">REV 01</span>
                     </div>
                   </div>
@@ -228,7 +233,8 @@ export function PMApprovalPage() {
                     <div className="flex items-center gap-2">
                       <DownloadDrawingButton
                         scopeId={`pm-approval-production-${selectedOrder.id}`}
-                        fileName={selectedOrder.productionImageName || `gambar-matang-${selectedOrder.id}.svg`}
+                        fileName={selectedOrder.productionImageName || `gambar-matang-${selectedOrder.id}`}
+                        source={selectedOrder.productionImage}
                       />
                       <span className="text-[9px] font-bold text-secondary/70">REV {String(getRevisionNumber(selectedOrder)).padStart(2, "0")}</span>
                     </div>

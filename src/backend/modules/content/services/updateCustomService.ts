@@ -1,4 +1,5 @@
-import { persistCustomService, customServices } from "./store";
+import { persistCustomService } from "./persistCustomService";
+import { customServices } from "./store";
 import type { CustomService, CustomServiceInput } from "../types";
 
 export function updateCustomService(id: string, input: CustomServiceInput): CustomService | undefined {

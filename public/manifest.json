@@ -1,14 +1,14 @@
 {
-  "name": "ALUPBESK - Solusi Produk Aluminium & Komponen Industrial",
-  "short_name": "ALUPBESK",
+  "name": "alupbesk",
+  "short_name": "alupbesk",
   "description": "Solusi Produk Aluminium & Komponen Industrial Terpercaya",
-  "start_url": "/",
+  "start_url": "/admin/app",
   "display": "standalone",
-  "background_color": "#1a1a2e",
-  "theme_color": "#e94560",
+  "background_color": "#121a2e",
+  "theme_color": "#121a2e",
   "orientation": "any",
   "scope": "/",
-  "lang": "id",
+  "lang": "en",
   "categories": ["business", "shopping", "utilities"],
   "icons": [
     {

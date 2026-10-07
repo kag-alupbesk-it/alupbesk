@@ -7,13 +7,13 @@ import FileUploadInput from "../../shared/FileUploadInput";
 
 type HeroValue = { title: string; subtitle: string; imageUrl: string; primaryCta: string; primaryLink: string };
 type ProfileValue = { title: string; description1: string; description2: string; visionTitle: string; visionText: string; missionTitle: string; missionText: string; imageUrl: string; quote: string; quoteAuthor: string };
-type ContactValue = { title: string; subtitle: string; address: string; email: string; phone: string; instagram: string; linkedin: string };
+type ContactValue = { title: string; subtitle: string; address: string; email: string; phone: string; whatsapp: string; instagram: string; linkedin: string };
 type StepsValue = { steps: string[] };
 type CapacitiesValue = { capacities: { label: string; value: string }[] };
 
 const emptyHero: HeroValue = { title: "", subtitle: "", imageUrl: "", primaryCta: "", primaryLink: "" };
 const emptyProfile: ProfileValue = { title: "", description1: "", description2: "", visionTitle: "", visionText: "", missionTitle: "", missionText: "", imageUrl: "", quote: "", quoteAuthor: "" };
-const emptyContact: ContactValue = { title: "", subtitle: "", address: "", email: "", phone: "", instagram: "", linkedin: "" };
+const emptyContact: ContactValue = { title: "", subtitle: "", address: "", email: "", phone: "", whatsapp: "", instagram: "", linkedin: "" };
 const emptySteps: StepsValue = { steps: [] };
 const emptyCapacities: CapacitiesValue = { capacities: [] };
 
@@ -48,9 +48,9 @@ export default function SiteContentTab() {
         loadValue<CapacitiesValue>("custom_capacities", emptyCapacities),
       ]);
       if (!active) return;
-      setHero(h);
-      setProfile(p);
-      setContact(c);
+      setHero({ ...emptyHero, ...h });
+      setProfile({ ...emptyProfile, ...p });
+      setContact({ ...emptyContact, ...c });
       setStepsText(stepVal.steps.join("\n"));
       setCapacitiesText(capVal.capacities.map((c) => `${c.label}: ${c.value}`).join("\n"));
     })()
@@ -139,6 +139,7 @@ export default function SiteContentTab() {
             <div className="grid grid-cols-2 gap-4">
               <div className={s.field}><label className={s.label}>Email</label><input className={s.input} value={contact.email} onChange={(e) => setContact({ ...contact, email: e.target.value })} /></div>
               <div className={s.field}><label className={s.label}>Telepon / WA</label><input className={s.input} value={contact.phone} onChange={(e) => setContact({ ...contact, phone: e.target.value })} /></div>
+              <div className={s.field}><label className={s.label}>Nomor WhatsApp (format internasional)</label><input className={s.input} value={contact.whatsapp} onChange={(e) => setContact({ ...contact, whatsapp: e.target.value })} /></div>
               <div className={s.field}><label className={s.label}>Instagram (URL)</label><input className={s.input} value={contact.instagram} onChange={(e) => setContact({ ...contact, instagram: e.target.value })} /></div>
               <div className={s.field}><label className={s.label}>LinkedIn (URL)</label><input className={s.input} value={contact.linkedin} onChange={(e) => setContact({ ...contact, linkedin: e.target.value })} /></div>
             </div>

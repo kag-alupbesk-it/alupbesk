@@ -1,6 +1,10 @@
+"use client";
+
 import FooterLinks from "../shared/FooterLinks";
+import { useLanguage } from "@/frontend/shared/i18n/LanguageProvider";
 
 export default function Footer() {
+  const { language, t } = useLanguage();
   return (
     <footer className="bg-primary-container py-16 text-on-surface">
       <div className="max-w-container-max mx-auto px-margin-x-mobile md:px-margin-x-desktop">
@@ -12,22 +16,23 @@ export default function Footer() {
               </span>
             </div>
             <p className="text-label-sm leading-relaxed text-on-surface-variant">
-              Penyedia solusi aluminium industrial terdepan dengan fokus pada
-              presisi, kualitas, dan keberlanjutan pasokan material.
+              {language === "en"
+                ? "Industrial aluminium solutions focused on precision, quality, and reliable material supply."
+                : "Penyedia solusi aluminium industrial dengan fokus pada presisi, kualitas, dan pasokan material yang andal."}
             </p>
           </div>
           <FooterLinks
-            title="Tautan Cepat"
+            title={t("quickLinks")}
             links={[
-              "Beranda",
-              "Profile Perusahaan",
-              "Katalog Produk",
-              "Mitra Industri",
-              "FAQ",
+              t("home"),
+              t("aboutCompany"),
+              t("productCatalog"),
+              t("partners"),
+              language === "en" ? "FAQ" : "Pertanyaan Umum",
             ]}
           />
           <FooterLinks
-            title="Produk Utama"
+            title={t("mainProducts")}
             links={[
               "Aluminum Extrusion",
               "Linear Guides",
@@ -37,7 +42,7 @@ export default function Footer() {
           />
           <div className="space-y-4">
             <h3 className="text-headline-h3 font-semibold text-secondary">
-              Lokasi Kami
+              {t("ourLocation")}
             </h3>
             <div className="overflow-hidden rounded-xl border border-outline/20">
               <iframe
@@ -53,14 +58,13 @@ export default function Footer() {
               />
             </div>
             <p className="text-label-sm leading-relaxed text-on-surface-variant">
-            Karang Tengah Sitimulyo, Karang Anom, Sitimulyo, Kec. Piyungan, Kabupaten Bantul, Daerah Istimewa Yogyakarta,Indonesia
+            Karang Tengah Sitimulyo, Karang Anom, Sitimulyo, Piyungan, Bantul, Special Region of Yogyakarta, Indonesia
             </p>
           </div>
         </div>
         <div className="flex flex-col items-center justify-between gap-6 border-t border-outline/20 pt-8 md:flex-row">
           <p className="text-label-sm text-on-surface-variant">
-            &copy; {new Date().getFullYear()} Alupbesk Industrial. All rights
-            reserved.
+            &copy; {new Date().getFullYear()} Alupbesk Industrial. {t("allRightsReserved")}
           </p>
           <div className="flex gap-8 text-label-sm text-on-surface-variant">
             <a className="transition-colors hover:text-on-surface" href="#">

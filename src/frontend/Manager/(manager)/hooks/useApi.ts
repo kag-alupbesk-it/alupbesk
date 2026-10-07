@@ -6,7 +6,7 @@ export interface ApiState<T> {
   data: T | null;
   loading: boolean;
   error: string | null;
-  refetch: () => void;
+  refetch: () => Promise<T | undefined>;
 }
 
 export function useApi<T>(

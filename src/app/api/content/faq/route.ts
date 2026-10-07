@@ -1,6 +1,8 @@
 import { z } from "zod";
 import { createFaqItem, getFaqItems } from "@/backend/modules/content";
 import { flushWrites } from "@/services/supabase";
+import { readJsonBody } from "@/backend/http/readJsonBody";
+import { ensureHydrated } from "@/services/supabaseHydrate";
 
 export const faqSchema = z.object({
   question: z.string().trim().min(1, "Pertanyaan wajib diisi."),
@@ -10,11 +12,13 @@ export const faqSchema = z.object({
 });
 
 export async function GET() {
+  await ensureHydrated();
   return Response.json({ success: true, data: getFaqItems() });
 }
 
 export async function POST(request: Request) {
-  const parsed = faqSchema.safeParse(await request.json());
+  await ensureHydrated();
+  const parsed = faqSchema.safeParse(await readJsonBody(request));
   if (!parsed.success) {
     return Response.json({ success: false, error: { code: "INVALID_FAQ", message: parsed.error.issues[0]?.message ?? "Data FAQ tidak valid." } }, { status: 400 });
   }

@@ -1,19 +1,20 @@
 import { db } from "@/services/supabase";
+import { ensureStorageBucket } from "@/backend/storage/ensureStorageBucket";
 
 const MAX_SIZE = 5 * 1024 * 1024;
 const BUCKET = "images";
-let bucketEnsured = false;
-
-async function ensureBucket(): Promise<boolean> {
-  if (!db) return false;
-  if (bucketEnsured) return true;
-  const { error } = await db.storage.createBucket(BUCKET, {
-    public: true,
-    fileSizeLimit: MAX_SIZE,
-  });
-  bucketEnsured = error === null || error.message.toLowerCase().includes("already exists");
-  return bucketEnsured;
-}
+const IMAGE_EXTENSIONS: Record<string, string> = {
+  "image/jpeg": "jpg",
+  "image/png": "png",
+  "image/webp": "webp",
+  "image/gif": "gif",
+};
+const MAX_REQUEST_SIZE = MAX_SIZE + 512 * 1024;
+const IMAGE_BUCKET_CONFIG = {
+  public: true,
+  fileSizeLimit: MAX_SIZE,
+  allowedMimeTypes: Object.keys(IMAGE_EXTENSIONS),
+};
 
 export async function POST(request: Request) {
   if (!db) {
@@ -29,7 +30,18 @@ export async function POST(request: Request) {
     );
   }
 
-  if (!(await ensureBucket())) {
+  const contentLength = Number(request.headers.get("content-length"));
+  if (Number.isFinite(contentLength) && contentLength > MAX_REQUEST_SIZE) {
+    return Response.json(
+      {
+        success: false,
+        error: { code: "FILE_TOO_LARGE", message: "Ukuran file maksimal 5 MB." },
+      },
+      { status: 413 },
+    );
+  }
+
+  if (!(await ensureStorageBucket(BUCKET, IMAGE_BUCKET_CONFIG))) {
     return Response.json(
       {
         success: false,
@@ -66,11 +78,12 @@ export async function POST(request: Request) {
     );
   }
 
-  if (!file.type.startsWith("image/")) {
+  const extension = IMAGE_EXTENSIONS[file.type];
+  if (!extension) {
     return Response.json(
       {
         success: false,
-        error: { code: "INVALID_TYPE", message: "Hanya file gambar yang diperbolehkan." },
+        error: { code: "INVALID_TYPE", message: "Format yang didukung: JPEG, PNG, WebP, dan GIF." },
       },
       { status: 400 },
     );
@@ -86,7 +99,6 @@ export async function POST(request: Request) {
     );
   }
 
-  const extension = file.name.split(".").pop()?.toLowerCase() ?? "jpg";
   const path = `uploads/${crypto.randomUUID()}.${extension}`;
   const arrayBuffer = await file.arrayBuffer();
 

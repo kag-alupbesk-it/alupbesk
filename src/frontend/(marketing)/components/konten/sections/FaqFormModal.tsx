@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import type { FaqFormData } from "./types";
 import { emptyFaqForm } from "./types";
 import { validateFaqForm } from "./helpers";
@@ -14,23 +14,13 @@ interface FaqFormModalProps {
 }
 
 export default function FaqFormModal({ isOpen, editItem, onClose, onSave }: FaqFormModalProps) {
-  const [form, setForm] = useState<FaqFormData>(emptyFaqForm());
+  const [form, setForm] = useState<FaqFormData>(() => editItem ? {
+    question: editItem.question,
+    answer: editItem.answer,
+    sortOrder: editItem.sortOrder,
+    active: editItem.active,
+  } : emptyFaqForm());
   const [errors, setErrors] = useState<Partial<Record<keyof FaqFormData, string>>>({});
-
-  useEffect(() => {
-    if (!isOpen) return;
-    if (editItem) {
-      setForm({
-        question: editItem.question,
-        answer: editItem.answer,
-        sortOrder: editItem.sortOrder,
-        active: editItem.active,
-      });
-    } else {
-      setForm(emptyFaqForm());
-    }
-    setErrors({});
-  }, [isOpen, editItem]);
 
   if (!isOpen) return null;
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import type { CaseStudyFormData } from "./types";
 import { emptyCaseStudyForm } from "./types";
 import { validateCaseStudyForm } from "./helpers";
@@ -15,27 +15,17 @@ interface CaseStudyFormModalProps {
 }
 
 export default function CaseStudyFormModal({ isOpen, editItem, onClose, onSave }: CaseStudyFormModalProps) {
-  const [form, setForm] = useState<CaseStudyFormData>(emptyCaseStudyForm());
+  const [form, setForm] = useState<CaseStudyFormData>(() => editItem ? {
+    client: editItem.client,
+    logo: editItem.logo,
+    industry: editItem.industry,
+    title: editItem.title,
+    desc: editItem.desc,
+    metrics: editItem.metrics.map((metric) => `${metric.label}: ${metric.value}`).join("\n"),
+    img: editItem.img,
+    year: editItem.year ? String(editItem.year) : "",
+  } : emptyCaseStudyForm());
   const [errors, setErrors] = useState<Partial<Record<keyof CaseStudyFormData, string>>>({});
-
-  useEffect(() => {
-    if (!isOpen) return;
-    if (editItem) {
-      setForm({
-        client: editItem.client,
-        logo: editItem.logo,
-        industry: editItem.industry,
-        title: editItem.title,
-        desc: editItem.desc,
-        metrics: editItem.metrics.map((m) => `${m.label}: ${m.value}`).join("\n"),
-        img: editItem.img,
-        year: editItem.year ? String(editItem.year) : "",
-      });
-    } else {
-      setForm(emptyCaseStudyForm());
-    }
-    setErrors({});
-  }, [isOpen, editItem]);
 
   if (!isOpen) return null;
 

@@ -11,12 +11,17 @@ import RequestForm from "./RequestForm";
 import RequestSidebar from "./RequestSidebar";
 import SuccessState from "./SuccessState";
 import { customApi } from "@/services/api";
+import { contactDefaults } from "@/frontend/(pelanggan)/data/siteContentDefaults";
+import { usePublicSiteContent } from "@/frontend/(pelanggan)/hooks/usePublicSiteContent";
+import { getWhatsAppUrl } from "@/frontend/(pelanggan)/utils/getWhatsAppUrl";
 
 export default function CustomSection() {
   const [form, setForm] = useState(emptyCustomRequestForm);
   const [submitted, setSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
+  const [whatsappHref, setWhatsappHref] = useState<string | null>(null);
+  const { data: contact } = usePublicSiteContent("contact", contactDefaults);
 
   const isValid = Boolean(
     form.nama &&
@@ -31,19 +36,16 @@ export default function CustomSection() {
     setSubmitError("");
     try {
       await customApi.createRequest(form);
-    const message =
-      `Halo ALUPBESK, saya ingin request Custom Quote:%0A%0A` +
-      `Nama: ${form.nama}%0A` +
-      `Layanan: ${form.layanan}%0A` +
-      `Deskripsi: ${form.deskripsi}%0A` +
-      `Dimensi: ${form.dimensi || "-"}%0A` +
-      `Kuantitas: ${form.kuantitas || "-"}`;
-
-    window.open(
-      `https://wa.me/6283847105847?text=${message}`,
-      "_blank"
-    );
-    setSubmitted(true);
+      const message = [
+        "Halo ALUPBESK, saya ingin request Custom Quote:",
+        `Nama: ${form.nama}`,
+        `Layanan: ${form.layanan}`,
+        `Deskripsi: ${form.deskripsi}`,
+        `Dimensi: ${form.dimensi || "-"}`,
+        `Kuantitas: ${form.kuantitas || "-"}`,
+      ].join("\n");
+      setWhatsappHref(getWhatsAppUrl(contact.whatsapp, message));
+      setSubmitted(true);
     } catch (error) {
       setSubmitError(error instanceof Error ? error.message : "Request gagal dikirim.");
     } finally {
@@ -56,7 +58,7 @@ export default function CustomSection() {
       <header className={styles.topbar}>
         <div className={styles.topbarInner}>
           <Link
-            href="/"
+            href="/catalog"
             className="text-on-surface/60"
           >
             <span className="material-symbols-outlined">
@@ -81,8 +83,10 @@ export default function CustomSection() {
           <SuccessState
             onReset={() => {
               setForm(emptyCustomRequestForm);
+              setWhatsappHref(null);
               setSubmitted(false);
             }}
+            whatsappHref={whatsappHref}
           />
         ) : (
           <div className={styles.grid}>

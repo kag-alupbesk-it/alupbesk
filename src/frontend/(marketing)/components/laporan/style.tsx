@@ -1,4 +1,4 @@
-export const container = "p-10 flex-1";
+export const container = "flex-1 p-4 sm:p-6 lg:p-10";
 export const header = "mb-10";
 export const title = "text-3xl font-bold text-on-surface mb-2 font-headline tracking-tight";
 export const subtitle = "text-on-surface-variant max-w-2xl leading-relaxed";

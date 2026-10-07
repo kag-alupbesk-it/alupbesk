@@ -1,2 +1,4 @@
 import { getGudangOrders } from "@/backend/modules/gudang";
-export async function GET() { return Response.json({ success: true, data: getGudangOrders() }); }
+import { ensureHydrated } from "@/services/supabaseHydrate";
+export async function GET() {
+  await ensureHydrated(); return Response.json({ success: true, data: getGudangOrders() }); }

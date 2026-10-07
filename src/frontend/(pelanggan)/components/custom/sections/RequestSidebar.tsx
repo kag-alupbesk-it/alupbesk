@@ -1,5 +1,12 @@
+import { useCallback } from "react";
+import { contentApi } from "@/services/api";
+import { usePollingResource } from "@/frontend/shared/hooks/usePollingResource";
 import { customStyles as styles } from "../style";
-import { steps, productionCapacities } from "./data";
+
+interface CustomSidebarContent {
+  steps: string[];
+  capacities: { label: string; value: string }[];
+}
 
 export default function RequestSidebar({
   isValid,
@@ -8,6 +15,34 @@ export default function RequestSidebar({
   isValid: boolean;
   onSubmit: () => void;
 }) {
+  const loadContent = useCallback(async (): Promise<CustomSidebarContent> => {
+    const [stepsContent, capacityContent] = await Promise.all([
+      contentApi.getSiteContent("custom_steps"),
+      contentApi.getSiteContent("custom_capacities"),
+    ]);
+
+    const steps = stepsContent.value.steps;
+    const capacities = capacityContent.value.capacities;
+
+    return {
+      steps: Array.isArray(steps) ? steps.filter((step): step is string => typeof step === "string") : [],
+      capacities: Array.isArray(capacities)
+        ? capacities.filter((item): item is { label: string; value: string } =>
+            typeof item === "object" &&
+            item !== null &&
+            "label" in item &&
+            "value" in item &&
+            typeof item.label === "string" &&
+            typeof item.value === "string",
+          )
+        : [],
+    };
+  }, []);
+  const { data: content, loading, error } = usePollingResource<CustomSidebarContent>(
+    loadContent,
+    { steps: [], capacities: [] },
+  );
+
   return (
     <aside className={styles.sidebar}>
       <section className={styles.panel}>
@@ -15,7 +50,11 @@ export default function RequestSidebar({
           Alur Request Custom
         </h2>
 
-        {steps.map((step, index) => (
+        {loading && content.steps.length === 0 ? (
+          <p className="mb-4 text-xs text-on-surface/50">Memuat alur layanan...</p>
+        ) : error && content.steps.length === 0 ? (
+          <p className="mb-4 text-xs text-on-surface/50">Alur layanan belum tersedia.</p>
+        ) : content.steps.map((step, index) => (
           <div
             key={step}
             className="flex gap-3 mb-4"
@@ -54,7 +93,7 @@ export default function RequestSidebar({
           Kapasitas Produksi
         </p>
 
-        {productionCapacities.map(([label, value]) => (
+        {content.capacities.map(({ label, value }) => (
           <div
             key={label}
             className="flex justify-between text-[12px] mb-2"

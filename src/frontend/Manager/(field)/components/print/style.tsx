@@ -1,6 +1,6 @@
 // Gaya cetak Surat Jalan. Berbeda dari modul lain: dokumen dicetak hitam di
 // atas putih (kertas A4), sehingga warna tidak bergantung pada tema aplikasi.
-export const sheet = "mx-auto bg-white text-slate-900 print:shadow-none w-[794px] min-h-[1123px] px-12 py-10 relative"
+export const sheet = "relative mx-auto min-h-[1123px] w-full max-w-[794px] bg-white px-4 py-6 text-slate-900 sm:px-8 sm:py-10 lg:px-12 print:w-[794px] print:shadow-none"
 export const kopWrap = "text-center border-b-4 border-slate-900 pb-3 mb-1"
 export const kopCompany = "text-[26px] font-extrabold tracking-tight uppercase font-headline text-slate-900"
 export const kopDivider = "flex items-center justify-center gap-3 mt-1 text-[13px] text-slate-700"

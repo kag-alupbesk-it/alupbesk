@@ -1,4 +1,4 @@
-import { persistFaqItem } from "./store";
+import { persistFaqItem } from "./persistFaqItem";
 import type { FaqItem, FaqItemInput } from "../types";
 
 export function createFaqItem(input: FaqItemInput): FaqItem {

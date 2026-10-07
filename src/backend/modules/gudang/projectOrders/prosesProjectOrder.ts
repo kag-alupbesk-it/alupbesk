@@ -1,11 +1,8 @@
 import { persistProjectOrder, projectOrders } from "./store";
 import { getGudangItems } from "../items/getGudangItems";
 import { createGudangKeluar } from "../movements/createGudangKeluar";
+import { getTodayIso } from "../getTodayIso";
 import type { ProjectOrder, ProjectProcessResult } from "./types";
-
-function todayIso(): string {
-  return new Date().toISOString().slice(0, 10);
-}
 
 // Menerima pesanan proyek: stok item proyek dipotong otomatis (barang keluar
 // dengan tujuan nama proyek) dan status naik ke "diproses". Stok semua baris
@@ -37,7 +34,7 @@ export function prosesProjectOrder(id: string): ProjectProcessResult {
     if (!gudangItem) continue;
     createGudangKeluar(gudangItem.id, {
       jumlah: item.quantity,
-      tanggal: todayIso(),
+      tanggal: getTodayIso(),
       tujuan: current.namaProyek,
       penerima: current.pelanggan,
       catatan: `Pesanan proyek ${current.id}`,

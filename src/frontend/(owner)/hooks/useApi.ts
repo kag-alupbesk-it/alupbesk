@@ -1,12 +1,13 @@
 "use client";
 
 import useSWR from "swr";
+import { useCallback } from "react";
 
 export interface ApiState<T> {
   data: T | null;
   loading: boolean;
   error: string | null;
-  refetch: () => void;
+  refetch: () => Promise<T | undefined>;
 }
 
 export function useApi<T>(
@@ -23,11 +24,12 @@ export function useApi<T>(
       revalidateOnFocus: false,
     }
   );
+  const refetch = useCallback(() => mutate(), [mutate]);
 
   return {
     data: data ?? null,
     loading: isLoading,
     error: error ? (error instanceof Error ? error.message : "Unknown error") : null,
-    refetch: () => mutate(),
+    refetch,
   };
 }

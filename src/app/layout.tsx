@@ -9,24 +9,25 @@ export const viewport = {
   initialScale: 1,
   maximumScale: 5,
   userScalable: true,
-  themeColor: "#e94560",
+  themeColor: "#121a2e",
 };
 
 export const metadata = {
-  title: "ALUPBESK | Solusi Produk Aluminium & Komponen Industrial Terpercaya",
+  title: "alupbesk",
   description:
     "Solusi Produk Aluminium & Komponen Industrial Terpercaya - Katalog, Pemesanan, dan Manajemen",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
-    title: "ALUPBESK",
+    title: "alupbesk",
   },
   formatDetection: {
     telephone: true,
   },
   icons: {
     icon: [
+      { url: "/favicon-32x32.png", sizes: "32x32", type: "image/png" },
       { url: "/icon-192x192.png", sizes: "192x192", type: "image/png" },
       { url: "/icon-512x512.png", sizes: "512x512", type: "image/png" },
     ],
@@ -49,7 +50,7 @@ export default function RootLayout({
     // suppressHydrationWarning: script inline mengubah class="dark" pada <html>
     // sebelum React hydrate, jadi React harus menerima nilai yang sudah ada di DOM
     // alih-alih menandai perbedaan atribut sebagai error.
-    <html lang="id" className="dark scroll-smooth" suppressHydrationWarning>
+    <html lang="en" className="dark scroll-smooth" suppressHydrationWarning>
       <head>
         {/*
          * Script anti-flicker tema: jalan sebelum CSS pertama dirender sehingga

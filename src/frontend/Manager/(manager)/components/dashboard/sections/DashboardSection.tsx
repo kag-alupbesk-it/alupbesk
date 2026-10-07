@@ -6,6 +6,9 @@ import * as styles from "../style";
 import { useApi } from "@/frontend/Manager/(manager)/hooks/useApi";
 import { fetchDashboardData } from "@/frontend/Manager/(manager)/services/dashboard";
 import { getOrders, decideOrder } from "@/frontend/Manager/(manager)/services/orders";
+import { reviewRoleRequest } from "@/services/api/roleRequests";
+import { request } from "@/services/api/request";
+import type { AuthenticatedProfile } from "@/backend/auth/getAuthenticatedProfile";
 import type { LocalOrder } from "@/services/orders";
 import type { Registration } from "@/frontend/Manager/(manager)/services/dashboard";
 import { periodLabels, type Period } from "@/frontend/Manager/(manager)/types";
@@ -33,24 +36,34 @@ export default function DashboardSection() {
   const [period, setPeriod] = useState<Period>("monthly");
   const { data, loading, error, refetch } = useApi(() => fetchDashboardData(period), { interval: 30000, key: period });
   const { data: orders, refetch: refetchOrders } = useApi(() => getOrders(), { interval: 30000 });
-  const [registrations, setRegistrations] = useState<Registration[]>([]);
+  const { data: profile } = useApi(
+    () => request<AuthenticatedProfile>("/auth/profile"),
+    { interval: 60000 },
+  );
   const [rejectTarget, setRejectTarget] = useState<LocalOrder | null>(null);
   const [rejectReason, setRejectReason] = useState("");
   const [rejectBusy, setRejectBusy] = useState(false);
+  const [reviewingRequestId, setReviewingRequestId] = useState<string | null>(null);
   const [actionError, setActionError] = useState("");
 
   const pendingOrders = (orders ?? []).filter((order) => order.status === "submitted_to_manager");
+  const displayRegistrations = data?.registrations ?? [];
+  const canApproveRoleRequests = profile?.role === "owner";
 
-  const handleApprove = (name: string) => {
-    setRegistrations((prev) =>
-      prev.map((r) => (r.name === name ? { ...r, status: "approved" as const } : r))
-    );
-  };
-
-  const handleReject = (name: string) => {
-    setRegistrations((prev) =>
-      prev.map((r) => (r.name === name ? { ...r, status: "rejected" as const } : r))
-    );
+  const handleRoleDecision = async (
+    registration: Registration,
+    decision: "approve" | "reject",
+  ) => {
+    setReviewingRequestId(registration.id);
+    setActionError("");
+    try {
+      await reviewRoleRequest(registration.id, decision);
+      await refetch();
+    } catch (reason) {
+      setActionError(reason instanceof Error ? reason.message : "Permintaan role gagal diproses.");
+    } finally {
+      setReviewingRequestId(null);
+    }
   };
 
   const handleApproveOrder = async (id: string) => {
@@ -81,8 +94,6 @@ export default function DashboardSection() {
     }
   };
 
-  const displayRegistrations = registrations.length > 0 ? registrations : data?.registrations ?? [];
-
   if (loading && !data) return <LoadingSkeleton />;
 
   if (error) {
@@ -102,8 +113,8 @@ export default function DashboardSection() {
   const sysStatus = data?.systemStatus ?? { serverGudang: "--", dbLatency: "--" };
 
   return (
-    <div className={styles.container}>
-      <div className={styles.mainContent}>
+    <div className={`${styles.container} max-lg:!flex-col max-lg:!gap-4 max-lg:!p-4`}>
+      <div className={`${styles.mainContent} max-lg:!w-full`}>
         <section className={styles.cardGrid}>
           {financialCards.map((card) => (
             <div key={card.label} className={styles.metricCard}>
@@ -164,30 +175,37 @@ export default function DashboardSection() {
               </div>
             )}
             {displayRegistrations.map((r) => (
-              <div key={r.name} className={styles.card}>
+              <div key={r.id} className={styles.card}>
                 <div className={styles.cardTop}>
                   <div className="flex items-center gap-3 min-w-0">
                     <div className={styles.avatar}>{r.initial}</div>
                     <span className={`${styles.nameText} truncate`}>{r.name}</span>
                   </div>
-                  {r.status === "pending" ? (
-                    <span className={styles.statusPending}>Menunggu</span>
-                  ) : r.status === "approved" ? (
-                    <span className={styles.statusApproved}>Disetujui</span>
-                  ) : (
-                    <span className={styles.statusRejected}>Ditolak</span>
-                  )}
+                  <span className={styles.statusPending}>Menunggu</span>
                 </div>
                 <div className={styles.cardInfo}>
-                  <div className="truncate">{r.dept}</div>
+                  <div className="break-all">{r.email}</div>
+                  <div className="truncate">Role: {r.requestedRole}{r.dept ? ` · ${r.dept}` : ""}</div>
                   <div>Terdaftar: {r.date}</div>
                 </div>
-                {r.status === "pending" && (
+                {canApproveRoleRequests ? (
                   <div className={`${styles.cardActions} gap-2`}>
-                    <button onClick={() => handleApprove(r.name)} className={`${styles.approveButton} w-full`}>Approve</button>
-                    <button onClick={() => handleReject(r.name)} className={`${styles.rejectButton} w-full`}>Tolak</button>
+                    <button
+                      disabled={reviewingRequestId !== null}
+                      onClick={() => void handleRoleDecision(r, "approve")}
+                      className={`${styles.approveButton} w-full disabled:opacity-50`}
+                    >
+                      {reviewingRequestId === r.id ? "Memproses..." : "Setujui"}
+                    </button>
+                    <button
+                      disabled={reviewingRequestId !== null}
+                      onClick={() => void handleRoleDecision(r, "reject")}
+                      className={`${styles.rejectButton} w-full disabled:opacity-50`}
+                    >
+                      Tolak
+                    </button>
                   </div>
-                )}
+                ) : <p className="mt-3 text-[10px] text-on-surface-variant">Menunggu persetujuan Owner.</p>}
               </div>
             ))}
           </div>
@@ -203,24 +221,38 @@ export default function DashboardSection() {
               </thead>
               <tbody className={styles.tableBody}>
                 {displayRegistrations.map((r) => (
-                  <tr key={r.name} className={styles.tableRow}>
+                  <tr key={r.id} className={styles.tableRow}>
                     <td className={styles.tableCell}>
                       <div className={styles.avatar}>{r.initial}</div>
-                      <span className={styles.nameText}>{r.name}</span>
+                      <div className="min-w-0">
+                        <span className={styles.nameText}>{r.name}</span>
+                        <p className="break-all text-[10px] text-on-surface-variant">{r.email}</p>
+                      </div>
                     </td>
-                    <td className={styles.tableCellSimple}>{r.dept}</td>
+                    <td className={styles.tableCellSimple}>
+                      <span className="capitalize">{r.requestedRole}</span>
+                      {r.dept && <p className="text-[10px] text-on-surface-variant">{r.dept}</p>}
+                    </td>
                     <td className={styles.tableCellSimple}>{r.date}</td>
                     <td className={styles.tableCellActions}>
-                      {r.status === "pending" ? (
+                      {canApproveRoleRequests ? (
                         <>
-                          <button onClick={() => handleApprove(r.name)} className={styles.approveButton}>Approve</button>
-                          <button onClick={() => handleReject(r.name)} className={styles.rejectButton}>Tolak</button>
+                          <button
+                            disabled={reviewingRequestId !== null}
+                            onClick={() => void handleRoleDecision(r, "approve")}
+                            className={`${styles.approveButton} disabled:opacity-50`}
+                          >
+                            {reviewingRequestId === r.id ? "Memproses..." : "Setujui"}
+                          </button>
+                          <button
+                            disabled={reviewingRequestId !== null}
+                            onClick={() => void handleRoleDecision(r, "reject")}
+                            className={`${styles.rejectButton} disabled:opacity-50`}
+                          >
+                            Tolak
+                          </button>
                         </>
-                      ) : r.status === "approved" ? (
-                        <span className={styles.statusApproved}>Disetujui</span>
-                      ) : (
-                        <span className={styles.statusRejected}>Ditolak</span>
-                      )}
+                      ) : <span className={styles.statusPending}>Menunggu Owner</span>}
                     </td>
                   </tr>
                 ))}
@@ -318,7 +350,7 @@ export default function DashboardSection() {
         </section>
       </div>
 
-      <aside className={styles.sidebar}>
+      <aside className={`${styles.sidebar} max-lg:!w-full`}>
         <div className={styles.sidebarCard}>
           <div className={styles.sidebarHeader}>
             <h5 className={styles.sidebarTitle}>Aktivitas Real-time</h5>

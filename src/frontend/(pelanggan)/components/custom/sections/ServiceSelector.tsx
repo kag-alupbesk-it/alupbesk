@@ -1,5 +1,8 @@
+import { useCallback } from "react";
 import { customStyles as styles } from "../style";
-import { services } from "./data";
+import { contentApi } from "@/services/api";
+import type { CustomService } from "@/backend/modules/content";
+import { usePollingResource } from "@/frontend/shared/hooks/usePollingResource";
 import type { CustomRequestForm } from "@/frontend/(pelanggan)/types";
 
 export default function ServiceSelector({
@@ -9,9 +12,16 @@ export default function ServiceSelector({
   form: CustomRequestForm;
   setForm: (form: CustomRequestForm) => void;
 }) {
+  const loadServices = useCallback(() => contentApi.getServices(), []);
+  const { data: services, loading, error } = usePollingResource<CustomService[]>(loadServices, []);
+
   return (
     <div className={styles.services}>
-      {services.map((service) => (
+      {loading && services.length === 0 ? (
+        <p className="col-span-full text-sm text-on-surface/50">Memuat layanan...</p>
+      ) : error && services.length === 0 ? (
+        <p className="col-span-full text-sm text-on-surface/50">Pilihan layanan belum tersedia.</p>
+      ) : services.filter((service) => service.active).map((service) => (
         <button
           key={service.title}
           type="button"
@@ -42,7 +52,7 @@ export default function ServiceSelector({
           </p>
 
           <p className="text-[11px] text-on-surface/40">
-            {service.desc}
+            {service.description}
           </p>
         </button>
       ))}

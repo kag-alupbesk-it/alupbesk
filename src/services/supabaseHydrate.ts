@@ -1,6 +1,6 @@
 import { db, supabaseEnabled } from "./supabase";
 import { products, type Product, type ProductVariant } from "./catalog/products";
-import { writeOrder } from "./orders/orderStore";
+import { replaceOrders } from "./orders/orderStore";
 import type { LocalOrder, OrderLine } from "./orders/types";
 import { gudangItems } from "../backend/modules/gudang/items/store";
 import type { GudangItem } from "../backend/modules/gudang/items/types";
@@ -24,6 +24,22 @@ import { portfolioItems, caseStudies } from "./portfolio/store";
 import type { PortfolioItem, CaseStudy } from "./portfolio/data";
 
 let hydrated: Promise<void> | null = null;
+let hydratedAt = 0;
+let refreshing = false;
+const HYDRATION_TTL_MS = 15_000;
+
+type SelectResult<Row> = {
+  data: Row[] | null;
+  error: { message: string } | null;
+};
+
+async function readRows<Row>(
+  query: PromiseLike<SelectResult<Row>>,
+): Promise<Row[]> {
+  const { data, error } = await query;
+  if (error) throw error;
+  return data ?? [];
+}
 
 // ---------------------------------------------------------------------
 // Mapper: row DB (snake_case) <-> objek domain (camelCase)
@@ -76,36 +92,19 @@ type OrderLineRow = {
   subtotal: number;
 };
 
-function gudangItemToRow(item: GudangItem): Record<string, unknown> {
-  return {
-    id: item.id,
-    sku: item.sku,
-    jenis_barang: item.jenisBarang,
-    kategori_barang: item.kategoriBarang,
-    satuan: item.satuan,
-    merek: item.merek,
-    warna: item.warna,
-    seksi_lokasi: item.seksiLokasi,
-    stok: item.stok,
-    min_stok: item.minStok,
-    proyek: item.proyek ?? null,
-    catatan: item.catatan ?? null,
-  };
-}
-
 // ---------------------------------------------------------------------
 // Hydrasi per entitas
 // ---------------------------------------------------------------------
 
 async function hydrateProducts(): Promise<void> {
   if (!db) return;
-  const { data: rows } = await db.from("products").select("*").order("id");
-  const { data: variantRows } = await db
-    .from("product_variants")
-    .select("product_id, name, options, colors");
+  const rows = await readRows(db.from("products").select("*").order("id"));
+  const variantRows = await readRows(
+    db.from("product_variants").select("product_id, name, options, colors"),
+  );
 
   const variantsByProduct = new Map<number, ProductVariant[]>();
-  for (const v of variantRows ?? []) {
+  for (const v of variantRows) {
     const list = variantsByProduct.get(v.product_id) ?? [];
     list.push({
       name: v.name,
@@ -115,7 +114,7 @@ async function hydrateProducts(): Promise<void> {
     variantsByProduct.set(v.product_id, list);
   }
 
-  if (!rows || rows.length === 0) {
+  if (rows.length === 0) {
     products.splice(0, products.length);
     return;
   }
@@ -126,19 +125,22 @@ async function hydrateProducts(): Promise<void> {
 
 async function hydrateOrders(): Promise<void> {
   if (!db) return;
-  const { data: orderRows } = await db.from("orders").select("*");
-  const { data: lineRows } = await db
-    .from("order_lines")
-    .select("order_id, product_id, quantity, variants, note, title, unit_price, subtotal");
+  const orderRows = await readRows(db.from("orders").select("*"));
+  const lineRows = await readRows(
+    db
+      .from("order_lines")
+      .select("order_id, product_id, quantity, variants, note, title, unit_price, subtotal"),
+  );
 
   const linesByOrder = new Map<string, OrderLineRow[]>();
-  for (const line of lineRows ?? []) {
+  for (const line of lineRows) {
     const list = linesByOrder.get(line.order_id) ?? [];
     list.push(line);
     linesByOrder.set(line.order_id, list);
   }
 
-  for (const row of orderRows ?? []) {
+  const hydratedOrders: LocalOrder[] = [];
+  for (const row of orderRows) {
     const lines = (linesByOrder.get(row.id) ?? []).map<OrderLine>((line) => ({
       productId: line.product_id,
       quantity: line.quantity,
@@ -165,16 +167,17 @@ async function hydrateOrders(): Promise<void> {
       managerDecisionAt: row.manager_decision_at ?? undefined,
       managerRejectionReason: row.manager_rejection_reason ?? undefined,
     };
-    writeOrder(order);
+    hydratedOrders.push(order);
   }
+  replaceOrders(hydratedOrders);
 }
 
 async function hydrateGudang(): Promise<void> {
   if (!db) return;
 
-  const { data: itemRows } = await db.from("gudang_items").select("*");
+  const itemRows = await readRows(db.from("gudang_items").select("*"));
   gudangItems.clear();
-  for (const row of itemRows ?? []) {
+  for (const row of itemRows) {
     const item: GudangItem = {
       id: row.id,
       sku: row.sku,
@@ -192,9 +195,9 @@ async function hydrateGudang(): Promise<void> {
     gudangItems.set(item.id, item);
   }
 
-  const { data: movementRows } = await db.from("gudang_movements").select("*");
+  const movementRows = await readRows(db.from("gudang_movements").select("*"));
   gudangMovements.clear();
-  for (const row of movementRows ?? []) {
+  for (const row of movementRows) {
     const movement: GudangMovement = {
       id: row.id,
       itemId: row.item_id,
@@ -216,13 +219,15 @@ async function hydrateGudang(): Promise<void> {
 
 async function hydrateProjectOrders(): Promise<void> {
   if (!db) return;
-  const { data: orderRows } = await db.from("project_orders").select("*");
-  const { data: itemRows } = await db
-    .from("project_order_items")
-    .select("project_order_id, gudang_item_id, sku, jenis_barang, merek, warna, satuan, quantity");
+  const orderRows = await readRows(db.from("project_orders").select("*"));
+  const itemRows = await readRows(
+    db
+      .from("project_order_items")
+      .select("project_order_id, gudang_item_id, sku, jenis_barang, merek, warna, satuan, quantity"),
+  );
 
   const itemsByOrder = new Map<string, ProjectOrderItem[]>();
-  for (const row of itemRows ?? []) {
+  for (const row of itemRows) {
     const list = itemsByOrder.get(row.project_order_id) ?? [];
     list.push({
       gudangItemId: row.gudang_item_id,
@@ -236,9 +241,8 @@ async function hydrateProjectOrders(): Promise<void> {
     itemsByOrder.set(row.project_order_id, list);
   }
 
-  if (orderRows && orderRows.length > 0) {
-    projectOrders.clear();
-    for (const row of orderRows) {
+  projectOrders.clear();
+  for (const row of orderRows) {
       const order: ProjectOrder = {
         id: row.id,
         requestId: row.request_id ?? undefined,
@@ -256,15 +260,14 @@ async function hydrateProjectOrders(): Promise<void> {
         completedAt: row.completed_at ?? undefined,
       };
       projectOrders.set(order.id, order);
-    }
   }
 }
 
 async function hydrateCustomRequests(): Promise<void> {
   if (!db) return;
-  const { data: rows } = await db.from("custom_requests").select("*");
+  const rows = await readRows(db.from("custom_requests").select("*"));
   customRequests.clear();
-  for (const row of rows ?? []) {
+  for (const row of rows) {
     const request: CustomRequest = {
       id: row.id,
       nama: row.nama,
@@ -286,9 +289,9 @@ async function hydrateCustomRequests(): Promise<void> {
 
 async function hydrateKas(): Promise<void> {
   if (!db) return;
-  const { data: rows } = await db.from("kas_entries").select("*");
+  const rows = await readRows(db.from("kas_entries").select("*"));
   kasEntries.clear();
-  for (const row of rows ?? []) {
+  for (const row of rows) {
     kasEntries.set(row.id, {
       id: row.id,
       tipe: row.tipe,
@@ -300,24 +303,24 @@ async function hydrateKas(): Promise<void> {
       createdAt: row.created_at,
     });
   }
-  if (rows && rows.length > 0) return;
+  if (rows.length > 0) return;
   syncKasDariPesanan();
 }
 
 async function hydratePenagihan(): Promise<void> {
   if (!db) return;
-  const { data: rows } = await db.from("penagihan").select("order_id, status");
+  const rows = await readRows(db.from("penagihan").select("order_id, status"));
   pembayaran.clear();
-  for (const row of rows ?? []) {
+  for (const row of rows) {
     pembayaran.set(row.order_id, row.status);
   }
 }
 
 async function hydrateBanners(): Promise<void> {
   if (!db) return;
-  const { data: rows } = await db.from("marketing_banners").select("*");
+  const rows = await readRows(db.from("marketing_banners").select("*"));
   marketingBanners.clear();
-  for (const row of rows ?? []) {
+  for (const row of rows) {
     const banner: MarketingBanner = {
       id: row.id,
       title: row.title,
@@ -336,9 +339,9 @@ async function hydrateBanners(): Promise<void> {
 
 async function hydratePartners(): Promise<void> {
   if (!db) return;
-  const { data: rows } = await db.from("partners").select("*");
+  const rows = await readRows(db.from("partners").select("*"));
   partners.clear();
-  for (const row of rows ?? []) {
+  for (const row of rows) {
     const partner: Partner = {
       id: row.id,
       name: row.name,
@@ -354,9 +357,9 @@ async function hydratePartners(): Promise<void> {
 
 async function hydrateFaq(): Promise<void> {
   if (!db) return;
-  const { data: rows } = await db.from("faq_items").select("*");
+  const rows = await readRows(db.from("faq_items").select("*"));
   faqItems.clear();
-  for (const row of rows ?? []) {
+  for (const row of rows) {
     faqItems.set(row.id, {
       id: row.id,
       question: row.question,
@@ -370,9 +373,9 @@ async function hydrateFaq(): Promise<void> {
 
 async function hydrateCustomServices(): Promise<void> {
   if (!db) return;
-  const { data: rows } = await db.from("custom_services").select("*");
+  const rows = await readRows(db.from("custom_services").select("*"));
   customServices.clear();
-  for (const row of rows ?? []) {
+  for (const row of rows) {
     customServices.set(row.id, {
       id: row.id,
       icon: row.icon,
@@ -387,9 +390,11 @@ async function hydrateCustomServices(): Promise<void> {
 
 async function hydrateSiteContent(): Promise<void> {
   if (!db) return;
-  const { data: rows } = await db.from("site_content").select("key, value, updated_at");
+  const rows = await readRows(
+    db.from("site_content").select("key, value, updated_at"),
+  );
   siteContent.clear();
-  for (const row of rows ?? []) {
+  for (const row of rows) {
     siteContent.set(row.key, {
       key: row.key,
       value: row.value as Record<string, unknown>,
@@ -400,9 +405,11 @@ async function hydrateSiteContent(): Promise<void> {
 
 async function hydratePortfolio(): Promise<void> {
   if (!db) return;
-  const { data: itemRows } = await db.from("portfolio_items").select("*");
+  const itemRows = await readRows(db.from("portfolio_items").select("*"));
+  const caseRows = await readRows(db.from("case_studies").select("*"));
+
   portfolioItems.clear();
-  for (const row of itemRows ?? []) {
+  for (const row of itemRows) {
     const item: PortfolioItem = {
       id: row.id,
       client: row.client,
@@ -418,9 +425,8 @@ async function hydratePortfolio(): Promise<void> {
     portfolioItems.set(item.id, item);
   }
 
-  const { data: caseRows } = await db.from("case_studies").select("*");
   caseStudies.clear();
-  for (const row of caseRows ?? []) {
+  for (const row of caseRows) {
     const study: CaseStudy = {
       id: row.id,
       client: row.client,
@@ -441,7 +447,8 @@ async function hydratePortfolio(): Promise<void> {
 // ---------------------------------------------------------------------
 export function ensureHydrated(): Promise<void> {
   if (!supabaseEnabled) return Promise.resolve();
-  if (!hydrated) {
+  if (!hydrated || (Date.now() - hydratedAt >= HYDRATION_TTL_MS && !refreshing)) {
+    refreshing = true;
     hydrated = (async () => {
       try {
         await hydrateProducts();
@@ -457,8 +464,14 @@ export function ensureHydrated(): Promise<void> {
         await hydrateCustomServices();
         await hydrateSiteContent();
         await hydratePortfolio();
+        hydratedAt = Date.now();
       } catch (error) {
         console.error("[supabase] gagal hydrate data:", error);
+        // Cache failures briefly too: a missing table must not trigger a full
+        // round of database queries on every API request.
+        hydratedAt = Date.now();
+      } finally {
+        refreshing = false;
       }
     })();
   }

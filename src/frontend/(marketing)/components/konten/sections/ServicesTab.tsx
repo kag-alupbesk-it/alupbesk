@@ -1,40 +1,29 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import * as s from "../style";
 import ServiceFormModal from "./ServiceFormModal";
 import { contentApi } from "@/services/api";
 import type { CustomService, CustomServiceInput } from "@/backend/modules/content";
 import type { ServiceFormData } from "./types";
 import { serviceToForm, formToServiceInput } from "./types";
+import { usePollingResource } from "@/frontend/shared/hooks/usePollingResource";
 
 export default function ServicesTab() {
-  const [items, setItems] = useState<CustomService[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const loadServices = useCallback(() => contentApi.getServices(), []);
+  const { data: items, loading, error: loadError, refresh } = usePollingResource<CustomService[]>(loadServices, []);
+  const [actionError, setActionError] = useState("");
   const [showForm, setShowForm] = useState(false);
   const [editItem, setEditItem] = useState<CustomService | null>(null);
-
-  useEffect(() => {
-    contentApi
-      .getServices()
-      .then(setItems)
-      .catch((reason) => setError(reason instanceof Error ? reason.message : "Layanan gagal dimuat."))
-      .finally(() => setLoading(false));
-  }, []);
-
-  async function refresh() {
-    setItems(await contentApi.getServices());
-  }
 
   async function handleSave(form: ServiceFormData, id?: string) {
     const input: CustomServiceInput = formToServiceInput(form);
     try {
       if (id) await contentApi.updateService(id, input);
       else await contentApi.createService(input);
-      await refresh();
+      refresh();
     } catch (reason) {
-      setError(reason instanceof Error ? reason.message : "Layanan gagal disimpan.");
+      setActionError(reason instanceof Error ? reason.message : "Layanan gagal disimpan.");
     }
     setShowForm(false);
     setEditItem(null);
@@ -44,18 +33,18 @@ export default function ServicesTab() {
     if (!confirm("Hapus layanan ini?")) return;
     try {
       await contentApi.deleteService(id);
-      await refresh();
+      refresh();
     } catch (reason) {
-      setError(reason instanceof Error ? reason.message : "Layanan gagal dihapus.");
+      setActionError(reason instanceof Error ? reason.message : "Layanan gagal dihapus.");
     }
   }
 
   async function handleToggle(item: CustomService) {
     try {
       await contentApi.updateService(item.id, { ...formToServiceInput(serviceToForm(item)), active: !item.active });
-      await refresh();
+      refresh();
     } catch (reason) {
-      setError(reason instanceof Error ? reason.message : "Layanan gagal diubah.");
+      setActionError(reason instanceof Error ? reason.message : "Layanan gagal diubah.");
     }
   }
 
@@ -74,7 +63,7 @@ export default function ServicesTab() {
         </button>
       </div>
 
-      {error && <p className="mb-4 text-sm text-red-400">{error}</p>}
+      {(actionError || loadError) && <p className="mb-4 text-sm text-red-400">{actionError || loadError}</p>}
 
       {loading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
@@ -114,7 +103,7 @@ export default function ServicesTab() {
         </div>
       )}
 
-      <ServiceFormModal isOpen={showForm} editItem={editItem} onClose={() => { setShowForm(false); setEditItem(null); }} onSave={handleSave} />
+      {showForm && <ServiceFormModal isOpen={showForm} editItem={editItem} onClose={() => { setShowForm(false); setEditItem(null); }} onSave={handleSave} />}
     </div>
   );
 }

@@ -1,77 +1,144 @@
 "use client";
 
-import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from "react";
-import { mockSPK } from "../data/mockSPK";
-import { tahapanOrder } from "../types";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from "react";
+import {
+  getPMOrders,
+  submitProductionDrawing,
+  updateProductionStage,
+} from "@/services/api/pm";
+import type { PMOrder } from "@/services/pm/types";
 import type { KirimGambarInput, SPK, TahapanProduksi } from "../types";
+import { mapPMOrderToSPK } from "../services/mapPMOrderToSPK";
 
 interface ProduksiContextValue {
   spk: SPK[];
-  // Order yang masih menunggu gambar teknik: belum ada berkas, atau PM sudah
-  // meminta revisi sehingga perlu unggah ulang. Nilainya sama persis dengan
-  // alur "Butuh Gambar Teknik" di dashboard, jadi angka di kedua tempat sinkron.
   spkPerluGambar: SPK[];
+  loading: boolean;
+  error: string;
+  clearError: () => void;
   getSPK: (nomor: string) => SPK | undefined;
-  kirimGambar: (input: KirimGambarInput) => SPK | undefined;
-  ubahTahapan: (nomor: string, tahapan: TahapanProduksi) => void;
+  kirimGambar: (input: KirimGambarInput) => Promise<boolean>;
+  ubahTahapan: (nomor: string, tahapan: TahapanProduksi) => Promise<boolean>;
 }
 
 const ProduksiContext = createContext<ProduksiContextValue | undefined>(undefined);
 
-function aktivitasUntukTahapan(tahapan: TahapanProduksi, namaKontraktor: string) {
-  if (tahapan === "siap_kirim") return `QC passed, barang siap kirim ke ${namaKontraktor}`;
-  return `Tahap ${tahapan} dimulai di workshop`;
+function replaceOrder(orders: PMOrder[], updated: PMOrder): PMOrder[] {
+  return orders.map((order) => (order.id === updated.id ? updated : order));
 }
 
 export function ProduksiProvider({ children }: { children: ReactNode }) {
-  const [spk, setSPK] = useState<SPK[]>(mockSPK);
+  const [orders, setOrders] = useState<PMOrder[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const spk = useMemo(() => orders.map(mapPMOrderToSPK), [orders]);
 
-  const getSPK = useCallback((nomor: string) => spk.find((item) => item.nomor === nomor), [spk]);
+  useEffect(() => {
+    let active = true;
+    const loadOrders = async () => {
+      try {
+        const loaded = await getPMOrders();
+        if (active) {
+          setOrders(loaded);
+          setError("");
+        }
+      } catch (loadError) {
+        if (active) {
+          setError(
+            loadError instanceof Error
+              ? loadError.message
+              : "Order produksi gagal dimuat.",
+          );
+        }
+      } finally {
+        if (active) setLoading(false);
+      }
+    };
 
+    void loadOrders();
+    const interval = window.setInterval(() => {
+      if (document.visibilityState === "visible") void loadOrders();
+    }, 15000);
+
+    return () => {
+      active = false;
+      window.clearInterval(interval);
+    };
+  }, []);
+
+  const clearError = useCallback(() => setError(""), []);
+  const getSPK = useCallback(
+    (nomor: string) => spk.find((item) => item.nomor === nomor),
+    [spk],
+  );
   const spkPerluGambar = useMemo(
-    () => spk.filter((item) => item.statusGambar === "belum_diunggah" || item.statusGambar === "revisi"),
+    () =>
+      spk.filter(
+        (item) =>
+          item.statusGambar === "belum_diunggah" || item.statusGambar === "revisi",
+      ),
     [spk],
   );
 
-  const kirimGambar = useCallback((input: KirimGambarInput) => {
-    let hasil: SPK | undefined;
-    setSPK((current) =>
-      current.map((item) => {
-        if (item.nomor !== input.spkNomor) return item;
-        hasil = {
-          ...item,
-          gambarTeknik: input.berkas,
-          catatanTeknis: input.catatanTeknis.trim() || undefined,
-          statusGambar: "menunggu_acc",
-          tahapan: "pemotongan",
-          aktivitasTerakhir: "Gambar teknik dikirim ke PM, menunggu ACC",
-        };
-        return hasil;
-      }),
-    );
-    return hasil;
+  const kirimGambar = useCallback(async (input: KirimGambarInput) => {
+    try {
+      const updated = await submitProductionDrawing(
+        input.spkNomor,
+        input.file,
+        input.catatanTeknis,
+      );
+      setOrders((current) => replaceOrder(current, updated));
+      setError("");
+      return true;
+    } catch (uploadError) {
+      setError(
+        uploadError instanceof Error
+          ? uploadError.message
+          : "Gambar teknik gagal diunggah.",
+      );
+      return false;
+    }
   }, []);
 
-  const ubahTahapan = useCallback((nomor: string, tahapan: TahapanProduksi) => {
-    setSPK((current) =>
-      current.map((item) => {
-        if (item.nomor !== nomor) return item;
-        // Produksi tidak boleh berjalan sebelum gambar teknik di-ACC PM, karena
-        // workshop akan memotong material dari ukuran yang salah.
-        if (item.statusGambar !== "acc_pm") return item;
-        if (!tahapanOrder.includes(tahapan)) return item;
-        return {
-          ...item,
-          tahapan,
-          aktivitasTerakhir: aktivitasUntukTahapan(tahapan, item.namaKontraktor),
-        };
-      }),
-    );
-  }, []);
+  const ubahTahapan = useCallback(
+    async (nomor: string, tahapan: TahapanProduksi) => {
+      try {
+        const updated = await updateProductionStage(nomor, tahapan);
+        setOrders((current) => replaceOrder(current, updated));
+        setError("");
+        return true;
+      } catch (updateError) {
+        setError(
+          updateError instanceof Error
+            ? updateError.message
+            : "Tahap produksi gagal diperbarui.",
+        );
+        return false;
+      }
+    },
+    [],
+  );
 
   const value = useMemo(
-    () => ({ spk, spkPerluGambar, getSPK, kirimGambar, ubahTahapan }),
-    [spk, spkPerluGambar, getSPK, kirimGambar, ubahTahapan],
+    () => ({
+      spk,
+      spkPerluGambar,
+      loading,
+      error,
+      clearError,
+      getSPK,
+      kirimGambar,
+      ubahTahapan,
+    }),
+    [spk, spkPerluGambar, loading, error, clearError, getSPK, kirimGambar, ubahTahapan],
   );
 
   return <ProduksiContext.Provider value={value}>{children}</ProduksiContext.Provider>;

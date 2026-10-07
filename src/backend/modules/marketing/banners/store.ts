@@ -1,4 +1,4 @@
-import { enqueueUpsert, enqueueDelete } from "@/services/supabase";
+import { enqueueUpsert } from "@/services/supabase";
 import type { MarketingBanner } from "../types";
 export const marketingBanners = new Map<string, MarketingBanner>();
 

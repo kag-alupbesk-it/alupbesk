@@ -1,40 +1,30 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useState } from "react";
+import Image from "next/image";
 import * as s from "../style";
 import PartnerFormModal from "./PartnerFormModal";
 import { contentApi } from "@/services/api";
 import type { Partner, PartnerInput } from "@/backend/modules/content";
 import type { PartnerFormData } from "./types";
 import { partnerToForm, formToPartnerInput } from "./types";
+import { usePollingResource } from "@/frontend/shared/hooks/usePollingResource";
 
 export default function PartnersTab() {
-  const [items, setItems] = useState<Partner[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const loadPartners = useCallback(() => contentApi.getPartners(), []);
+  const { data: items, loading, error: loadError, refresh } = usePollingResource<Partner[]>(loadPartners, []);
+  const [actionError, setActionError] = useState("");
   const [showForm, setShowForm] = useState(false);
   const [editItem, setEditItem] = useState<Partner | null>(null);
-
-  useEffect(() => {
-    contentApi
-      .getPartners()
-      .then(setItems)
-      .catch((reason) => setError(reason instanceof Error ? reason.message : "Mitra gagal dimuat."))
-      .finally(() => setLoading(false));
-  }, []);
-
-  async function refresh() {
-    setItems(await contentApi.getPartners());
-  }
 
   async function handleSave(form: PartnerFormData, id?: string) {
     const input: PartnerInput = formToPartnerInput(form);
     try {
       if (id) await contentApi.updatePartner(id, input);
       else await contentApi.createPartner(input);
-      await refresh();
+      refresh();
     } catch (reason) {
-      setError(reason instanceof Error ? reason.message : "Mitra gagal disimpan.");
+      setActionError(reason instanceof Error ? reason.message : "Mitra gagal disimpan.");
     }
     setShowForm(false);
     setEditItem(null);
@@ -44,18 +34,18 @@ export default function PartnersTab() {
     if (!confirm("Hapus mitra ini?")) return;
     try {
       await contentApi.deletePartner(id);
-      await refresh();
+      refresh();
     } catch (reason) {
-      setError(reason instanceof Error ? reason.message : "Mitra gagal dihapus.");
+      setActionError(reason instanceof Error ? reason.message : "Mitra gagal dihapus.");
     }
   }
 
   async function handleToggle(item: Partner) {
     try {
       await contentApi.updatePartner(item.id, { ...formToPartnerInput(partnerToForm(item)), active: !item.active });
-      await refresh();
+      refresh();
     } catch (reason) {
-      setError(reason instanceof Error ? reason.message : "Mitra gagal diubah.");
+      setActionError(reason instanceof Error ? reason.message : "Mitra gagal diubah.");
     }
   }
 
@@ -74,7 +64,7 @@ export default function PartnersTab() {
         </button>
       </div>
 
-      {error && <p className="mb-4 text-sm text-red-400">{error}</p>}
+      {(actionError || loadError) && <p className="mb-4 text-sm text-red-400">{actionError || loadError}</p>}
 
       {loading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
@@ -89,7 +79,7 @@ export default function PartnersTab() {
               <div className={s.cardHeader}>
                 <div className="flex items-center gap-3">
                   {item.logoUrl ? (
-                    <img src={item.logoUrl} alt="" className="size-12 rounded-full object-contain bg-surface p-2 border border-outline/30" />
+                    <Image src={item.logoUrl} alt="" width={48} height={48} unoptimized className="size-12 rounded-full object-contain bg-surface p-2 border border-outline/30" />
                   ) : (
                     <span className="size-12 rounded-full bg-secondary/15 text-secondary grid place-items-center text-sm font-black">{item.initials}</span>
                   )}
@@ -117,7 +107,7 @@ export default function PartnersTab() {
         </div>
       )}
 
-      <PartnerFormModal isOpen={showForm} editPartner={editItem} onClose={() => { setShowForm(false); setEditItem(null); }} onSave={handleSave} />
+      {showForm && <PartnerFormModal isOpen={showForm} editPartner={editItem} onClose={() => { setShowForm(false); setEditItem(null); }} onSave={handleSave} />}
     </div>
   );
 }

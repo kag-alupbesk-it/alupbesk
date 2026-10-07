@@ -15,7 +15,7 @@ export default function FooterLinks({
           <li key={link}>
             <a
               className="transition-colors hover:text-secondary"
-              href={link === "FAQ" ? "#faq" : "#"}
+              href={link === "FAQ" || link === "Pertanyaan Umum" ? "#faq" : "#"}
             >
               {link}
             </a>

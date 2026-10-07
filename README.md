@@ -1,46 +1,28 @@
 # ALUPBESK
 
-Website katalog aluminium dan komponen industri berbasis Next.js 16, Tailwind CSS, serta Express API lokal. Data dipersist ke Supabase (PostgreSQL) — saat server dimulai, seluruh data di-load ke memori lalu setiap mutasi ditulis kembali secara sinkron.
+Website katalog aluminium dan komponen industri berbasis Next.js 16 dan Tailwind CSS. Route Handler Next.js menyediakan API web. Express API lokal tersedia secara opsional untuk kompatibilitas.
 
 ## Menjalankan project
 
 1. Install Node.js 20 atau lebih baru.
-2. Buat project Supabase, lalu jalankan seluruh isi `database/schema.sql` di SQL Editor Supabase.
-3. Salin `.env.example` menjadi `.env` dan isi dengan kredensial Supabase:
-
-   ```powershell
-   Copy-Item .env.example .env
-   ```
-
-   Variabel yang dibutuhkan: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, dan `SUPABASE_SERVICE_ROLE_KEY` (untuk tulis lintas-RLS dari server).
-
-4. Install paket dan jalankan dua terminal:
+2. Buat project Supabase. Untuk database baru, jalankan `database/schema.sql`. Untuk database yang sudah ada, jalankan migrasi yang belum diterapkan dari `database/migrations/` secara berurutan.
+3. Salin `.env.example` menjadi `.env.local` dan isi `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, serta `SUPABASE_SERVICE_ROLE_KEY`. Service role key hanya digunakan di server. Untuk validasi bot, isi `NEXT_PUBLIC_HCAPTCHA_SITE_KEY` dan aktifkan hCaptcha di pengaturan Auth Supabase.
+4. Install paket dan jalankan Next.js:
 
    ```powershell
    npm install
-   npm run dev:api
-   ```
-
-   Terminal kedua:
-
-   ```powershell
    npm run dev
    ```
 
-5. Buka:
+5. Buka `http://localhost:3000`.
 
-   - Website: http://localhost:3000
-   - Katalog penuh: http://localhost:3000/katalog
-   - Keranjang: http://localhost:3000/keranjang
-   - Checkout: http://localhost:3000/checkout
-   - Admin persiapan: http://localhost:3000/admin
-   - API: http://localhost:4000/api/catalog/products
+Express API opsional dijalankan terpisah dengan `npm run dev:api` pada port 4000.
 
 ## Perintah penting
 
 ```powershell
-npm run dev       # Website Next.js
-npm run dev:api   # Express API lokal
+npm run dev       # Website Next.js dan API Route Handler
+npm run dev:api   # Express API lokal opsional
 npm run lint      # Pemeriksaan ESLint
 npx tsc --noEmit  # Pemeriksaan TypeScript
 npm run build     # Build produksi
@@ -48,15 +30,28 @@ npm run build     # Build produksi
 
 ## Persistensi Supabase
 
-- Skema database ada di `database/schema.sql` (tabel, enum, index). Eksekusi sekali di SQL Editor Supabase.
-- Saat server start, `src/services/supabaseHydrate.ts` memuat semua tabel ke store in-memory dan men-seed data awal (produk, gudang, kas) jika tabel kosong. Pemicu: `src/instrumentation.ts` untuk Next.js dan middleware di `src/backend/app.ts` untuk Express.
-- Setiap mutasi store memanggil `enqueueUpsert`/`enqueueDelete` dari `src/services/supabase.ts`, lalu route API memanggil `await flushWrites()` untuk menulis antrean ke Supabase.
-- Karena tulis memakai antrean sinkron, jangan jalankan dua instance aplikasi (mis. `next dev` + `next start`) terhadap database yang sama secara bersamaan.
+- Skema database ada di `database/schema.sql`; migrasi tambahan ada di `database/migrations/`.
+- `src/instrumentation.ts` memuat data awal; Route Handler yang memakai cache store menyegarkan data paling lama setiap 15 detik.
+- Perubahan store dikirim lewat `src/services/supabase.ts`. Jika tulis ke Supabase gagal, request mutasi ikut gagal dan operasi tetap di antrean untuk dicoba kembali.
+- PM, Pengiriman Lapangan, dan ringkasan Keuangan menggunakan query Supabase langsung.
+- Tanpa kredensial Supabase, sebagian fitur memakai cache memori lokal dan datanya tidak bertahan setelah proses server berhenti. Fitur yang memakai query langsung mengembalikan error.
 
-## Catatan pengembangan
+## Catatan
 
-Produk dan gambar saat ini bersifat dinamis dari data di `src/services/catalog/products.ts` dan disajikan oleh API. Mitra menggunakan data sementara di `src/features/home/data/partners.ts`; setiap item sudah memiliki tempat `logoUrl` untuk integrasi media.
+Halaman operasional memakai `/login` dan mencocokkan akun Supabase Auth dengan profil aktif di `public.users`. Buat akun owner awal di Supabase Auth, kemudian tambahkan profil `owner` dengan email yang sama, status `ACTIVE`, dan `active = true`. Profil yang dibuat dari halaman Manager belum membuat kredensial Auth.
 
-Katalog beranda hanya menampilkan delapan produk agar halaman tidak terlalu panjang, sementara semua produk tersedia di `/katalog`. Keranjang menggabungkan produk yang sama menjadi satu item dan mencantumkan pilihan ukuran/varian di dalamnya.
+Pendaftaran staf dilakukan di `/register`. Pemohon memilih role `keuangan`, `proyek`, `field`, `produksi`, `gudang`, atau `marketing`; `owner` dan `manager` tidak bisa diminta dari formulir publik. Permintaan role disimpan sebagai `PENDING` dan hanya Owner aktif yang dapat menyetujui atau menolaknya melalui dashboard/pengelolaan pengguna. Untuk database yang sudah berjalan, terapkan migrasi `20261014_operational_roles.sql` lalu `20261015_role_requests.sql` sesuai urutan. Untuk database baru, `database/schema.sql` sudah memuat kedua fitur tersebut.
 
-Lihat [WARNING.md](WARNING.md) sebelum mulai integrasi database, unggahan gambar, dan autentikasi admin.
+Permintaan pendaftaran dibuat oleh trigger Supabase Auth. Karena itu, pastikan skema/migrasi diterapkan sebelum membuka `/register`, serta setel redirect konfirmasi email Supabase ke halaman aplikasi yang sesuai. Owner pertama tetap perlu dibuat melalui Supabase secara manual sebelum ada yang dapat menyetujui permintaan role.
+
+PWA menyimpan halaman publik dan aset publik tertentu untuk pembukaan offline. Halaman/API operasional serta perubahan data tetap memerlukan koneksi server; mutasi offline tidak dianggap tersimpan sampai server mengonfirmasi. Realtime permintaan role menggunakan Supabase Realtime dengan polling berkala sebagai fallback.
+
+## Bahasa, katalog, dan autentikasi
+
+- Pilihan bahasa English/Indonesia tersedia di portal, navbar publik, login, dan register. Bahasa awal adalah English; pilihan berikutnya disimpan di browser. Konten perusahaan yang diubah dari CMS masih memakai satu versi teks sampai kolom terjemahan CMS ditambahkan.
+- Katalog publik hanya menampilkan detail produk perusahaan; keranjang, checkout, dan endpoint checkout publik sudah dilepas. Data pesanan lama dan alur internal divisi tetap disimpan.
+- Password login/register punya tombol tampilkan/sembunyikan. Form login membatasi tiga kegagalan per email pada browser selama 15 menit. Pembatas ini membantu penggunaan normal, bukan pengganti batas server; atur rate limit endpoint Auth di Supabase Dashboard untuk perlindungan lintas perangkat.
+- Aktifkan CAPTCHA di Supabase: Authentication → Bot and Abuse Protection → CAPTCHA, pilih hCaptcha, lalu masukkan secret key di Dashboard. Simpan site key pada `NEXT_PUBLIC_HCAPTCHA_SITE_KEY`. CAPTCHA diteruskan ke Supabase saat login dan registrasi. Jangan simpan secret CAPTCHA atau service role key di variabel `NEXT_PUBLIC_*`.
+- Akun Owner pertama tidak dibuat melalui pendaftaran umum. Provisioning Owner dilakukan oleh administrator server melalui prosedur internal; halaman publik tidak menyediakan panduan atau SQL untuk membuat Owner.
+
+Sebelum produksi, ikuti daftar pekerjaan di [WARNING.md](WARNING.md), termasuk pemeriksaan otorisasi per handler.

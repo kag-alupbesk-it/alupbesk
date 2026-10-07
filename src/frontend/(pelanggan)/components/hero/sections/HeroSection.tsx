@@ -1,18 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
-
-interface MarketingBanner {
-  id: string;
-  title: string;
-  subtitle?: string;
-  imageUrl: string;
-  linkUrl?: string;
-  active: boolean;
-  order: number;
-  startDate?: string;
-  endDate?: string;
-}
+import { useCallback, useEffect, useState } from "react";
+import { marketingApi } from "@/services/api";
+import type { MarketingBanner } from "@/backend/modules/marketing";
+import { heroDefaults } from "@/frontend/(pelanggan)/data/siteContentDefaults";
+import { usePollingResource } from "@/frontend/shared/hooks/usePollingResource";
+import { usePublicSiteContent } from "@/frontend/(pelanggan)/hooks/usePublicSiteContent";
+import { useLanguage } from "@/frontend/shared/i18n/LanguageProvider";
 
 function isWithinRange(banner: MarketingBanner): boolean {
   if (banner.startDate && new Date(banner.startDate).getTime() > Date.now()) return false;
@@ -21,27 +15,15 @@ function isWithinRange(banner: MarketingBanner): boolean {
 }
 
 export default function HeroSection() {
-  const [banners, setBanners] = useState<MarketingBanner[]>([]);
+  const { t } = useLanguage();
+  const loadBanners = useCallback(() => marketingApi.getBanners(), []);
+  const { data: bannerData } = usePollingResource<MarketingBanner[]>(loadBanners, []);
+  const { data: hero } = usePublicSiteContent("hero", heroDefaults);
+  const banners = bannerData
+    .filter((banner) => banner.active && isWithinRange(banner))
+    .sort((left, right) => left.order - right.order);
   const [activeIndex, setActiveIndex] = useState(0);
-
-  useEffect(() => {
-    let cancelled = false;
-    fetch("/api/marketing/banners")
-      .then((response) => response.json())
-      .then((body) => {
-        if (cancelled) return;
-        const active = (body.data as MarketingBanner[] | undefined)
-          ?.filter((banner) => banner.active && isWithinRange(banner))
-          .sort((a, b) => a.order - b.order) ?? [];
-        setBanners(active);
-      })
-      .catch(() => {
-        if (!cancelled) setBanners([]);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+  const safeActiveIndex = banners.length ? activeIndex % banners.length : 0;
 
   useEffect(() => {
     if (banners.length < 2) return;
@@ -60,30 +42,24 @@ export default function HeroSection() {
         <div className="absolute inset-0 opacity-40">
           <div
             className="w-full h-full bg-cover bg-center"
-            style={{
-              backgroundImage:
-                "url('https://lh3.googleusercontent.com/aida-public/AB6AXuAF01DjQuzxqehDWahuPf_aFZ3DcXxh2BQCZ6HnCpt0_6BjRemnRnCOreO2TuteIan0mTHZDXWotXGPoHKMVkicB5M76tANcB8cictuFOPGDHTtjt4X50Klwc7yOeYbxWSeeQhk2awTZI3kVF80cvuF_fo60X4dAZeiHPA-U-2pkWgj2_SYaqTqgKLwGjJ1hjgIBqe1Nu9AVSLCoCEbRxMKYknt41vggriwhwoIgYvhxTnUvHQZ495EOROjUTitJHD1WSaQZeQs1vk')",
-            }}
+            style={hero.imageUrl ? { backgroundImage: `url('${hero.imageUrl}')` } : undefined}
           ></div>
           <div className="absolute inset-0 bg-gradient-to-r from-primary-container via-primary-container/80 to-transparent"></div>
         </div>
         <div className="relative z-10 max-w-container-max mx-auto px-margin-x-mobile md:px-margin-x-desktop grid lg:grid-cols-2 gap-12 items-center">
           <div className="space-y-8">
             <h1 className="text-display-hero-mobile md:text-display-hero font-display-hero text-on-surface leading-tight">
-              Solusi Produk Aluminium &amp; Komponen Industrial{" "}
-              <span className="text-secondary">Terpercaya</span>
+              {hero.title === heroDefaults.title ? t("heroTitle") : hero.title}
             </h1>
             <p className="text-on-surface-variant text-body-lg max-w-xl">
-              Menyediakan material aluminium berkualitas tinggi dan komponen
-              industri presisi untuk mendukung akselerasi produksi bisnis Anda di
-              seluruh Indonesia.
+              {hero.subtitle === heroDefaults.subtitle ? t("heroDescription") : hero.subtitle}
             </p>
             <div className="flex flex-col sm:flex-row gap-4 pt-4">
               <a
                 className="px-8 py-4 bg-secondary text-primary font-bold rounded-full flex items-center justify-center gap-2 hover:bg-secondary-fixed transition-all group"
-                href="#katalog"
+                href={hero.primaryLink || "#katalog"}
               >
-                Lihat Katalog
+                {hero.primaryCta ? (hero.primaryCta === heroDefaults.primaryCta ? t("viewCatalog") : hero.primaryCta) : t("viewCatalog")}
                 <span className="material-symbols-outlined group-hover:translate-x-1 transition-transform">
                   arrow_forward
                 </span>
@@ -93,7 +69,7 @@ export default function HeroSection() {
                 href="#"
               >
                 <span className="material-symbols-outlined">chat</span>
-                Hubungi via WhatsApp
+                {t("contactWhatsApp")}
               </a>
             </div>
           </div>
@@ -111,7 +87,7 @@ export default function HeroSection() {
         <div
           key={banner.id}
           className={`absolute inset-0 transition-opacity duration-700 ${
-            index === activeIndex ? "opacity-100" : "opacity-0"
+            index === safeActiveIndex ? "opacity-100" : "opacity-0"
           }`}
         >
           <div
@@ -125,19 +101,19 @@ export default function HeroSection() {
       <div className="relative z-10 max-w-container-max mx-auto px-margin-x-mobile md:px-margin-x-desktop grid lg:grid-cols-2 gap-12 items-center">
         <div className="space-y-8">
           <h1 className="text-display-hero-mobile md:text-display-hero font-display-hero text-on-surface leading-tight">
-            {banners[activeIndex].title}
+            {banners[safeActiveIndex].title}
           </h1>
-          {banners[activeIndex].subtitle && (
+          {banners[safeActiveIndex].subtitle && (
             <p className="text-on-surface-variant text-body-lg max-w-xl">
-              {banners[activeIndex].subtitle}
+              {banners[safeActiveIndex].subtitle}
             </p>
           )}
           <div className="flex flex-col sm:flex-row gap-4 pt-4">
             <a
               className="px-8 py-4 bg-secondary text-primary font-bold rounded-full flex items-center justify-center gap-2 hover:bg-secondary-fixed transition-all group"
-              href={banners[activeIndex].linkUrl || "#katalog"}
+              href={banners[safeActiveIndex].linkUrl || "#katalog"}
             >
-              {banners[activeIndex].linkUrl ? "Lihat Promo" : "Lihat Katalog"}
+              {banners[safeActiveIndex].linkUrl ? t("viewPromotion") : t("viewCatalog")}
               <span className="material-symbols-outlined group-hover:translate-x-1 transition-transform">
                 arrow_forward
               </span>
@@ -147,7 +123,7 @@ export default function HeroSection() {
               href="#katalog"
             >
               <span className="material-symbols-outlined">inventory_2</span>
-              Lihat Katalog
+              {t("viewCatalog")}
             </a>
           </div>
         </div>
@@ -162,7 +138,7 @@ export default function HeroSection() {
               aria-label={`Banner ${index + 1}`}
               onClick={() => setActiveIndex(index)}
               className={`h-2.5 rounded-full transition-all ${
-                index === activeIndex
+                index === safeActiveIndex
                   ? "w-8 bg-secondary"
                   : "w-2.5 bg-on-surface-variant/40 hover:bg-on-surface-variant/70"
               }`}

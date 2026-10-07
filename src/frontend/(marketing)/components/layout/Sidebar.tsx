@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { getRolePagePath } from "@/frontend/shared/navigation/getRolePagePath";
 import { clsx } from "clsx";
 import { useSidebar } from "./SidebarProvider";
 
@@ -14,7 +15,7 @@ const navItems = [
 ];
 
 export default function Sidebar() {
-  const pathname = usePathname();
+  const pathname = getRolePagePath(usePathname());
   const { open, close, desktopOpen } = useSidebar();
 
   const isActive = (href: string) =>
@@ -61,7 +62,7 @@ export default function Sidebar() {
 
       <div className="mt-auto px-3 lg:px-4 space-y-0.5 border-t border-outline/20 pt-6">
         <Link
-          href="/"
+          href="/catalog"
           onClick={close}
           className="flex items-center gap-3 px-3 lg:px-4 py-2.5 lg:py-3 text-on-surface-variant hover:text-on-surface transition-colors text-xs lg:text-sm rounded-lg"
         >

@@ -6,13 +6,12 @@ import {
   useContext,
   useMemo,
   useReducer,
+  useRef,
+  useEffect,
+  useState,
   type ReactNode,
 } from "react";
-import {
-  karyawanAwal,
-  invoiceAwal,
-  transaksiKasAwal,
-} from "./mockData";
+import { request } from "@/services/api/request";
 
 import {
   KATEGORI_BIAYA,
@@ -57,7 +56,8 @@ type FinanceAction =
   | { type: "ubah-karyawan"; payload: Karyawan }
   | { type: "hapus-karyawan"; id: string }
   | { type: "toast"; message: string }
-  | { type: "bersihkan-toast" };
+  | { type: "bersihkan-toast" }
+  | { type: "hydrate"; payload: Omit<FinanceState, "toast"> };
 
 const gabungOpsi = <T extends string>(dasar: readonly T[], kustom: T[]): T[] => {
   const lihat = new Set(dasar.map((item) => item.toLowerCase()));
@@ -65,16 +65,16 @@ const gabungOpsi = <T extends string>(dasar: readonly T[], kustom: T[]): T[] => 
 };
 
 const initialState: FinanceState = {
-  transaksi: transaksiKasAwal,
-  invoice: invoiceAwal,
-  karyawan: karyawanAwal,
+  transaksi: [],
+  invoice: [],
+  karyawan: [],
   opsiJabatan: [],
   opsiPerson: [],
   opsiKategori: [],
   opsiPos: [],
   toast: "",
   seq: 1,
-  seqKaryawan: karyawanAwal.length + 1,
+  seqKaryawan: 1,
 };
 
 function buatTransaksi(payload: Omit<TransaksiKas, "id">, urut: number): TransaksiKas {
@@ -83,6 +83,8 @@ function buatTransaksi(payload: Omit<TransaksiKas, "id">, urut: number): Transak
 
 function reducer(state: FinanceState, action: FinanceAction): FinanceState {
   switch (action.type) {
+    case "hydrate":
+      return { ...state, ...action.payload };
     case "tambah-transaksi": {
       const transaksi = buatTransaksi(action.payload, state.seq);
       return {
@@ -298,6 +300,70 @@ const FinanceContext = createContext<FinanceContextValue | null>(null);
 
 export function FinanceProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(reducer, initialState);
+  const [loadedFromApi, setLoadedFromApi] = useState(false);
+  const saveQueue = useRef<Promise<unknown>>(Promise.resolve());
+
+  useEffect(() => {
+    let active = true;
+    request<Omit<FinanceState, "toast">>("/keuangan/finance-store")
+      .then((saved) => {
+        if (active) {
+          dispatch({ type: "hydrate", payload: saved });
+          setLoadedFromApi(true);
+        }
+      })
+      .catch((error: unknown) => {
+        if (active) {
+          dispatch({
+            type: "toast",
+            message: error instanceof Error
+              ? `Data belum tersambung ke database: ${error.message}`
+              : "Data belum tersambung ke database.",
+          });
+        }
+      });
+    return () => { active = false; };
+  }, []);
+
+  const {
+    transaksi,
+    invoice,
+    karyawan,
+    opsiJabatan,
+    opsiPerson,
+    opsiKategori,
+    opsiPos,
+    seq,
+    seqKaryawan,
+  } = state;
+  const persistedState = useMemo(() => ({
+    transaksi,
+    invoice,
+    karyawan,
+    opsiJabatan,
+    opsiPerson,
+    opsiKategori,
+    opsiPos,
+    seq,
+    seqKaryawan,
+  }), [transaksi, invoice, karyawan, opsiJabatan, opsiPerson, opsiKategori, opsiPos, seq, seqKaryawan]);
+
+  useEffect(() => {
+    if (!loadedFromApi) return;
+    saveQueue.current = saveQueue.current.catch(() => undefined).then(() =>
+      request("/keuangan/finance-store", {
+        method: "PUT",
+        body: JSON.stringify(persistedState),
+      }),
+    ).catch((error: unknown) => {
+      dispatch({
+        type: "toast",
+        message: error instanceof Error
+          ? `Perubahan belum tersimpan: ${error.message}`
+          : "Perubahan belum tersimpan ke database.",
+      });
+    });
+  }, [loadedFromApi, persistedState]);
 
   const tambahTransaksi = useCallback(
     (payload: Omit<TransaksiKas, "id">) => dispatch({ type: "tambah-transaksi", payload }),

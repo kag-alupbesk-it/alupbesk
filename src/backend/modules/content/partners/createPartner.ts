@@ -1,4 +1,4 @@
-import { persistPartner } from "./store";
+import { persistPartner } from "./persistPartner";
 import type { Partner, PartnerInput } from "../types";
 
 export function createPartner(input: PartnerInput): Partner {

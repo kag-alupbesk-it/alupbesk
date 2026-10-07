@@ -1,6 +1,8 @@
 import { z } from "zod";
 import { createPartner, getPartners } from "@/backend/modules/content";
 import { flushWrites } from "@/services/supabase";
+import { readJsonBody } from "@/backend/http/readJsonBody";
+import { ensureHydrated } from "@/services/supabaseHydrate";
 
 export const partnerSchema = z.object({
   name: z.string().trim().min(1, "Nama mitra wajib diisi."),
@@ -11,11 +13,13 @@ export const partnerSchema = z.object({
 });
 
 export async function GET() {
+  await ensureHydrated();
   return Response.json({ success: true, data: getPartners() });
 }
 
 export async function POST(request: Request) {
-  const parsed = partnerSchema.safeParse(await request.json());
+  await ensureHydrated();
+  const parsed = partnerSchema.safeParse(await readJsonBody(request));
   if (!parsed.success) {
     return Response.json({ success: false, error: { code: "INVALID_PARTNER", message: parsed.error.issues[0]?.message ?? "Data mitra tidak valid." } }, { status: 400 });
   }

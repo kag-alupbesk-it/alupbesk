@@ -1,7 +1,9 @@
 import { deleteProjectOrder } from "@/backend/modules/gudang";
 import { flushWrites } from "@/services/supabase";
+import { ensureHydrated } from "@/services/supabaseHydrate";
 
 export async function DELETE(_request: Request, { params }: { params: Promise<{ id: string }> }) {
+  await ensureHydrated();
   const { id } = await params;
   const result = deleteProjectOrder(id);
   await flushWrites();

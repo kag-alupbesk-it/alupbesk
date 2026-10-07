@@ -1,26 +1,25 @@
 # Pekerjaan lanjutan sebelum produksi
 
-Project saat ini dapat berjalan penuh secara lokal tanpa database. Data katalog berasal dari `src/services/catalog/products.ts`, dan pesanan disimpan sementara di memori proses API. Semua data pesanan akan hilang saat `npm run dev:api` dihentikan.
+Beberapa fitur sudah tersambung ke Supabase, tetapi deployment database belum bisa diverifikasi dari workspace ini. Terapkan skema dan migrasi sebelum memakai data operasional.
 
 ## Prioritas wajib
 
-1. Buat Supabase project, isi `.env.local` dari `.env.example`, lalu buat tabel `products`, `product_variants`, `partners`, `orders`, dan `order_items`.
-2. Ganti penyimpanan lokal pada `src/services/orders` dengan repository database. Jangan gunakan service-role key di browser.
-3. Tambahkan autentikasi nyata (mis. Supabase) berbasis role sebelum produksi. Saat ini halaman role (`/gudang`, `/marketing`, `/manager`, `/owner`) langsung bisa diakses tanpa login untuk keperluan pengujian lokal.
-4. Sediakan bucket media untuk gambar produk/logo mitra, validasi tipe/ukuran unggahan, lalu simpan URL publik atau signed URL di database.
-5. Ganti nomor WhatsApp contoh `6281234567890` pada navbar, hero, dan checkout.
-6. Tambahkan payment gateway, ongkir, status pembayaran, audit log, rate limit, dan validasi server untuk produksi.
+1. Buat project Supabase, isi `.env.local` dari `.env.example`, lalu jalankan `database/schema.sql` untuk database baru atau jalankan migrasi yang belum diterapkan dari `database/migrations/` secara berurutan.
+2. Siapkan Owner pertama melalui `/owner-setup`: buat akun di Supabase Auth, lalu buat profil `owner` dengan email yang sama di `public.users`. Tidak ada pendaftaran Owner publik.
+3. Next Proxy sudah mewajibkan sesi aktif dan mencocokkan role untuk halaman operasional serta Route Handler berdasarkan prefix. Sebelum produksi, tambahkan pemeriksaan role di setiap handler dan proteksi untuk Express API; Express saat ini hanya bind ke loopback.
+4. Profil di `public.users` belum membuat atau mengelola identitas di `auth.users`; tambah/edit role hanya mengubah profil database.
+5. Tinjau konfigurasi bucket dan akses file sebelum produksi. Foto POD memakai bucket publik dengan batas 5 MiB; gambar teknik memakai bucket privat dengan batas 50 MiB.
+6. Aktifkan hCaptcha di Supabase Auth, atur `NEXT_PUBLIC_HCAPTCHA_SITE_KEY`, dan konfigurasi rate limit Auth di Dashboard. Batas tiga percobaan pada form browser bukan pengganti rate limit server.
+7. Verifikasi alamat dan nomor WhatsApp perusahaan pada konten yang dikelola melalui CMS.
+8. Tambahkan audit log dan tinjau akses seluruh API sebelum produksi.
 
-## Struktur yang dipakai
+## Struktur aplikasi
 
-- `src/features/home`: komposisi beranda dan mitra.
-- `src/features/catalog`: kartu produk, katalog beranda, serta halaman `/katalog`.
-- `src/features/cart` dan `src/features/checkout`: pintu masuk fitur transaksi; implementasi UI lama masih dire-ekspor saat migrasi bertahap.
-- Role operasional (`/gudang`, `/marketing`, `/manager`, `/owner`) bisa diakses langsung tanpa login (untuk pengujian lokal).
-- `src/services`: domain data dan API client.
-- `src/backend`: Express API lokal untuk katalog, pesanan, portofolio, marketing, gudang, dan manager.
+- Route Handler Next.js berada di `src/app/api`.
+- Modul backend dipisah per fitur di `src/backend/modules`.
+- API client dan tipe domain berada di `src/services`.
+- `src/backend/server.ts` menyediakan Express API lokal opsional untuk kompatibilitas.
 
-## Catatan teknis
+## Persistensi
 
-- Satu produk pada keranjang kini satu baris; pilihan ukuran/varian berbeda digabung sebagai keterangan pada baris tersebut.
-- Jangan menghapus folder `src/frontend/(katalog)` sebelum semua komponen yang masih dire-ekspor dipindahkan ke `src/features`. Gunakan pencarian import terlebih dahulu.
+Modul berbasis store memuat cache dari Supabase dan mengantrekan mutasi. Route Handler menyegarkan cache paling lama setiap 15 detik. PM, Pengiriman Lapangan, dan ringkasan Keuangan melakukan query langsung. Tanpa kredensial Supabase, sebagian fitur memakai memori proses saja dan datanya hilang saat server berhenti; fitur yang memakai query langsung mengembalikan error.

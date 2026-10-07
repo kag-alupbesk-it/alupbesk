@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import * as s from "../style";
 import PortfolioItemFormModal from "./PortfolioItemFormModal";
 import CaseStudyFormModal from "./CaseStudyFormModal";
@@ -8,44 +8,31 @@ import { contentApi } from "@/services/api";
 import type { PortfolioItem, CaseStudy } from "@/services/portfolio";
 import type { PortfolioItemFormData, CaseStudyFormData } from "./types";
 import { formToPortfolioItemInput, formToCaseStudyInput } from "./types";
+import { usePollingResource } from "@/frontend/shared/hooks/usePollingResource";
 
 export default function PortfolioTab() {
-  const [items, setItems] = useState<PortfolioItem[]>([]);
-  const [studies, setStudies] = useState<CaseStudy[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const loadPortfolio = useCallback(() => contentApi.getPortfolio(), []);
+  const {
+    data: portfolio,
+    loading,
+    error: loadError,
+    refresh,
+  } = usePollingResource(loadPortfolio, { items: [], caseStudies: [] });
+  const items = portfolio.items;
+  const studies = portfolio.caseStudies;
+  const [actionError, setActionError] = useState("");
   const [showItemForm, setShowItemForm] = useState(false);
   const [editItem, setEditItem] = useState<PortfolioItem | null>(null);
   const [showStudyForm, setShowStudyForm] = useState(false);
   const [editStudy, setEditStudy] = useState<CaseStudy | null>(null);
 
-  useEffect(() => {
-    (async () => {
-      try {
-        const res = await contentApi.getPortfolio();
-        setItems(res.items);
-        setStudies(res.caseStudies);
-      } catch (reason) {
-        setError(reason instanceof Error ? reason.message : "Portofolio gagal dimuat.");
-      } finally {
-        setLoading(false);
-      }
-    })();
-  }, []);
-
-  async function refresh() {
-    const res = await contentApi.getPortfolio();
-    setItems(res.items);
-    setStudies(res.caseStudies);
-  }
-
   async function handleSaveItem(form: PortfolioItemFormData, id?: number) {
     try {
       if (id) await contentApi.updatePortfolioItem(id, formToPortfolioItemInput(form));
       else await contentApi.createPortfolioItem(formToPortfolioItemInput(form));
-      await refresh();
+      refresh();
     } catch (reason) {
-      setError(reason instanceof Error ? reason.message : "Item portofolio gagal disimpan.");
+      setActionError(reason instanceof Error ? reason.message : "Item portofolio gagal disimpan.");
     }
     setShowItemForm(false);
     setEditItem(null);
@@ -55,9 +42,9 @@ export default function PortfolioTab() {
     if (!confirm("Hapus item portofolio ini?")) return;
     try {
       await contentApi.deletePortfolioItem(id);
-      await refresh();
+      refresh();
     } catch (reason) {
-      setError(reason instanceof Error ? reason.message : "Item portofolio gagal dihapus.");
+      setActionError(reason instanceof Error ? reason.message : "Item portofolio gagal dihapus.");
     }
   }
 
@@ -65,9 +52,9 @@ export default function PortfolioTab() {
     try {
       if (id) await contentApi.updateCaseStudy(id, formToCaseStudyInput(form));
       else await contentApi.createCaseStudy(formToCaseStudyInput(form));
-      await refresh();
+      refresh();
     } catch (reason) {
-      setError(reason instanceof Error ? reason.message : "Studi kasus gagal disimpan.");
+      setActionError(reason instanceof Error ? reason.message : "Studi kasus gagal disimpan.");
     }
     setShowStudyForm(false);
     setEditStudy(null);
@@ -77,9 +64,9 @@ export default function PortfolioTab() {
     if (!confirm("Hapus studi kasus ini?")) return;
     try {
       await contentApi.deleteCaseStudy(id);
-      await refresh();
+      refresh();
     } catch (reason) {
-      setError(reason instanceof Error ? reason.message : "Studi kasus gagal dihapus.");
+      setActionError(reason instanceof Error ? reason.message : "Studi kasus gagal dihapus.");
     }
   }
 
@@ -96,7 +83,7 @@ export default function PortfolioTab() {
         </div>
       </div>
 
-      {error && <p className="mb-4 text-sm text-red-400">{error}</p>}
+      {(actionError || loadError) && <p className="mb-4 text-sm text-red-400">{actionError || loadError}</p>}
 
       <div className="flex items-center justify-between mb-4">
         <h4 className="text-lg font-bold text-on-surface font-headline">Item Portofolio</h4>
@@ -165,8 +152,8 @@ export default function PortfolioTab() {
         </div>
       )}
 
-      <PortfolioItemFormModal isOpen={showItemForm} editItem={editItem} onClose={() => { setShowItemForm(false); setEditItem(null); }} onSave={handleSaveItem} />
-      <CaseStudyFormModal isOpen={showStudyForm} editItem={editStudy} onClose={() => { setShowStudyForm(false); setEditStudy(null); }} onSave={handleSaveStudy} />
+      {showItemForm && <PortfolioItemFormModal isOpen={showItemForm} editItem={editItem} onClose={() => { setShowItemForm(false); setEditItem(null); }} onSave={handleSaveItem} />}
+      {showStudyForm && <CaseStudyFormModal isOpen={showStudyForm} editItem={editStudy} onClose={() => { setShowStudyForm(false); setEditStudy(null); }} onSave={handleSaveStudy} />}
     </div>
   );
 }

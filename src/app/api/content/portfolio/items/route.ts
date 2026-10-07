@@ -1,6 +1,8 @@
 import { z } from "zod";
 import { createPortfolioItem } from "@/services/portfolio";
 import { flushWrites } from "@/services/supabase";
+import { readJsonBody } from "@/backend/http/readJsonBody";
+import { ensureHydrated } from "@/services/supabaseHydrate";
 
 export const portfolioItemSchema = z.object({
   client: z.string().trim().min(1, "Nama klien wajib diisi."),
@@ -15,7 +17,8 @@ export const portfolioItemSchema = z.object({
 });
 
 export async function POST(request: Request) {
-  const parsed = portfolioItemSchema.safeParse(await request.json());
+  await ensureHydrated();
+  const parsed = portfolioItemSchema.safeParse(await readJsonBody(request));
   if (!parsed.success) {
     return Response.json({ success: false, error: { code: "INVALID_PORTFOLIO", message: parsed.error.issues[0]?.message ?? "Data portofolio tidak valid." } }, { status: 400 });
   }

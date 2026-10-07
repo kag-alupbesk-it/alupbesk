@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useCallback, useState, useMemo } from "react";
 import { gudangApi } from "@/services/api";
 import { GudangHeader } from "./GudangHeader";
 import { GudangTable } from "./GudangTable";
@@ -13,14 +13,17 @@ import { ProjectStockSummary } from "./ProjectStockSummary";
 import { filterItems, computeMetrics } from "./helpers";
 import type { GudangItem, GudangMovement, GudangMasukInput, GudangKeluarInput, GudangItemInput } from "./types";
 import * as s from "../style";
+import { usePollingResource } from "@/frontend/shared/hooks/usePollingResource";
 
 interface GudangSectionProps {
   initialItems: GudangItem[];
 }
 
 export function GudangSection({ initialItems }: GudangSectionProps) {
-  const [items, setItems] = useState<GudangItem[]>(initialItems);
-  const [movements, setMovements] = useState<GudangMovement[]>([]);
+  const loadItems = useCallback(() => gudangApi.getItems(), []);
+  const loadMovements = useCallback(() => gudangApi.getMovements(), []);
+  const { data: items, setData: setItems, error: itemsError } = usePollingResource<GudangItem[]>(loadItems, initialItems);
+  const { data: movements, setData: setMovements, error: movementsError } = usePollingResource<GudangMovement[]>(loadMovements, []);
   const [error, setError] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedMerek, setSelectedMerek] = useState("ALL");
@@ -30,11 +33,6 @@ export function GudangSection({ initialItems }: GudangSectionProps) {
   const [masukItem, setMasukItem] = useState<GudangItem | null>(null);
   const [keluarItem, setKeluarItem] = useState<GudangItem | null>(null);
   const [showTambah, setShowTambah] = useState(false);
-
-  useEffect(() => {
-    gudangApi.getItems().then(setItems).catch((reason) => setError(reason instanceof Error ? reason.message : "Data gudang gagal dimuat."));
-    gudangApi.getMovements().then(setMovements).catch(() => undefined);
-  }, []);
 
   function refreshMovements() {
     gudangApi.getMovements().then(setMovements).catch(() => undefined);
@@ -107,7 +105,7 @@ export function GudangSection({ initialItems }: GudangSectionProps) {
             jumlahLowStock={metrics.jumlahLowStock}
             onTambah={() => setShowTambah(true)}
           />
-          {error && <p className="mb-4 text-sm text-red-400">{error}</p>}
+      {(error || itemsError || movementsError) && <p className="mb-4 text-sm text-red-400">{error || itemsError || movementsError}</p>}
           <ProjectStockSummary
             items={items}
             selectedProyek={selectedProyek}
