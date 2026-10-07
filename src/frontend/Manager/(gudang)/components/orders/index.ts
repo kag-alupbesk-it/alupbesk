@@ -1,5 +1,5 @@
-export * from "./types";
-export * from "./OrdersSection";
-export { OrdersTable } from "./OrdersTable";
-export { OrderDetailModal } from "./OrderDetailModal";
-export { OrderActionModal } from "./OrderActionModal";
+export * from "./types/types";
+export * from "./OrdersSection/OrdersSection";
+export { OrdersTable } from "./OrdersTable/OrdersTable";
+export { OrderDetailModal } from "./OrderDetailModal/OrderDetailModal";
+export { OrderActionModal } from "./OrderActionModal/OrderActionModal";

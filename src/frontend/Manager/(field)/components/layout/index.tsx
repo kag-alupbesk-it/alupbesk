@@ -1,3 +1,3 @@
-export { SidebarProvider, useSidebar } from "./SidebarProvider";
-export { default as Sidebar } from "./Sidebar";
-export { default as FieldShell } from "./FieldShell";
+export { SidebarProvider, useSidebar } from "./SidebarProvider/SidebarProvider";
+export { default as Sidebar } from "./Sidebar/Sidebar";
+export { default as FieldShell } from "./FieldShell/FieldShell";

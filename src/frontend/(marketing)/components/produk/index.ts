@@ -1,1 +1,1 @@
-export { default as ProdukSection } from "./sections/ProdukSection";
+export { default as ProdukSection } from "./sections/ProdukSection/ProdukSection";

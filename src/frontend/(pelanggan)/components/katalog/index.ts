@@ -1,1 +1,1 @@
-export { default } from "./sections/KatalogSection";
+export { default } from "./sections/KatalogSection/KatalogSection";

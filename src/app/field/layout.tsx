@@ -2,9 +2,9 @@
 
 import { usePathname } from "next/navigation";
 import { useTheme } from "@/app/ThemeContext";
-import { SidebarProvider } from "@/frontend/Manager/(field)/components/layout/SidebarProvider";
-import Sidebar from "@/frontend/Manager/(field)/components/layout/Sidebar";
-import FieldShell from "@/frontend/Manager/(field)/components/layout/FieldShell";
+import { SidebarProvider } from "@/frontend/Manager/(field)/components/layout/SidebarProvider/SidebarProvider";
+import Sidebar from "@/frontend/Manager/(field)/components/layout/Sidebar/Sidebar";
+import FieldShell from "@/frontend/Manager/(field)/components/layout/FieldShell/FieldShell";
 
 function FieldLayoutInner({ children }: { children: React.ReactNode }) {
   const { theme } = useTheme();

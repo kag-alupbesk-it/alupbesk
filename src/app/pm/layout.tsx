@@ -1,10 +1,10 @@
 "use client";
 
 import { useTheme } from "@/app/ThemeContext";
-import { PMOrderProvider } from "@/frontend/Manager/(pm)/context/PMOrderContext";
-import { PMSidebarProvider } from "@/frontend/Manager/(pm)/components/layout/PMSidebarProvider";
-import { PMSidebar } from "@/frontend/Manager/(pm)/components/layout/PMSidebar";
-import { PMShell } from "@/frontend/Manager/(pm)/components/layout/PMShell";
+import { PMOrderProvider } from "@/frontend/Manager/(pm)/context/PMOrderContext/PMOrderContext";
+import { PMSidebarProvider } from "@/frontend/Manager/(pm)/components/layout/PMSidebarProvider/PMSidebarProvider";
+import { PMSidebar } from "@/frontend/Manager/(pm)/components/layout/PMSidebar/PMSidebar";
+import { PMShell } from "@/frontend/Manager/(pm)/components/layout/PMShell/PMShell";
 
 function PMLayoutContent({ children }: { children: React.ReactNode }) {
   const { theme } = useTheme();
