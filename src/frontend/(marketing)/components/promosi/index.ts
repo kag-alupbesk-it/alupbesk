@@ -1,1 +1,1 @@
-export { default as PromosiSection } from "./sections/PromosiSection";
+export { default as PromosiSection } from "./sections/PromosiSection/PromosiSection";

@@ -1,2 +1,2 @@
-export { ProductCard } from "./ProductCard";
-export { default as ProductDetailModal } from "./ProductDetailModal";
+export { ProductCard } from "./ProductCard/ProductCard";
+export { default as ProductDetailModal } from "./ProductDetailModal/ProductDetailModal";

@@ -1,1 +1,1 @@
-export { default as InventorySection } from "./sections/InventorySection";
+export { default as InventorySection } from "./sections/InventorySection/InventorySection";

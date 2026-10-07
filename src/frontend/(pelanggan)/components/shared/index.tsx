@@ -1,4 +1,4 @@
-export { default as Modal } from "./Modal";
-export { default as ContactDetail } from "./ContactDetail";
-export { default as FormField } from "./FormField";
-export { default as FooterLinks } from "./FooterLinks";
+export { default as Modal } from "./Modal/Modal";
+export { default as ContactDetail } from "./ContactDetail/ContactDetail";
+export { default as FormField } from "./FormField/FormField";
+export { default as FooterLinks } from "./FooterLinks/FooterLinks";

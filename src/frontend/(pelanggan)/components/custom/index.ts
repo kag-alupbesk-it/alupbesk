@@ -1,1 +1,1 @@
-export { default } from "./sections/CustomSection";
+export { default } from "./sections/CustomSection/CustomSection";

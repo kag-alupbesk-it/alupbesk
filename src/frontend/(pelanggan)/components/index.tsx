@@ -1,8 +1,8 @@
 "use client";
 
 import { Suspense } from "react";
-import Navbar from "./layout/Navbar";
-import Footer from "./layout/Footer";
+import Navbar from "./layout/Navbar/Navbar";
+import Footer from "./layout/Footer/Footer";
 import HeroSection from "./hero";
 import ProfileSection from "./profile";
 import KatalogSection from "./katalog";

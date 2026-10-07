@@ -1,4 +1,4 @@
-export { default as Sidebar } from "./Sidebar";
-export { default as OwnerShell } from "./OwnerShell";
-export { default as TopBar } from "./TopBar";
-export { SidebarProvider, useSidebar } from "./SidebarProvider";
+export { default as Sidebar } from "./Sidebar/Sidebar";
+export { default as OwnerShell } from "./OwnerShell/OwnerShell";
+export { default as TopBar } from "./TopBar/TopBar";
+export { SidebarProvider, useSidebar } from "./SidebarProvider/SidebarProvider";

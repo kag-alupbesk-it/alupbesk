@@ -1,1 +1,1 @@
-export { default as KontenSection } from "./sections/KontenSection";
+export { default as KontenSection } from "./sections/KontenSection/KontenSection";

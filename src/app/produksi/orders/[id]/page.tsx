@@ -1,4 +1,4 @@
-import { DetailSpkProgress } from "@/frontend/Manager/(produksi)/components/DetailSpkProgress";
+import { DetailSpkProgress } from "@/frontend/Manager/(produksi)/components/DetailSpkProgress/DetailSpkProgress";
 
 export const metadata = {
   title: "Detail SPK & Progress | Manajer Produksi",
