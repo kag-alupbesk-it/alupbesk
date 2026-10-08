@@ -1,6 +1,8 @@
 import { z } from "zod";
-import { createProjectOrder, getProjectOrders } from "@/backend/modules/gudang";
+import { createProjectOrder, getProjectOrders } from "@/backend/modules/gudang/index";
 import { flushWrites } from "@/services/supabase";
+import { readJsonBody } from "@/backend/http/readJsonBody";
+import { ensureHydrated } from "@/services/supabaseHydrate";
 
 const createSchema = z.object({
   requestId: z.string().optional(),
@@ -19,11 +21,13 @@ const createSchema = z.object({
 });
 
 export async function GET() {
+  await ensureHydrated();
   return Response.json({ success: true, data: getProjectOrders() });
 }
 
 export async function POST(request: Request) {
-  const parsed = createSchema.safeParse(await request.json());
+  await ensureHydrated();
+  const parsed = createSchema.safeParse(await readJsonBody(request));
   if (!parsed.success)
     return Response.json(
       { success: false, error: { code: "INVALID_PROJECT_ORDER", message: parsed.error.issues[0]?.message ?? "Data pesanan proyek tidak valid." } },

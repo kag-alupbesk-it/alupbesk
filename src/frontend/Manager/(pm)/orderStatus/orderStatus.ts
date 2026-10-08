@@ -7,3 +7,4 @@ export function needsDrawingApproval(order: PMOrder) {
   if (!order.hasProductionDrawing) return false;
   return order.drawingStatus === "menunggu_acc" || order.drawingStatus === "revisi";
 }
+ 

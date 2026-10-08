@@ -1,27 +1,19 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState } from "react";
 import * as styles from "../../style/style";
 import { useApi } from "@/frontend/Manager/(manager)/hooks/useApi/useApi";
-import { fetchUsersData } from "@/frontend/Manager/(manager)/services/users/users";
+import { createUser, deleteUser, fetchUsersData, updateUser } from "@/frontend/Manager/(manager)/services/users/users";
 import { roleColor as getRoleColor, statusInfo } from "../helpers/helpers";
 import { ITEMS_PER_PAGE, defaultUserForm } from "../data/data";
 
 interface UserData {
-  name: string; email: string; dept: string; role: string; status: string; active: boolean;
+  id: string; name: string; email: string; dept: string; role: string; status: string; active: boolean;
 }
 
 export default function UsersSection() {
-  const { data: apiData } = useApi(fetchUsersData, { interval: 30000 });
-  const seeded = useRef(false);
-  const [users, setUsers] = useState<UserData[]>([]);
-
-  useEffect(() => {
-    if (apiData && !seeded.current) {
-      seeded.current = true;
-      setUsers(apiData.users);
-    }
-  }, [apiData]);
+  const { data: apiData, refetch } = useApi(fetchUsersData, { interval: 30000 });
+  const users: UserData[] = apiData?.users ?? [];
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
   const [roleFilter, setRoleFilter] = useState("All");
@@ -30,6 +22,8 @@ export default function UsersSection() {
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingIdx, setEditingIdx] = useState<number | null>(null);
   const [form, setForm] = useState(defaultUserForm);
+  const [mutationError, setMutationError] = useState("");
+  const [saving, setSaving] = useState(false);
 
   const filteredUsers = users.filter((u) => {
     const matchSearch = search === "" || u.name.toLowerCase().includes(search.toLowerCase()) || u.email.toLowerCase().includes(search.toLowerCase());
@@ -40,35 +34,55 @@ export default function UsersSection() {
   const totalPages = Math.max(1, Math.ceil(filteredUsers.length / ITEMS_PER_PAGE));
   const paginatedUsers = filteredUsers.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE);
 
-  const handleAdd = () => {
+  const handleAdd = async () => {
     if (!form.name || !form.email) return;
-    const roleColor = getRoleColor(form.role);
-    const { statusColor, active } = statusInfo("PENDING");
-    setUsers((prev) => [...prev, { ...form, roleColor, status: "PENDING", statusColor, active }]);
-    setShowAddModal(false);
-    setForm(defaultUserForm);
+    setSaving(true);
+    setMutationError("");
+    try {
+      await createUser(form);
+      await refetch();
+      setShowAddModal(false);
+      setForm(defaultUserForm);
+    } catch (error) {
+      setMutationError(error instanceof Error ? error.message : "Pengguna gagal disimpan.");
+    } finally {
+      setSaving(false);
+    }
   };
 
-  const handleOpenEdit = (idx: number) => {
-    const user = filteredUsers[idx];
-    setEditingIdx(users.indexOf(user));
+  const handleOpenEdit = (user: UserData) => {
+    setEditingIdx(users.findIndex((item) => item.id === user.id));
     setForm({ name: user.name, email: user.email, dept: user.dept, role: user.role, status: user.status });
     setShowEditModal(true);
   };
 
-  const handleSaveEdit = () => {
+  const handleSaveEdit = async () => {
     if (editingIdx === null) return;
-    const roleColor = getRoleColor(form.role);
-    const { statusColor, active } = statusInfo(form.status);
-    setUsers((prev) => prev.map((u, i) => i === editingIdx ? { ...u, ...form, roleColor, statusColor, active } : u));
-    setShowEditModal(false);
-    setEditingIdx(null);
+    const current = users[editingIdx];
+    if (!current) return;
+    setSaving(true);
+    setMutationError("");
+    try {
+      await updateUser(current.id, form);
+      await refetch();
+      setShowEditModal(false);
+      setEditingIdx(null);
+    } catch (error) {
+      setMutationError(error instanceof Error ? error.message : "Perubahan pengguna gagal disimpan.");
+    } finally {
+      setSaving(false);
+    }
   };
 
-  const handleDelete = (idx: number) => {
-    const user = filteredUsers[idx];
+  const handleDelete = async (user: UserData) => {
     if (!confirm(`Hapus user ${user.name}?`)) return;
-    setUsers((prev) => prev.filter((u) => u !== user));
+    setMutationError("");
+    try {
+      await deleteUser(user.id);
+      await refetch();
+    } catch (error) {
+      setMutationError(error instanceof Error ? error.message : "Pengguna gagal dihapus.");
+    }
   };
 
   return (
@@ -76,12 +90,14 @@ export default function UsersSection() {
       <div className={styles.header}>
         <div>
           <h3 className={styles.title}>User Management</h3>
-          <p className={styles.subtitle}>Manage personnel security, structural permissions, and administrative oversight for the industrial ecosystem.</p>
+          <p className={styles.subtitle}>Kelola profil dan peran pengguna aplikasi. Data ini belum membuat akun login Supabase Auth.</p>
         </div>
         <button onClick={() => { setForm(defaultUserForm); setShowAddModal(true); }} className={styles.addButton}>
-          <span className={styles.icon}>person_add</span><span>Add New User</span>
+          <span className={styles.icon}>person_add</span><span>Tambah Data Pengguna</span>
         </button>
       </div>
+      {mutationError && <p role="alert" className="mb-4 rounded-lg border border-red-400/30 bg-red-400/10 p-3 text-xs text-red-300">{mutationError}</p>}
+      {mutationError && <p role="alert" className="mb-4 rounded-lg border border-red-400/30 bg-red-400/10 p-3 text-xs text-red-300">{mutationError}</p>}
 
       <div className={styles.filterGrid}>
         <div className={styles.searchCard}>
@@ -93,7 +109,7 @@ export default function UsersSection() {
           <span className={`${styles.icon} ${styles.expandIcon}`}>expand_more</span>
           {showRoleDropdown && (
             <div className={styles.dropdown}>
-              {["All", "Owner", "Admin", "Staff"].map((role) => (
+              {["All", "pelanggan", "marketing", "gudang", "keuangan", "proyek", "field", "produksi", "manager", "owner"].map((role) => (
                 <button key={role} onClick={(e) => { e.stopPropagation(); setRoleFilter(role); setShowRoleDropdown(false); setPage(1); }} className={`${styles.dropdownItem} ${roleFilter === role ? styles.dropdownActive : styles.dropdownInactive}`}>{role}</button>
               ))}
             </div>
@@ -111,7 +127,7 @@ export default function UsersSection() {
             Tidak ada user yang cocok.
           </div>
         )}
-        {paginatedUsers.map((u, i) => (
+        {paginatedUsers.map((u) => (
           <div key={u.email} className={styles.card}>
             <div className={styles.cardTop}>
               <div className="flex items-center gap-3 min-w-0">
@@ -131,8 +147,8 @@ export default function UsersSection() {
               </div>
             </div>
             <div className={`${styles.cardActions} gap-2`}>
-              <button onClick={() => handleOpenEdit(i)} className={`${styles.editButton} w-full`} title="Edit"><span className={styles.icon}>edit</span></button>
-              <button onClick={() => handleDelete(i)} className={`${styles.deleteButton} w-full`} title="Hapus"><span className={styles.icon}>delete</span></button>
+              <button onClick={() => handleOpenEdit(u)} className={`${styles.editButton} w-full`} title="Edit"><span className={styles.icon}>edit</span></button>
+              <button onClick={() => void handleDelete(u)} className={`${styles.deleteButton} w-full`} title="Hapus"><span className={styles.icon}>delete</span></button>
             </div>
           </div>
         ))}
@@ -148,7 +164,7 @@ export default function UsersSection() {
             </tr>
           </thead>
           <tbody className={styles.tableBody}>
-            {paginatedUsers.map((u, i) => (
+            {paginatedUsers.map((u) => (
               <tr key={u.email} className={styles.tableRow}>
                 <td className={styles.tableCell}><div className={styles.userCell}>
                   <div className={styles.avatar}><span className={`${styles.icon} ${styles.avatarIcon}`}>account_circle</span></div>
@@ -161,8 +177,8 @@ export default function UsersSection() {
                   {u.status}
                 </span></td>
                 <td className={styles.actionsCell}><div className={styles.actionsGroup}>
-                  <button onClick={() => handleOpenEdit(i)} className={styles.editButton} title="Edit"><span className={styles.icon}>edit</span></button>
-                  <button onClick={() => handleDelete(i)} className={styles.deleteButton} title="Hapus"><span className={styles.icon}>delete</span></button>
+                  <button onClick={() => handleOpenEdit(u)} className={styles.editButton} title="Edit"><span className={styles.icon}>edit</span></button>
+                  <button onClick={() => void handleDelete(u)} className={styles.deleteButton} title="Hapus"><span className={styles.icon}>delete</span></button>
                 </div></td>
               </tr>
             ))}
@@ -184,18 +200,26 @@ export default function UsersSection() {
       {showAddModal && (
         <div className={styles.modalOverlay} onClick={() => setShowAddModal(false)}>
           <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
-            <h4 className={styles.modalTitle}>Tambah User Baru</h4>
+            <h4 className={styles.modalTitle}>Tambah Data Pengguna</h4>
             <div className={styles.modalForm}>
               <input className={styles.modalInput} placeholder="Nama Lengkap" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
               <input className={styles.modalInput} placeholder="Email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
               <input className={styles.modalInput} placeholder="Departemen" value={form.dept} onChange={(e) => setForm({ ...form, dept: e.target.value })} />
               <select className={styles.modalSelect} value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value })}>
-                <option value="Staff">Staff</option><option value="Admin">Admin</option>
+                <option value="pelanggan">Pelanggan</option>
+                <option value="marketing">Marketing</option>
+                <option value="gudang">Gudang</option>
+                <option value="keuangan">Keuangan</option>
+                <option value="proyek">Proyek</option>
+                <option value="field">Field</option>
+                <option value="produksi">Produksi</option>
+                <option value="manager">Manager</option>
+                <option value="owner">Owner</option>
               </select>
             </div>
             <div className={styles.modalActions}>
               <button onClick={() => setShowAddModal(false)} className={styles.modalCancelButton}>Batal</button>
-              <button onClick={handleAdd} className={styles.modalConfirmButton}>Tambah</button>
+              <button onClick={() => void handleAdd()} disabled={saving} className={styles.modalConfirmButton}>{saving ? "Menyimpan..." : "Tambah"}</button>
             </div>
           </div>
         </div>
@@ -210,7 +234,15 @@ export default function UsersSection() {
               <input className={styles.modalInput} placeholder="Email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
               <input className={styles.modalInput} placeholder="Departemen" value={form.dept} onChange={(e) => setForm({ ...form, dept: e.target.value })} />
               <select className={styles.modalSelect} value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value })}>
-                <option value="Owner">Owner</option><option value="Admin">Admin</option><option value="Staff">Staff</option>
+                <option value="pelanggan">Pelanggan</option>
+                <option value="marketing">Marketing</option>
+                <option value="gudang">Gudang</option>
+                <option value="keuangan">Keuangan</option>
+                <option value="proyek">Proyek</option>
+                <option value="field">Field</option>
+                <option value="produksi">Produksi</option>
+                <option value="manager">Manager</option>
+                <option value="owner">Owner</option>
               </select>
               <select className={styles.modalSelect} value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })}>
                 <option value="ACTIVE">ACTIVE</option><option value="PENDING">PENDING</option><option value="SUSPENDED">SUSPENDED</option>
@@ -218,7 +250,7 @@ export default function UsersSection() {
             </div>
             <div className={styles.modalActions}>
               <button onClick={() => setShowEditModal(false)} className={styles.modalCancelButton}>Batal</button>
-              <button onClick={handleSaveEdit} className={styles.modalConfirmButton}>Simpan</button>
+              <button onClick={() => void handleSaveEdit()} disabled={saving} className={styles.modalConfirmButton}>{saving ? "Menyimpan..." : "Simpan"}</button>
             </div>
           </div>
         </div>

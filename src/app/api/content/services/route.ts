@@ -1,6 +1,8 @@
 import { z } from "zod";
-import { createCustomService, getCustomServices } from "@/backend/modules/content";
+import { createCustomService, getCustomServices } from "@/backend/modules/content/index";
 import { flushWrites } from "@/services/supabase";
+import { readJsonBody } from "@/backend/http/readJsonBody";
+import { ensureHydrated } from "@/services/supabaseHydrate";
 
 export const serviceSchema = z.object({
   icon: z.string().trim().min(1, "Ikon wajib diisi."),
@@ -11,11 +13,13 @@ export const serviceSchema = z.object({
 });
 
 export async function GET() {
+  await ensureHydrated();
   return Response.json({ success: true, data: getCustomServices() });
 }
 
 export async function POST(request: Request) {
-  const parsed = serviceSchema.safeParse(await request.json());
+  await ensureHydrated();
+  const parsed = serviceSchema.safeParse(await readJsonBody(request));
   if (!parsed.success) {
     return Response.json({ success: false, error: { code: "INVALID_SERVICE", message: parsed.error.issues[0]?.message ?? "Data layanan tidak valid." } }, { status: 400 });
   }

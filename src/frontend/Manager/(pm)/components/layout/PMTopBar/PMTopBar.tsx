@@ -1,9 +1,11 @@
 "use client";
 
 import { usePathname } from "next/navigation";
+import { getRolePagePath } from "@/frontend/shared/navigation/getRolePagePath";
 import { Menu, PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import { usePMSidebar } from "../PMSidebarProvider/PMSidebarProvider";
 import ThemeToggle from "@/app/ThemeToggle";
+import { LogoutButton } from "@/frontend/auth/LogoutButton";
 
 function getPageTitle(pathname: string) {
   if (pathname === "/pm") return "Overview";
@@ -14,7 +16,7 @@ function getPageTitle(pathname: string) {
 }
 
 export function PMTopBar() {
-  const pathname = usePathname();
+  const pathname = getRolePagePath(usePathname());
   const { desktopOpen, toggle, toggleDesktop } = usePMSidebar();
   const title = getPageTitle(pathname);
 
@@ -38,6 +40,7 @@ export function PMTopBar() {
 
       <div className="ml-auto flex items-center gap-3">
         <ThemeToggle />
+        <LogoutButton />
         <div className="flex items-center gap-2.5">
           <span className="flex h-8 w-8 items-center justify-center rounded-full bg-secondary/15 text-[10px] font-extrabold text-secondary">PM</span>
           <span className="hidden lg:block">

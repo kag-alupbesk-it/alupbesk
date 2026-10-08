@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import TopBar from "../TopBar/TopBar";
 import BottomNav from "../BottomNav/BottomNav";
 import { useSidebar } from "../SidebarProvider/SidebarProvider";
+import { getRolePagePath } from "@/frontend/shared/navigation/getRolePagePath";
 
 const TITLES: Record<string, string> = {
   "/field": "Daftar Pengiriman",
@@ -13,7 +14,7 @@ const TITLES: Record<string, string> = {
 };
 
 export default function FieldShell({ children }: { children: React.ReactNode }) {
-  const pathname = usePathname();
+  const pathname = getRolePagePath(usePathname());
   const { desktopOpen } = useSidebar();
 
   const title = TITLES[pathname] ?? "Manajer Lapangan";

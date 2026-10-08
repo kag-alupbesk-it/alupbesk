@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import type { ServiceFormData } from "../types/types";
 import { emptyServiceForm } from "../types/types";
 import { validateServiceForm } from "../helpers/helpers";
@@ -14,24 +14,14 @@ interface ServiceFormModalProps {
 }
 
 export default function ServiceFormModal({ isOpen, editItem, onClose, onSave }: ServiceFormModalProps) {
-  const [form, setForm] = useState<ServiceFormData>(emptyServiceForm());
+  const [form, setForm] = useState<ServiceFormData>(() => editItem ? {
+    icon: editItem.icon,
+    title: editItem.title,
+    description: editItem.description,
+    sortOrder: editItem.sortOrder,
+    active: editItem.active,
+  } : emptyServiceForm());
   const [errors, setErrors] = useState<Partial<Record<keyof ServiceFormData, string>>>({});
-
-  useEffect(() => {
-    if (!isOpen) return;
-    if (editItem) {
-      setForm({
-        icon: editItem.icon,
-        title: editItem.title,
-        description: editItem.description,
-        sortOrder: editItem.sortOrder,
-        active: editItem.active,
-      });
-    } else {
-      setForm(emptyServiceForm());
-    }
-    setErrors({});
-  }, [isOpen, editItem]);
 
   if (!isOpen) return null;
 

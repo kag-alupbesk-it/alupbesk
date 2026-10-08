@@ -3,6 +3,7 @@
 import { clsx } from "clsx";
 import { useSidebar } from "../SidebarProvider/SidebarProvider";
 import ThemeToggle from "@/app/ThemeToggle";
+import { LogoutButton } from "@/frontend/auth/LogoutButton";
 
 export default function TopBar({ title }: { title: string }) {
   const { toggle, toggleDesktop, desktopOpen } = useSidebar();
@@ -50,6 +51,7 @@ export default function TopBar({ title }: { title: string }) {
           <span className="absolute top-0 right-0 w-1.5 h-1.5 bg-secondary rounded-full animate-pulse" />
         </button>
         <ThemeToggle />
+        <LogoutButton />
         <div className="w-7 h-7 lg:w-8 lg:h-8 rounded-full overflow-hidden border-2 border-outline hover:border-secondary transition-colors cursor-pointer">
           <div className="w-full h-full bg-surface-variant flex items-center justify-center">
             <span className="material-symbols-outlined text-secondary text-xs lg:text-sm">person</span>

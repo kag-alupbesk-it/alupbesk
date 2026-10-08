@@ -5,6 +5,7 @@ import { clsx } from "clsx";
 import TopBar from "../TopBar/TopBar";
 import MobileBottomNav from "@/app/MobileBottomNav";
 import { useSidebar } from "../SidebarProvider/SidebarProvider";
+import { getRolePagePath } from "@/frontend/shared/navigation/getRolePagePath";
 
 const BOTTOM_NAV = [
   { href: "/manager", label: "Overview", icon: "dashboard" },
@@ -25,7 +26,7 @@ const pageTitles: Record<string, string> = {
 };
 
 export default function ManagerShell({ children }: { children: React.ReactNode }) {
-  const pathname = usePathname();
+  const pathname = getRolePagePath(usePathname());
   const title = pageTitles[pathname] || "Dashboard";
   const { desktopOpen, toggle } = useSidebar();
 

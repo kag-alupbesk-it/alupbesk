@@ -27,7 +27,7 @@ interface FormItem {
 
 const inputClass = "mt-2 w-full rounded-xl border border-outline/35 bg-surface px-3.5 py-3 text-xs text-on-surface outline-none transition-colors placeholder:text-on-surface-variant/45 focus:border-secondary/70 focus:ring-2 focus:ring-secondary/10";
 const labelClass = "text-[10px] font-bold uppercase tracking-[0.12em] text-on-surface-variant";
-const maxFileSize = 10 * 1024 * 1024;
+const maxFileSize = 5 * 1024 * 1024;
 const acceptedImageTypes = new Set(["image/png", "image/jpeg", "image/webp"]);
 
 function createItem(id: string): FormItem {
@@ -42,10 +42,14 @@ export function CreateOrderForm() {
   const formId = useId();
   const [contractorName, setContractorName] = useState("");
   const [contractorCode, setContractorCode] = useState("");
+  const [contractorPhone, setContractorPhone] = useState("");
+  const [projectAddress, setProjectAddress] = useState("");
   const [targetDate, setTargetDate] = useState("");
   const [items, setItems] = useState<FormItem[]>(() => [createItem(`${formId}-item-1`)]);
   const [imagePreview, setImagePreview] = useState<string | undefined>();
   const [imageName, setImageName] = useState("");
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
   const [isReadingImage, setIsReadingImage] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const imageInputRef = useRef<HTMLInputElement>(null);
@@ -69,12 +73,13 @@ export function CreateOrderForm() {
       return;
     }
     if (file.size > maxFileSize) {
-      setError("Ukuran gambar maksimal 10 MB.");
+      setError("Ukuran gambar maksimal 5 MB.");
       return;
     }
 
     setIsReadingImage(true);
     setError("");
+    setImageFile(file);
     const reader = new FileReader();
     reader.onload = () => {
       if (typeof reader.result === "string") {
@@ -87,6 +92,7 @@ export function CreateOrderForm() {
     reader.onerror = () => {
       setImagePreview(undefined);
       setImageName("");
+      setImageFile(null);
       setIsReadingImage(false);
       setError("Gambar tidak dapat dibaca. Coba pilih file lain.");
     };
@@ -106,11 +112,12 @@ export function CreateOrderForm() {
   const clearImage = () => {
     setImagePreview(undefined);
     setImageName("");
+    setImageFile(null);
     setError("");
     if (imageInputRef.current) imageInputRef.current.value = "";
   };
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (isReadingImage) {
       setError("Tunggu sampai preview gambar selesai dibaca.");
@@ -135,20 +142,51 @@ export function CreateOrderForm() {
       return;
     }
 
-    addOrder({
-      contractorName,
-      contractorCode,
-      targetDate,
-      items: validItems.map((item) => ({
-        name: item.name.trim(),
-        quantity: Math.max(1, Math.floor(Number(item.quantity))),
-        unit: item.unit.trim() || "pcs",
-        technicalNote: item.technicalNote.trim(),
-      })),
-      rawImage: imagePreview,
-      rawImageName: imageName || undefined,
-    });
-    router.push("/pm");
+    setIsSaving(true);
+    setError("");
+    try {
+      let imageUrl: string | undefined;
+      if (imageFile) {
+        const formData = new FormData();
+        formData.set("file", imageFile);
+        const uploadResponse = await fetch("/api/upload", {
+          method: "POST",
+          body: formData,
+        });
+        const uploadResult = (await uploadResponse.json()) as {
+          success: boolean;
+          data?: { url: string };
+          error?: { message: string };
+        };
+        if (!uploadResponse.ok || !uploadResult.success || !uploadResult.data) {
+          throw new Error(uploadResult.error?.message ?? "Gambar gagal diunggah.");
+        }
+        imageUrl = uploadResult.data.url;
+      }
+
+      const saved = await addOrder({
+        contractorName,
+        contractorCode,
+        contractorPhone,
+        projectAddress,
+        targetDate,
+        items: validItems.map((item) => ({
+          name: item.name.trim(),
+          quantity: Math.max(1, Math.floor(Number(item.quantity))),
+          unit: item.unit.trim() || "pcs",
+          technicalNote: item.technicalNote.trim(),
+        })),
+        rawImage: imageUrl,
+        rawImageName: imageUrl ? imageName || undefined : undefined,
+      });
+      if (saved) router.push("/pm");
+    } catch (saveError) {
+      setError(
+        saveError instanceof Error ? saveError.message : "Order gagal disimpan.",
+      );
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -169,6 +207,14 @@ export function CreateOrderForm() {
               <div>
                 <h3 className="font-headline text-base font-bold text-on-surface">Informasi Order</h3>
                 <p className="mt-1 text-[10px] text-on-surface-variant">Identitas order dan komunikasi internal dengan kontraktor.</p>
+              </div>
+              <div>
+                <label htmlFor="contractor-phone" className={labelClass}>Telepon Kontraktor</label>
+                <input id="contractor-phone" name="contractorPhone" type="tel" value={contractorPhone} onChange={(event) => setContractorPhone(event.target.value)} placeholder="Nomor yang dapat dihubungi" className={inputClass} />
+              </div>
+              <div>
+                <label htmlFor="project-address" className={labelClass}>Alamat Proyek</label>
+                <input id="project-address" name="projectAddress" value={projectAddress} onChange={(event) => setProjectAddress(event.target.value)} placeholder="Alamat tujuan pengiriman" className={inputClass} />
               </div>
             </div>
             <div className="mt-5 grid grid-cols-1 gap-5 md:grid-cols-2">
@@ -246,7 +292,7 @@ export function CreateOrderForm() {
                 <div className="flex flex-col items-center justify-center py-5 text-center">
                   <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-secondary/10 text-secondary"><UploadCloud size={22} className="animate-pulse" /></div>
                   <p className="mt-4 text-sm font-bold text-on-surface">Membaca preview gambar...</p>
-                  <p className="mt-1.5 text-[10px] text-on-surface-variant">File hanya diproses di browser.</p>
+                  <p className="mt-1.5 text-[10px] text-on-surface-variant">Gambar diunggah saat order disimpan.</p>
                 </div>
               ) : imagePreview ? (
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
@@ -267,7 +313,7 @@ export function CreateOrderForm() {
                 <label htmlFor="raw-image" className="flex cursor-pointer flex-col items-center justify-center py-5 text-center">
                   <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-secondary/10 text-secondary"><UploadCloud size={22} /></div>
                   <p className="mt-4 text-sm font-bold text-on-surface">Drop gambar di sini atau <span className="text-secondary">browse file</span></p>
-                  <p className="mt-1.5 text-[10px] text-on-surface-variant">PNG, JPG, atau WEBP · maksimal 10 MB</p>
+                  <p className="mt-1.5 text-[10px] text-on-surface-variant">PNG, JPG, atau WEBP · maksimal 5 MB</p>
                 </label>
               )}
               <input ref={imageInputRef} id="raw-image" name="rawImage" type="file" accept="image/png,image/jpeg,image/webp" onChange={handleFileChange} disabled={isReadingImage} className="sr-only" />
@@ -283,8 +329,8 @@ export function CreateOrderForm() {
 
           <div className="flex flex-col-reverse justify-end gap-3 sm:flex-row">
             <Link href="/pm" className="inline-flex items-center justify-center gap-2 rounded-xl border border-outline/35 px-4 py-3 text-xs font-bold text-on-surface-variant transition-colors hover:border-on-surface/40 hover:text-on-surface">Batal</Link>
-            <button type="submit" disabled={isReadingImage} className="inline-flex items-center justify-center gap-2 rounded-xl bg-secondary px-5 py-3 text-xs font-extrabold text-primary shadow-lg shadow-secondary/15 transition-all hover:-translate-y-0.5 hover:brightness-105 disabled:cursor-wait disabled:opacity-60">
-              <Save size={15} /> Simpan Order
+            <button type="submit" disabled={isReadingImage || isSaving} className="inline-flex items-center justify-center gap-2 rounded-xl bg-secondary px-5 py-3 text-xs font-extrabold text-primary shadow-lg shadow-secondary/15 transition-all hover:-translate-y-0.5 hover:brightness-105 disabled:cursor-wait disabled:opacity-60">
+              <Save size={15} /> {isSaving ? "Menyimpan..." : "Simpan Order"}
               <ArrowRight size={14} />
             </button>
           </div>

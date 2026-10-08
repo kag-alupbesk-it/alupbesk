@@ -36,6 +36,10 @@ function lineToRow(orderId: string, line: OrderLine): Record<string, unknown> {
 
 export function readOrder(id: string): LocalOrder | undefined { return orders.get(id); }
 export function readOrders(): LocalOrder[] { return [...orders.values()].sort((left, right) => right.createdAt.localeCompare(left.createdAt)); }
+export function replaceOrders(nextOrders: LocalOrder[]): void {
+  orders.clear();
+  for (const order of nextOrders) orders.set(order.id, order);
+}
 export function writeOrder(order: LocalOrder): void {
   orders.set(order.id, order);
   enqueueUpsert("orders", orderToRow(order), "id");

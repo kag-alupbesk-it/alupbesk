@@ -22,6 +22,7 @@ import type { BerkasGambar } from "../../types/types";
 import { formatTanggal, getInisial } from "../../utils/format/format";
 
 const TIPE_DITERIMA = [".pdf", ".dwg", ".dxf", ".png", ".jpg", ".jpeg", ".webp"];
+const MAX_FILE_SIZE = 50 * 1024 * 1024;
 
 function formatByteDariFile(file: File): number {
   return file.size;
@@ -33,6 +34,8 @@ export function UploadGambarTeknik() {
 
   const [nomorSPK, setNomorSPK] = useState("");
   const [berkas, setBerkas] = useState<BerkasGambar | null>(null);
+  const [file, setFile] = useState<File | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
   const [catatan, setCatatan] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [sukses, setSukses] = useState(false);
@@ -54,16 +57,26 @@ export function UploadGambarTeknik() {
     if (!file) return;
     const ekstensi = `.${file.name.split(".").pop()?.toLowerCase() ?? ""}`;
     if (!TIPE_DITERIMA.includes(ekstensi)) {
+      setFile(null);
+      setBerkas(null);
       setError(`Format berkas tidak didukung. Gunakan PDF, CAD (DWG/DXF), atau gambar (PNG/JPG/WEBP).`);
+      return;
+    }
+    if (file.size <= 0 || file.size > MAX_FILE_SIZE) {
+      setFile(null);
+      setBerkas(null);
+      setError("Ukuran gambar teknik maksimal 50 MB.");
       return;
     }
     if (objectUrlRef.current) URL.revokeObjectURL(objectUrlRef.current);
     const url = URL.createObjectURL(file);
     objectUrlRef.current = url;
+    setFile(file);
     setBerkas({ nama: file.name, ukuran: formatByteDariFile(file), tipe: file.type, url });
   };
 
-  const kirim = () => {
+  const kirim = async () => {
+    if (isUploading) return;
     if (!nomorSPK) {
       setError("Pilih order/SPK yang membutuhkan gambar teknik terlebih dahulu.");
       return;
@@ -72,10 +85,26 @@ export function UploadGambarTeknik() {
       setError("Lampirkan berkas gambar teknik (PDF atau CAD) sebelum mengirim ke PM.");
       return;
     }
-    kirimGambar({ spkNomor: nomorSPK, berkas, catatanTeknis: catatan });
-    setSukses(true);
-    // Beri jeda singkat supaya pesan berhasil terbaca sebelum pindah halaman.
-    setTimeout(() => router.push("/produksi"), 900);
+    if (!file) {
+      setError("Pilih ulang file gambar teknik sebelum mengirim.");
+      return;
+    }
+    setIsUploading(true);
+    try {
+      const berhasil = await kirimGambar({
+        spkNomor: nomorSPK,
+        file,
+        catatanTeknis: catatan,
+      });
+      if (!berhasil) {
+        setError("Gambar teknik gagal diunggah. Periksa pesan backend lalu coba lagi.");
+        return;
+      }
+      setSukses(true);
+      setTimeout(() => router.push("/produksi"), 900);
+    } finally {
+      setIsUploading(false);
+    }
   };
 
   return (
@@ -208,7 +237,7 @@ export function UploadGambarTeknik() {
                 </div>
                 <div>
                   <h3 className="font-headline text-base font-bold text-on-surface">Berkas Gambar Teknik</h3>
-                  <p className="mt-0.5 text-[10px] text-on-surface-variant">PDF, CAD (DWG/DXF), atau gambar teknik</p>
+                  <p className="mt-0.5 text-[10px] text-on-surface-variant">PDF, CAD (DWG/DXF), atau gambar · maksimal 50 MB</p>
                 </div>
               </div>
 
@@ -228,6 +257,7 @@ export function UploadGambarTeknik() {
                       onClick={() => {
                         if (objectUrlRef.current) URL.revokeObjectURL(objectUrlRef.current);
                         objectUrlRef.current = null;
+                        setFile(null);
                         setBerkas(null);
                         if (inputRef.current) inputRef.current.value = "";
                       }}
@@ -367,10 +397,11 @@ export function UploadGambarTeknik() {
                 <button
                   type="button"
                   onClick={kirim}
-                  className="inline-flex items-center gap-2 rounded-xl bg-secondary px-5 py-2.5 text-xs font-extrabold text-primary shadow-lg shadow-secondary/15 transition-all hover:-translate-y-0.5 hover:brightness-105"
+                  disabled={isUploading}
+                  className="inline-flex items-center gap-2 rounded-xl bg-secondary px-5 py-2.5 text-xs font-extrabold text-primary shadow-lg shadow-secondary/15 transition-all hover:-translate-y-0.5 hover:brightness-105 disabled:cursor-wait disabled:opacity-60"
                 >
                   <Send size={15} strokeWidth={2.5} />
-                  Kirim ke PM
+                  {isUploading ? "Mengunggah..." : "Kirim ke PM"}
                 </button>
               </div>
             </div>

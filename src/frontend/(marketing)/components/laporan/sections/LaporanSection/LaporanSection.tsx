@@ -1,21 +1,17 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useCallback } from "react";
 import * as s from "../../style/style";
-import type { MarketingOrder, MarketingReport } from "@/backend/modules/marketing";
-import { marketingApi } from "@/services/api";
+import type { MarketingOrder, MarketingReport } from "@/backend/modules/marketing/index";
+import { marketingApi } from "@/services/api/index";
 import { formatCurrency, formatDate, statusBg, statusColor, STATUS_LABELS } from "../helpers/helpers";
+import { usePollingResource } from "@/frontend/shared/hooks/usePollingResource";
 
 export default function LaporanSection() {
   const [period, setPeriod] = useState<"7hari" | "30hari" | "semua">("semua");
-  const [orders, setOrders] = useState<MarketingOrder[]>([]);
+  const loadOrders = useCallback(() => marketingApi.getOrders(), []);
+  const { data: orders, loading, error } = usePollingResource<MarketingOrder[]>(loadOrders, []);
   const [now, setNow] = useState(() => Date.now());
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-
-  useEffect(() => {
-    marketingApi.getOrders().then(setOrders).catch((reason) => setError(reason instanceof Error ? reason.message : "Data laporan gagal dimuat.")).finally(() => setLoading(false));
-  }, []);
 
   const filteredOrders = useMemo(() => {
     return orders.filter((o) => {

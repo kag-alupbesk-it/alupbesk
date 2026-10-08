@@ -1,12 +1,9 @@
-import { getLocalOrder, publishOrderStatus } from "@/services/orders";
-import { getCatalogProduct } from "@/services/catalog";
-import { getGudangItems, createGudangKeluar } from "@/backend/modules/gudang";
+import { getLocalOrder, publishOrderStatus } from "@/services/orders/index";
+import { getCatalogProduct } from "@/services/catalog/index";
+import { getGudangItems, createGudangKeluar } from "@/backend/modules/gudang/index";
+import { getTodayIso } from "../getTodayIso";
 import type { GudangOrderDeduction, GudangProcessResult } from "./types";
 import { computeOrderSegment } from "./segment";
-
-function todayIso(): string {
-  return new Date().toISOString().slice(0, 10);
-}
 
 // Menerima pesanan yang disetujui manajer: setiap baris produk dicocokkan ke
 // item gudang lewat SKU lalu dicatat sebagai barang keluar (penjualan), dan
@@ -34,7 +31,7 @@ export function processGudangOrder(id: string): GudangProcessResult {
 
     const result = createGudangKeluar(item.id, {
       jumlah: line.quantity,
-      tanggal: todayIso(),
+      tanggal: getTodayIso(),
       tujuan: "Penjualan",
       penerima: current.customer.name,
       catatan: `Pesanan ${id}`,

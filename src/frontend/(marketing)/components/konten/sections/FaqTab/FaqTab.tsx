@@ -1,40 +1,29 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import * as s from "../../style/style";
 import FaqFormModal from "../FaqFormModal/FaqFormModal";
-import { contentApi } from "@/services/api";
-import type { FaqItem, FaqItemInput } from "@/backend/modules/content";
+import { contentApi } from "@/services/api/index";
+import type { FaqItem, FaqItemInput } from "@/backend/modules/content/index";
 import type { FaqFormData } from "../types/types";
 import { faqToForm, formToFaqInput } from "../types/types";
+import { usePollingResource } from "@/frontend/shared/hooks/usePollingResource";
 
 export default function FaqTab() {
-  const [items, setItems] = useState<FaqItem[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const loadFaq = useCallback(() => contentApi.getFaq(), []);
+  const { data: items, loading, error: loadError, refresh } = usePollingResource<FaqItem[]>(loadFaq, []);
+  const [actionError, setActionError] = useState("");
   const [showForm, setShowForm] = useState(false);
   const [editItem, setEditItem] = useState<FaqItem | null>(null);
-
-  useEffect(() => {
-    contentApi
-      .getFaq()
-      .then(setItems)
-      .catch((reason) => setError(reason instanceof Error ? reason.message : "FAQ gagal dimuat."))
-      .finally(() => setLoading(false));
-  }, []);
-
-  async function refresh() {
-    setItems(await contentApi.getFaq());
-  }
 
   async function handleSave(form: FaqFormData, id?: string) {
     const input: FaqItemInput = formToFaqInput(form);
     try {
       if (id) await contentApi.updateFaq(id, input);
       else await contentApi.createFaq(input);
-      await refresh();
+      refresh();
     } catch (reason) {
-      setError(reason instanceof Error ? reason.message : "FAQ gagal disimpan.");
+      setActionError(reason instanceof Error ? reason.message : "FAQ gagal disimpan.");
     }
     setShowForm(false);
     setEditItem(null);
@@ -44,18 +33,18 @@ export default function FaqTab() {
     if (!confirm("Hapus FAQ ini?")) return;
     try {
       await contentApi.deleteFaq(id);
-      await refresh();
+      refresh();
     } catch (reason) {
-      setError(reason instanceof Error ? reason.message : "FAQ gagal dihapus.");
+      setActionError(reason instanceof Error ? reason.message : "FAQ gagal dihapus.");
     }
   }
 
   async function handleToggle(item: FaqItem) {
     try {
       await contentApi.updateFaq(item.id, { ...formToFaqInput(faqToForm(item)), active: !item.active });
-      await refresh();
+      refresh();
     } catch (reason) {
-      setError(reason instanceof Error ? reason.message : "FAQ gagal diubah.");
+      setActionError(reason instanceof Error ? reason.message : "FAQ gagal diubah.");
     }
   }
 
@@ -74,7 +63,7 @@ export default function FaqTab() {
         </button>
       </div>
 
-      {error && <p className="mb-4 text-sm text-red-400">{error}</p>}
+      {(actionError || loadError) && <p className="mb-4 text-sm text-red-400">{actionError || loadError}</p>}
 
       {loading ? (
         <div className="space-y-3">
@@ -113,7 +102,7 @@ export default function FaqTab() {
         </div>
       )}
 
-      <FaqFormModal isOpen={showForm} editItem={editItem} onClose={() => { setShowForm(false); setEditItem(null); }} onSave={handleSave} />
+      {showForm && <FaqFormModal isOpen={showForm} editItem={editItem} onClose={() => { setShowForm(false); setEditItem(null); }} onSave={handleSave} />}
     </div>
   );
 }

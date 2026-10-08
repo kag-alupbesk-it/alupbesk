@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useMemo, useState } from "react";
 import * as styles from "../../style/style";
 import { useApi } from "@/frontend/(owner)/hooks/useApi/useApi";
 import { fetchInventoryData } from "@/frontend/(owner)/services/inventory/inventory";
@@ -14,22 +14,12 @@ interface InventoryItem {
 
 export default function InventorySection() {
   const { data: apiData } = useApi(fetchInventoryData, { interval: 30000 });
-  const seeded = useRef(false);
   const [activeFilter, setActiveFilter] = useState("All Items");
   const [search, setSearch] = useState("");
-  const [items, setItems] = useState<InventoryItem[]>([]);
-
-  useEffect(() => {
-    if (apiData && !seeded.current) {
-      seeded.current = true;
-      setItems(
-        apiData.items.map((item) => {
-          const { statusColor, barColor } = statusFromStock(item.stock, item.threshold);
-          return { ...item, statusColor, barColor };
-        })
-      );
-    }
-  }, [apiData]);
+  const items = useMemo<InventoryItem[]>(() => (apiData?.items ?? []).map((item) => ({
+    ...item,
+    ...statusFromStock(item.stock, item.threshold),
+  })), [apiData]);
 
   const filteredItems = items.filter((item) => {
     const matchFilter = activeFilter === "All Items" || item.category === activeFilter;

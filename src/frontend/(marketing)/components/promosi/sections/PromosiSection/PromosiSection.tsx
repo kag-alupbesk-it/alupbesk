@@ -1,27 +1,20 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import * as s from "../../style/style";
 import BannerCard from "../BannerCard/BannerCard";
 import BannerFormModal from "../BannerFormModal/BannerFormModal";
-import type { MarketingBanner, MarketingBannerInput } from "@/backend/modules/marketing";
+import type { MarketingBanner, MarketingBannerInput } from "@/backend/modules/marketing/index";
 import type { BannerFormData } from "../../../../types/types";
-import { marketingApi } from "@/services/api";
+import { marketingApi } from "@/services/api/index";
+import { usePollingResource } from "@/frontend/shared/hooks/usePollingResource";
 
 export default function PromosiSection() {
-  const [banners, setBanners] = useState<MarketingBanner[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const loadBanners = useCallback(() => marketingApi.getBanners(), []);
+  const { data: banners, loading, error: loadError, refresh } = usePollingResource<MarketingBanner[]>(loadBanners, []);
+  const [actionError, setActionError] = useState("");
   const [showForm, setShowForm] = useState(false);
   const [editBanner, setEditBanner] = useState<MarketingBanner | null>(null);
-
-  useEffect(() => {
-    marketingApi
-      .getBanners()
-      .then(setBanners)
-      .catch((reason) => setError(reason instanceof Error ? reason.message : "Banner gagal dimuat."))
-      .finally(() => setLoading(false));
-  }, []);
 
   function toInput(banner: MarketingBanner): MarketingBannerInput {
     return {
@@ -34,10 +27,6 @@ export default function PromosiSection() {
       startDate: banner.startDate,
       endDate: banner.endDate,
     };
-  }
-
-  async function refresh() {
-    setBanners(await marketingApi.getBanners());
   }
 
   async function handleSave(form: BannerFormData, id?: string) {
@@ -57,9 +46,9 @@ export default function PromosiSection() {
       } else {
         await marketingApi.createBanner(input);
       }
-      await refresh();
+      refresh();
     } catch (reason) {
-      setError(reason instanceof Error ? reason.message : "Banner gagal disimpan.");
+      setActionError(reason instanceof Error ? reason.message : "Banner gagal disimpan.");
     }
     setShowForm(false);
     setEditBanner(null);
@@ -69,9 +58,9 @@ export default function PromosiSection() {
     if (!confirm("Hapus banner ini?")) return;
     try {
       await marketingApi.deleteBanner(id);
-      await refresh();
+      refresh();
     } catch (reason) {
-      setError(reason instanceof Error ? reason.message : "Banner gagal dihapus.");
+      setActionError(reason instanceof Error ? reason.message : "Banner gagal dihapus.");
     }
   }
 
@@ -80,9 +69,9 @@ export default function PromosiSection() {
     if (!banner) return;
     try {
       await marketingApi.updateBanner(id, { ...toInput(banner), active: !banner.active });
-      await refresh();
+      refresh();
     } catch (reason) {
-      setError(reason instanceof Error ? reason.message : "Banner gagal diubah.");
+      setActionError(reason instanceof Error ? reason.message : "Banner gagal diubah.");
     }
   }
 
@@ -104,7 +93,7 @@ export default function PromosiSection() {
         </button>
       </div>
 
-      {error && <p className="mb-4 text-sm text-red-400">{error}</p>}
+      {(actionError || loadError) && <p className="mb-4 text-sm text-red-400">{actionError || loadError}</p>}
 
       {loading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
@@ -142,7 +131,7 @@ export default function PromosiSection() {
         </>
       )}
 
-      <BannerFormModal isOpen={showForm} editBanner={editBanner} onClose={() => { setShowForm(false); setEditBanner(null); }} onSave={handleSave} />
+      {showForm && <BannerFormModal isOpen={showForm} editBanner={editBanner} onClose={() => { setShowForm(false); setEditBanner(null); }} onSave={handleSave} />}
     </div>
   );
 }

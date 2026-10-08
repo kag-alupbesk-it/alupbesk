@@ -1,12 +1,15 @@
 "use client";
 
-import { CartProvider } from "@/frontend/(pelanggan)/hooks/useCart/useCart";
+import { ProductDetailProvider } from "@/frontend/(pelanggan)/hooks/useProductDetail";
 import { ThemeProvider } from "@/app/ThemeContext";
+import { LanguageProvider } from "@/frontend/shared/i18n/LanguageProvider";
 
 export default function Providers({ children }: { children: React.ReactNode }) {
   return (
-    <ThemeProvider>
-      <CartProvider>{children}</CartProvider>
-    </ThemeProvider>
+    <LanguageProvider>
+      <ThemeProvider>
+        <ProductDetailProvider>{children}</ProductDetailProvider>
+      </ThemeProvider>
+    </LanguageProvider>
   );
 }

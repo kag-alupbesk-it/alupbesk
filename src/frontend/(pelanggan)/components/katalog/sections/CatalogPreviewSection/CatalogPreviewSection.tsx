@@ -1,15 +1,14 @@
 "use client";
 import Link from "next/link";
-import { useEffect, useState } from "react";
-import { catalogApi } from "@/services/api";
-import type { Product } from "@/services/catalog";
+import { useCallback } from "react";
+import { catalogApi } from "@/services/api/index";
+import type { Product } from "@/services/catalog/index";
+import { usePollingResource } from "@/frontend/shared/hooks/usePollingResource";
 import { ProductCard } from "../../../product/ProductCard/ProductCard";
 
 export function CatalogPreview() {
-  const [catalogProducts, setCatalogProducts] = useState<Product[]>([]);
-  useEffect(() => {
-    catalogApi.getProducts().then(setCatalogProducts).catch(() => setCatalogProducts([]));
-  }, []);
+  const loadProducts = useCallback(() => catalogApi.getProducts(), []);
+  const { data: catalogProducts, loading } = usePollingResource<Product[]>(loadProducts, []);
   return (
     <section className="py-section-gap-desktop bg-primary-container" id="katalog">
       <div className="max-w-container-max mx-auto px-margin-x-mobile md:px-margin-x-desktop">
@@ -19,13 +18,15 @@ export function CatalogPreview() {
             Komponen Presisi untuk Konstruksi Unggul
           </h2>
           <Link
-            href="/katalog"
+            href="/catalog/produk"
             className="rounded-full border border-secondary px-5 py-2.5 text-sm font-bold text-secondary transition-colors hover:bg-secondary hover:text-primary"
           >
             Lihat selengkapnya
           </Link>
         </div>
-        {catalogProducts.length === 0 ? (
+        {loading ? (
+          <div className="py-16 text-center text-on-surface/50">Memuat katalog produk...</div>
+        ) : catalogProducts.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-24 text-center">
             <span className="material-symbols-outlined text-[64px] text-on-surface/20 mb-4">inventory_2</span>
             <p className="text-[16px] font-semibold text-on-surface/50 mb-2">Produk masih kosong</p>

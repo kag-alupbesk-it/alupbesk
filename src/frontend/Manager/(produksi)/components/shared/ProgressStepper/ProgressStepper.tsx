@@ -53,12 +53,13 @@ export function ProgressStepper({ tahapan, terkunci, pesanTerkunci, onPilih }: P
         {tahapanOrder.map((tahapan, index) => {
           const selesai = index < indeksSekarang;
           const sekarang = index === indeksSekarang;
+          const bisaDipilih = !terkunci && index === indeksSekarang + 1;
 
           return (
             <li key={tahapan}>
               <button
                 type="button"
-                disabled={terkunci}
+                disabled={!bisaDipilih}
                 aria-current={sekarang ? "step" : undefined}
                 onClick={() => onPilih(tahapan)}
                 className={[
@@ -68,8 +69,10 @@ export function ProgressStepper({ tahapan, terkunci, pesanTerkunci, onPilih }: P
                     : sekarang
                       ? "border-secondary/50 bg-secondary/10 shadow-lg shadow-secondary/10"
                       : selesai
-                        ? "border-emerald-400/25 bg-emerald-400/[0.06] hover:border-emerald-400/50"
-                        : "border-outline/25 bg-surface hover:border-secondary/40",
+                        ? "cursor-not-allowed border-emerald-400/25 bg-emerald-400/[0.06] opacity-60"
+                        : bisaDipilih
+                          ? "border-outline/25 bg-surface hover:border-secondary/40"
+                          : "cursor-not-allowed border-outline/20 bg-surface-variant/20 opacity-60",
                 ].join(" ")}
               >
                 <div className="flex items-center gap-2.5">
@@ -82,14 +85,20 @@ export function ProgressStepper({ tahapan, terkunci, pesanTerkunci, onPilih }: P
                           ? "bg-emerald-400/20 text-emerald-300"
                           : sekarang
                             ? "bg-secondary text-primary"
-                            : "bg-surface-variant text-on-surface-variant",
+                            : bisaDipilih
+                              ? "bg-surface-variant text-on-surface-variant"
+                              : "bg-surface-variant text-on-surface-variant/60",
                     ].join(" ")}
                   >
                     {terkunci ? <CircleSlash size={13} /> : selesai ? <Check size={14} strokeWidth={3} /> : index + 1}
                   </span>
                   <span
                     className={`text-[11px] font-extrabold uppercase tracking-[0.06em] ${
-                      terkunci ? "text-on-surface-variant" : sekarang ? "text-secondary" : "text-on-surface"
+                      terkunci || (!bisaDipilih && !sekarang && !selesai)
+                        ? "text-on-surface-variant"
+                        : sekarang
+                          ? "text-secondary"
+                          : "text-on-surface"
                     }`}
                   >
                     {tahapanLabels[tahapan]}

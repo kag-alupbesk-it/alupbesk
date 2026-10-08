@@ -1,4 +1,5 @@
-import { persistPartner, partners } from "./store";
+import { persistPartner } from "./persistPartner";
+import { partners } from "./store";
 import type { Partner, PartnerInput } from "../types";
 
 export function updatePartner(id: string, input: PartnerInput): Partner | undefined {

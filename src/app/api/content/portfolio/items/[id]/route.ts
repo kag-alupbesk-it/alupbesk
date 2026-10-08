@@ -1,9 +1,12 @@
 import { portfolioItemSchema } from "../route";
-import { updatePortfolioItem, deletePortfolioItemById } from "@/services/portfolio";
+import { updatePortfolioItem, deletePortfolioItemById } from "@/services/portfolio/index";
 import { flushWrites } from "@/services/supabase";
+import { readJsonBody } from "@/backend/http/readJsonBody";
+import { ensureHydrated } from "@/services/supabaseHydrate";
 
 export async function PUT(request: Request, { params }: { params: Promise<{ id: string }> }) {
-  const parsed = portfolioItemSchema.safeParse(await request.json());
+  await ensureHydrated();
+  const parsed = portfolioItemSchema.safeParse(await readJsonBody(request));
   if (!parsed.success) {
     return Response.json({ success: false, error: { code: "INVALID_PORTFOLIO", message: parsed.error.issues[0]?.message ?? "Data portofolio tidak valid." } }, { status: 400 });
   }
@@ -17,6 +20,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
 }
 
 export async function DELETE(_request: Request, { params }: { params: Promise<{ id: string }> }) {
+  await ensureHydrated();
   const { id } = await params;
   if (!deletePortfolioItemById(Number(id))) {
     await flushWrites();

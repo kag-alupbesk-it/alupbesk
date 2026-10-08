@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { getRolePagePath } from "@/frontend/shared/navigation/getRolePagePath";
 import { clsx } from "clsx";
 import { useSidebar } from "../SidebarProvider/SidebarProvider";
 
@@ -12,7 +13,7 @@ const navItems = [
 ];
 
 export default function Sidebar() {
-  const pathname = usePathname();
+  const pathname = getRolePagePath(usePathname());
   const { open, close, desktopOpen } = useSidebar();
 
   const isActive = (href: string) =>

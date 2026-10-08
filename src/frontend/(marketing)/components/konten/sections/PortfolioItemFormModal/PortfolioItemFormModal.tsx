@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import type { PortfolioItemFormData } from "../types/types";
 import { emptyPortfolioItemForm } from "../types/types";
 import { validatePortfolioItemForm } from "../helpers/helpers";
@@ -15,28 +15,18 @@ interface PortfolioItemFormModalProps {
 }
 
 export default function PortfolioItemFormModal({ isOpen, editItem, onClose, onSave }: PortfolioItemFormModalProps) {
-  const [form, setForm] = useState<PortfolioItemFormData>(emptyPortfolioItemForm());
+  const [form, setForm] = useState<PortfolioItemFormData>(() => editItem ? {
+    client: editItem.client,
+    industry: editItem.industry,
+    title: editItem.title,
+    challenge: editItem.challenge,
+    solution: editItem.solution,
+    result: editItem.result,
+    img: editItem.img,
+    tags: editItem.tags.join(", "),
+    year: editItem.year ? String(editItem.year) : "",
+  } : emptyPortfolioItemForm());
   const [errors, setErrors] = useState<Partial<Record<keyof PortfolioItemFormData, string>>>({});
-
-  useEffect(() => {
-    if (!isOpen) return;
-    if (editItem) {
-      setForm({
-        client: editItem.client,
-        industry: editItem.industry,
-        title: editItem.title,
-        challenge: editItem.challenge,
-        solution: editItem.solution,
-        result: editItem.result,
-        img: editItem.img,
-        tags: editItem.tags.join(", "),
-        year: editItem.year ? String(editItem.year) : "",
-      });
-    } else {
-      setForm(emptyPortfolioItemForm());
-    }
-    setErrors({});
-  }, [isOpen, editItem]);
 
   if (!isOpen) return null;
 

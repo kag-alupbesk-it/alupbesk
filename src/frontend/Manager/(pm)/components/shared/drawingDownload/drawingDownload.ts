@@ -96,16 +96,24 @@ function downloadSvg(svg: SVGSVGElement, fileName: string): void {
   downloadBlob(new Blob([markup], { type: "image/svg+xml;charset=utf-8" }), fileName);
 }
 
-export async function downloadDrawing(scopeId: string, rawFileName: string): Promise<void> {
+export async function downloadDrawing(
+  scopeId: string,
+  rawFileName: string,
+  source?: string,
+): Promise<void> {
+  const fileName = sanitizeFileName(rawFileName, "gambar-referensi");
+  if (source) {
+    await downloadImage(source, fileName);
+    return;
+  }
+
   const scope = document.getElementById(scopeId);
   if (!scope) throw new Error("Pratinjau gambar tidak ditemukan.");
 
-  const fileName = sanitizeFileName(rawFileName, "gambar-referensi");
-
   const image = scope.querySelector<HTMLImageElement>("img[src]");
-  const source = image?.currentSrc || image?.src;
-  if (source) {
-    await downloadImage(source, fileName);
+  const imageSource = image?.currentSrc || image?.src;
+  if (imageSource) {
+    await downloadImage(imageSource, fileName);
     return;
   }
 

@@ -1,6 +1,7 @@
 "use client";
 
-import type { MarketingBanner as Banner } from "@/backend/modules/marketing";
+import Image from "next/image";
+import type { MarketingBanner as Banner } from "@/backend/modules/marketing/index";
 import * as s from "../../style/style";
 
 interface BannerCardProps {
@@ -14,7 +15,7 @@ export default function BannerCard({ banner, onEdit, onDelete, onToggle }: Banne
   return (
     <div className={s.bannerCard}>
       <div className={s.bannerImageWrapper}>
-        <img src={banner.imageUrl} alt={banner.title} className={s.bannerImage} />
+        <Image src={banner.imageUrl} alt={banner.title} width={960} height={540} unoptimized className={s.bannerImage} />
         <div className={s.bannerOverlay} />
         <span className={`${s.bannerBadge} ${banner.active ? s.bannerBadgeActive : s.bannerBadgeInactive}`}>
           {banner.active ? "Aktif" : "Nonaktif"}

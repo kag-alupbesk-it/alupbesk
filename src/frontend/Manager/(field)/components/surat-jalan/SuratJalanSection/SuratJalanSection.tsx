@@ -1,8 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { fieldStore } from "../../store/store";
+import { useCallback, useMemo, useState } from "react";
 import type { FieldDelivery } from "../../types/types";
+import { useFieldDeliveries } from "../../../hooks/useFieldDeliveries";
 import type { FieldFilter } from "../../antrean/types/types";
 import { STATUS_FILTER_LABELS } from "../../antrean/helpers/helpers";
 import { FieldDeliveryDetailModal } from "../../antrean/FieldDeliveryDetailModal/FieldDeliveryDetailModal";
@@ -11,8 +11,7 @@ import { SuratJalanTable } from "../SuratJalanTable/SuratJalanTable";
 import { SuratJalanFormModal } from "../SuratJalanFormModal/SuratJalanFormModal";
 
 export function SuratJalanSection() {
-  const [deliveries, setDeliveries] = useState<FieldDelivery[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { deliveries, loading, refresh } = useFieldDeliveries();
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<FieldFilter>("ALL");
   const [filterOpen, setFilterOpen] = useState(false);
@@ -22,24 +21,12 @@ export function SuratJalanSection() {
 
   const load = useCallback(async () => {
     try {
-      const data = await fieldStore.getDeliveries();
-      setDeliveries(data);
+      await refresh();
       setNotice(null);
     } catch {
-      setDeliveries([]);
       setNotice("Gagal memuat data surat jalan.");
-    } finally {
-      setLoading(false);
     }
-  }, []);
-
-  useEffect(() => {
-    fieldStore
-      .getDeliveries()
-      .then(setDeliveries)
-      .catch(() => setDeliveries([]))
-      .finally(() => setLoading(false));
-  }, []);
+  }, [refresh]);
 
   const filtered = useMemo(() => {
     const needle = search.trim().toLowerCase();

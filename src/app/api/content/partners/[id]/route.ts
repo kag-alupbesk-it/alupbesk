@@ -1,9 +1,12 @@
 import { partnerSchema } from "../route";
-import { deletePartner, updatePartner } from "@/backend/modules/content";
+import { deletePartner, updatePartner } from "@/backend/modules/content/index";
 import { flushWrites } from "@/services/supabase";
+import { readJsonBody } from "@/backend/http/readJsonBody";
+import { ensureHydrated } from "@/services/supabaseHydrate";
 
 export async function PUT(request: Request, { params }: { params: Promise<{ id: string }> }) {
-  const parsed = partnerSchema.safeParse(await request.json());
+  await ensureHydrated();
+  const parsed = partnerSchema.safeParse(await readJsonBody(request));
   if (!parsed.success) {
     return Response.json({ success: false, error: { code: "INVALID_PARTNER", message: parsed.error.issues[0]?.message ?? "Data mitra tidak valid." } }, { status: 400 });
   }
@@ -17,6 +20,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
 }
 
 export async function DELETE(_request: Request, { params }: { params: Promise<{ id: string }> }) {
+  await ensureHydrated();
   const { id } = await params;
   if (!deletePartner(id)) {
     await flushWrites();

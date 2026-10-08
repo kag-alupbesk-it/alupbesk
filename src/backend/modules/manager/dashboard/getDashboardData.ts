@@ -1,8 +1,10 @@
-import type { OrderStatus } from "@/services/orders";
-import { getLocalOrders } from "@/services/orders";
-import { getCustomRequests } from "@/backend/modules/custom";
-import { formatRp, fmtDate, fmtTime, isRevenueStatus, periodDays, withinDays } from "../helpers";
+import { getLocalOrders } from "@/services/orders/index";
+import { getCustomRequests } from "@/backend/modules/custom/index";
+import { getRoleRequests } from "@/backend/modules/roleRequests/index";
+import { formatRp, fmtDate, fmtTime, isRevenueStatus, periodDays, withinDays } from "../helpers/index";
 import type { Activity, DashboardData, FinancialCard, Registration, SystemStatus } from "../types";
+import { getSystemStatus } from "./getSystemStatus";
+import { revenueOf } from "./revenueOf";
 
 const ORDER_STATUS_LABEL: Record<string, string> = {
   pending: "Menunggu",
@@ -14,11 +16,10 @@ const ORDER_STATUS_LABEL: Record<string, string> = {
   completed: "Selesai",
 };
 
-function revenueOf(list: { status: OrderStatus; total: number; createdAt: string }[]): number {
-  return list.filter((order) => isRevenueStatus(order.status)).reduce((sum, order) => sum + order.total, 0);
-}
-
-export function getDashboardData(period = "monthly"): DashboardData {
+export async function getDashboardData(
+  period = "monthly",
+  includeRoleRequests = false,
+): Promise<DashboardData> {
   const orders = getLocalOrders();
   const customs = getCustomRequests();
   const days = periodDays(period);
@@ -54,11 +55,16 @@ export function getDashboardData(period = "monthly"): DashboardData {
     { label: "Menunggu Konfirmasi", value: String(pending), change: pending > 0 ? "Perlu tindakan" : "Semua clear", positive: pending === 0, bars },
   ];
 
-  const registrations: Registration[] = customs.slice(0, 5).map((request) => ({
-    name: request.nama,
-    dept: request.layanan,
+  const roleRequests = includeRoleRequests ? await getRoleRequests() : [];
+  const registrations: Registration[] = roleRequests.slice(0, 10).map((request) => ({
+    id: request.id,
+    profileId: request.profileId,
+    name: request.name,
+    email: request.email,
+    dept: request.department,
+    requestedRole: request.requestedRole,
     date: fmtDate(request.createdAt),
-    initial: (request.nama.trim()[0] ?? "?").toUpperCase(),
+    initial: (request.name.trim()[0] ?? "?").toUpperCase(),
     status: "pending",
   }));
 
@@ -75,10 +81,16 @@ export function getDashboardData(period = "monthly"): DashboardData {
       time: fmtTime(request.createdAt),
       text: `Permintaan custom dari ${request.nama}`,
       tag: request.layanan,
+      highlight: false,
     })),
-  ].sort((left, right) => right.at - left.at).slice(0, 8).map(({ at: _at, ...entry }) => entry);
+  ].sort((left, right) => right.at - left.at).slice(0, 8).map((entry) => ({
+    time: entry.time,
+    text: entry.text,
+    tag: entry.tag,
+    highlight: entry.highlight,
+  }));
 
-  const systemStatus: SystemStatus = { serverGudang: "Online", dbLatency: "12 ms" };
+  const systemStatus: SystemStatus = await getSystemStatus();
 
   return { financialCards, registrations, activities, systemStatus };
 }

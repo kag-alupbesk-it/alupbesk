@@ -1,9 +1,11 @@
-import { getCatalogProduct } from "@/services/catalog";
+import { getCatalogProduct } from "@/services/catalog/index";
+import { ensureHydrated } from "@/services/supabaseHydrate";
 
 export async function GET(
   _request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  await ensureHydrated();
   const { id } = await params;
   const product = getCatalogProduct(Number(id));
   if (!product) {

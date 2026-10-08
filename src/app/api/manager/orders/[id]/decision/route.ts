@@ -1,10 +1,12 @@
-import { decideOrder, MANAGER_DECISIONS } from "@/backend/modules/manager";
+import { decideOrder, MANAGER_DECISIONS } from "@/backend/modules/manager/index";
 import { flushWrites } from "@/services/supabase";
+import { ensureHydrated } from "@/services/supabaseHydrate";
 
 export async function POST(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  await ensureHydrated();
   const { id } = await params;
   const body = (await request.json().catch(() => null)) ?? {};
   const decision = (body as { decision?: unknown }).decision;

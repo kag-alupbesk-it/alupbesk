@@ -1,9 +1,12 @@
 import { serviceSchema } from "../route";
-import { deleteCustomService, updateCustomService } from "@/backend/modules/content";
+import { deleteCustomService, updateCustomService } from "@/backend/modules/content/index";
 import { flushWrites } from "@/services/supabase";
+import { readJsonBody } from "@/backend/http/readJsonBody";
+import { ensureHydrated } from "@/services/supabaseHydrate";
 
 export async function PUT(request: Request, { params }: { params: Promise<{ id: string }> }) {
-  const parsed = serviceSchema.safeParse(await request.json());
+  await ensureHydrated();
+  const parsed = serviceSchema.safeParse(await readJsonBody(request));
   if (!parsed.success) {
     return Response.json({ success: false, error: { code: "INVALID_SERVICE", message: parsed.error.issues[0]?.message ?? "Data layanan tidak valid." } }, { status: 400 });
   }
@@ -17,6 +20,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
 }
 
 export async function DELETE(_request: Request, { params }: { params: Promise<{ id: string }> }) {
+  await ensureHydrated();
   const { id } = await params;
   if (!deleteCustomService(id)) {
     await flushWrites();

@@ -7,8 +7,9 @@ import FaqTab from "../FaqTab/FaqTab";
 import ServicesTab from "../ServicesTab/ServicesTab";
 import SiteContentTab from "../SiteContentTab/SiteContentTab";
 import PortfolioTab from "../PortfolioTab/PortfolioTab";
+import ContactMessagesTab from "../ContactMessagesTab";
 
-type TabKey = "partners" | "faq" | "services" | "site" | "portfolio";
+type TabKey = "partners" | "faq" | "services" | "site" | "portfolio" | "messages";
 
 const tabs: { key: TabKey; label: string; icon: string }[] = [
   { key: "partners", label: "Mitra", icon: "handshake" },
@@ -16,6 +17,7 @@ const tabs: { key: TabKey; label: string; icon: string }[] = [
   { key: "services", label: "Layanan", icon: "build" },
   { key: "site", label: "Konten Statis", icon: "edit_note" },
   { key: "portfolio", label: "Portofolio", icon: "folder_special" },
+  { key: "messages", label: "Pesan Masuk", icon: "mail" },
 ];
 
 export default function KontenSection() {
@@ -44,6 +46,7 @@ export default function KontenSection() {
       {tab === "services" && <ServicesTab />}
       {tab === "site" && <SiteContentTab />}
       {tab === "portfolio" && <PortfolioTab />}
+      {tab === "messages" && <ContactMessagesTab />}
     </div>
   );
 }

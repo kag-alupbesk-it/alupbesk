@@ -1,5 +1,5 @@
 export function roleColor(role: string) {
-  return role === "Owner" ? "bg-secondary/10 text-secondary" : "bg-white/10 text-white/50";
+  return role === "owner" ? "bg-secondary/10 text-secondary" : "bg-white/10 text-white/50";
 }
 
 export function statusInfo(status: string) {

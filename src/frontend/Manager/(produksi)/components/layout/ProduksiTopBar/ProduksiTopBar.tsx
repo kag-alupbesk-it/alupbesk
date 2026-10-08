@@ -1,9 +1,11 @@
 "use client";
 
 import { usePathname } from "next/navigation";
+import { getRolePagePath } from "@/frontend/shared/navigation/getRolePagePath";
 import { Menu, PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import { useProduksiSidebar } from "../ProduksiSidebarProvider/ProduksiSidebarProvider";
 import ThemeToggle from "@/app/ThemeToggle";
+import { LogoutButton } from "@/frontend/auth/LogoutButton";
 
 function getPageTitle(pathname: string) {
   if (pathname === "/produksi") return "Antrean Produksi";
@@ -13,7 +15,7 @@ function getPageTitle(pathname: string) {
 }
 
 export function ProduksiTopBar() {
-  const pathname = usePathname();
+  const pathname = getRolePagePath(usePathname());
   const { desktopOpen, toggle, toggleDesktop } = useProduksiSidebar();
   const title = getPageTitle(pathname);
 
@@ -51,6 +53,7 @@ export function ProduksiTopBar() {
 
       <div className="ml-auto flex items-center gap-3">
         <ThemeToggle />
+        <LogoutButton />
         <div className="flex items-center gap-2.5">
           <span className="flex h-8 w-8 items-center justify-center rounded-full bg-secondary/15 text-[10px] font-extrabold text-secondary">
             MP

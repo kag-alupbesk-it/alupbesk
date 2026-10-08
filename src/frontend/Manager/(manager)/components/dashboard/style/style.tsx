@@ -61,7 +61,6 @@ export const cardInfo = "mt-3 space-y-1 text-xs text-on-surface-variant"
 export const cardMeta = "mt-3 flex items-center justify-between text-xs"
 export const cardActions = "mt-4 flex"
 export const desktopOnly = "hidden md:block"
-
 export const modalOverlay = "fixed inset-0 z-[80] bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-3 animate-fadeIn"
 export const modalCard = "w-full max-w-md bg-surface-container-high border border-outline/30 rounded-2xl p-5 sm:p-6 max-h-[92vh] overflow-y-auto"
 export const modalTitle = "text-lg font-bold text-on-surface font-headline"

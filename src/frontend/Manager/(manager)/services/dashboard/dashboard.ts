@@ -10,8 +10,12 @@ export interface FinancialCard {
 }
 
 export interface Registration {
+  id: string;
+  profileId: string;
   name: string;
+  email: string;
   dept: string;
+  requestedRole: string;
   date: string;
   initial: string;
   status: "pending" | "approved" | "rejected";

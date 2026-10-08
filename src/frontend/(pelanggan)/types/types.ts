@@ -1,13 +1,6 @@
 import type { Product, ProductVariant } from "@/services/catalog/products";
-import type { PortfolioItem, CaseStudy } from "@/services/portfolio";
+import type { PortfolioItem, CaseStudy } from "@/services/portfolio/index";
 export type { Product, ProductVariant, PortfolioItem, CaseStudy };
-
-export interface CartItem {
-  product: Product;
-  quantity: number;
-  note: string;
-  selectedVariants?: Record<string, string>;
-}
 
 export interface CustomRequestForm {
   nama: string;

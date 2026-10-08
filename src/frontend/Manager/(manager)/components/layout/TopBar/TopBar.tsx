@@ -3,6 +3,7 @@
 import { clsx } from "clsx";
 import { useSidebar } from "../SidebarProvider/SidebarProvider";
 import ThemeToggle from "@/app/ThemeToggle";
+import { LogoutButton } from "@/frontend/auth/LogoutButton";
 
 interface TopBarProps {
   title: string;
@@ -42,6 +43,7 @@ export default function TopBar({ title }: TopBarProps) {
         </button>
         {/* ── Theme toggle ── */}
         <ThemeToggle />
+        <LogoutButton />
         <div className="w-7 h-7 lg:w-8 lg:h-8 rounded-full overflow-hidden border-2 border-outline hover:border-secondary transition-colors cursor-pointer relative z-[60]">
           <div className="w-full h-full bg-surface-variant flex items-center justify-center">
             <span className="material-symbols-outlined text-secondary text-xs lg:text-sm">person</span>

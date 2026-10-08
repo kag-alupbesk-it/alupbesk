@@ -1,37 +1,19 @@
 "use client";
 
-import { useState } from "react";
-import { useCart } from "@/frontend/(pelanggan)/hooks/useCart/useCart";
+import { useProductDetail } from "@/frontend/(pelanggan)/hooks/useProductDetail";
+import { useLanguage } from "@/frontend/shared/i18n/LanguageProvider";
 import Modal from "../../shared/Modal/Modal";
 
-function formatPrice(price: number) {
-  return new Intl.NumberFormat("id-ID", {
-    style: "currency",
-    currency: "IDR",
-    minimumFractionDigits: 0,
-  }).format(price);
-}
-
 export default function ProductDetailModal() {
-  const { detailProduct, setDetailProduct, addToCart } = useCart();
-  const [selectedVariants, setSelectedVariants] = useState<Record<string, string>>({});
+  const { detailProduct, setDetailProduct } = useProductDetail();
+  const { t } = useLanguage();
 
   if (!detailProduct) return null;
 
   const product = detailProduct;
 
-  const handleAddToCart = () => {
-    if (product.variants) {
-      const missingVariants = product.variants.filter((v) => !selectedVariants[v.name]);
-      if (missingVariants.length > 0) return;
-    }
-    addToCart(product, 1, selectedVariants);
-    setSelectedVariants({});
-    setDetailProduct(null);
-  };
-
   return (
-    <Modal isOpen={!!detailProduct} onClose={() => { setDetailProduct(null); setSelectedVariants({}); }}>
+    <Modal isOpen={!!detailProduct} onClose={() => setDetailProduct(null)}>
       <div className="grid md:grid-cols-2">
         <div
           className="aspect-square md:aspect-auto md:h-full min-h-[300px] bg-cover bg-center rounded-t-2xl md:rounded-l-2xl md:rounded-tr-none"
@@ -47,10 +29,6 @@ export default function ProductDetailModal() {
           <p className="text-body-sm text-on-surface/60">
             {product.desc}
           </p>
-          <div className="text-[28px] font-bold text-secondary">
-            {formatPrice(product.price)}
-          </div>
-
           {product.variants?.map((v) => (
             <div key={v.name}>
               <p className="text-[12px] font-bold text-on-surface/70 mb-2">
@@ -58,16 +36,10 @@ export default function ProductDetailModal() {
               </p>
               <div className="flex flex-wrap gap-2">
                 {v.options.map((opt) => {
-                  const isSelected = selectedVariants[v.name] === opt;
                   return (
-                    <button
+                    <span
                       key={opt}
-                      onClick={() => setSelectedVariants((prev) => ({ ...prev, [v.name]: opt }))}
-                      className={`px-4 py-2 rounded-xl text-[12px] font-bold border transition-all ${
-                        isSelected
-                          ? "bg-secondary text-primary border-secondary"
-                          : "bg-surface-container text-on-surface/60 border-outline/20 hover:border-outline"
-                      }`}
+                      className="inline-flex items-center gap-2 rounded-xl border border-outline/20 bg-surface-container px-4 py-2 text-[12px] font-bold text-on-surface/70"
                     >
                       {v.colors?.[v.options.indexOf(opt)] ? (
                         <span className="flex items-center gap-2">
@@ -80,24 +52,16 @@ export default function ProductDetailModal() {
                       ) : (
                         opt
                       )}
-                    </button>
+                    </span>
                   );
                 })}
               </div>
             </div>
           ))}
 
-          <button
-            onClick={handleAddToCart}
-            className="w-full py-4 rounded-xl bg-secondary text-primary font-bold hover:bg-secondary-800 transition-all flex items-center justify-center gap-2 text-[14px]"
-          >
-            <span className="material-symbols-outlined text-[20px]">add_shopping_cart</span>
-            Tambah ke Keranjang
-          </button>
-
           {product.specs && (
             <div className="space-y-3 pt-4 border-t border-outline/20">
-              <p className="text-[12px] font-bold text-on-surface/70 uppercase tracking-wider">Spesifikasi</p>
+              <p className="text-[12px] font-bold text-on-surface/70 uppercase tracking-wider">{t("technicalSpecifications")}</p>
               <div className="grid grid-cols-2 gap-3">
                 {product.specs.map((spec) => (
                   <div key={spec.label} className="bg-surface-container rounded-lg p-3">

@@ -1,31 +1,20 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback } from "react";
 import Link from "next/link";
-import type { CaseStudy, PortfolioItem } from "@/services/portfolio";
-import { portfolioApi } from "@/services/api";
-import { Navbar } from "@/frontend/(pelanggan)/components/layout";
+import { portfolioApi } from "@/services/api/index";
+import { usePollingResource } from "@/frontend/shared/hooks/usePollingResource";
+import { Navbar } from "@/frontend/(pelanggan)/components/layout/index";
 
 import { portfolioStyles as styles } from "../../style/style";
 import ProjectCard from "../ProjectCard/ProjectCard";
 import CaseStudyCard from "../CaseStudyCard/CaseStudyCard";
 
 export default function PortfolioSection() {
-  const [items, setItems] = useState<PortfolioItem[]>([]);
-  const [caseStudies, setCaseStudies] = useState<CaseStudy[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-
-  useEffect(() => {
-    portfolioApi
-      .getAll()
-      .then((data) => {
-        setItems(data.items);
-        setCaseStudies(data.caseStudies);
-      })
-      .catch((reason) => setError(reason instanceof Error ? reason.message : "Portofolio gagal dimuat."))
-      .finally(() => setLoading(false));
-  }, []);
+  const loadPortfolio = useCallback(() => portfolioApi.getAll(), []);
+  const { data, loading, error } = usePollingResource(loadPortfolio, { items: [], caseStudies: [] });
+  const items = data.items;
+  const caseStudies = data.caseStudies;
 
   return (
     <div className={styles.page}>
@@ -102,14 +91,14 @@ export default function PortfolioSection() {
 
           <div className={styles.ctaButtons}>
             <Link
-              href="/jasa-custom"
+              href="/catalog/jasa-custom"
               className={styles.primary}
             >
               Request Custom Quote
             </Link>
 
             <Link
-              href="/#kontak"
+              href="/catalog#kontak"
               className={styles.secondary}
             >
               Hubungi Tim Kami

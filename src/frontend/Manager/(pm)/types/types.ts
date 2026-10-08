@@ -1,51 +1,20 @@
-export type ProjectStatus =
-  | "menunggu_acc"
-  | "siap_produksi"
-  | "produksi"
-  | "siap_kirim"
-  | "selesai";
+export type {
+  PMItem,
+  PMOrder,
+  NewPMOrderInput,
+} from "@/services/pm/types";
 
-export type DrawingStatus = "menunggu_acc" | "acc_gambar" | "revisi";
+import type {
+  PMDrawingStatus,
+  PMDrawingVariant,
+  PMProjectStatus,
+  PMProductionStage,
+} from "@/services/pm/types";
 
-export type DrawingVariant = "curtain-wall" | "window-frame" | "ventilation" | "partition";
-
-export interface PMItem {
-  id: string;
-  name: string;
-  quantity: number;
-  unit: string;
-  technicalNote: string;
-}
-
-export interface PMOrder {
-  id: string;
-  contractorName: string;
-  contractorCode: string;
-  enteredAt: string;
-  targetDate: string;
-  projectStatus: ProjectStatus;
-  drawingStatus: DrawingStatus;
-  stage: 0 | 1 | 2 | 3;
-  drawingVariant: DrawingVariant;
-  items: PMItem[];
-  rawImage?: string;
-  rawImageName?: string;
-  productionImage?: string;
-  productionImageName?: string;
-  hasProductionDrawing: boolean;
-  revisionNote?: string;
-  revisionCount: number;
-  lastActivity: string;
-}
-
-export interface NewPMOrderInput {
-  contractorName: string;
-  contractorCode: string;
-  targetDate: string;
-  items: Omit<PMItem, "id">[];
-  rawImage?: string;
-  rawImageName?: string;
-}
+export type DrawingStatus = PMDrawingStatus;
+export type ProjectStatus = PMProjectStatus;
+export type DrawingVariant = PMDrawingVariant;
+export type ProductionStage = PMProductionStage;
 
 export const projectStatusLabels: Record<ProjectStatus, string> = {
   menunggu_acc: "Menunggu ACC",

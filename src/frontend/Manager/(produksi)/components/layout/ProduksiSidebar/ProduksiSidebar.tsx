@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { getRolePagePath } from "@/frontend/shared/navigation/getRolePagePath";
 import { clsx } from "clsx";
 import { Factory, FileUp, LayoutDashboard, X, type LucideIcon } from "lucide-react";
 import { useProduksi } from "../../../context/ProduksiContext/ProduksiContext";
@@ -16,7 +17,7 @@ interface NavigationItem {
 }
 
 export function ProduksiSidebar() {
-  const pathname = usePathname();
+  const pathname = getRolePagePath(usePathname());
   const { open, close, desktopOpen } = useProduksiSidebar();
   const { spk, spkPerluGambar } = useProduksi();
 

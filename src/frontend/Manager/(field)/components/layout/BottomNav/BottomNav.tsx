@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { getRolePagePath } from "@/frontend/shared/navigation/getRolePagePath";
 import { clsx } from "clsx";
 
 const navItems = [
@@ -11,7 +12,7 @@ const navItems = [
 ];
 
 export default function BottomNav() {
-  const pathname = usePathname();
+  const pathname = getRolePagePath(usePathname());
 
   const isActive = (href: string) =>
     href === "/field"

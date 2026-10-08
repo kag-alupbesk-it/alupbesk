@@ -1,7 +1,10 @@
 export * from "./types";
-export * from "./orders";
+export * from "./orders/index";
 export * from "./dashboard/getDashboardData";
 export * from "./financials/getFinancialsData";
 export * from "./inventory/getInventoryData";
 export * from "./users/getUsersData";
+export * from "./users/createUser";
+export * from "./users/updateUser";
+export * from "./users/deleteUser";
 export { default as managerRouter } from "./router";

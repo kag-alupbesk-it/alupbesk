@@ -1,9 +1,12 @@
 import { caseStudySchema } from "../route";
-import { updateCaseStudy, deleteCaseStudyById } from "@/services/portfolio";
+import { updateCaseStudy, deleteCaseStudyById } from "@/services/portfolio/index";
 import { flushWrites } from "@/services/supabase";
+import { readJsonBody } from "@/backend/http/readJsonBody";
+import { ensureHydrated } from "@/services/supabaseHydrate";
 
 export async function PUT(request: Request, { params }: { params: Promise<{ id: string }> }) {
-  const parsed = caseStudySchema.safeParse(await request.json());
+  await ensureHydrated();
+  const parsed = caseStudySchema.safeParse(await readJsonBody(request));
   if (!parsed.success) {
     return Response.json({ success: false, error: { code: "INVALID_CASE_STUDY", message: parsed.error.issues[0]?.message ?? "Data studi kasus tidak valid." } }, { status: 400 });
   }
@@ -17,6 +20,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
 }
 
 export async function DELETE(_request: Request, { params }: { params: Promise<{ id: string }> }) {
+  await ensureHydrated();
   const { id } = await params;
   if (!deleteCaseStudyById(Number(id))) {
     await flushWrites();

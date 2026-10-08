@@ -1,4 +1,4 @@
-export const container = "p-10 pb-24 min-h-screen"
+export const container = "min-h-screen p-4 pb-24 sm:p-6 lg:p-10"
 export const header = "flex justify-between items-end mb-12"
 export const breadcrumb = "flex items-center gap-2 text-on-surface-variant mb-3 text-xs uppercase tracking-widest font-bold"
 export const breadcrumbChevron = "text-xs"

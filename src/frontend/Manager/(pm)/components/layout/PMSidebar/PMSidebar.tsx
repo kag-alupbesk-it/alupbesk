@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { getRolePagePath } from "@/frontend/shared/navigation/getRolePagePath";
 import { clsx } from "clsx";
 import {
   ClipboardCheck,
@@ -22,7 +23,7 @@ interface NavigationItem {
 }
 
 export function PMSidebar() {
-  const pathname = usePathname();
+  const pathname = getRolePagePath(usePathname());
   const { open, close, desktopOpen } = usePMSidebar();
   const { orders } = usePMOrders();
   const pendingApproval = orders.filter(needsDrawingApproval).length;

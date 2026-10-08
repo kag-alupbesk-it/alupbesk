@@ -1,11 +1,7 @@
 "use client";
 
-import { Sidebar } from "./layout";
-import { DashboardSection } from "./dashboard";
-import { FinancialsSection } from "./financials";
-import { UsersSection } from "./users";
-import { InventorySection } from "./inventory";
-
+import { Sidebar } from "./layout/index";
+import { DashboardSection } from "./dashboard/index";
 export default function Components() {
   return (
     <div className="flex min-h-screen bg-primary">

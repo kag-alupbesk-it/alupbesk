@@ -2,19 +2,25 @@
 
 import { useMemo, useEffect, useState, useCallback, useRef } from "react";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
-import type { Product } from "@/services/catalog";
-import { catalogApi } from "@/services/api";
+import type { Product } from "@/services/catalog/index";
+import { catalogApi } from "@/services/api/index";
 import { useDebounce } from "@/frontend/(pelanggan)/hooks/useDebounce/useDebounce";
+import { usePollingResource } from "@/frontend/shared/hooks/usePollingResource";
 import BestSellerSection from "../BestSellerSection/BestSellerSection";
 import { ProductCard } from "../../../product/ProductCard/ProductCard";
+import { useLanguage } from "@/frontend/shared/i18n/LanguageProvider";
 
 export default function KatalogSection() {
+  const { t } = useLanguage();
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const [catalogProducts, setCatalogProducts] = useState<Product[]>([]);
-  const [catalogError, setCatalogError] = useState<string | null>(null);
-  const [isCatalogLoading, setCatalogLoading] = useState(true);
+  const loadProducts = useCallback(() => catalogApi.getProducts(), []);
+  const {
+    data: catalogProducts,
+    error: catalogError,
+    loading: isCatalogLoading,
+  } = usePollingResource<Product[]>(loadProducts, []);
 
   const urlQuery = searchParams.get("q") ?? "";
   const urlKategori = searchParams.get("kategori") ?? "Semua";
@@ -23,17 +29,10 @@ export default function KatalogSection() {
   const debouncedSearch = useDebounce(searchInput, 400);
 
   useEffect(() => {
+    // Back/forward navigation updates the input draft from the URL query.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setSearchInput(urlQuery);
   }, [urlQuery]);
-
-  useEffect(() => {
-    let isActive = true;
-    catalogApi.getProducts()
-      .then((data) => { if (isActive) setCatalogProducts(data); })
-      .catch((error) => { if (isActive) setCatalogError(error instanceof Error ? error.message : "Katalog gagal dimuat."); })
-      .finally(() => { if (isActive) setCatalogLoading(false); });
-    return () => { isActive = false; };
-  }, []);
 
   const isFirstRender = useRef(true);
   useEffect(() => {
@@ -43,7 +42,7 @@ export default function KatalogSection() {
     if (urlKategori && urlKategori !== "Semua") params.set("kategori", urlKategori);
     const qs = params.toString();
     router.replace(`${pathname}${qs ? `?${qs}` : ""}#katalog`, { scroll: false });
-  }, [debouncedSearch]);
+  }, [debouncedSearch, pathname, router, urlKategori]);
 
   const handleSearchChange = (value: string) => setSearchInput(value);
 
@@ -82,13 +81,13 @@ export default function KatalogSection() {
   return (
     <section className="py-section-gap-desktop bg-primary-container" id="katalog">
       <div className="max-w-container-max mx-auto px-margin-x-mobile md:px-margin-x-desktop">
-        <BestSellerSection />
+        <BestSellerSection products={catalogProducts} />
 
         <div className="flex flex-col md:flex-row justify-between items-end mb-8 gap-6">
           <div>
             <span className="text-secondary font-eyebrow text-eyebrow">KATALOG PRODUK</span>
             <h2 className="text-headline-h1 font-headline-h1 mt-4 text-on-surface">
-              Komponen Presisi untuk Konstruksi Unggul
+              {t("catalogHeading")}
             </h2>
           </div>
         </div>
@@ -103,7 +102,7 @@ export default function KatalogSection() {
                 type="text"
                 value={searchInput}
                 onChange={(e) => handleSearchChange(e.target.value)}
-                placeholder="Cari produk, SKU, atau deskripsi..."
+                placeholder={t("searchCatalog")}
                 className="w-full rounded-2xl border border-outline/20 bg-surface-container px-12 py-4 text-on-surface placeholder:text-on-surface/40 text-[14px] focus:outline-none focus:border-secondary/60 focus:ring-1 focus:ring-secondary/30 transition-all"
               />
               {searchInput && (
@@ -127,7 +126,7 @@ export default function KatalogSection() {
                       : "bg-surface-container border border-outline/20 text-on-surface/70 hover:text-on-surface hover:border-outline"
                   }`}
                 >
-                  {kat}
+                  {kat === "Semua" ? t("allCategories") : kat}
                 </button>
               ))}
             </div>
@@ -137,7 +136,7 @@ export default function KatalogSection() {
         {(urlQuery || (urlKategori && urlKategori !== "Semua")) && (
           <div className="flex items-center gap-3 mb-6">
             <p className="text-[13px] text-on-surface/40">
-              {filteredProducts.length} produk ditemukan
+              {filteredProducts.length} {t("foundProducts")}
               {urlQuery && <span> untuk <span className="text-on-surface/70">&ldquo;{urlQuery}&rdquo;</span></span>}
               {urlKategori && urlKategori !== "Semua" && <span> di kategori <span className="text-secondary font-semibold">{urlKategori}</span></span>}
             </p>
@@ -146,13 +145,13 @@ export default function KatalogSection() {
               className="text-[12px] text-secondary hover:text-secondary-fixed transition-colors flex items-center gap-1"
             >
               <span className="material-symbols-outlined text-[14px]">refresh</span>
-              Reset
+              {t("reset")}
             </button>
           </div>
         )}
 
         {isCatalogLoading ? (
-          <div className="py-24 text-center text-on-surface/50">Memuat katalog produk...</div>
+          <div className="py-24 text-center text-on-surface/50">{t("loadingCatalog")}</div>
         ) : catalogError ? (
           <div className="py-24 text-center text-on-surface/50"><p className="mb-4">{catalogError}</p><button onClick={() => window.location.reload()} className="text-secondary font-bold">Coba lagi</button></div>
         ) : filteredProducts.length > 0 ? (
@@ -166,18 +165,16 @@ export default function KatalogSection() {
             {catalogProducts.length === 0 ? (
               <>
                 <span className="material-symbols-outlined text-[64px] text-on-surface/20 mb-4">inventory_2</span>
-                <p className="text-[16px] font-semibold text-on-surface/50 mb-2">Produk masih kosong</p>
+                <p className="text-[16px] font-semibold text-on-surface/50 mb-2">{t("emptyProducts")}</p>
                 <p className="text-[13px] text-on-surface/30 mb-6">
-                  Belum ada produk yang ditambahkan. Katalog akan tampil setelah produk tersedia.
+                  {t("productsWillAppear")}
                 </p>
               </>
             ) : (
               <>
                 <span className="material-symbols-outlined text-[64px] text-on-surface/20 mb-4">search_off</span>
-                <p className="text-[16px] font-semibold text-on-surface/50 mb-2">Produk tidak ditemukan</p>
-                <p className="text-[13px] text-on-surface/30 mb-6">
-                  Tidak ada produk yang cocok dengan pencarian atau filter yang dipilih.
-                </p>
+                <p className="text-[16px] font-semibold text-on-surface/50 mb-2">{t("noMatchingProducts")}</p>
+                <p className="text-[13px] text-on-surface/30 mb-6">{t("filterEmpty")}</p>
               </>
             )}
           </div>

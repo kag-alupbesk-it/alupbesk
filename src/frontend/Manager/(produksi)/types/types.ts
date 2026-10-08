@@ -1,5 +1,5 @@
-// Modul Manajer Produksi (/produksi) - seluruh data di halaman ini bersifat
-// mock dan hanya hidup di React state lokal (tidak ada backend / API / database).
+// Tampilan Produksi memakai order bersama dari modul PM; file gambar disimpan
+// di Supabase Storage dan tahap kerja disimpan pada order yang sama.
 
 // Status gambar teknik kerja. Manajer Produksi mengunggah gambar, lalu PM yang
 // memberi ACC. "revisi" berarti PM meminta perbaikan sehingga perlu unggah ulang.
@@ -64,7 +64,7 @@ export interface SPK {
 
 export interface KirimGambarInput {
   spkNomor: string;
-  berkas: BerkasGambar;
+  file: File;
   catatanTeknis: string;
 }
 

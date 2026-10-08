@@ -1,10 +1,12 @@
 "use client";
 
-import type { Product } from "@/services/catalog";
-import { useCart } from "@/frontend/(pelanggan)/hooks/useCart/useCart";
+import type { Product } from "@/services/catalog/index";
+import { useProductDetail } from "@/frontend/(pelanggan)/hooks/useProductDetail";
+import { useLanguage } from "@/frontend/shared/i18n/LanguageProvider";
 
 export function ProductCard({ product }: { product: Product }) {
-  const { addToCart, setDetailProduct } = useCart();
+  const { setDetailProduct } = useProductDetail();
+  const { t } = useLanguage();
 
   return (
     <div className="group overflow-hidden rounded-2xl border border-outline/20 bg-primary-container transition-all duration-300 hover:-translate-y-1 hover:border-secondary/50 hover:shadow-2xl">
@@ -22,9 +24,7 @@ export function ProductCard({ product }: { product: Product }) {
 
       {/* Content */}
       <div className="p-5">
-        <p className="text-[11px] text-on-surface/40 mb-2 uppercase tracking-widest font-semibold">
-          {product.category}
-        </p>
+        <p className="text-[11px] text-on-surface/40 mb-2 uppercase tracking-widest font-semibold">{product.category}</p>
         <h3
           className="text-[15px] font-bold text-on-surface mb-3 leading-snug line-clamp-2 cursor-pointer hover:text-secondary transition-colors"
           onClick={() => setDetailProduct(product)}
@@ -34,21 +34,13 @@ export function ProductCard({ product }: { product: Product }) {
         <p className="text-[12px] text-on-surface/60 leading-relaxed line-clamp-3 mb-4">
           {product.desc}
         </p>
-        <div className="flex items-center justify-between gap-3">
-          <span className="text-[16px] font-bold text-secondary">
-            {new Intl.NumberFormat("id-ID", {
-              style: "currency",
-              currency: "IDR",
-              minimumFractionDigits: 0,
-            }).format(product.price)}
-          </span>
+        <div className="flex items-center justify-end gap-3">
           <button
-            onClick={() => addToCart(product, 1)}
-            title="Tambah ke keranjang"
-            aria-label="Tambah ke keranjang"
-            className="flex h-9 w-9 items-center justify-center rounded-full bg-secondary/20 text-secondary transition-all hover:bg-secondary hover:text-primary active:scale-95"
+            onClick={() => setDetailProduct(product)}
+            className="inline-flex min-h-10 items-center gap-2 rounded-full bg-secondary/15 px-4 text-xs font-bold text-secondary transition-all hover:bg-secondary hover:text-primary active:scale-95"
           >
-            <span className="material-symbols-outlined text-[18px]">add_shopping_cart</span>
+            <span className="material-symbols-outlined text-[18px]">visibility</span>
+            {t("viewDetails")}
           </button>
         </div>
       </div>

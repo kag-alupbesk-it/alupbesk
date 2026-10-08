@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import Image from "next/image";
 
 interface FileUploadInputProps {
   value: string;
@@ -54,9 +55,12 @@ export default function FileUploadInput({
       )}
       {value ? (
         <div className="flex items-center gap-3">
-          <img
+          <Image
             src={value}
             alt="Pratinjau"
+            width={64}
+            height={64}
+            unoptimized
             className="h-16 w-16 rounded-lg border border-outline-variant object-cover"
           />
           <div className="flex flex-col gap-1">

@@ -1,8 +1,55 @@
-const STATIC_CACHE = "alupbesk-static-v2";
-const DYNAMIC_CACHE = "alupbesk-dynamic-v2";
+const STATIC_CACHE = "alupbesk-static-v4";
+const DYNAMIC_CACHE = "alupbesk-dynamic-v3";
 
-self.addEventListener("install", () => {
-  self.skipWaiting();
+const PRIVATE_PATH_PREFIXES = [
+  "/manager",
+  "/owner",
+  "/admin",
+  "/marketing",
+  "/gudang",
+  "/keuangan",
+  "/pm",
+  "/produksi",
+  "/field",
+  "/api/manager",
+  "/api/owner",
+  "/api/admin",
+  "/api/marketing",
+  "/api/gudang",
+  "/api/keuangan",
+  "/api/pm",
+  "/api/produksi",
+  "/api/field",
+  "/api/auth",
+  "/api/upload",
+];
+
+function isPrivatePath(pathname) {
+  if (pathname === "/admin") return false;
+  return PRIVATE_PATH_PREFIXES.some(
+    (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
+  );
+}
+
+function isPublicApiPath(pathname) {
+  return (
+    pathname === "/api/catalog/products" ||
+    pathname.startsWith("/api/catalog/products/") ||
+    pathname === "/api/portfolio" ||
+    pathname.startsWith("/api/content/faq") ||
+    pathname.startsWith("/api/content/partners") ||
+    pathname.startsWith("/api/content/portfolio") ||
+    pathname.startsWith("/api/content/services") ||
+    pathname.startsWith("/api/content/site/")
+  );
+}
+
+self.addEventListener("install", (event) => {
+  event.waitUntil(
+    caches.open(STATIC_CACHE)
+      .then((cache) => cache.add("/offline.html"))
+      .then(() => self.skipWaiting()),
+  );
 });
 
 self.addEventListener("activate", (event) => {
@@ -10,7 +57,9 @@ self.addEventListener("activate", (event) => {
     caches.keys().then((keys) =>
       Promise.all(
         keys
-          .filter((key) => key !== STATIC_CACHE && key !== DYNAMIC_CACHE)
+          .filter((key) =>
+            key.startsWith("alupbesk-") && key !== STATIC_CACHE && key !== DYNAMIC_CACHE,
+          )
           .map((key) => caches.delete(key))
       )
     )
@@ -52,9 +101,8 @@ self.addEventListener("fetch", (event) => {
     url.pathname.startsWith("/icon-") ||
     url.pathname.startsWith("/apple-") ||
     url.pathname === "/manifest.json" ||
-    url.pathname.endsWith(".svg") ||
-    url.pathname.endsWith(".png") ||
-    url.pathname.endsWith(".ico")
+    (!url.search && /^\/(?:images|logos|fonts)\/[^/]+\.(?:svg|png|jpe?g|webp|woff2?)$/i.test(url.pathname)) ||
+    (!url.search && /^\/[^/]+\.(?:svg|png|ico)$/i.test(url.pathname))
   ) {
     event.respondWith(
       caches.match(request).then(
@@ -72,10 +120,16 @@ self.addEventListener("fetch", (event) => {
 
   // API — network-first with cache fallback
   if (url.pathname.startsWith("/api/")) {
+    if (!isPublicApiPath(url.pathname)) {
+      event.respondWith(fetch(request));
+      return;
+    }
+
     event.respondWith(
       fetch(request)
         .then((response) => {
-          if (response.ok) {
+          const cacheControl = response.headers.get("cache-control") ?? "";
+          if (response.ok && !/private|no-store/i.test(cacheControl)) {
             const clone = response.clone();
             caches.open(DYNAMIC_CACHE).then((c) => c.put(request, clone));
           }
@@ -88,6 +142,13 @@ self.addEventListener("fetch", (event) => {
 
   // HTML navigation — network-first, offline fallback
   if (request.headers.get("accept")?.includes("text/html")) {
+    if (isPrivatePath(url.pathname)) {
+      event.respondWith(
+        fetch(request).catch(() => caches.match("/offline.html")),
+      );
+      return;
+    }
+
     event.respondWith(
       fetch(request)
         .then((response) => {
@@ -101,26 +162,14 @@ self.addEventListener("fetch", (event) => {
   }
 
   // Everything else — stale-while-revalidate
-  event.respondWith(
-    caches.match(request).then((cached) => {
-      const fetchPromise = fetch(request)
-        .then((response) => {
-          if (response.ok) {
-            const clone = response.clone();
-            caches.open(DYNAMIC_CACHE).then((c) => c.put(request, clone));
-          }
-          return response;
-        })
-        .catch(() => cached);
-
-      return cached || fetchPromise;
-    })
-  );
+  // Unknown requests may contain user-specific data or signed file URLs.
+  // Keep them network-only so responses cannot persist across accounts.
+  event.respondWith(fetch(request));
 });
 
 self.addEventListener("push", (event) => {
   const data = event.data?.json() || {
-    title: "ALUPBESK",
+    title: "alupbesk",
     body: "Ada notifikasi baru untuk Anda",
   };
 

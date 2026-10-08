@@ -21,6 +21,7 @@ export type DbWrite =
   | { kind: "delete"; table: string; column: string; value: string };
 
 const writes: DbWrite[] = [];
+let flushTask: Promise<void> | null = null;
 
 export function enqueueUpsert(
   table: string,
@@ -38,33 +39,44 @@ export function enqueueDelete(
   writes.push({ kind: "delete", table, column, value });
 }
 
-// Mengirim seluruh antrean tulis ke Supabase. Error dicatat tapi tidak
-// menggagalkan respons agar aplikasi tetap berfungsi secara lokal.
-export async function flushWrites(): Promise<void> {
+// Request mutasi harus gagal jika antrean Supabase gagal dikirim agar UI tidak
+// mengira perubahan sudah tersimpan secara permanen.
+export function flushWrites(): Promise<void> {
+  if (flushTask) return flushTask;
+
+  flushTask = flushPendingWrites().finally(() => {
+    flushTask = null;
+  });
+  return flushTask;
+}
+
+async function flushPendingWrites(): Promise<void> {
   if (!db) {
     writes.length = 0;
     return;
   }
   while (writes.length) {
-    const write = writes.shift();
-    if (!write) continue;
+    const write = writes[0];
+    if (!write) break;
     try {
       if (write.kind === "upsert") {
         const { error } = await db
           .from(write.table)
           .upsert(write.row, { onConflict: write.onConflict });
-        if (error)
-          console.error(`[supabase] upsert ${write.table} gagal: ${error.message}`);
+        if (error) throw error;
       } else {
         const { error } = await db
           .from(write.table)
           .delete()
           .eq(write.column, write.value);
-        if (error)
-          console.error(`[supabase] delete ${write.table} gagal: ${error.message}`);
+        if (error) throw error;
       }
+      writes.shift();
     } catch (error) {
       console.error(`[supabase] tulis ${write.table} gagal:`, error);
+      // Keep the failed operation at the head of the queue. The next request
+      // retries it before later writes so related records keep their order.
+      throw error;
     }
   }
 }

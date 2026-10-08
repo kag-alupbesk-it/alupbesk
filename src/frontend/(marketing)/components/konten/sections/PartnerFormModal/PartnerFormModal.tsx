@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import type { PartnerFormData } from "../types/types";
 import { emptyPartnerForm } from "../types/types";
 import { validatePartnerForm } from "../helpers/helpers";
@@ -15,24 +15,14 @@ interface PartnerFormModalProps {
 }
 
 export default function PartnerFormModal({ isOpen, editPartner, onClose, onSave }: PartnerFormModalProps) {
-  const [form, setForm] = useState<PartnerFormData>(emptyPartnerForm());
+  const [form, setForm] = useState<PartnerFormData>(() => editPartner ? {
+    name: editPartner.name,
+    initials: editPartner.initials,
+    logoUrl: editPartner.logoUrl ?? "",
+    sortOrder: editPartner.sortOrder,
+    active: editPartner.active,
+  } : emptyPartnerForm());
   const [errors, setErrors] = useState<Partial<Record<keyof PartnerFormData, string>>>({});
-
-  useEffect(() => {
-    if (!isOpen) return;
-    if (editPartner) {
-      setForm({
-        name: editPartner.name,
-        initials: editPartner.initials,
-        logoUrl: editPartner.logoUrl ?? "",
-        sortOrder: editPartner.sortOrder,
-        active: editPartner.active,
-      });
-    } else {
-      setForm(emptyPartnerForm());
-    }
-    setErrors({});
-  }, [isOpen, editPartner]);
 
   if (!isOpen) return null;
 

@@ -1,6 +1,8 @@
 import { z } from "zod";
-import { createCaseStudy } from "@/services/portfolio";
+import { createCaseStudy } from "@/services/portfolio/index";
 import { flushWrites } from "@/services/supabase";
+import { readJsonBody } from "@/backend/http/readJsonBody";
+import { ensureHydrated } from "@/services/supabaseHydrate";
 
 export const caseStudySchema = z.object({
   client: z.string().trim().min(1, "Nama klien wajib diisi."),
@@ -14,7 +16,8 @@ export const caseStudySchema = z.object({
 });
 
 export async function POST(request: Request) {
-  const parsed = caseStudySchema.safeParse(await request.json());
+  await ensureHydrated();
+  const parsed = caseStudySchema.safeParse(await readJsonBody(request));
   if (!parsed.success) {
     return Response.json({ success: false, error: { code: "INVALID_CASE_STUDY", message: parsed.error.issues[0]?.message ?? "Data studi kasus tidak valid." } }, { status: 400 });
   }

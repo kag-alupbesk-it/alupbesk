@@ -1,8 +1,8 @@
 import express from "express";
 import { corsMiddleware } from "./middleware/cors";
-import { catalogRouter, checkoutRouter, portfolioRouter } from "./modules/(pelanggan)";
+import { catalogRouter, portfolioRouter } from "./modules/(pelanggan)/index";
 import marketingRouter from "./modules/marketing/router";
-import { contentRouter } from "./modules/content";
+import { contentRouter } from "./modules/content/index";
 import customRouter from "./modules/custom/router";
 import gudangRouter from "./modules/gudang/router";
 import managerRouter from "./modules/manager/router";
@@ -19,7 +19,7 @@ app.use((_request, response, next) => {
   response.on("finish", () => void flushWrites());
   next();
 });
-app.use("/api/catalog", catalogRouter); app.use("/api/checkout", checkoutRouter); app.use("/api/portfolio", portfolioRouter);
+app.use("/api/catalog", catalogRouter); app.use("/api/portfolio", portfolioRouter);
 app.use("/api/marketing", marketingRouter);
 app.use("/api/content", contentRouter);
 app.use("/api/custom", customRouter);
