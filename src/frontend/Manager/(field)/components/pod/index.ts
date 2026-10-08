@@ -1,2 +1,2 @@
-export * from "./PodSection";
-export { PodPhotoPreview } from "./PodPhotoPreview";
+export * from "./PodSection/PodSection";
+export { PodPhotoPreview } from "./PodPhotoPreview/PodPhotoPreview";

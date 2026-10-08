@@ -1,1 +1,1 @@
-export { GudangSection } from "./sections/GudangSection";
+export { GudangSection } from "./sections/GudangSection/GudangSection";

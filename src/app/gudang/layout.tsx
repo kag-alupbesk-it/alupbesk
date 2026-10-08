@@ -1,9 +1,9 @@
 "use client";
 
 import { useTheme } from "@/app/ThemeContext";
-import { SidebarProvider } from "@/frontend/Manager/(gudang)/components/layout/SidebarProvider";
-import Sidebar from "@/frontend/Manager/(gudang)/components/layout/Sidebar";
-import GudangShell from "@/frontend/Manager/(gudang)/components/layout/GudangShell";
+import { SidebarProvider } from "@/frontend/Manager/(gudang)/components/layout/SidebarProvider/SidebarProvider";
+import Sidebar from "@/frontend/Manager/(gudang)/components/layout/Sidebar/Sidebar";
+import GudangShell from "@/frontend/Manager/(gudang)/components/layout/GudangShell/GudangShell";
 
 function GudangLayoutInner({ children }: { children: React.ReactNode }) {
   const { theme } = useTheme();

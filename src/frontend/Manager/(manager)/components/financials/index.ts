@@ -1,1 +1,1 @@
-export { default as FinancialsSection } from "./sections/FinancialsSection";
+export { default as FinancialsSection } from "./sections/FinancialsSection/FinancialsSection";

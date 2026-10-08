@@ -1,4 +1,4 @@
-import { ProduksiDashboard } from "@/frontend/Manager/(produksi)/components/ProduksiDashboard";
+import { ProduksiDashboard } from "@/frontend/Manager/(produksi)/components/ProduksiDashboard/ProduksiDashboard";
 
 export const metadata = {
   title: "Antrean Produksi | Manajer Produksi",

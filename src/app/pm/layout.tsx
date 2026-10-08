@@ -5,9 +5,9 @@ import {
   PMOrderProvider,
   usePMOrders,
 } from "@/frontend/Manager/(pm)/context/PMOrderContext";
-import { PMSidebarProvider } from "@/frontend/Manager/(pm)/components/layout/PMSidebarProvider";
-import { PMSidebar } from "@/frontend/Manager/(pm)/components/layout/PMSidebar";
-import { PMShell } from "@/frontend/Manager/(pm)/components/layout/PMShell";
+import { PMSidebarProvider } from "@/frontend/Manager/(pm)/components/layout/PMSidebarProvider/PMSidebarProvider";
+import { PMSidebar } from "@/frontend/Manager/(pm)/components/layout/PMSidebar/PMSidebar";
+import { PMShell } from "@/frontend/Manager/(pm)/components/layout/PMShell/PMShell";
 
 function PMLayoutFrame({ children }: { children: React.ReactNode }) {
   const { theme } = useTheme();
