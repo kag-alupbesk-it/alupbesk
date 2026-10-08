@@ -191,13 +191,13 @@ export default function KatalogSection() {
             </span>
             <div>
               <p className="text-[12px] font-bold uppercase tracking-wide text-secondary">
-                Butuh solusi khusus?
+                {t("customCtaEyebrow")}
               </p>
               <h3 className="mt-2 text-[20px] font-bold text-on-surface">
-                Konsultasikan kebutuhan custom Anda
+                {t("customCtaTitle")}
               </h3>
               <p className="mt-2 max-w-2xl text-[13px] leading-relaxed text-on-surface/60">
-                Kami siap membantu kebutuhan desain dan fabrikasi sesuai spesifikasi proyek Anda.
+                {t("customCtaDescription")}
               </p>
             </div>
           </div>
@@ -205,7 +205,7 @@ export default function KatalogSection() {
             href="/jasa-custom"
             className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-secondary px-5 py-3 text-[13px] font-bold text-primary transition-all hover:brightness-110"
           >
-            Lihat Jasa Custom
+            {t("customCtaButton")}
             <span aria-hidden="true" className="material-symbols-outlined text-[18px]">
               arrow_forward
             </span>
