@@ -167,7 +167,7 @@ export function RegisterForm() {
 
         <label className="block text-xs font-semibold">
           {t("passwordLength")}
-          <PasswordInput className="mt-2" inputClassName="min-h-11 w-full rounded-xl border border-outline/40 bg-surface px-3 py-2.5 outline-none focus:border-secondary" autoComplete="new-password" minLength={12} required value={password} onChange={(event) => setPassword(event.target.value)} />
+          <PasswordInput className="mt-2" inputClassName="min-h-11 w-full rounded-xl border border-outline/40 bg-surface px-3 py-2.5 outline-none focus:border-secondary" autoComplete="new-password" minLength={8} required value={password} onChange={(event) => setPassword(event.target.value)} />
         </label>
 
         <CaptchaChallenge key={captchaVersion} onVerify={setCaptchaToken} onReset={() => setCaptchaToken("")} />
