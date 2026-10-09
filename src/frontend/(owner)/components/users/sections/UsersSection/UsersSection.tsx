@@ -18,7 +18,7 @@ interface UserData {
 }
 
 export default function UsersSection() {
-  const { data: apiData } = useApi(fetchUsersData, { interval: 30000 });
+  const { data: apiData, refetch: refetchUsers } = useApi(fetchUsersData, { interval: 30000 });
   const {
     data: roleRequestData,
     loading: roleRequestsLoading,
@@ -46,7 +46,7 @@ export default function UsersSection() {
       .channel("owner-role-requests")
       .on(
         "postgres_changes",
-        { event: "*", schema: "public", table: "role_requests" },
+        { event: "*", schema: "public", table: "users" },
         () => void refetchRoleRequests(),
       )
       .subscribe();
@@ -57,14 +57,17 @@ export default function UsersSection() {
   }, [refetchRoleRequests]);
 
   async function handleRoleDecision(
-    requestId: string,
+    request: RoleRequestItem,
     decision: "approve" | "reject",
   ) {
-    setReviewingRequestId(requestId);
+    setReviewingRequestId(request.id);
     setReviewError("");
     try {
-      await decideRoleRequest(requestId, decision);
-      await refetchRoleRequests();
+      await decideRoleRequest(request.id, decision, {
+        role: request.requestedRole,
+        dept: request.department,
+      });
+      await Promise.all([refetchRoleRequests(), refetchUsers()]);
     } catch (reason) {
       setReviewError(reason instanceof Error ? reason.message : "Permintaan role gagal diproses.");
     } finally {
@@ -134,15 +137,15 @@ export default function UsersSection() {
                   <button
                     type="button"
                     disabled={reviewingRequestId !== null}
-                    onClick={() => void handleRoleDecision(request.id, "reject")}
+                    onClick={() => void handleRoleDecision(request, "reject")}
                     className="min-h-11 rounded-xl border border-outline/35 px-4 text-xs font-bold text-on-surface-variant disabled:opacity-50"
                   >
-                    Tolak
+                    {reviewingRequestId === request.id ? "Memproses..." : "Tolak"}
                   </button>
                   <button
                     type="button"
                     disabled={reviewingRequestId !== null}
-                    onClick={() => void handleRoleDecision(request.id, "approve")}
+                    onClick={() => void handleRoleDecision(request, "approve")}
                     className="min-h-11 rounded-xl bg-secondary px-4 text-xs font-bold text-primary disabled:opacity-50"
                   >
                     {reviewingRequestId === request.id ? "Memproses..." : "Setujui role"}
@@ -180,10 +183,6 @@ export default function UsersSection() {
               ))}
             </div>
           )}
-        </div>
-        <div className={styles.filterCard}>
-          <span className={styles.filterCardLabel}>Dept: Manufacturing</span>
-          <span className={`${styles.icon} ${styles.expandIcon}`}>expand_more</span>
         </div>
       </div>
 

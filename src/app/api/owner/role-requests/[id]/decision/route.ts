@@ -5,6 +5,20 @@ import { readJsonBody } from "@/backend/http/readJsonBody";
 
 const decisionSchema = z.object({
   decision: z.enum(["approve", "reject"]),
+  role: z
+    .enum([
+      "pelanggan",
+      "marketing",
+      "gudang",
+      "keuangan",
+      "proyek",
+      "field",
+      "produksi",
+      "manager",
+      "owner",
+    ])
+    .optional(),
+  dept: z.string().trim().max(120).optional(),
 });
 
 export async function POST(
@@ -35,7 +49,7 @@ export async function POST(
         success: false,
         error: {
           code: "INVALID_DECISION",
-          message: "Pilih keputusan setujui atau tolak.",
+          message: "Keputusan permintaan role tidak valid.",
         },
       },
       { status: 400 },
@@ -47,8 +61,8 @@ export async function POST(
     await reviewRoleRequest(
       id,
       parsed.data.decision,
-      access.profile.id,
       access.profile.role,
+      { role: parsed.data.role, dept: parsed.data.dept },
     );
     return Response.json({ success: true, data: { id } });
   } catch (error) {

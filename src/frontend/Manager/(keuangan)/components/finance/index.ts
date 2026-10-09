@@ -5,4 +5,5 @@ export { FinancialChartsSection } from "./FinancialChartsSection/FinancialCharts
 export { TerminSection } from "./TerminSection/TerminSection";
 export { PayrollSection } from "./PayrollSection/PayrollSection";
 export { InvoicePreviewModal } from "./InvoicePreviewModal/InvoicePreviewModal";
+export { InvoiceFormModal } from "./InvoiceFormModal/InvoiceFormModal";
 export { SlipGajiModal } from "./SlipGajiModal/SlipGajiModal";

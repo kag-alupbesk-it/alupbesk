@@ -4,14 +4,27 @@ import { getGudangItems } from "@/backend/modules/gudang/index";
 import { formatRp, isRevenueStatus, periodDays, withinDays } from "../helpers/index";
 import type { BarData, FinancialsData, Metric, Statement } from "../types";
 
-export function getFinancialsData(period = "monthly"): FinancialsData {
+export function getFinancialsData(period = "monthly", opts?: { startDate?: string; endDate?: string }): FinancialsData {
   const orders = getLocalOrders();
-  const days = periodDays(period);
-  const now = Date.now();
-  const windowMs = days * 86400000;
   const gudangItems = getGudangItems();
+  const now = Date.now();
 
-  const current = orders.filter((order) => withinDays(order.createdAt, now, days));
+  let current = orders;
+  let windowMs = 0;
+  const hasRange = !!(opts?.startDate || opts?.endDate);
+  if (hasRange && opts?.startDate && opts?.endDate) {
+    const start = new Date(opts.startDate + "T00:00:00").getTime();
+    const end = new Date(opts.endDate + "T23:59:59").getTime();
+    windowMs = Math.max(1, end - start);
+    current = orders.filter((order) => {
+      const at = new Date(order.createdAt).getTime();
+      return at >= start && at <= end;
+    });
+  } else {
+    const days = periodDays(period);
+    windowMs = days * 86400000;
+    current = orders.filter((order) => withinDays(order.createdAt, now, days));
+  }
   const revenueList = current.filter((order) => isRevenueStatus(order.status));
   const revenue = revenueList.reduce((sum, order) => sum + order.total, 0);
   const total = current.length;
@@ -43,11 +56,26 @@ export function getFinancialsData(period = "monthly"): FinancialsData {
     { label: "Pesanan Ditolak", value: String(rejected), sub: null, icon: "cancel" },
   ];
 
-  const bucketCount = period === "daily" ? 7 : period === "weekly" ? 4 : period === "monthly" ? 12 : 4;
+  let bucketCount = 12;
+  if (!hasRange) {
+    bucketCount = period === "daily" ? 7 : period === "weekly" ? 4 : period === "monthly" ? 12 : 4;
+  } else {
+    const totalDays = Math.max(1, Math.ceil(windowMs / 86400000));
+    bucketCount = totalDays <= 7 ? totalDays || 1 : totalDays <= 31 ? 4 : totalDays <= 90 ? 6 : 12;
+  }
   const bucketRevenue: number[] = [];
   for (let index = 0; index < bucketCount; index += 1) {
-    const start = now - (bucketCount - index) * (windowMs / bucketCount);
-    const end = now - (bucketCount - index - 1) * (windowMs / bucketCount);
+    let start: number;
+    let end: number;
+    if (hasRange && opts?.startDate && opts?.endDate) {
+      const s = new Date(opts.startDate + "T00:00:00").getTime();
+      const e = new Date(opts.endDate + "T23:59:59").getTime();
+      start = s + index * ((e - s) / bucketCount);
+      end = s + (index + 1) * ((e - s) / bucketCount);
+    } else {
+      start = now - (bucketCount - index) * (windowMs / bucketCount);
+      end = now - (bucketCount - index - 1) * (windowMs / bucketCount);
+    }
     bucketRevenue.push(
       orders.filter((order) => {
         const at = new Date(order.createdAt).getTime();
@@ -60,7 +88,17 @@ export function getFinancialsData(period = "monthly"): FinancialsData {
 
   const grouped = new Map<string, number>();
   for (const order of orders) {
-    if (!withinDays(order.createdAt, now, days) || !isRevenueStatus(order.status)) continue;
+    if (!isRevenueStatus(order.status)) continue;
+    if (!hasRange) {
+      if (!withinDays(order.createdAt, now, periodDays(period))) continue;
+    } else if (opts?.startDate && opts?.endDate) {
+      const at = new Date(order.createdAt).getTime();
+      const start = new Date(opts.startDate + "T00:00:00").getTime();
+      const end = new Date(opts.endDate + "T23:59:59").getTime();
+      if (at < start || at > end) continue;
+    } else {
+      if (!withinDays(order.createdAt, now, periodDays(period))) continue;
+    }
     const key = new Date(order.createdAt).toLocaleDateString("id-ID", { month: "short", year: "numeric" });
     grouped.set(key, (grouped.get(key) ?? 0) + order.total);
   }

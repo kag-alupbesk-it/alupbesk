@@ -6,8 +6,9 @@ import { FeedbackToast } from "../ui/FeedbackToast/FeedbackToast";
 import { FinancialStatCard } from "../ui/FinancialStatCard/FinancialStatCard";
 import { StatusBadge } from "../ui/StatusBadge/StatusBadge";
 import { InvoicePreviewModal } from "../InvoicePreviewModal/InvoicePreviewModal";
+import { InvoiceFormModal } from "../InvoiceFormModal/InvoiceFormModal";
 import { formatRp, formatTanggal } from "../format/format";
-import type { StatusInvoice } from "../types/types";
+import type { Invoice, StatusInvoice } from "../types/types";
 import * as s from "../style/style";
 
 const TONE_STATUS: Record<StatusInvoice, "pending" | "approved" | "overdue"> = {
@@ -28,11 +29,74 @@ const IKON_STATUS: Record<StatusInvoice, string> = {
   overdue: "warning",
 };
 
+function ModalHapusInvoice({ invoice, onTutup }: { invoice: Invoice; onTutup: () => void }) {
+  const { hapusInvoice } = useFinance();
+  const belumLunas = invoice.termin.filter((item) => !item.lunas);
+
+  return (
+    <div className={s.modalOverlay} onMouseDown={(event) => event.target === event.currentTarget && onTutup()}>
+      <section
+        role="alertdialog"
+        aria-modal="true"
+        aria-labelledby="hapus-invoice-judul"
+        className={`${s.modalPanel} max-w-md`}
+      >
+        <header className={s.modalHeader}>
+          <div className="min-w-0">
+            <p className={s.fieldLabel}>Hapus Invoice</p>
+            <h3 id="hapus-invoice-judul" className={s.modalTitle}>
+              {invoice.nomor}
+            </h3>
+          </div>
+          <button type="button" onClick={onTutup} aria-label="Batal hapus invoice" className={s.modalClose}>
+            <span aria-hidden="true" className={s.iconMd}>
+              close
+            </span>
+          </button>
+        </header>
+
+        <div className="space-y-4 px-4 py-4 sm:px-6">
+          <p className="text-xs leading-relaxed text-on-surface-variant">
+            Invoice <span className="font-bold text-on-surface">{invoice.nomor}</span> untuk{" "}
+            <span className="font-bold text-on-surface">{invoice.nama}</span> akan dihapus dari daftar termin.
+            {belumLunas.length > 0 && (
+              <>
+                {" "}
+                Masih ada {belumLunas.length} termin yang belum lunas.
+              </>
+            )}
+          </p>
+          <div className="flex justify-end gap-2">
+            <button type="button" onClick={onTutup} className={s.secondaryButton}>
+              Batal
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                hapusInvoice(invoice.id);
+                onTutup();
+              }}
+              className={s.dangerButton}
+            >
+              <span aria-hidden="true" className={s.iconSm}>
+                delete
+              </span>
+              Hapus
+            </button>
+          </div>
+        </div>
+      </section>
+    </div>
+  );
+}
+
 export function TerminSection() {
   const { state, invoiceRingkas, lunasTermin, clearToast } = useFinance();
   const [filterStatus, setFilterStatus] = useState<"all" | StatusInvoice>("all");
   const [cari, setCari] = useState("");
   const [preview, setPreview] = useState<InvoiceRingkas | null>(null);
+  const [form, setForm] = useState<{ invoice?: Invoice } | null>(null);
+  const [hapus, setHapus] = useState<Invoice | null>(null);
 
   const daftar = useMemo(() => {
     const query = cari.trim().toLowerCase();
@@ -93,9 +157,17 @@ export function TerminSection() {
               Status DP, lunas, atau overdue berdasarkan termin yang jatuh tempo. Buka preview untuk mencetak invoice.
             </p>
           </div>
-          <span className={s.dataCounter}>
-            {daftar.length} dari {invoiceRingkas.length} invoice
-          </span>
+          <div className="flex flex-wrap items-center gap-2">
+            <span className={s.dataCounter}>
+              {daftar.length} dari {invoiceRingkas.length} invoice
+            </span>
+            <button type="button" onClick={() => setForm({})} className={s.primaryButton}>
+              <span aria-hidden="true" className={s.iconSm}>
+                add
+              </span>
+              Tambah Invoice
+            </button>
+          </div>
         </div>
 
         <div className={`mt-4 ${s.toolbarRow}`}>
@@ -206,6 +278,28 @@ export function TerminSection() {
                           </span>
                         </button>
                       )}
+                      <button
+                        type="button"
+                        onClick={() => setForm({ invoice: item.invoice })}
+                        aria-label={`Ubah invoice ${item.invoice.nomor}`}
+                        title="Ubah invoice"
+                        className={s.actionButton}
+                      >
+                        <span aria-hidden="true" className={s.iconSm}>
+                          edit
+                        </span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setHapus(item.invoice)}
+                        aria-label={`Hapus invoice ${item.invoice.nomor}`}
+                        title="Hapus invoice"
+                        className={s.actionButtonDanger}
+                      >
+                        <span aria-hidden="true" className={s.iconSm}>
+                          delete
+                        </span>
+                      </button>
                     </div>
                   </td>
                 </tr>
@@ -292,6 +386,28 @@ export function TerminSection() {
                   </span>
                   Preview
                 </button>
+                <button
+                  type="button"
+                  onClick={() => setForm({ invoice: item.invoice })}
+                  aria-label={`Ubah invoice ${item.invoice.nomor}`}
+                  title="Ubah invoice"
+                  className={s.actionButton}
+                >
+                  <span aria-hidden="true" className={s.iconSm}>
+                    edit
+                  </span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setHapus(item.invoice)}
+                  aria-label={`Hapus invoice ${item.invoice.nomor}`}
+                  title="Hapus invoice"
+                  className={s.actionButtonDanger}
+                >
+                  <span aria-hidden="true" className={s.iconSm}>
+                    delete
+                  </span>
+                </button>
               </div>
             </article>
           ))}
@@ -299,6 +415,8 @@ export function TerminSection() {
       </section>
 
       {preview && <InvoicePreviewModal data={preview} onTutup={() => setPreview(null)} />}
+      {form && <InvoiceFormModal awal={form.invoice} onTutup={() => setForm(null)} />}
+      {hapus && <ModalHapusInvoice invoice={hapus} onTutup={() => setHapus(null)} />}
       <FeedbackToast message={state.toast} onDismiss={clearToast} />
     </div>
   );

@@ -16,7 +16,8 @@
 export function InlineScript({ html }: { html: string }) {
   return (
     <script
-      type={typeof window === "undefined" ? "text/javascript" : "text/plain"}
+      type="text/javascript"
+      data-dynamic="true"
       suppressHydrationWarning
       dangerouslySetInnerHTML={{ __html: html }}
     />

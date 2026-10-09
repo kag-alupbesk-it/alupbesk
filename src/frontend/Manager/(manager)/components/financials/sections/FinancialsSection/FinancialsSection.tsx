@@ -24,7 +24,9 @@ function LoadingSkeleton() {
 
 export default function FinancialsSection() {
   const [period, setPeriod] = useState<Period>("monthly");
-  const { data, loading, error, refetch } = useApi(() => fetchFinancialsData(period), { interval: 30000, key: period });
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
+  const { data, loading, error, refetch } = useApi(() => fetchFinancialsData(period as Period, { startDate: startDate || undefined, endDate: endDate || undefined }), { interval: 30000, key: period + startDate + endDate });
 
   const handleDownloadAll = () => {
     const stmts = data?.statements ?? [];
@@ -104,10 +106,18 @@ export default function FinancialsSection() {
               <h4 className={styles.sectionTitle}>Revenue Stream Analysis</h4>
               <p className={styles.sectionSubtitle}>Precision Manufacturing & Logistics Dividends</p>
             </div>
-            <div className={styles.toggleGroup}>
-              {(["daily", "weekly", "monthly", "yearly"] as Period[]).map((p) => (
-                <button key={p} onClick={() => setPeriod(p)} className={`${styles.toggleButton} ${period === p ? styles.toggleActive : styles.toggleInactive}`}>{periodLabels[p]}</button>
-              ))}
+            <div className="flex flex-col gap-2 items-end">
+              <div className={styles.toggleGroup}>
+                {(["daily", "weekly", "monthly", "yearly"] as Period[]).map((p) => (
+                  <button key={p} onClick={() => setPeriod(p)} className={`${styles.toggleButton} ${period === p ? styles.toggleActive : styles.toggleInactive}`}>{periodLabels[p]}</button>
+                ))}
+              </div>
+              <div className="flex flex-wrap gap-1 text-[10px] items-center">
+                <input type="date" value={startDate} onChange={(e)=>setStartDate(e.target.value)} className="bg-white/5 border border-white/10 rounded px-1 py-0.5" />
+                <span className="text-white/40">-</span>
+                <input type="date" value={endDate} onChange={(e)=>setEndDate(e.target.value)} className="bg-white/5 border border-white/10 rounded px-1 py-0.5" />
+                <button onClick={()=>{setStartDate(""); setEndDate("");}} className="px-1 py-0.5 bg-white/5 rounded border border-white/10">Bersihkan</button>
+              </div>
             </div>
           </div>
           <div className={styles.chartArea}>
@@ -246,4 +256,25 @@ export default function FinancialsSection() {
       </section>
     </div>
   );
+}
+
+function formatDateForInput(date: Date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function setPreset(type: string, setStart: (v: string) => void, setEnd: (v: string) => void) {
+  const now = new Date(); now.setHours(0,0,0,0);
+  if (type === "today") { const s=formatDateForInput(now); setStart(s); setEnd(s); return; }
+  if (type === "yesterday") { const d=new Date(now); d.setDate(d.getDate()-1); const s=formatDateForInput(d); setStart(s); setEnd(s); return; }
+  if (type === "thisWeek") { const d=new Date(now); const day=d.getDay(); const diff=day===0?6:day-1; const start=new Date(d); start.setDate(d.getDate()-diff); setStart(formatDateForInput(start)); setEnd(formatDateForInput(now)); return; }
+  if (type === "lastWeek") { const d=new Date(now); const day=d.getDay(); const diff=day===0?6:day-1; const end=new Date(d); end.setDate(d.getDate()-diff-1); const start=new Date(end); start.setDate(end.getDate()-6); setStart(formatDateForInput(start)); setEnd(formatDateForInput(end)); return; }
+  if (type === "thisMonth") { const start=new Date(now.getFullYear(), now.getMonth(),1); setStart(formatDateForInput(start)); setEnd(formatDateForInput(now)); return; }
+  if (type === "lastMonth") { const start=new Date(now.getFullYear(), now.getMonth()-1,1); const end=new Date(now.getFullYear(), now.getMonth(),0); setStart(formatDateForInput(start)); setEnd(formatDateForInput(end)); return; }
+  if (type === "last3Months") { const start=new Date(now.getFullYear(), now.getMonth()-3,1); const end=new Date(now.getFullYear(), now.getMonth(),0); setStart(formatDateForInput(start)); setEnd(formatDateForInput(end)); return; }
+  if (type === "last6Months") { const start=new Date(now.getFullYear(), now.getMonth()-6,1); const end=new Date(now.getFullYear(), now.getMonth(),0); setStart(formatDateForInput(start)); setEnd(formatDateForInput(end)); return; }
+  if (type === "thisYear") { const start=new Date(now.getFullYear(),0,1); setStart(formatDateForInput(start)); setEnd(formatDateForInput(now)); return; }
+  if (type === "lastYear") { const start=new Date(now.getFullYear()-1,0,1); const end=new Date(now.getFullYear()-1,11,31); setStart(formatDateForInput(start)); setEnd(formatDateForInput(end)); return; }
 }
