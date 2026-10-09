@@ -1,21 +1,23 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { FileSpreadsheet } from "lucide-react";
 import { useFinance } from "../FinanceStore/FinanceStore";
 import { FeedbackToast } from "../ui/FeedbackToast/FeedbackToast";
 import { FinancialStatCard } from "../ui/FinancialStatCard/FinancialStatCard";
 import { StatusBadge } from "../ui/StatusBadge/StatusBadge";
 import { SelectTambahBaru } from "../ui/SelectTambahBaru/SelectTambahBaru";
-import { KATEGORI_KAS } from "@/services/api/keuangan";
 import { formatRp, formatTanggal, tanggalHariIni } from "../format/format";
 import {
   JENIS_TRANSAKSI,
+  KATEGORI_BIAYA,
   LABEL_JENIS_TRANSAKSI,
   type JenisTransaksi,
   type KategoriBiaya,
   type TransaksiKas,
 } from "../types/types";
 import * as s from "../style/style";
+import { exportCashflowToExcel } from "./exportCashflow";
 
 const IKON_JENIS: Record<JenisTransaksi, string> = {
   kas_masuk: "south_west",
@@ -23,16 +25,7 @@ const IKON_JENIS: Record<JenisTransaksi, string> = {
   kas_beredar: "handshake",
 };
 
-type PeriodeKas = "hari" | "minggu" | "bulan" | "tahun";
 
-const PERIODE_LIST: PeriodeKas[] = ["hari", "minggu", "bulan", "tahun"];
-
-const LABEL_PERIODE: Record<PeriodeKas, string> = {
-  hari: "Harian",
-  minggu: "Mingguan",
-  bulan: "Bulanan",
-  tahun: "Tahunan",
-};
 
 function badgeJenis(jenis: JenisTransaksi) {
   if (jenis === "kas_masuk") return s.badgeMasuk;
@@ -40,20 +33,95 @@ function badgeJenis(jenis: JenisTransaksi) {
   return s.badgeBonedar;
 }
 
+function formatDateForInput(date: Date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function setPreset(type: string, setStart: (v: string) => void, setEnd: (v: string) => void) {
+  const now = new Date();
+  now.setHours(0, 0, 0, 0);
+  if (type === "today") {
+    const s = formatDateForInput(now);
+    setStart(s); setEnd(s);
+    return;
+  }
+  if (type === "yesterday") {
+    const d = new Date(now); d.setDate(d.getDate() - 1);
+    const s = formatDateForInput(d);
+    setStart(s); setEnd(s);
+    return;
+  }
+  if (type === "thisWeek") {
+    const d = new Date(now);
+    const day = d.getDay(); // 0 Sun
+    const diff = day === 0 ? 6 : day - 1; // Monday
+    const start = new Date(d); start.setDate(d.getDate() - diff);
+    setStart(formatDateForInput(start)); setEnd(formatDateForInput(now));
+    return;
+  }
+  if (type === "lastWeek") {
+    const d = new Date(now);
+    const day = d.getDay();
+    const diff = day === 0 ? 6 : day - 1;
+    const end = new Date(d); end.setDate(d.getDate() - diff - 1);
+    const start = new Date(end); start.setDate(end.getDate() - 6);
+    setStart(formatDateForInput(start)); setEnd(formatDateForInput(end));
+    return;
+  }
+  if (type === "thisMonth") {
+    const start = new Date(now.getFullYear(), now.getMonth(), 1);
+    setStart(formatDateForInput(start)); setEnd(formatDateForInput(now));
+    return;
+  }
+  if (type === "lastMonth") {
+    const start = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    const end = new Date(now.getFullYear(), now.getMonth(), 0);
+    setStart(formatDateForInput(start)); setEnd(formatDateForInput(end));
+    return;
+  }
+  if (type === "last3Months") {
+    const start = new Date(now.getFullYear(), now.getMonth() - 3, 1);
+    const end = new Date(now.getFullYear(), now.getMonth(), 0);
+    setStart(formatDateForInput(start)); setEnd(formatDateForInput(end));
+    return;
+  }
+  if (type === "last6Months") {
+    const start = new Date(now.getFullYear(), now.getMonth() - 6, 1);
+    const end = new Date(now.getFullYear(), now.getMonth(), 0);
+    setStart(formatDateForInput(start)); setEnd(formatDateForInput(end));
+    return;
+  }
+  if (type === "thisYear") {
+    const start = new Date(now.getFullYear(), 0, 1);
+    setStart(formatDateForInput(start)); setEnd(formatDateForInput(now));
+    return;
+  }
+  if (type === "lastYear") {
+    const start = new Date(now.getFullYear() - 1, 0, 1);
+    const end = new Date(now.getFullYear() - 1, 11, 31);
+    setStart(formatDateForInput(start)); setEnd(formatDateForInput(end));
+    return;
+  }
+}
+
 function FormKas() {
-  const { tambahTransaksi, opsiKategori, tambahOpsi } = useFinance();
+  const { tambahTransaksi, opsiKategori, opsiPerson, tambahOpsi } = useFinance();
   const [jenis, setJenis] = useState<JenisTransaksi>("kas_keluar");
   const [tanggal, setTanggal] = useState(tanggalHariIni());
   const [uraian, setUraian] = useState("");
   const [nominal, setNominal] = useState(0);
-  const [kategori, setKategori] = useState<string>(KATEGORI_KAS[2]);
+  const [kategori, setKategori] = useState<string>(KATEGORI_BIAYA[0]);
+  const [person, setPerson] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const JENIS_BE = JENIS_TRANSAKSI.filter((item) => item !== "kas_beredar");
 
   const gantiJenis = (berikutnya: JenisTransaksi) => {
     setJenis(berikutnya);
-    setKategori(berikutnya === "kas_masuk" ? KATEGORI_KAS[0] : KATEGORI_KAS[2]);
+    setKategori(KATEGORI_BIAYA[0]);
   };
 
   const submit = (event: React.FormEvent<HTMLFormElement>) => {
@@ -62,6 +130,8 @@ function FormKas() {
     if (!tanggal) validasi.tanggal = "Tanggal wajib diisi.";
     if (!uraian.trim()) validasi.uraian = "Deskripsi wajib diisi.";
     if (nominal <= 0) validasi.nominal = "Jumlah harus lebih dari Rp 0.";
+    if (jenis === "kas_keluar" && !person.trim())
+      validasi.person = "Penerima wajib diisi untuk pengeluaran.";
     setErrors(validasi);
     if (Object.keys(validasi).length > 0) return;
 
@@ -71,7 +141,7 @@ function FormKas() {
       uraian: uraian.trim(),
       kategori,
       posProyek: "",
-      person: "",
+      person: person.trim(),
       nominal,
       noNota: "",
       bukti: "",
@@ -80,6 +150,7 @@ function FormKas() {
     });
     setUraian("");
     setNominal(0);
+    setPerson("");
     setErrors({});
   };
 
@@ -87,7 +158,8 @@ function FormKas() {
     <form onSubmit={submit} className={s.card} noValidate>
       <h2 className={s.sectionTitle}>Catat Transaksi Kas</h2>
       <p className={s.sectionSubtitle}>
-        Pilih jenis transaksi, lalu lengkapi tanggal, deskripsi, jumlah, dan kategori.
+        Pilih jenis transaksi, lalu lengkapi tanggal, deskripsi, jumlah, kategori, dan nama pihak (penerima untuk
+        pengeluaran).
       </p>
 
       <fieldset className="mt-4">
@@ -186,6 +258,19 @@ function FormKas() {
             </span>
           )}
         </label>
+
+        <SelectTambahBaru
+          label={jenis === "kas_keluar" ? "Penerima" : "Pihak / Pemberi"}
+          value={person}
+          options={opsiPerson}
+          placeholder={jenis === "kas_keluar" ? "cth: Bambang Sutrisno" : "cth: CV Karya Baja"}
+          error={errors.person}
+          onChange={(value) => {
+            setPerson(value);
+            setErrors((current) => ({ ...current, person: "" }));
+          }}
+          onTambah={(value) => tambahOpsi("person", value)}
+        />
       </div>
 
       <div className="mt-5 flex justify-end">
@@ -340,25 +425,21 @@ export function KasSection() {
   const { state, rekap, transaksiUrut, opsiKategori, clearToast } = useFinance();
   const [filterJenis, setFilterJenis] = useState<"all" | JenisTransaksi>("all");
   const [filterKategori, setFilterKategori] = useState<"all" | KategoriBiaya>("all");
-  const [periode, setPeriode] = useState<PeriodeKas>("hari");
   const [cari, setCari] = useState("");
   const [preview, setPreview] = useState<TransaksiKas | null>(null);
   const [hapus, setHapus] = useState<TransaksiKas | null>(null);
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
 
   const transaksi = useMemo(() => {
     const query = cari.trim().toLowerCase();
-    const now = new Date();
-    const hariIni = now.toISOString().slice(0, 10);
-    const mulaiMinggu = new Date(now);
-    mulaiMinggu.setDate(mulaiMinggu.getDate() - 6);
-    const mulaiBulan = new Date(now.getFullYear(), now.getMonth(), 1);
-    const mulaiTahun = new Date(now.getFullYear(), 0, 1);
+    let start: Date | null = null;
+    let end: Date | null = null;
+    if (startDate) start = new Date(startDate + "T00:00:00");
+    if (endDate) end = new Date(endDate + "T23:59:59");
     return transaksiUrut.filter((item) => {
-      let cocokPeriode = true;
-      if (periode === "hari") cocokPeriode = item.tanggal === hariIni;
-      if (periode === "minggu") cocokPeriode = new Date(item.tanggal) >= mulaiMinggu;
-      if (periode === "bulan") cocokPeriode = new Date(item.tanggal) >= mulaiBulan;
-      if (periode === "tahun") cocokPeriode = new Date(item.tanggal) >= mulaiTahun;
+      const d = new Date(item.tanggal + "T00:00:00");
+      const cocokPeriode = (!start || d >= start) && (!end || d <= end);
       const cocokJenis = filterJenis === "all" || item.jenis === filterJenis;
       const cocokKategori = filterKategori === "all" || item.kategori === filterKategori;
       const cocokCari =
@@ -367,7 +448,7 @@ export function KasSection() {
         (item.noNota || "").toLowerCase().includes(query);
       return cocokPeriode && cocokJenis && cocokKategori && cocokCari;
     });
-  }, [transaksiUrut, filterJenis, filterKategori, cari, periode]);
+  }, [transaksiUrut, filterJenis, filterKategori, cari, startDate, endDate]);
 
   return (
     <div className="space-y-5">
@@ -405,46 +486,38 @@ export function KasSection() {
       <FormKas />
 
       <section className={s.card}>
-        <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-          <div>
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+          <div className="flex-1">
             <h2 className={s.sectionTitle}>Riwayat Transaksi Kas</h2>
             <p className={s.sectionSubtitle}>
               Preview bukti nota dan hapus transaksi yang tidak sesuai pencatatan.
             </p>
           </div>
-          <div className="flex flex-wrap gap-2">
-            <div className={s.segmentedTrack}>
-              {PERIODE_LIST.map((p) => {
-                const aktif = periode === p;
-                return (
-                  <button
-                    key={p}
-                    type="button"
-                    aria-pressed={aktif}
-                    onClick={() => setPeriode(p)}
-                    className={`${s.segmentedItem} ${aktif ? s.segmentedItemActive : s.segmentedItemIdle}`}
-                  >
-                    {LABEL_PERIODE[p]}
-                  </button>
-                );
-              })}
-            </div>
+              <div className="flex flex-wrap items-center justify-end gap-2 lg:self-end" suppressHydrationWarning>
             <span className={s.dataCounter}>
               {transaksi.length} dari {transaksiUrut.length} transaksi
             </span>
+            <button
+              type="button"
+              onClick={() => exportCashflowToExcel(transaksi)}
+              className="bg-emerald-600/90 hover:bg-emerald-600 text-white text-xs font-semibold px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-all shadow-sm whitespace-nowrap"
+            >
+              <FileSpreadsheet className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+              <span>Export Excel</span>
+            </button>
           </div>
         </div>
 
         <div className={`mt-4 ${s.toolbarRow}`}>
           <label className="sr-only" htmlFor="kas-cari">
-            Cari uraian atau person
+            Cari uraian atau penerima
           </label>
           <input
             id="kas-cari"
             type="search"
             value={cari}
             onChange={(event) => setCari(event.target.value)}
-            placeholder="Cari uraian, person, atau no. nota..."
+            placeholder="Cari uraian, penerima, atau no. nota..."
             className={s.searchInput}
           />
           <label className="sr-only" htmlFor="kas-filter-jenis">
@@ -479,6 +552,25 @@ export function KasSection() {
               </option>
             ))}
           </select>
+          <div className="flex items-center gap-1.5">
+            <input
+              type="date"
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
+              className={`${s.input} text-xs py-1 px-1.5`}
+              max={endDate || new Date().toISOString().slice(0,10)}
+              min={new Date(Date.now() - 5*365*24*60*60*1000).toISOString().slice(0,10)}
+            />
+            <span className="text-on-surface-variant text-xs">-</span>
+            <input
+              type="date"
+              value={endDate}
+              onChange={(e) => setEndDate(e.target.value)}
+              className={`${s.input} text-xs py-1 px-1.5`}
+              min={startDate || undefined}
+              max={new Date().toISOString().slice(0,10)}
+            />
+          </div>
         </div>
 
         <div className={`mt-4 ${s.tableWrap}`}>
@@ -498,7 +590,7 @@ export function KasSection() {
                   Kategori
                 </th>
                 <th scope="col" className={s.th}>
-                  Sumber
+                  Penerima
                 </th>
                 <th scope="col" className={`${s.th} text-right`}>
                   Nominal
@@ -531,7 +623,7 @@ export function KasSection() {
                     </p>
                   </td>
                   <td className={s.tdMuted}>{item.kategori}</td>
-                  <td className={s.tdMuted}>{item.person}</td>
+                  <td className={s.tdMuted}>{item.person || "-"}</td>
                   <td
                     className={`${s.td} text-right font-bold ${
                       item.jenis === "kas_masuk" ? "text-success" : "text-error"
@@ -584,6 +676,7 @@ export function KasSection() {
               )}
             </tbody>
           </table>
+
         </div>
 
         <div className={`mt-4 ${s.cardListWrap}`}>
@@ -612,8 +705,8 @@ export function KasSection() {
                   <p className={s.cardListValue}>{item.kategori}</p>
                 </div>
                 <div>
-                  <p className={s.cardListLabel}>Sumber</p>
-                  <p className={s.cardListValue}>{item.person}</p>
+                  <p className={s.cardListLabel}>Penerima</p>
+                  <p className={s.cardListValue}>{item.person || "-"}</p>
                 </div>
                 <div>
                   <p className={s.cardListLabel}>Status</p>

@@ -43,22 +43,50 @@ export function RegisterForm() {
       return;
     }
 
+    const trimmedName = name.trim();
+    const normalizedEmail = email.trim().toLowerCase();
+    const dept = requestedRoles.find((item) => item.value === role)?.labelId ?? role;
+
     try {
       const { data, error: signUpError } = await getSupabaseBrowserClient().auth.signUp({
-        email: email.trim().toLowerCase(),
+        email: normalizedEmail,
         password,
         options: {
           captchaToken: captchaToken || undefined,
           data: {
-            full_name: name.trim(),
-            department:
-              requestedRoles.find((item) => item.value === role)?.labelId ?? role,
+            full_name: trimmedName,
+            role,
+            dept,
             requested_role: role,
+            department: dept,
           },
         },
       });
       if (signUpError) throw signUpError;
       if (!data.user) throw new Error("Your account could not be created. Please try again.");
+
+      // Simpan role & dept pilihan pemohon ke public.users agar tidak jatuh ke
+      // nilai default (pelanggan) yang ditulis trigger/auth.
+      const profileResponse = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId: data.user.id,
+          name: trimmedName,
+          email: normalizedEmail,
+          role,
+          dept,
+        }),
+      });
+      if (!profileResponse.ok) {
+        const payload = (await profileResponse.json().catch(() => null)) as {
+          error?: { message?: string };
+        } | null;
+        throw new Error(
+          payload?.error?.message ??
+            "Your registration could not be saved. Please try again.",
+        );
+      }
 
       if (data.session) {
         try {

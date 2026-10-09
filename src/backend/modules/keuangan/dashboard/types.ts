@@ -8,6 +8,7 @@ export interface FinanceDashboardState {
   opsiPos: string[];
   seq: number;
   seqKaryawan: number;
+  seqInvoice: number;
 }
 
 export const EMPTY_FINANCE_STATE: FinanceDashboardState = {
@@ -20,4 +21,5 @@ export const EMPTY_FINANCE_STATE: FinanceDashboardState = {
   opsiPos: [],
   seq: 1,
   seqKaryawan: 1,
+  seqInvoice: 1,
 };

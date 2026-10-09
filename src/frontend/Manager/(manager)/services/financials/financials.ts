@@ -36,6 +36,6 @@ export interface FinancialsData {
   donut: { value: number; label: string; color: string }[];
 }
 
-export function fetchFinancialsData(period: Period = "monthly"): Promise<FinancialsData> {
+export function fetchFinancialsData(period: Period = "monthly", opts?: { startDate?: string; endDate?: string }): Promise<FinancialsData> {
   return request<FinancialsData>(`/manager/financials?period=${period}`);
 }
