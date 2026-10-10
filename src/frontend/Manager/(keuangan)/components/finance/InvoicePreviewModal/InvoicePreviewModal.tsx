@@ -35,19 +35,18 @@ export function InvoicePreviewModal({
             </p>
           </div>
           <div className="flex shrink-0 items-center gap-2">
-            <button
-              type="button"
-              onClick={() => {
-                setToast(`Invoice ${invoice.nomor} dikirim ke printer.`);
-                onTutup();
-              }}
+            <a
+              href={`/keuangan/invoice/${invoice.id}/print`}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => onTutup()}
               className={s.secondaryButton}
             >
               <span aria-hidden="true" className={s.iconSm}>
                 print
               </span>
               Cetak
-            </button>
+            </a>
             <button type="button" onClick={onTutup} aria-label="Tutup preview invoice" className={s.modalClose}>
               <span aria-hidden="true" className={s.iconMd}>
                 close

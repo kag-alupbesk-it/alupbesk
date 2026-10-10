@@ -115,10 +115,6 @@ export default function UsersSection() {
             </div>
           )}
         </div>
-        <div className={styles.filterCard}>
-          <span className={styles.filterCardLabel}>Dept: Manufacturing</span>
-          <span className={`${styles.icon} ${styles.expandIcon}`}>expand_more</span>
-        </div>
       </div>
 
       <div className={styles.mobileList}>

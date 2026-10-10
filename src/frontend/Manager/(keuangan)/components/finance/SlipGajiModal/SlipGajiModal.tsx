@@ -2,7 +2,7 @@
 
 import { useFinance } from "../FinanceStore/FinanceStore";
 import { FeedbackToast } from "../ui/FeedbackToast/FeedbackToast";
-import { formatRp, formatTanggalPanjang } from "../format/format";
+import { formatRp, formatTanggal, formatTanggalPanjang } from "../format/format";
 import { hitungGaji, type Karyawan } from "../types/types";
 import * as s from "../style/style";
 
@@ -15,8 +15,7 @@ export function SlipGajiModal({ karyawan, onTutup }: { karyawan: Karyawan; onTut
     { label: "Gaji Pokok", nilai: karyawan.gajiPokok, tanda: "+" as const },
     { label: "Tunjangan", nilai: karyawan.tunjangan, tanda: "+" as const },
     { label: "Lembur", nilai: karyawan.lembur, tanda: "+" as const },
-    { label: "Potongan Bon", nilai: karyawan.potonganBon, tanda: "-" as const },
-    { label: "Potongan Kasbon", nilai: karyawan.potonganKasbon, tanda: "-" as const },
+    { label: "Potongan Kasbon/Bon", nilai: karyawan.potongan, tanda: "-" as const },
   ];
 
   return (
@@ -24,7 +23,7 @@ export function SlipGajiModal({ karyawan, onTutup }: { karyawan: Karyawan; onTut
       <section role="dialog" aria-modal="true" aria-labelledby="slip-judul" className={`${s.modalPanel} max-w-2xl`}>
         <header className={s.modalHeader}>
           <div className="min-w-0">
-            <p className={s.fieldLabel}>Slip Gaji · Periode {karyawan.periode}</p>
+            <p className={s.fieldLabel}>Slip Gaji · Gajian {formatTanggal(karyawan.periode)}</p>
             <h3 id="slip-judul" className={s.modalTitle}>
               {karyawan.nama}
             </h3>
@@ -101,7 +100,7 @@ export function SlipGajiModal({ karyawan, onTutup }: { karyawan: Karyawan; onTut
               <dd className={s.detailValue}>{karyawan.metodeBayar}</dd>
             </div>
             <div className={s.cardCompact}>
-              <dt className={s.detailLabel}>Potongan bon + kasbon</dt>
+              <dt className={s.detailLabel}>Potongan kasbon/bon</dt>
               <dd className={`${s.detailValue} text-error`}>{formatRp(potongan)}</dd>
             </div>
           </dl>

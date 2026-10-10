@@ -600,8 +600,11 @@ declare
     display_name text;
     department text;
 begin
-    requested_role_text := new.raw_user_meta_data ->> 'requested_role';
-    if requested_role_text is null or requested_role_text = '' then
+    requested_role_text := coalesce(
+        nullif(trim(new.raw_user_meta_data ->> 'requested_role'), ''),
+        nullif(trim(new.raw_user_meta_data ->> 'role'), '')
+    );
+    if requested_role_text is null then
         return new;
     end if;
     if requested_role_text not in (
@@ -614,7 +617,10 @@ begin
         nullif(trim(new.raw_user_meta_data ->> 'full_name'), ''),
         split_part(new.email, '@', 1)
     );
-    department := nullif(trim(new.raw_user_meta_data ->> 'department'), '');
+    department := coalesce(
+        nullif(trim(new.raw_user_meta_data ->> 'dept'), ''),
+        nullif(trim(new.raw_user_meta_data ->> 'department'), '')
+    );
 
     select id, active
       into profile_id_value, profile_active
@@ -629,13 +635,29 @@ begin
         insert into public.users (id, name, email, dept, role, status, active)
         values (
             new.id, display_name, lower(new.email), department,
-            'pelanggan', 'PENDING', false
+            requested_role_text::public.user_role, 'PENDING', false
         )
         returning id into profile_id_value;
+    else
+        -- Profil sudah dibuat sebelumnya: samakan role/dept dengan pilihan formulir.
+        update public.users
+           set name = display_name,
+               dept = department,
+               role = requested_role_text::public.user_role,
+               status = 'PENDING',
+               active = false
+         where id = profile_id_value;
     end if;
 
-    insert into public.role_requests (auth_user_id, profile_id, requested_role)
-    values (new.id, profile_id_value, requested_role_text::public.user_role);
+    if to_regclass('public.role_requests') is not null then
+        delete from public.role_requests
+         where profile_id = profile_id_value
+           and status = 'PENDING';
+
+        insert into public.role_requests (auth_user_id, profile_id, requested_role)
+        values (new.id, profile_id_value, requested_role_text::public.user_role)
+        on conflict do nothing;
+    end if;
     return new;
 end;
 $$;

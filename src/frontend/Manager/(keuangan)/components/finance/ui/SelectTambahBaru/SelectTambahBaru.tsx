@@ -71,6 +71,9 @@ export function SelectTambahBaru({
           aria-invalid={Boolean(error)}
           className={s.select}
         >
+          <option value="" disabled>
+            Pilih {label.toLowerCase()}…
+          </option>
           {options.map((item) => (
             <option key={item} value={item}>
               {item}

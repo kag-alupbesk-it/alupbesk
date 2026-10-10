@@ -13,6 +13,7 @@ const stateSchema = z.object({
   opsiPos: z.array(z.string().max(160)).max(500),
   seq: z.number().int().positive(),
   seqKaryawan: z.number().int().positive(),
+  seqInvoice: z.number().int().positive(),
 });
 
 export async function GET() {

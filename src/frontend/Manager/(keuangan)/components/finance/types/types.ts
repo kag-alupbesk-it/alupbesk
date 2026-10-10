@@ -112,8 +112,7 @@ export type Karyawan = {
   gajiPokok: number;
   tunjangan: number;
   lembur: number;
-  potonganBon: number;
-  potonganKasbon: number;
+  potongan: number;
   periode: string;
   statusBayar: "belum" | "terbayar";
   tanggalBayar: string;
@@ -131,13 +130,6 @@ export const JABATAN_AWAL = [
 ] as const;
 
 export type PeriodeGaji = string;
-
-export const periodeBerikutnya = (dari: string): string => {
-  const [tahun, bulan] = dari.split("-").map(Number);
-  if (!tahun || !bulan) return dari;
-  const date = new Date(tahun, bulan, 1);
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
-};
 
 export const REKAP_TRANSAKSI = (transaksi: TransaksiKas[]) => {
   const totalMasuk = transaksi
@@ -191,7 +183,7 @@ export const hitungInvoice = (invoice: Invoice) => {
 
 export const hitungGaji = (karyawan: Karyawan) => {
   const pendapatan = karyawan.gajiPokok + karyawan.tunjangan + karyawan.lembur;
-  const potongan = karyawan.potonganBon + karyawan.potonganKasbon;
+  const potongan = karyawan.potongan;
   return {
     pendapatan,
     potongan,
