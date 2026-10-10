@@ -18,6 +18,8 @@ interface GudangTableProps {
   onStock: (item: GudangItem) => void;
   onMasuk: (item: GudangItem) => void;
   onKeluar: (item: GudangItem) => void;
+  /** Mode pantau Owner: seluruh tombol aksi disembunyikan. */
+  readOnly?: boolean;
 }
 
 export function GudangTable({
@@ -25,6 +27,7 @@ export function GudangTable({
   daftarMerek, daftarProyek,
   onSearchChange, onMerekChange, onKategoriChange, onProyekChange,
   onStock, onMasuk, onKeluar,
+  readOnly = false,
 }: GudangTableProps) {
   return (
     <div className={s.tableCard}>
@@ -71,7 +74,7 @@ export function GudangTable({
           items.map((item) => {
             const isLowStock = item.stok <= item.minStok;
             return (
-              <div key={item.id} className={s.card}>
+              <div key={item.id} data-focus-id={isLowStock ? "stok-kritis" : undefined} className={s.card}>
                 <div className={s.cardTop}>
                   <div className="min-w-0">
                     <div className={s.skuText}>{item.sku}</div>
@@ -102,18 +105,22 @@ export function GudangTable({
                   </span>
                 </div>
                 <div className={`${s.cardActions} flex-col gap-2`}>
-                  <button onClick={() => onMasuk(item)} className={`${s.editButton} w-full`}>
-                    <span className={s.iconSm}>login</span>
-                    <span className="ml-1 text-[10px] font-bold uppercase tracking-wide">Masuk</span>
-                  </button>
-                  <button onClick={() => onKeluar(item)} className={`${s.editButton} w-full`}>
-                    <span className={s.iconSm}>logout</span>
-                    <span className="ml-1 text-[10px] font-bold uppercase tracking-wide">Keluar</span>
-                  </button>
-                  <button onClick={() => onStock(item)} className={`${s.editButton} w-full`}>
-                    <span className={s.iconSm}>inventory</span>
-                    <span className="ml-1 text-[10px] font-bold uppercase tracking-wide">Kelola Stok</span>
-                  </button>
+                  {!readOnly && (
+                    <>
+                      <button onClick={() => onMasuk(item)} className={`${s.editButton} w-full`}>
+                        <span className={s.iconSm}>login</span>
+                        <span className="ml-1 text-[10px] font-bold uppercase tracking-wide">Masuk</span>
+                      </button>
+                      <button onClick={() => onKeluar(item)} className={`${s.editButton} w-full`}>
+                        <span className={s.iconSm}>logout</span>
+                        <span className="ml-1 text-[10px] font-bold uppercase tracking-wide">Keluar</span>
+                      </button>
+                      <button onClick={() => onStock(item)} className={`${s.editButton} w-full`}>
+                        <span className={s.iconSm}>inventory</span>
+                        <span className="ml-1 text-[10px] font-bold uppercase tracking-wide">Kelola Stok</span>
+                      </button>
+                    </>
+                  )}
                 </div>
               </div>
             );
@@ -134,7 +141,7 @@ export function GudangTable({
               <th scope="col" className={s.thHiddenMd}>Proyek</th>
               <th scope="col" className={s.thRight}>Jumlah / Stok</th>
               <th scope="col" className={s.thHiddenMd}>Catatan</th>
-              <th scope="col" className={s.thRight}>Aksi</th>
+              {!readOnly && <th scope="col" className={s.thRight}>Aksi</th>}
             </tr>
           </thead>
           <tbody className={s.tbody}>
@@ -148,7 +155,7 @@ export function GudangTable({
               items.map((item) => {
                 const isLowStock = item.stok <= item.minStok;
                 return (
-                  <tr key={item.id} className={s.row}>
+                  <tr key={item.id} data-focus-id={isLowStock ? "stok-kritis" : undefined} className={s.row}>
                     <td className={s.td}>
                       <span className={s.skuText}>{item.sku}</span>
                     </td>
@@ -194,17 +201,19 @@ export function GudangTable({
                       )}
                     </td>
                     <td className={s.tdRight}>
-                      <div className={s.aksiWrapper}>
-                        <button onClick={() => onMasuk(item)} title="Catat barang masuk" className={s.editButton}>
-                          <span className={s.iconSm}>login</span>
-                        </button>
-                        <button onClick={() => onKeluar(item)} title="Catat barang keluar" className={s.editButton}>
-                          <span className={s.iconSm}>logout</span>
-                        </button>
-                        <button onClick={() => onStock(item)} title="Kelola stok" className={s.editButton}>
-                          <span className={s.iconSm}>inventory</span>
-                        </button>
-                      </div>
+                      {!readOnly && (
+                        <div className={s.aksiWrapper}>
+                          <button onClick={() => onMasuk(item)} title="Catat barang masuk" className={s.editButton}>
+                            <span className={s.iconSm}>login</span>
+                          </button>
+                          <button onClick={() => onKeluar(item)} title="Catat barang keluar" className={s.editButton}>
+                            <span className={s.iconSm}>logout</span>
+                          </button>
+                          <button onClick={() => onStock(item)} title="Kelola stok" className={s.editButton}>
+                            <span className={s.iconSm}>inventory</span>
+                          </button>
+                        </div>
+                      )}
                     </td>
                   </tr>
                 );
@@ -218,9 +227,11 @@ export function GudangTable({
         <p className={s.footerText}>
           Menampilkan <span className={s.footerAccent}>{items.length}</span> item
         </p>
-        <p className={s.footerHint}>
-          Ikon <span className={s.footerEdit}>masuk / keluar</span> untuk catat pergerakan barang
-        </p>
+        {!readOnly && (
+          <p className={s.footerHint}>
+            Ikon <span className={s.footerEdit}>masuk / keluar</span> untuk catat pergerakan barang
+          </p>
+        )}
       </div>
     </div>
   );

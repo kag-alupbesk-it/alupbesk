@@ -10,18 +10,20 @@ import { getRolePagePath } from "@/frontend/shared/navigation/getRolePagePath";
 const BOTTOM_NAV = [
   { href: "/owner", label: "Overview", icon: "dashboard" },
   { href: "/owner/pesanan", label: "Pesanan", icon: "receipt_long" },
-  { href: "/owner/financials", label: "Financials", icon: "payments" },
+  { href: "/owner/keuangan", label: "Keuangan", icon: "payments" },
+  { href: "/owner/gudang", label: "Inventory", icon: "inventory_2" },
   { href: "/owner/users", label: "Users", icon: "group" },
-  { href: "/owner/inventory", label: "Inventory", icon: "inventory_2" },
-  { href: "/owner/reports", label: "Reports", icon: "assessment" },
 ];
 
 const pageTitles: Record<string, string> = {
   "/owner": "Overview",
   "/owner/pesanan": "Pesanan Masuk",
-  "/owner/financials": "Financials",
+  "/owner/keuangan": "Keuangan",
+  "/owner/gudang": "Inventory",
+  "/owner/proyek": "Proyek",
+  "/owner/produksi": "Produksi",
+  "/owner/field": "Pengiriman",
   "/owner/users": "User Management",
-  "/owner/inventory": "Inventory",
   "/owner/reports": "Reports",
 };
 

@@ -12,6 +12,7 @@ import {
   type ReactNode,
 } from "react";
 import { request } from "@/services/api/request";
+import { isReadOnlyMode } from "@/frontend/shared/access/accessMode";
 import { formatTanggal } from "../format/format";
 
 import {
@@ -460,6 +461,9 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (!loadedFromApi) return;
+    // Mode pantau (Owner membuka modul Keuangan): tidak ada yang berubah, jangan
+    // kirim PUT yang otomatis ditolak server (403) memunculkan toast error.
+    if (isReadOnlyMode()) return;
     saveQueue.current = saveQueue.current.catch(() => undefined).then(() =>
       request("/keuangan/finance-store", {
         method: "PUT",

@@ -3,11 +3,13 @@
 import { clsx } from "clsx";
 import { useSidebar } from "../SidebarProvider/SidebarProvider";
 import ThemeToggle from "@/app/ThemeToggle";
-import { LogoutButton } from "@/frontend/auth/LogoutButton";
+import QuickSearch from "./QuickSearch";
+import NotificationBell from "./NotificationBell";
+import DateBadge from "./DateBadge";
+import ProfileMenu from "./ProfileMenu";
 
 interface TopBarProps {
   title: string;
-  tabs?: { label: string; href: string; active?: boolean }[];
 }
 
 export default function TopBar({ title }: TopBarProps) {
@@ -26,29 +28,12 @@ export default function TopBar({ title }: TopBarProps) {
       </button>
       <h2 className="text-sm lg:text-lg font-bold text-on-surface font-headline truncate pr-4">{title}</h2>
       <div className="ml-auto flex items-center gap-2 lg:gap-4 pr-3 lg:pr-6">
-        <div className="relative group hidden sm:block">
-          <span className="material-symbols-outlined absolute left-2.5 top-1/2 -translate-y-1/2 text-on-surface-variant text-[18px] group-focus-within:text-secondary transition-colors">search</span>
-          <input
-            className="bg-surface-variant border border-outline/50 rounded-pill pl-9 pr-3 py-1.5 w-36 lg:w-64 text-xs text-on-surface placeholder:text-on-surface-variant focus:ring-1 focus:ring-secondary focus:border-secondary transition-all outline-none"
-            placeholder="Search..."
-            type="text"
-          />
-        </div>
-        <button className="text-on-surface-variant hover:text-secondary transition-colors relative">
-          <span className="material-symbols-outlined text-[18px] lg:text-[20px]">notifications</span>
-          <span className="absolute top-0 right-0 w-1.5 h-1.5 bg-secondary rounded-full animate-pulse" />
-        </button>
-        <button className="text-on-surface-variant hover:text-secondary transition-colors hidden md:block">
-          <span className="material-symbols-outlined text-[18px] lg:text-[20px]">calendar_today</span>
-        </button>
+        <QuickSearch />
+        <NotificationBell />
+        <DateBadge />
         {/* ── Theme toggle ── */}
         <ThemeToggle />
-        <LogoutButton />
-        <div className="w-7 h-7 lg:w-8 lg:h-8 rounded-full overflow-hidden border-2 border-outline hover:border-secondary transition-colors cursor-pointer relative z-[60]">
-          <div className="w-full h-full bg-surface-variant flex items-center justify-center">
-            <span className="material-symbols-outlined text-secondary text-xs lg:text-sm">person</span>
-          </div>
-        </div>
+        <ProfileMenu />
       </div>
     </header>
   );

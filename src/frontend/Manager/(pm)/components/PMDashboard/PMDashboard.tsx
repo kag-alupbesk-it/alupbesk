@@ -319,7 +319,7 @@ export function PMDashboard() {
         </section>
 
         <aside className="space-y-6">
-          <section className="rounded-2xl border border-outline/30 bg-surface-container-low p-5">
+          <section data-focus-id="approval" className="rounded-2xl border border-outline/30 bg-surface-container-low p-5">
             <div className="flex items-start justify-between gap-3">
               <div>
                 <div className="flex items-center gap-2 text-secondary">

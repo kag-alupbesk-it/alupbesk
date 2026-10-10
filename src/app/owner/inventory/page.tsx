@@ -1,7 +1,5 @@
-import { InventorySection as InventoryPage } from "@/frontend/(owner)/components/inventory";
-
-export const metadata = { title: "Inventory | ALUPBESK Owner" };
+import { redirect } from "next/navigation";
 
 export default function Page() {
-  return <InventoryPage />;
+  redirect("/owner/gudang");
 }

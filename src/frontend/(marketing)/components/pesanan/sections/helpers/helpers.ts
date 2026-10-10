@@ -3,6 +3,8 @@ export function statusColor(status: string): string {
     case "pending": return "text-yellow-400";
     case "submitted_to_manager": return "text-blue-400";
     case "confirmed": return "text-secondary";
+    case "processing": return "text-orange-400";
+    case "completed": return "text-success";
     case "rejected_by_manager": return "text-red-400";
     case "cancelled": return "text-on-surface-variant/50";
     default: return "text-on-surface-variant";
@@ -14,6 +16,8 @@ export function statusBg(status: string): string {
     case "pending": return "bg-yellow-400/10";
     case "submitted_to_manager": return "bg-blue-400/10";
     case "confirmed": return "bg-secondary/10";
+    case "processing": return "bg-orange-400/10";
+    case "completed": return "bg-success/10";
     case "rejected_by_manager": return "bg-red-400/10";
     case "cancelled": return "bg-white/5";
     default: return "bg-white/5";

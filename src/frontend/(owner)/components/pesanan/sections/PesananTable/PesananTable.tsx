@@ -25,7 +25,7 @@ export default function PesananTable({ orders, onSelect }: PesananTableProps) {
     <>
       <div className={s.mobileList}>
         {orders.map((order) => (
-          <div key={order.id} className={s.card}>
+          <div key={order.id} data-focus-id={`order-${order.id}`} className={s.card}>
             <div className={s.cardTop}>
               <button className="min-w-0 text-left" onClick={() => onSelect(order)}>
                 <span className="font-bold text-on-surface text-sm">
@@ -71,7 +71,7 @@ export default function PesananTable({ orders, onSelect }: PesananTableProps) {
           </thead>
           <tbody className={s.tableBody}>
             {orders.map((order) => (
-              <tr key={order.id} className={s.tableRow} onClick={() => onSelect(order)}>
+              <tr key={order.id} data-focus-id={`order-${order.id}`} className={s.tableRow} onClick={() => onSelect(order)}>
                 <td className={s.tableCell}>
                   <span className="font-bold text-on-surface text-sm">
                     {order.id}

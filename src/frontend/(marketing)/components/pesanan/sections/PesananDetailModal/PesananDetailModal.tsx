@@ -4,6 +4,7 @@ import type { MarketingOrder } from "@/backend/modules/marketing";
 import * as s from "../../style/style";
 import { statusColor, statusBg, formatCurrency, formatDate } from "../helpers/helpers";
 import { STATUS_LABELS } from "../data/data";
+import { useReadOnly } from "@/frontend/shared/access/AccessModeProvider";
 
 interface PesananDetailModalProps {
   isOpen: boolean;
@@ -13,6 +14,8 @@ interface PesananDetailModalProps {
 }
 
 export default function PesananDetailModal({ isOpen, order, onClose, onConfirm }: PesananDetailModalProps) {
+  const readOnly = useReadOnly();
+
   if (!isOpen || !order) return null;
 
   function handleBackdrop(e: React.MouseEvent<HTMLDivElement>) {
@@ -101,10 +104,12 @@ export default function PesananDetailModal({ isOpen, order, onClose, onConfirm }
           {canConfirm && (
             <>
               <button onClick={onClose} className={s.secondaryButton}>Tutup</button>
-              <button onClick={() => onConfirm(order)} className={s.primaryButton}>
-                <span className={s.icon}>check_circle</span>
-                Konfirmasi &amp; Ajukan ke Manager
-              </button>
+              {!readOnly && (
+                <button onClick={() => onConfirm(order)} className={s.primaryButton}>
+                  <span className={s.icon}>check_circle</span>
+                  Konfirmasi &amp; Ajukan ke Manager
+                </button>
+              )}
             </>
           )}
           {(isPendingManager || isRejected) && (

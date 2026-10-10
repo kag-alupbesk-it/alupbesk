@@ -22,6 +22,7 @@ import type { SPK } from "../../types/types";
 import { AlurBadge, StatusBadge, StatusGambarBadge } from "../shared/StatusBadge/StatusBadge";
 import { alurMeta, alurOrder, alurSPK, type AlurSPK } from "../../utils/alur/alur";
 import { formatTanggal, getInisial } from "../../utils/format/format";
+import { useFocusValue } from "@/frontend/shared/focus/focusStore";
 
 type FilterStatus = AlurSPK | "all";
 
@@ -76,7 +77,12 @@ function StatCard({ alur, value, icon: Icon, aktif, onPilih }: StatCardProps) {
 export function ProduksiDashboard() {
   const { spk, spkPerluGambar } = useProduksi();
   const [search, setSearch] = useState("");
-  const [filter, setFilter] = useState<FilterStatus>("all");
+  const [userFilter, setUserFilter] = useState<FilterStatus | null>(null);
+  const focus = useFocusValue();
+
+  // Deep-link dari Overview (/owner/produksi?focus=gambar) menyaring SPK yang
+  // masih butuh gambar teknik — sampai user memilih filter lain.
+  const filter: FilterStatus = userFilter ?? (focus === "gambar" ? "butuh_gambar" : "all");
 
   // Semua angka, filter, dan badge diturunkan dari alurSPK() supaya tidak
   // mungkin ada kartu yang bilang 3 sementara dropdown upload berisi 2.
@@ -212,28 +218,28 @@ export function ProduksiDashboard() {
           value={hitungAlur.butuh_gambar}
           icon={Send}
           aktif={filter === "butuh_gambar"}
-          onPilih={() => setFilter(filter === "butuh_gambar" ? "all" : "butuh_gambar")}
+          onPilih={() => setUserFilter(filter === "butuh_gambar" ? "all" : "butuh_gambar")}
         />
         <StatCard
           alur="menunggu_acc"
           value={hitungAlur.menunggu_acc}
           icon={Clock3}
           aktif={filter === "menunggu_acc"}
-          onPilih={() => setFilter(filter === "menunggu_acc" ? "all" : "menunggu_acc")}
+          onPilih={() => setUserFilter(filter === "menunggu_acc" ? "all" : "menunggu_acc")}
         />
         <StatCard
           alur="dalam_produksi"
           value={hitungAlur.dalam_produksi}
           icon={Factory}
           aktif={filter === "dalam_produksi"}
-          onPilih={() => setFilter(filter === "dalam_produksi" ? "all" : "dalam_produksi")}
+          onPilih={() => setUserFilter(filter === "dalam_produksi" ? "all" : "dalam_produksi")}
         />
         <StatCard
           alur="siap_kirim"
           value={hitungAlur.siap_kirim}
           icon={CheckCircle2}
           aktif={filter === "siap_kirim"}
-          onPilih={() => setFilter(filter === "siap_kirim" ? "all" : "siap_kirim")}
+          onPilih={() => setUserFilter(filter === "siap_kirim" ? "all" : "siap_kirim")}
         />
       </section>
 
@@ -304,7 +310,7 @@ export function ProduksiDashboard() {
             <div className="relative flex-1 sm:flex-none">
               <select
                 value={filter}
-                onChange={(event) => setFilter(event.target.value as FilterStatus)}
+                onChange={(event) => setUserFilter(event.target.value as FilterStatus)}
                 className="h-10 w-full appearance-none rounded-xl border border-outline/30 bg-surface py-2 pl-3 pr-9 text-xs font-semibold text-on-surface outline-none transition-colors focus:border-secondary/60 sm:w-56"
                 aria-label="Filter status pengerjaan"
               >
@@ -341,7 +347,7 @@ export function ProduksiDashboard() {
                   type="button"
                   onClick={() => {
                     setSearch("");
-                    setFilter("all");
+                    setUserFilter("all");
                   }}
                   className="mt-5 inline-flex min-h-11 w-full items-center justify-center rounded-xl border border-outline/40 px-4 py-3 text-xs font-bold text-on-surface transition-colors hover:border-secondary/50 hover:text-secondary md:min-h-0"
                 >
@@ -430,7 +436,7 @@ export function ProduksiDashboard() {
                         type="button"
                         onClick={() => {
                           setSearch("");
-                          setFilter("all");
+                          setUserFilter("all");
                         }}
                         className="mt-5 inline-flex min-h-11 items-center justify-center rounded-xl border border-outline/40 px-4 py-2.5 text-xs font-bold text-on-surface transition-colors hover:border-secondary/50 hover:text-secondary md:min-h-0"
                       >
@@ -448,7 +454,7 @@ export function ProduksiDashboard() {
       </section>
 
       {spkPerluGambar.length > 0 && (
-        <section className="flex flex-wrap items-center gap-3 rounded-2xl border border-outline/30 bg-surface-container-low px-5 py-4">
+        <section data-focus-id="gambar" className="flex flex-wrap items-center gap-3 rounded-2xl border border-outline/30 bg-surface-container-low px-5 py-4">
           <StatusBadge tone="red" dot>
             Perlu Gambar
           </StatusBadge>

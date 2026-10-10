@@ -14,12 +14,14 @@ import { filterItems, computeMetrics } from "../helpers/helpers";
 import type { GudangItem, GudangMovement, GudangMasukInput, GudangKeluarInput, GudangItemInput } from "../types/types";
 import * as s from "../../style/style";
 import { usePollingResource } from "@/frontend/shared/hooks/usePollingResource";
+import { useReadOnly } from "@/frontend/shared/access/AccessModeProvider";
 
 interface GudangSectionProps {
   initialItems: GudangItem[];
 }
 
 export function GudangSection({ initialItems }: GudangSectionProps) {
+  const readOnly = useReadOnly();
   const loadItems = useCallback(() => gudangApi.getItems(), []);
   const loadMovements = useCallback(() => gudangApi.getMovements(), []);
   const { data: items, setData: setItems, error: itemsError } = usePollingResource<GudangItem[]>(loadItems, initialItems);
@@ -103,7 +105,7 @@ export function GudangSection({ initialItems }: GudangSectionProps) {
             totalStok={metrics.totalStok}
             totalJenisItem={items.length}
             jumlahLowStock={metrics.jumlahLowStock}
-            onTambah={() => setShowTambah(true)}
+            onTambah={readOnly ? undefined : () => setShowTambah(true)}
           />
       {(error || itemsError || movementsError) && <p className="mb-4 text-sm text-red-400">{error || itemsError || movementsError}</p>}
           <ProjectStockSummary
@@ -126,6 +128,7 @@ export function GudangSection({ initialItems }: GudangSectionProps) {
             onStock={handleStock}
             onMasuk={setMasukItem}
             onKeluar={setKeluarItem}
+            readOnly={readOnly}
           />
           <MovementHistorySection movements={movements} items={items} />
         </div>
