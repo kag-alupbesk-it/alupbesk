@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { db } from "@/services/supabase";
 import { readJsonBody } from "@/backend/http/readJsonBody";
+import { sendPushToRoles } from "@/services/push/send";
 
 export const dynamic = "force-dynamic";
 
@@ -25,6 +26,14 @@ const registerSchema = z.object({
 
 function errorResponse(code: string, message: string, status: number) {
   return Response.json({ success: false, error: { code, message } }, { status });
+}
+
+function notifyOwner(name: string, role: string) {
+  void sendPushToRoles(["owner"], {
+    title: "Permintaan Role Baru",
+    body: `${name} mengajukan role ${role} dan menunggu persetujuan.`,
+    url: "/admin/owner",
+  });
 }
 
 export async function POST(request: Request) {
@@ -61,6 +70,7 @@ export async function POST(request: Request) {
     if (existing) {
       const { error } = await db.from("users").update(profile).eq("id", existing.id);
       if (error) throw error;
+      notifyOwner(parsed.data.name, parsed.data.role);
       return Response.json({ success: true, data: { id: existing.id, status: "PENDING" } });
     }
 
@@ -70,6 +80,8 @@ export async function POST(request: Request) {
       .select("id")
       .single();
     if (insertError) throw insertError;
+
+    notifyOwner(parsed.data.name, parsed.data.role);
 
     return Response.json(
       { success: true, data: { id: created.id, status: "PENDING" } },

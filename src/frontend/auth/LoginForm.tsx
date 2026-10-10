@@ -13,6 +13,7 @@ import ThemeToggle from "@/app/ThemeToggle";
 import { CaptchaChallenge } from "./CaptchaChallenge";
 import { PasswordInput } from "./PasswordInput";
 import { useLoginAttemptLimit } from "./useLoginAttemptLimit";
+import { activatePushSubscription, requestNotificationPermission } from "./usePushNotification";
 
 const roleHome: Record<AuthenticatedProfile["role"], string> = {
   pelanggan: "/catalog",
@@ -59,6 +60,8 @@ export function LoginForm() {
 
     setPending(true);
     let credentialsRejected = false;
+    // Prompt izin notifikasi dalam user gesture (tombol Submit diklik).
+    void requestNotificationPermission();
     try {
       const supabase = getSupabaseBrowserClient();
       const { error: signInError } = await supabase.auth.signInWithPassword({
@@ -75,6 +78,7 @@ export function LoginForm() {
       attemptLimit.clear(email);
 
       const profile = await request<AuthenticatedProfile>("/auth/profile");
+      void activatePushSubscription();
       const requestedPath = new URLSearchParams(window.location.search).get("next");
       const safeNext = requestedPath?.startsWith("/") && !requestedPath.startsWith("//")
         ? requestedPath

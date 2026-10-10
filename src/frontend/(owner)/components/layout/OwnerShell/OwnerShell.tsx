@@ -9,6 +9,7 @@ import { getRolePagePath } from "@/frontend/shared/navigation/getRolePagePath";
 
 const BOTTOM_NAV = [
   { href: "/owner", label: "Overview", icon: "dashboard" },
+  { href: "/owner/pesanan", label: "Pesanan", icon: "receipt_long" },
   { href: "/owner/financials", label: "Financials", icon: "payments" },
   { href: "/owner/users", label: "Users", icon: "group" },
   { href: "/owner/inventory", label: "Inventory", icon: "inventory_2" },
@@ -17,6 +18,7 @@ const BOTTOM_NAV = [
 
 const pageTitles: Record<string, string> = {
   "/owner": "Overview",
+  "/owner/pesanan": "Pesanan Masuk",
   "/owner/financials": "Financials",
   "/owner/users": "User Management",
   "/owner/inventory": "Inventory",

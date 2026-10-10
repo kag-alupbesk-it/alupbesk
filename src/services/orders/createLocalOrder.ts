@@ -1,5 +1,6 @@
 import { getCatalogProduct } from "@/services/catalog";
 import { saveLocalOrder } from "./saveLocalOrder";
+import { notifyOrderStatusChange } from "@/services/push/orderNotifications";
 import type { CreateOrderInput, LocalOrder, OrderLine } from "./types";
 
 export function createLocalOrder(input: CreateOrderInput): LocalOrder {
@@ -14,5 +15,6 @@ export function createLocalOrder(input: CreateOrderInput): LocalOrder {
   const now = new Date().toISOString();
   const order: LocalOrder = { id: crypto.randomUUID(), status: "pending", customer: input.customer, items: lines, total: lines.reduce((total, line) => total + line.subtotal, 0), createdAt: now, updatedAt: now };
   saveLocalOrder(order);
+  notifyOrderStatusChange(order, "pending");
   return order;
 }

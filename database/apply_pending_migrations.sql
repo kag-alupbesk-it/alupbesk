@@ -1,4 +1,4 @@
--- Migrasi tertunda (20261006 s/d 20261016) — aman dijalankan berulang (idempotent).
+-- Migrasi tertunda (20261006 s/d 20261017) — aman dijalankan berulang (idempotent).
 -- Jalankan sekali di Supabase Dashboard > SQL Editor.
 
 -- ===== database/migrations/20261006_pm_orders.sql =====
@@ -616,3 +616,41 @@ drop trigger if exists on_auth_user_role_request on auth.users;
 create trigger on_auth_user_role_request
 after insert on auth.users
 for each row execute function public.create_role_request_for_auth_user();
+
+-- ===== database/migrations/20261017_push_subscriptions.sql =====
+create table if not exists push_subscriptions (
+    id          uuid primary key default gen_random_uuid(),
+    user_id     uuid not null references users(id) on delete cascade,
+    endpoint    text not null unique,
+    auth        text not null,
+    p256dh      text not null,
+    user_agent  text,
+    created_at  timestamptz not null default now(),
+    updated_at  timestamptz not null default now()
+);
+
+create index if not exists idx_push_subscriptions_user
+    on push_subscriptions(user_id);
+
+alter table push_subscriptions enable row level security;
+
+drop policy if exists "users manage own push subscriptions" on public.push_subscriptions;
+create policy "users manage own push subscriptions" on public.push_subscriptions
+    for all to authenticated
+    using (
+        exists (
+            select 1 from public.users
+             where lower(email) = lower(auth.jwt() ->> 'email')
+               and id = push_subscriptions.user_id
+        )
+    )
+    with check (
+        exists (
+            select 1 from public.users
+             where lower(email) = lower(auth.jwt() ->> 'email')
+               and id = push_subscriptions.user_id
+        )
+    );
+
+revoke all on public.push_subscriptions from public, anon;
+grant select, insert, update, delete on public.push_subscriptions to service_role;
