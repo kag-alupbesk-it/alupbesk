@@ -21,6 +21,18 @@ function redirectTo(request: NextRequest, pathname: string) {
   return NextResponse.redirect(url);
 }
 
+/**
+ * Hanya izinkan nilai `next` berupa path internal (dimulai satu `/` dan bukan
+ * `//`). Nilai absolut/protocol-relative dibuang supaya tidak menjadi open
+ * redirect setelah login.
+ */
+function enforceSafeNext(url: URL) {
+  const nextRaw = url.searchParams.get("next");
+  if (nextRaw && (!nextRaw.startsWith("/") || nextRaw.startsWith("//"))) {
+    url.searchParams.delete("next");
+  }
+}
+
 type CatalogPageRoute = {
   legacyPath: string;
   isCanonical: boolean;
@@ -89,16 +101,36 @@ function requiresRole(pathname: string, method: string): boolean {
   if (pathname.startsWith("/api/custom/")) return method !== "POST";
   if (pathname.startsWith("/api/contact/")) return method !== "POST";
 
-  return [
-    "/manager",
-    "/owner",
-    "/gudang",
-    "/keuangan",
-    "/pm",
-    "/produksi",
-    "/field",
-    "/marketing",
-  ].some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`));
+  if (pathname.startsWith("/api/push/")) return true;
+
+  if (
+    [
+      "/manager",
+      "/owner",
+      "/gudang",
+      "/keuangan",
+      "/pm",
+      "/produksi",
+      "/field",
+      "/marketing",
+    ].some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`))
+  ) {
+    return true;
+  }
+
+  // Fail-closed: semua path /admin/<x> kecuali login/register wajib punya sesi
+  // aktif. Ini melindungi halaman admin apa pun (termasuk yang akan ditambah
+  // nanti) dari akses langsung oleh user yang belum login.
+  const adminParts = pathname.split("/").filter(Boolean);
+  if (
+    adminParts.length >= 2 &&
+    adminParts[0] === "admin" &&
+    !ADMIN_PUBLIC_ROUTES.includes(adminParts[1] as (typeof ADMIN_PUBLIC_ROUTES)[number])
+  ) {
+    return true;
+  }
+
+  return false;
 }
 
 function denied(request: NextRequest, api: boolean, status: 401 | 403) {
@@ -150,6 +182,7 @@ export async function proxy(request: NextRequest) {
     ADMIN_PUBLIC_ROUTES.includes(adminPath[1] as (typeof ADMIN_PUBLIC_ROUTES)[number])
   ) {
     const rewriteUrl = request.nextUrl.clone();
+    enforceSafeNext(rewriteUrl);
     rewriteUrl.pathname = `/${adminPath[1]}`;
     return NextResponse.rewrite(rewriteUrl);
   }
@@ -158,7 +191,10 @@ export async function proxy(request: NextRequest) {
     adminPath.length === 1 &&
     ADMIN_PUBLIC_ROUTES.includes(adminPath[0] as (typeof ADMIN_PUBLIC_ROUTES)[number])
   ) {
-    return redirectTo(request, `/admin/${adminPath[0]}`);
+    const redirectUrl = request.nextUrl.clone();
+    enforceSafeNext(redirectUrl);
+    redirectUrl.pathname = `/admin/${adminPath[0]}`;
+    return NextResponse.redirect(redirectUrl);
   }
 
   const permissionPath = adminRoleRoute?.legacyPath ?? pathname;
@@ -204,6 +240,17 @@ export async function proxy(request: NextRequest) {
     .maybeSingle();
   if (profileError || !profile || !profile.active) return denied(request, api, 403);
   if (!roleCanAccess(profile.role as AppRole, permissionPath, request.method)) {
+    return denied(request, api, 403);
+  }
+
+  // Fail-closed untuk sub-halaman /admin/<x> yang tidak dikenal (bukan salah
+  // satu role resmi dan bukan /admin/app). Tidak ada role yang boleh membukanya.
+  if (
+    adminRoleRoute === null &&
+    pathname.startsWith("/admin/") &&
+    pathname !== "/admin" &&
+    pathname !== "/admin/app"
+  ) {
     return denied(request, api, 403);
   }
 

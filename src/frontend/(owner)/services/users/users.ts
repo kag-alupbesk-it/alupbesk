@@ -22,3 +22,7 @@ export { reviewRoleRequest as decideRoleRequest } from "@/services/api/roleReque
 export function fetchUsersData(): Promise<UsersData> {
   return request<UsersData>("/owner/users");
 }
+
+export function deleteUser(id: string): Promise<null> {
+  return request<null>(`/owner/users/${encodeURIComponent(id)}`, { method: "DELETE" });
+}

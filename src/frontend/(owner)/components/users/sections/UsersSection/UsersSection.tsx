@@ -5,6 +5,7 @@ import * as styles from "../../style/style";
 import { useApi } from "@/frontend/(owner)/hooks/useApi/useApi";
 import {
   decideRoleRequest,
+  deleteUser,
   fetchRoleRequests,
   fetchUsersData,
   type RoleRequestItem,
@@ -14,7 +15,7 @@ import { ITEMS_PER_PAGE } from "../data/data";
 import { getSupabaseBrowserClient } from "@/services/supabaseBrowser";
 
 interface UserData {
-  name: string; email: string; dept: string; role: string; status: string; active: boolean;
+  id: string; name: string; email: string; dept: string; role: string; status: string; active: boolean;
 }
 
 export default function UsersSection() {
@@ -33,6 +34,9 @@ export default function UsersSection() {
   const [showRoleDropdown, setShowRoleDropdown] = useState(false);
   const [reviewingRequestId, setReviewingRequestId] = useState<string | null>(null);
   const [reviewError, setReviewError] = useState("");
+  const [deleteTarget, setDeleteTarget] = useState<UserData | null>(null);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState("");
 
   useEffect(() => {
     let client: ReturnType<typeof getSupabaseBrowserClient>;
@@ -72,6 +76,21 @@ export default function UsersSection() {
       setReviewError(reason instanceof Error ? reason.message : "Permintaan role gagal diproses.");
     } finally {
       setReviewingRequestId(null);
+    }
+  }
+
+  async function handleDeleteUser() {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    setDeleteError("");
+    try {
+      await deleteUser(deleteTarget.id);
+      setDeleteTarget(null);
+      await Promise.all([refetchUsers(), refetchRoleRequests()]);
+    } catch (reason) {
+      setDeleteError(reason instanceof Error ? reason.message : "Pengguna gagal dihapus.");
+    } finally {
+      setDeleting(false);
     }
   }
 
@@ -193,11 +212,12 @@ export default function UsersSection() {
               {["Employee", "Department", "Role", "Status"].map((h) => (
                 <th key={h} className={styles.tableHeaderCell}>{h}</th>
               ))}
+              <th className={`${styles.tableHeaderCell} ${styles.tableHeaderCellRight}`}>Actions</th>
             </tr>
           </thead>
           <tbody className={styles.tableBody}>
             {paginatedUsers.map((u) => (
-              <tr key={u.email} className={styles.tableRow}>
+              <tr key={u.id} className={styles.tableRow}>
                 <td className={styles.tableCell}><div className={styles.userCell}>
                   <div className={styles.avatar}><span className={`${styles.icon} ${styles.avatarIcon}`}>account_circle</span></div>
                   <div><p className={styles.userName}>{u.name}</p><p className={styles.userEmail}>{u.email}</p></div>
@@ -208,6 +228,19 @@ export default function UsersSection() {
                   {u.active ? <span className={`${styles.statusDot} ${styles.statusDotActive}`} /> : u.status === "SUSPENDED" ? <span className={`${styles.statusDot} ${styles.statusDotSuspended}`} /> : <span className={`${styles.statusDot} ${styles.statusDotPending}`} />}
                   {u.status}
                 </span></td>
+                <td className={styles.actionsCell}>
+                  <div className={styles.actionsGroup}>
+                    <button
+                      type="button"
+                      title={`Hapus ${u.name}`}
+                      aria-label={`Hapus pengguna ${u.name}`}
+                      onClick={() => { setDeleteError(""); setDeleteTarget(u); }}
+                      className={styles.deleteButton}
+                    >
+                      <span className={styles.icon}>delete</span>
+                    </button>
+                  </div>
+                </td>
               </tr>
             ))}
           </tbody>
@@ -224,6 +257,34 @@ export default function UsersSection() {
           <button onClick={() => setPage((p) => Math.min(totalPages, p + 1))} disabled={page === totalPages} className={styles.paginationNav}>NEXT</button>
         </div>
       </div>
+
+      {deleteTarget && (
+        <div className={styles.modalOverlay} onClick={() => { if (!deleting) setDeleteTarget(null); }}>
+          <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
+            <h4 className={styles.modalTitle}>Hapus pengguna?</h4>
+            <p className="text-xs leading-relaxed text-on-surface-variant">
+              Akun <span className="font-bold text-on-surface">{deleteTarget.name}</span>{" "}
+              ({deleteTarget.email}) dengan role{" "}
+              <span className="font-bold text-on-surface">{deleteTarget.role}</span> akan
+              dihapus dari manajemen user beserta permintaan role-nya dan tidak dapat
+              dipulihkan.
+            </p>
+            {deleteError && (
+              <p role="alert" className="mt-4 rounded-lg border border-red-400/30 bg-red-400/10 p-3 text-xs text-red-300">
+                {deleteError}
+              </p>
+            )}
+            <div className={styles.modalActions}>
+              <button type="button" disabled={deleting} onClick={() => setDeleteTarget(null)} className={styles.modalCancelButton}>
+                Batal
+              </button>
+              <button type="button" disabled={deleting} onClick={() => void handleDeleteUser()} className={styles.modalConfirmButton}>
+                {deleting ? "Menghapus..." : "Hapus pengguna"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -1,4 +1,5 @@
 import { emitOrder, readOrder, writeOrder } from "./orderStore";
+import { notifyOrderStatusChange } from "@/services/push/orderNotifications";
 import type { LocalOrder, OrderStatus } from "./types";
 
 export function publishOrderStatus(
@@ -16,5 +17,6 @@ export function publishOrderStatus(
   };
   writeOrder(updated);
   emitOrder({ orderId: id, status, updatedAt: updated.updatedAt });
+  notifyOrderStatusChange(updated, status);
   return updated;
 }

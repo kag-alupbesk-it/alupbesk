@@ -1,5 +1,5 @@
-const STATIC_CACHE = "alupbesk-static-v4";
-const DYNAMIC_CACHE = "alupbesk-dynamic-v3";
+const STATIC_CACHE = "alupbesk-static-v5";
+const DYNAMIC_CACHE = "alupbesk-dynamic-v4";
 
 const PRIVATE_PATH_PREFIXES = [
   "/manager",
