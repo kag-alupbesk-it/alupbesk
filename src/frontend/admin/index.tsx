@@ -8,6 +8,7 @@ import {
   Laptop,
   MonitorDown,
   Smartphone,
+  Terminal,
   type LucideIcon,
 } from "lucide-react";
 import { LanguageSwitcher } from "@/frontend/shared/i18n/LanguageSwitcher";
@@ -23,6 +24,7 @@ interface InstallPromptEvent extends Event {
 const installTargets = [
   { id: "windows", label: "Windows", Icon: MonitorDown },
   { id: "mac", label: "macOS", Icon: Laptop },
+  { id: "linux", label: "Linux", Icon: Terminal },
   { id: "android", label: "Android", Icon: Smartphone },
   { id: "ios", label: "iOS", Icon: Apple },
 ] as const satisfies ReadonlyArray<{
@@ -33,10 +35,70 @@ const installTargets = [
 
 type InstallTarget = (typeof installTargets)[number]["id"];
 
+const manualSteps: Record<InstallTarget, { en: string[]; id: string[] }> = {
+  windows: {
+    en: [
+      "Open Chrome or Edge.",
+      'Click the install icon in the address bar, or open menu "⋮" and choose "Install alupbesk".',
+    ],
+    id: [
+      "Buka Chrome atau Edge.",
+      'Klik ikon Install di address bar, atau buka menu "⋮" lalu pilih "Install alupbesk".',
+    ],
+  },
+  mac: {
+    en: [
+      'Chrome: open menu "⋮" and choose "Install alupbesk".',
+      'Safari: open the "File" menu and choose "Add to Dock".',
+    ],
+    id: [
+      'Chrome: buka menu "⋮" lalu pilih "Install alupbesk".',
+      'Safari: buka menu "File" lalu pilih "Add to Dock".',
+    ],
+  },
+  linux: {
+    en: [
+      "Open Chrome, Chromium, or Edge.",
+      'Click the install icon in the address bar, or open menu "⋮" and choose "Install alupbesk".',
+    ],
+    id: [
+      "Buka Chrome, Chromium, atau Edge.",
+      'Klik ikon Install di address bar, atau buka menu "⋮" lalu pilih "Install alupbesk".',
+    ],
+  },
+  android: {
+    en: ["Open Chrome.", 'Open menu "⋮" and choose "Install app" or "Add to Home screen".'],
+    id: ['Buka Chrome.', 'Buka menu "⋮" lalu pilih "Install app" atau "Add to Home screen".'],
+  },
+  ios: {
+    en: ["Open Safari.", "Tap the Share button.", 'Choose "Add to Home Screen".'],
+    id: ["Buka Safari.", "Tap tombol Share.", 'Pilih "Add to Home Screen".'],
+  },
+};
+
+function detectPlatform(): InstallTarget | null {
+  if (typeof navigator === "undefined") return null;
+  const ua = navigator.userAgent;
+  const uaData = (navigator as Navigator & { userAgentData?: { platform?: string } }).userAgentData;
+  const platform = (uaData?.platform || navigator.platform || "").toLowerCase();
+  const isTouchMac = /mac/.test(platform) && "ontouchend" in document;
+  if (/iphone|ipad|ipod/.test(ua) || isTouchMac) return "ios";
+  if (/android/.test(ua)) return "android";
+  if (/win/.test(platform)) return "windows";
+  if (/mac/.test(platform)) return "mac";
+  if (/linux|x11|cros/.test(platform) || /linux/.test(ua)) return "linux";
+  return null;
+}
+
 export function AdminPortal() {
   const { language, t } = useLanguage();
   const [installPrompt, setInstallPrompt] = useState<InstallPromptEvent | null>(null);
-  const [notice, setNotice] = useState<{ target: InstallTarget; message: string } | null>(null);
+  const [notice, setNotice] = useState<{
+    target: InstallTarget;
+    message?: string;
+    steps?: string[];
+  } | null>(null);
+  const [currentPlatform, setCurrentPlatform] = useState<InstallTarget | null>(null);
 
   useEffect(() => {
     const handleInstallPrompt = (event: Event) => {
@@ -47,6 +109,27 @@ export function AdminPortal() {
     window.addEventListener("beforeinstallprompt", handleInstallPrompt);
     return () => window.removeEventListener("beforeinstallprompt", handleInstallPrompt);
   }, []);
+
+  useEffect(() => {
+    // Platform detection needs browser APIs, so it runs after mount to keep SSR output stable.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setCurrentPlatform(detectPlatform());
+  }, []);
+
+  useEffect(() => {
+    const handleInstalled = () => {
+      setNotice({
+        target: currentPlatform ?? "windows",
+        message:
+          language === "en"
+            ? "alupbesk has been installed on this device."
+            : "alupbesk telah terpasang di perangkat ini.",
+      });
+    };
+
+    window.addEventListener("appinstalled", handleInstalled);
+    return () => window.removeEventListener("appinstalled", handleInstalled);
+  }, [currentPlatform, language]);
 
   async function installApp(target: InstallTarget) {
     setNotice(null);
@@ -65,7 +148,9 @@ export function AdminPortal() {
       return;
     }
 
-    if (installPrompt) {
+    const onOtherDevice = currentPlatform !== null && target !== currentPlatform;
+
+    if (installPrompt && !onOtherDevice) {
       try {
         await installPrompt.prompt();
         const choice = await installPrompt.userChoice;
@@ -94,12 +179,20 @@ export function AdminPortal() {
       return;
     }
 
+    const targetLabel =
+      installTargets.find((entry) => entry.id === target)?.label ?? target;
+    const currentLabel = currentPlatform
+      ? installTargets.find((entry) => entry.id === currentPlatform)?.label ?? currentPlatform
+      : "";
+
     setNotice({
       target,
-      message:
-        language === "en"
-          ? "Installation is not available on this browser or device yet."
-          : "Instalasi belum tersedia di browser atau perangkat ini.",
+      message: onOtherDevice
+        ? language === "en"
+          ? `This card is for ${targetLabel}. Your device is detected as ${currentLabel}. Choose the card matching your device to install it here.`
+          : `Kartu ini untuk perangkat ${targetLabel}. Perangkat Anda terdeteksi ${currentLabel}. Pilih kartu yang sesuai perangkat Anda untuk memasang di sini.`
+        : undefined,
+      steps: manualSteps[target][language],
     });
   }
 
@@ -138,17 +231,22 @@ export function AdminPortal() {
               </p>
             </div>
 
-            <div className="portalInstallGrid">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
               {installTargets.map(({ id, label, Icon }) => (
-                <article className="portalInstallCard" key={id}>
-                  <div className="portalInstallCardTop">
+                <article
+                  className={`relative flex h-14 items-center justify-between gap-3 rounded-xl border bg-zinc-900/50 p-3 ${
+                    currentPlatform === id ? "border-amber-500/60" : "border-zinc-800"
+                  }`}
+                  key={id}
+                >
+                  <div className="flex min-w-0 items-center gap-2.5">
                     <span className="portalPlatformIcon" aria-hidden="true">
                       <Icon size={19} strokeWidth={1.8} />
                     </span>
-                    <h3>{label}</h3>
+                    <h3 className="truncate text-sm font-bold">{label}</h3>
                   </div>
                   <button
-                    className="portalInstallButton"
+                    className="portalInstallButton shrink-0"
                     type="button"
                     onClick={() => void installApp(id)}
                     aria-label={`${t("installApp")} ${label}`}
@@ -156,6 +254,11 @@ export function AdminPortal() {
                     <span>{language === "en" ? "Install" : "Pasang"}</span>
                     <ArrowDownToLine size={15} aria-hidden="true" />
                   </button>
+                  {currentPlatform === id && (
+                    <span className="absolute -bottom-2.5 left-1/2 z-10 -translate-x-1/2 whitespace-nowrap rounded-full bg-zinc-900 px-2 py-0.5 text-[10px] font-bold text-amber-400">
+                      {language === "en" ? "This device" : "Perangkat ini"}
+                    </span>
+                  )}
                 </article>
               ))}
             </div>
@@ -169,7 +272,14 @@ export function AdminPortal() {
             {notice && (
               <div className="portalInstallNote" role="status" aria-live="polite">
                 <p className="mb-1 font-bold">{noticeTitle}</p>
-                <p>{notice.message}</p>
+                {notice.message && <p>{notice.message}</p>}
+                {notice.steps && notice.steps.length > 0 && (
+                  <ol className="portalInstallSteps">
+                    {notice.steps.map((step, index) => (
+                      <li key={index}>{step}</li>
+                    ))}
+                  </ol>
+                )}
               </div>
             )}
           </section>

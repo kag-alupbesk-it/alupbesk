@@ -99,33 +99,6 @@
   line-height: 1.5;
 }
 
-.portalInstallGrid {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: 0.65rem;
-}
-
-.portalInstallCard {
-  display: flex;
-  min-width: 0;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
-  border: 1px solid var(--portal-border);
-  border-radius: 0.85rem;
-  background: var(--portal-card);
-  padding: 0.65rem;
-}
-
-.portalInstallCardTop {
-  display: flex;
-  min-width: 0;
-  align-items: center;
-  gap: 0.55rem;
-  font-size: 0.88rem;
-  font-weight: 700;
-}
-
 .portalPlatformIcon {
   display: grid;
   width: 2.2rem;
@@ -220,6 +193,23 @@
   line-height: 1.55;
 }
 
+.portalInstallSteps {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin: 0.5rem 0 0;
+  padding-inline-start: 1.1rem;
+}
+
+.portalInstallSteps li::marker {
+  color: #896800;
+  font-weight: 800;
+}
+
+.dark .portalInstallSteps li::marker {
+  color: #f4d36b;
+}
+
 .portalTextLink {
   display: inline-flex;
   min-height: 2.5rem;
@@ -248,10 +238,6 @@
   .portalInner {
     width: min(100% - 3rem, 70rem);
   }
-
-  .portalInstallGrid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
 }
 
 @media (min-width: 58rem) {
@@ -261,11 +247,6 @@
 }
 
 @media (max-width: 22rem) {
-  .portalInstallCard {
-    gap: 0.4rem;
-    padding: 0.5rem;
-  }
-
   .portalInstallButton {
     padding-inline: 0.65rem;
   }
