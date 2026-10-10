@@ -78,13 +78,13 @@ const manualSteps: Record<InstallTarget, { en: string[]; id: string[] }> = {
 
 function detectPlatform(): InstallTarget | null {
   if (typeof navigator === "undefined") return null;
-  const ua = navigator.userAgent;
+  const ua = navigator.userAgent.toLowerCase();
   const uaData = (navigator as Navigator & { userAgentData?: { platform?: string } }).userAgentData;
   const platform = (uaData?.platform || navigator.platform || "").toLowerCase();
   const isTouchMac = /mac/.test(platform) && "ontouchend" in document;
-  if (/iphone|ipad|ipod/.test(ua) || isTouchMac) return "ios";
-  if (/android/.test(ua)) return "android";
-  if (/win/.test(platform)) return "windows";
+  if (/iphone|ipad|ipod/.test(ua) || /iphone|ipad|ipod/.test(platform) || isTouchMac) return "ios";
+  if (/android/.test(ua) || /android/.test(platform)) return "android";
+  if (/win/.test(platform) || /win/.test(ua)) return "windows";
   if (/mac/.test(platform)) return "mac";
   if (/linux|x11|cros/.test(platform) || /linux/.test(ua)) return "linux";
   return null;
