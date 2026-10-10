@@ -10,6 +10,7 @@ import { InvoiceFormModal } from "../InvoiceFormModal/InvoiceFormModal";
 import { formatRp, formatTanggal } from "../format/format";
 import type { Invoice, StatusInvoice } from "../types/types";
 import * as s from "../style/style";
+import { useReadOnly } from "@/frontend/shared/access/AccessModeProvider";
 
 const TONE_STATUS: Record<StatusInvoice, "pending" | "approved" | "overdue"> = {
   dp: "pending",
@@ -91,6 +92,7 @@ function ModalHapusInvoice({ invoice, onTutup }: { invoice: Invoice; onTutup: ()
 }
 
 export function TerminSection() {
+  const readOnly = useReadOnly();
   const { state, invoiceRingkas, lunasTermin, clearToast } = useFinance();
   const [filterStatus, setFilterStatus] = useState<"all" | StatusInvoice>("all");
   const [cari, setCari] = useState("");
@@ -161,12 +163,14 @@ export function TerminSection() {
             <span className={s.dataCounter}>
               {daftar.length} dari {invoiceRingkas.length} invoice
             </span>
-            <button type="button" onClick={() => setForm({})} className={s.primaryButton}>
-              <span aria-hidden="true" className={s.iconSm}>
-                add
-              </span>
-              Tambah Invoice
-            </button>
+            {!readOnly && (
+              <button type="button" onClick={() => setForm({})} className={s.primaryButton}>
+                <span aria-hidden="true" className={s.iconSm}>
+                  add
+                </span>
+                Tambah Invoice
+              </button>
+            )}
           </div>
         </div>
 
@@ -265,41 +269,45 @@ export function TerminSection() {
                         </span>
                         Preview
                       </button>
-                      {item.terminBerikutnya && (
-                        <button
-                          type="button"
-                          onClick={() => lunasTermin(item.invoice.id, item.terminBerikutnya.id)}
-                          aria-label={`Tandai lunas ${item.terminBerikutnya.label} invoice ${item.invoice.nomor}`}
-                          title={`Catat ${item.terminBerikutnya.label} sebagai Kas Masuk`}
-                          className={s.actionButton}
-                        >
-                          <span aria-hidden="true" className={s.iconSm}>
-                            paid
-                          </span>
-                        </button>
+                      {!readOnly && (
+                        <>
+                          {item.terminBerikutnya && (
+                            <button
+                              type="button"
+                              onClick={() => lunasTermin(item.invoice.id, item.terminBerikutnya.id)}
+                              aria-label={`Tandai lunas ${item.terminBerikutnya.label} invoice ${item.invoice.nomor}`}
+                              title={`Catat ${item.terminBerikutnya.label} sebagai Kas Masuk`}
+                              className={s.actionButton}
+                            >
+                              <span aria-hidden="true" className={s.iconSm}>
+                                paid
+                              </span>
+                            </button>
+                          )}
+                          <button
+                            type="button"
+                            onClick={() => setForm({ invoice: item.invoice })}
+                            aria-label={`Ubah invoice ${item.invoice.nomor}`}
+                            title="Ubah invoice"
+                            className={s.actionButton}
+                          >
+                            <span aria-hidden="true" className={s.iconSm}>
+                              edit
+                            </span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setHapus(item.invoice)}
+                            aria-label={`Hapus invoice ${item.invoice.nomor}`}
+                            title="Hapus invoice"
+                            className={s.actionButtonDanger}
+                          >
+                            <span aria-hidden="true" className={s.iconSm}>
+                              delete
+                            </span>
+                          </button>
+                        </>
                       )}
-                      <button
-                        type="button"
-                        onClick={() => setForm({ invoice: item.invoice })}
-                        aria-label={`Ubah invoice ${item.invoice.nomor}`}
-                        title="Ubah invoice"
-                        className={s.actionButton}
-                      >
-                        <span aria-hidden="true" className={s.iconSm}>
-                          edit
-                        </span>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setHapus(item.invoice)}
-                        aria-label={`Hapus invoice ${item.invoice.nomor}`}
-                        title="Hapus invoice"
-                        className={s.actionButtonDanger}
-                      >
-                        <span aria-hidden="true" className={s.iconSm}>
-                          delete
-                        </span>
-                      </button>
                     </div>
                   </td>
                 </tr>
@@ -361,7 +369,7 @@ export function TerminSection() {
               </div>
 
               <div className={s.cardListActions}>
-                {item.terminBerikutnya && (
+                {!readOnly && item.terminBerikutnya && (
                   <button
                     type="button"
                     onClick={() => lunasTermin(item.invoice.id, item.terminBerikutnya.id)}
@@ -386,28 +394,32 @@ export function TerminSection() {
                   </span>
                   Preview
                 </button>
-                <button
-                  type="button"
-                  onClick={() => setForm({ invoice: item.invoice })}
-                  aria-label={`Ubah invoice ${item.invoice.nomor}`}
-                  title="Ubah invoice"
-                  className={s.actionButton}
-                >
-                  <span aria-hidden="true" className={s.iconSm}>
-                    edit
-                  </span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setHapus(item.invoice)}
-                  aria-label={`Hapus invoice ${item.invoice.nomor}`}
-                  title="Hapus invoice"
-                  className={s.actionButtonDanger}
-                >
-                  <span aria-hidden="true" className={s.iconSm}>
-                    delete
-                  </span>
-                </button>
+                {!readOnly && (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => setForm({ invoice: item.invoice })}
+                      aria-label={`Ubah invoice ${item.invoice.nomor}`}
+                      title="Ubah invoice"
+                      className={s.actionButton}
+                    >
+                      <span aria-hidden="true" className={s.iconSm}>
+                        edit
+                      </span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setHapus(item.invoice)}
+                      aria-label={`Hapus invoice ${item.invoice.nomor}`}
+                      title="Hapus invoice"
+                      className={s.actionButtonDanger}
+                    >
+                      <span aria-hidden="true" className={s.iconSm}>
+                        delete
+                      </span>
+                    </button>
+                  </>
+                )}
               </div>
             </article>
           ))}

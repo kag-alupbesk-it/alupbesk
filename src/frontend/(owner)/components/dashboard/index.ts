@@ -1,1 +1,1 @@
-export { default as DashboardSection } from "./sections/DashboardSection/DashboardSection";
+export { default as OverviewSection } from "./sections/OverviewSection/OverviewSection";

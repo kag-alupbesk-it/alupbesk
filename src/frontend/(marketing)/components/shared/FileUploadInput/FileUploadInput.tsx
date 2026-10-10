@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react";
 import Image from "next/image";
+import { isReadOnlyMode } from "@/frontend/shared/access/accessMode";
 
 interface FileUploadInputProps {
   value: string;
@@ -24,6 +25,10 @@ export default function FileUploadInput({
 
   async function handleFile(file: File | undefined) {
     if (!file) return;
+    if (isReadOnlyMode()) {
+      setUploadError("Mode pantau: mengunggah file dinonaktifkan.");
+      return;
+    }
     setUploadError("");
     setUploading(true);
     try {

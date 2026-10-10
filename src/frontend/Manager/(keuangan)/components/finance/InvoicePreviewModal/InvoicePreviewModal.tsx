@@ -5,6 +5,7 @@ import { StatusBadge } from "../ui/StatusBadge/StatusBadge";
 import { formatRp, formatTanggalPanjang } from "../format/format";
 import type { InvoiceRingkas } from "../FinanceStore/FinanceStore";
 import * as s from "../style/style";
+import { useReadOnly } from "@/frontend/shared/access/AccessModeProvider";
 
 export function InvoicePreviewModal({
   data,
@@ -14,6 +15,7 @@ export function InvoicePreviewModal({
   onTutup: () => void;
 }) {
   const { lunasTermin, setToast } = useFinance();
+  const readOnly = useReadOnly();
   const { invoice, totalTagihan, terbayar, sisaTagihan, jatuhTempo } = data;
 
   return (
@@ -95,9 +97,11 @@ export function InvoicePreviewModal({
                   <th scope="col" className={s.th}>
                     Status
                   </th>
-                  <th scope="col" className={`${s.th} text-right`}>
-                    Aksi
-                  </th>
+                  {!readOnly && (
+                    <th scope="col" className={`${s.th} text-right`}>
+                      Aksi
+                    </th>
+                  )}
                 </tr>
               </thead>
               <tbody>
@@ -114,20 +118,22 @@ export function InvoicePreviewModal({
                         <StatusBadge tone="pending" label="Belum" icon="schedule" />
                       )}
                     </td>
-                    <td className={`${s.td} text-right`}>
-                      <button
-                        type="button"
-                        disabled={termin.lunas}
-                        onClick={() => lunasTermin(invoice.id, termin.id)}
-                        aria-label={`Tandai lunas ${termin.label} invoice ${invoice.nomor}`}
-                        className={s.ghostButton}
-                      >
-                        <span aria-hidden="true" className={s.iconSm}>
-                          {termin.lunas ? "task_alt" : "paid"}
-                        </span>
-                        {termin.lunas ? "Lunas" : "Tandai Lunas"}
-                      </button>
-                    </td>
+                    {!readOnly && (
+                      <td className={`${s.td} text-right`}>
+                        <button
+                          type="button"
+                          disabled={termin.lunas}
+                          onClick={() => lunasTermin(invoice.id, termin.id)}
+                          aria-label={`Tandai lunas ${termin.label} invoice ${invoice.nomor}`}
+                          className={s.ghostButton}
+                        >
+                          <span aria-hidden="true" className={s.iconSm}>
+                            {termin.lunas ? "task_alt" : "paid"}
+                          </span>
+                          {termin.lunas ? "Lunas" : "Tandai Lunas"}
+                        </button>
+                      </td>
+                    )}
                   </tr>
                 ))}
               </tbody>

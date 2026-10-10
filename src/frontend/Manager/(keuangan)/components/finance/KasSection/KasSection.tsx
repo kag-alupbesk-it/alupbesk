@@ -17,6 +17,7 @@ import {
   type TransaksiKas,
 } from "../types/types";
 import * as s from "../style/style";
+import { useReadOnly } from "@/frontend/shared/access/AccessModeProvider";
 import { exportCashflowToExcel } from "./exportCashflow";
 
 const IKON_JENIS: Record<JenisTransaksi, string> = {
@@ -422,6 +423,7 @@ function ModalHapus({
 }
 
 export function KasSection() {
+  const readOnly = useReadOnly();
   const { state, rekap, transaksiUrut, opsiKategori, clearToast } = useFinance();
   const [filterJenis, setFilterJenis] = useState<"all" | JenisTransaksi>("all");
   const [filterKategori, setFilterKategori] = useState<"all" | KategoriBiaya>("all");
@@ -483,14 +485,16 @@ export function KasSection() {
         />
       </div>
 
-      <FormKas />
+      {!readOnly && <FormKas />}
 
       <section className={s.card}>
         <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
           <div className="flex-1">
             <h2 className={s.sectionTitle}>Riwayat Transaksi Kas</h2>
             <p className={s.sectionSubtitle}>
-              Preview bukti nota dan hapus transaksi yang tidak sesuai pencatatan.
+              {readOnly
+                ? "Preview bukti nota setiap transaksi kas."
+                : "Preview bukti nota dan hapus transaksi yang tidak sesuai pencatatan."}
             </p>
           </div>
               <div className="flex flex-wrap items-center justify-end gap-2 lg:self-end" suppressHydrationWarning>
@@ -652,17 +656,19 @@ export function KasSection() {
                           visibility
                         </span>
                       </button>
-                      <button
-                        type="button"
-                        onClick={() => setHapus(item)}
-                        aria-label={`Hapus transaksi ${item.uraian}`}
-                        title="Hapus transaksi"
-                        className={s.actionButtonDanger}
-                      >
-                        <span aria-hidden="true" className={s.iconSm}>
-                          delete
-                        </span>
-                      </button>
+                      {!readOnly && (
+                        <button
+                          type="button"
+                          onClick={() => setHapus(item)}
+                          aria-label={`Hapus transaksi ${item.uraian}`}
+                          title="Hapus transaksi"
+                          className={s.actionButtonDanger}
+                        >
+                          <span aria-hidden="true" className={s.iconSm}>
+                            delete
+                          </span>
+                        </button>
+                      )}
                     </div>
                   </td>
                 </tr>
@@ -737,17 +743,19 @@ export function KasSection() {
                     visibility
                   </span>
                 </button>
-                <button
-                  type="button"
-                  onClick={() => setHapus(item)}
-                  aria-label={`Hapus transaksi ${item.uraian}`}
-                  title="Hapus transaksi"
-                  className={s.actionButtonDanger}
-                >
-                  <span aria-hidden="true" className={s.iconSm}>
-                    delete
-                  </span>
-                </button>
+                {!readOnly && (
+                  <button
+                    type="button"
+                    onClick={() => setHapus(item)}
+                    aria-label={`Hapus transaksi ${item.uraian}`}
+                    title="Hapus transaksi"
+                    className={s.actionButtonDanger}
+                  >
+                    <span aria-hidden="true" className={s.iconSm}>
+                      delete
+                    </span>
+                  </button>
+                )}
               </div>
             </article>
           ))}

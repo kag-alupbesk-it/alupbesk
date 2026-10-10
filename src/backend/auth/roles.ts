@@ -13,6 +13,36 @@ function matchesPath(pathname: string, prefix: string): boolean {
   return pathname === prefix || pathname.startsWith(`${prefix}/`);
 }
 
+const READ_ONLY_METHODS = new Set(["GET", "HEAD", "OPTIONS"]);
+
+// Modul divisi tempat Owner hanya boleh memantau (read-only).
+const DIVISION_ROOTS = ["keuangan", "gudang", "marketing", "pm", "produksi", "field"];
+
+function isDivisionPath(path: string): boolean {
+  return DIVISION_ROOTS.some(
+    (root) =>
+      matchesPath(path, `/${root}`) || matchesPath(path, `/api/${root}`),
+  );
+}
+
+/**
+ * Owner bersifat pemantau: dilarang menulis di modul divisi, mengunggah file,
+ * maupun menyunting konten. Fitur milik Owner sendiri (`/api/owner`,
+ * `/api/admin`, `/api/push`, `/api/auth`) tetap diizinkan agar Owner masih bisa
+ * mengelola user dan berlangganan notifikasi.
+ */
+function ownerReadOnly(role: string, pathname: string, method: string): boolean {
+  if (role !== "owner" || READ_ONLY_METHODS.has(method.toUpperCase())) return false;
+  return (
+    isDivisionPath(pathname) ||
+    // Endpoint manager: keputusan order & CRUD user. Owner punya kanal sendiri
+    // (`/api/owner/users`, `/api/owner/role-requests`), jadi tulisan di sini ditutup.
+    matchesPath(pathname, "/api/manager") ||
+    matchesPath(pathname, "/api/upload") ||
+    matchesPath(pathname, "/api/content")
+  );
+}
+
 export function roleCanAccess(
   role: AppRole,
   pathname: string,
@@ -23,6 +53,8 @@ export function roleCanAccess(
   );
   const path = adminRolePath ? pathname.slice("/admin".length) : pathname;
   const elevated = role === "manager" || role === "owner";
+
+  if (ownerReadOnly(role, path, method)) return false;
 
   if (matchesPath(path, "/api/upload")) {
     return role === "marketing" || elevated;

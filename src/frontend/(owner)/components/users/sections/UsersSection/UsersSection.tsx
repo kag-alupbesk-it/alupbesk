@@ -112,7 +112,7 @@ export default function UsersSection() {
         </div>
       </div>
 
-      <section className="mb-6 rounded-2xl border border-outline/30 bg-surface-container-low p-4 sm:p-6">
+      <section data-focus-id="pendaftaran" className="mb-6 rounded-2xl border border-outline/30 bg-surface-container-low p-4 sm:p-6">
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
           <div>
             <h4 className="text-base font-bold text-on-surface sm:text-lg">Permintaan akses role</h4>
@@ -205,7 +205,7 @@ export default function UsersSection() {
         </div>
       </div>
 
-      <div className={styles.tableContainer}>
+      <div className={`${styles.tableContainer} hidden sm:block`}>
         <table className={styles.table}>
           <thead>
             <tr className={styles.tableHeaderRow}>
@@ -246,6 +246,46 @@ export default function UsersSection() {
           </tbody>
         </table>
       </div>
+
+      <ul className="space-y-3 sm:hidden">
+        {paginatedUsers.length === 0 && (
+          <li className="rounded-2xl border border-outline/30 bg-surface p-5 text-center text-sm text-on-surface-variant">
+            Tidak ada pengguna yang cocok dengan filter.
+          </li>
+        )}
+        {paginatedUsers.map((u) => (
+          <li key={u.id} className="rounded-2xl border border-outline/30 bg-surface p-4">
+            <div className="flex min-w-0 items-start justify-between gap-3">
+              <div className={`${styles.userCell} min-w-0`}>
+                <div className={styles.avatar}>
+                  <span className={`${styles.icon} ${styles.avatarIcon}`}>account_circle</span>
+                </div>
+                <div className="min-w-0">
+                  <p className={styles.userName}>{u.name}</p>
+                  <p className={`${styles.userEmail} break-all`}>{u.email}</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                title={`Hapus ${u.name}`}
+                aria-label={`Hapus pengguna ${u.name}`}
+                onClick={() => { setDeleteError(""); setDeleteTarget(u); }}
+                className={styles.deleteButton}
+              >
+                <span className={styles.icon}>delete</span>
+              </button>
+            </div>
+            <div className="mt-3 flex flex-wrap items-center gap-2">
+              <span className={`${styles.roleBadge} ${getRoleColor(u.role)}`}>{u.role}</span>
+              <span className={`${styles.statusBadge} ${statusInfo(u.status).statusColor}`}>
+                {u.active ? <span className={`${styles.statusDot} ${styles.statusDotActive}`} /> : u.status === "SUSPENDED" ? <span className={`${styles.statusDot} ${styles.statusDotSuspended}`} /> : <span className={`${styles.statusDot} ${styles.statusDotPending}`} />}
+                {u.status}
+              </span>
+              <span className="text-xs text-on-surface-variant">{u.dept}</span>
+            </div>
+          </li>
+        ))}
+      </ul>
 
       <div className={styles.pagination}>
         <p className={styles.paginationText}>Showing <span className={styles.paginationHighlight}>{filteredUsers.length > 0 ? (page - 1) * ITEMS_PER_PAGE + 1 : 0} to {Math.min(page * ITEMS_PER_PAGE, filteredUsers.length)}</span> of <span className={styles.paginationHighlight}>{filteredUsers.length}</span> employees</p>

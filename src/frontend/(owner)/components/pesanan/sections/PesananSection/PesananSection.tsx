@@ -11,12 +11,13 @@ import type { MarketingOrder } from "@/backend/modules/marketing/index";
 import { STATUS_LABELS, STATUS_OPTIONS } from "../data/data";
 import { isNewOrder } from "../helpers/helpers";
 import { usePollingResource } from "@/frontend/shared/hooks/usePollingResource";
+import { useFocusValue } from "@/frontend/shared/focus/focusStore";
 
 export default function PesananSection() {
   const loadOrders = useCallback(() => getPesanan(), []);
   const { data: orders, loading, error: loadError, refresh } = usePollingResource<MarketingOrder[]>(loadOrders, []);
   const [error, setError] = useState("");
-  const [search, setSearch] = useState("");
+  const [searchOverride, setSearchOverride] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState("ALL");
   const [showStatusDropdown, setShowStatusDropdown] = useState(false);
   const [page, setPage] = useState(1);
@@ -25,6 +26,13 @@ export default function PesananSection() {
   const [showConfirm, setShowConfirm] = useState(false);
   const [showRejected, setShowRejected] = useState(false);
   const [confirmOrder, setConfirmOrder] = useState<MarketingOrder | null>(null);
+  const focus = useFocusValue();
+
+  // Deep-link dari Overview (/owner/pesanan?focus=order-<id>): awali pencarian
+  // dengan ID pesanan itu supaya barisnya langsung terlihat, sampai user
+  // mengetik/menghapus pencarian sendiri.
+  const focusOrderId = focus?.startsWith("order-") ? focus.slice("order-".length) : null;
+  const search = searchOverride ?? focusOrderId ?? "";
 
   const filtered = orders.filter((o) => {
     const matchSearch = search === "" || o.id.toLowerCase().includes(search.toLowerCase()) || o.customer.name.toLowerCase().includes(search.toLowerCase()) || o.customer.phone.includes(search);
@@ -33,7 +41,8 @@ export default function PesananSection() {
   });
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / 5));
-  const paginated = filtered.slice((page - 1) * 5, page * 5);
+  const safePage = Math.min(page, totalPages);
+  const paginated = filtered.slice((safePage - 1) * 5, safePage * 5);
 
   function handleSelect(order: MarketingOrder) {
     setSelectedOrder(order);
@@ -108,10 +117,10 @@ export default function PesananSection() {
             className={s.searchInput}
             placeholder="Cari ID, nama, atau telepon..."
             value={search}
-            onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+            onChange={(e) => { setSearchOverride(e.target.value); setPage(1); }}
           />
           {search && (
-            <button onClick={() => { setSearch(""); setPage(1); }} className="text-on-surface-variant hover:text-on-surface">
+            <button onClick={() => { setSearchOverride(""); setPage(1); }} className="text-on-surface-variant hover:text-on-surface">
               <span className={s.icon}>close</span>
             </button>
           )}
@@ -143,16 +152,16 @@ export default function PesananSection() {
 
       <div className={s.pagination}>
         <p className={s.paginationText}>
-          Menampilkan <span className={s.paginationHighlight}>{paginated.length > 0 ? (page - 1) * 5 + 1 : 0}</span> hingga{' '}
-          <span className={s.paginationHighlight}>{Math.min(page * 5, filtered.length)}</span> dari{' '}
+          Menampilkan <span className={s.paginationHighlight}>{paginated.length > 0 ? (safePage - 1) * 5 + 1 : 0}</span> hingga{' '}
+          <span className={s.paginationHighlight}>{Math.min(safePage * 5, filtered.length)}</span> dari{' '}
           <span className={s.paginationHighlight}>{filtered.length}</span> pesanan
         </p>
         <div className={s.paginationButtons}>
-          <button onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page === 1} className={s.paginationNav}>SEBELUMNYA</button>
+          <button onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={safePage === 1} className={s.paginationNav}>SEBELUMNYA</button>
           {Array.from({ length: totalPages }, (_, i) => i + 1).map((n) => (
-            <button key={n} onClick={() => setPage(n)} className={`${s.pageButton} ${n === page ? s.activePage : s.inactivePage}`}>{n}</button>
+            <button key={n} onClick={() => setPage(n)} className={`${s.pageButton} ${n === safePage ? s.activePage : s.inactivePage}`}>{n}</button>
           ))}
-          <button onClick={() => setPage((p) => Math.min(totalPages, p + 1))} disabled={page === totalPages} className={s.paginationNav}>SELANJUTNYA</button>
+          <button onClick={() => setPage((p) => Math.min(totalPages, p + 1))} disabled={safePage === totalPages} className={s.paginationNav}>SELANJUTNYA</button>
         </div>
       </div>
 

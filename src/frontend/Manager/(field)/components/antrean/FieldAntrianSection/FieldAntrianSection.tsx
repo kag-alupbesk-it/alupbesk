@@ -8,16 +8,22 @@ import type { FieldFilter } from "../types/types";
 import * as s from "../style/style";
 import { FieldAntrianTable } from "../FieldAntrianTable/FieldAntrianTable";
 import { FieldDeliveryDetailModal } from "../FieldDeliveryDetailModal/FieldDeliveryDetailModal";
+import { useFocusValue } from "@/frontend/shared/focus/focusStore";
 
 const PAGE_SIZE = 6;
 
 export function FieldAntrianSection() {
   const { deliveries, loading } = useFieldDeliveries();
   const [search, setSearch] = useState("");
-  const [filter, setFilter] = useState<FieldFilter>("ALL");
+  const [userFilter, setUserFilter] = useState<FieldFilter | null>(null);
   const [filterOpen, setFilterOpen] = useState(false);
   const [page, setPage] = useState(0);
   const [detail, setDetail] = useState<FieldDelivery | null>(null);
+  const focus = useFocusValue();
+
+  // Deep-link dari Overview (/owner/field?focus=siap-kirim) menyaring
+  // pengiriman yang siap dikirim — sampai user memilih filter lain.
+  const filter: FieldFilter = userFilter ?? (focus === "siap-kirim" ? "siap-kirim" : "ALL");
 
   const filtered = useMemo(() => {
     const needle = search.trim().toLowerCase();
@@ -103,7 +109,7 @@ export function FieldAntrianSection() {
                     className={`${s.dropdownItem} ${filter === option ? s.dropdownActive : s.dropdownInactive}`}
                     onClick={(e) => {
                       e.stopPropagation();
-                      setFilter(option);
+                      setUserFilter(option);
                       setPage(0);
                       setFilterOpen(false);
                     }}
@@ -119,7 +125,9 @@ export function FieldAntrianSection() {
         {loading ? (
           <div className={`${s.tableCard} ${s.emptyCell}`}>Memuat pengiriman...</div>
         ) : (
-          <FieldAntrianTable deliveries={pageItems} onOpenDetail={setDetail} />
+          <div data-focus-id="siap-kirim">
+            <FieldAntrianTable deliveries={pageItems} onOpenDetail={setDetail} />
+          </div>
         )}
 
         <div className={s.pagination}>

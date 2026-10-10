@@ -29,6 +29,45 @@ function pushSupported(): boolean {
   );
 }
 
+/** True bila browser + build saat ini mendukung Web Push. */
+export function isPushSupported(): boolean {
+  return pushSupported();
+}
+
+export interface PushStatus {
+  supported: boolean;
+  permission: NotificationPermission | "unsupported";
+  subscribed: boolean;
+}
+
+/** Status langganan push saat ini, untuk ditampilkan di ikon notifikasi. */
+export async function getPushStatus(): Promise<PushStatus> {
+  if (!pushSupported()) {
+    return { supported: false, permission: "unsupported", subscribed: false };
+  }
+  let subscribed = false;
+  try {
+    const registration = await navigator.serviceWorker.getRegistration("/sw.js");
+    const subscription = await registration?.pushManager.getSubscription();
+    subscribed = Boolean(subscription);
+  } catch {
+    // Biarkan false: status tak terbaca berarti dianggap belum berlangganan.
+  }
+  return { supported: true, permission: Notification.permission, subscribed };
+}
+
+/**
+ * Aktifkan notifikasi dari user gesture (klik ikon bell): minta izin lalu
+ * daftarkan push subscription ke server.
+ */
+export async function subscribePush(): Promise<boolean> {
+  const granted = await requestNotificationPermission();
+  if (!granted) return false;
+  await activatePushSubscription();
+  const status = await getPushStatus();
+  return status.subscribed;
+}
+
 /**
  * Minta izin notifikasi. Panggil dari dalam user gesture (mis. saat submit
  * form login) supaya prompt muncul tanpa diblokir browser. Mengembalikan true

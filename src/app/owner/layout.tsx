@@ -1,7 +1,9 @@
 "use client";
 
+import { Suspense } from "react";
 import { useTheme } from "@/app/ThemeContext";
 import { Sidebar, SidebarProvider, OwnerShell } from "@/frontend/(owner)/components/layout";
+import FocusHighlighter from "@/frontend/shared/focus/FocusHighlighter";
 
 function OwnerLayoutInner({ children }: { children: React.ReactNode }) {
   const { theme } = useTheme();
@@ -23,6 +25,9 @@ function OwnerLayoutInner({ children }: { children: React.ReactNode }) {
         <Sidebar />
         <OwnerShell>{children}</OwnerShell>
       </div>
+      <Suspense fallback={null}>
+        <FocusHighlighter />
+      </Suspense>
     </SidebarProvider>
   );
 }

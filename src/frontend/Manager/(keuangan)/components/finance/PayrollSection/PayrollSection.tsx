@@ -10,6 +10,7 @@ import { SlipGajiModal } from "../SlipGajiModal/SlipGajiModal";
 import { formatRp, formatTanggal, tanggalHariIni } from "../format/format";
 import { hitungGaji, type Karyawan, type PosProyek } from "../types/types";
 import * as s from "../style/style";
+import { useReadOnly } from "@/frontend/shared/access/AccessModeProvider";
 
 type DraftKaryawan = Omit<Karyawan, "id" | "statusBayar" | "tanggalBayar">;
 
@@ -486,6 +487,7 @@ function DetailUangKas() {
 }
 
 export function PayrollSection() {
+  const readOnly = useReadOnly();
   const { state, opsiPos, bayarGaji, hapusKaryawan, clearToast } = useFinance();
   const [filterStatus, setFilterStatus] = useState<"all" | "belum" | "terbayar">("all");
   const [filterLokasi, setFilterLokasi] = useState("all");
@@ -581,15 +583,18 @@ export function PayrollSection() {
       {!formTerbuka && (
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <p className={s.sectionSubtitle}>
-            Tanggal gajian bebas per karyawan — gajian tidak harus barengan. Tekan &ldquo;Gaji lagi&rdquo; di
-            baris karyawan untuk menyimpan gaji berikutnya tanpa mengetik nama lagi.
+            {readOnly
+              ? "Rincian pendapatan, potongan bon/kasbon, dan status pembayaran per karyawan."
+              : "Tanggal gajian bebas per karyawan — gajian tidak harus barengan. Tekan “Gaji lagi” di baris karyawan untuk menyimpan gaji berikutnya tanpa mengetik nama lagi."}
           </p>
-          <button type="button" onClick={mulaiTambah} className={`${s.primaryButton} shrink-0`}>
-            <span aria-hidden="true" className={s.iconMd}>
-              person_add
-            </span>
-            Tambah Karyawan
-          </button>
+          {!readOnly && (
+            <button type="button" onClick={mulaiTambah} className={`${s.primaryButton} shrink-0`}>
+              <span aria-hidden="true" className={s.iconMd}>
+                person_add
+              </span>
+              Tambah Karyawan
+            </button>
+          )}
         </div>
       )}
 
@@ -609,12 +614,14 @@ export function PayrollSection() {
             <span className={s.dataCounter}>
               {daftar.length} dari {rowsPeriode.length} karyawan
             </span>
-            <button type="button" onClick={formTerbuka ? tutupForm : mulaiTambah} className={s.secondaryButton}>
-              <span aria-hidden="true" className={s.iconSm}>
-                {formTerbuka ? "close" : "person_add"}
-              </span>
-              {formTerbuka ? "Tutup Form" : "Tambah Karyawan"}
-            </button>
+            {!readOnly && (
+              <button type="button" onClick={formTerbuka ? tutupForm : mulaiTambah} className={s.secondaryButton}>
+                <span aria-hidden="true" className={s.iconSm}>
+                  {formTerbuka ? "close" : "person_add"}
+                </span>
+                {formTerbuka ? "Tutup Form" : "Tambah Karyawan"}
+              </button>
+            )}
           </div>
         </div>
 
@@ -752,51 +759,55 @@ export function PayrollSection() {
                           </span>
                           Slip Gaji
                         </button>
-                        <button
-                          type="button"
-                          onClick={() => setGajiLagiRow(item)}
-                          aria-label={`Gaji lagi ${item.nama} di tanggal lain`}
-                          title="Gaji lagi di tanggal lain"
-                          className={s.actionButton}
-                        >
-                          <span aria-hidden="true" className={s.iconSm}>
-                            event_repeat
-                          </span>
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => mulaiUbah(item)}
-                          aria-label={`Ubah data gaji ${item.nama}`}
-                          title="Ubah data karyawan"
-                          className={s.actionButton}
-                        >
-                          <span aria-hidden="true" className={s.iconSm}>
-                            edit
-                          </span>
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => bayarGaji(item.id, new Date().toISOString().slice(0, 10))}
-                          disabled={item.statusBayar === "terbayar"}
-                          aria-label={`Tandai terbayar gaji ${item.nama}`}
-                          title="Tandai terbayar"
-                          className={s.actionButton}
-                        >
-                          <span aria-hidden="true" className={s.iconSm}>
-                            paid
-                          </span>
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setHapus(item)}
-                          aria-label={`Hapus karyawan ${item.nama}`}
-                          title="Hapus karyawan"
-                          className={s.actionButtonDanger}
-                        >
-                          <span aria-hidden="true" className={s.iconSm}>
-                            delete
-                          </span>
-                        </button>
+                        {!readOnly && (
+                          <>
+                            <button
+                              type="button"
+                              onClick={() => setGajiLagiRow(item)}
+                              aria-label={`Gaji lagi ${item.nama} di tanggal lain`}
+                              title="Gaji lagi di tanggal lain"
+                              className={s.actionButton}
+                            >
+                              <span aria-hidden="true" className={s.iconSm}>
+                                event_repeat
+                              </span>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => mulaiUbah(item)}
+                              aria-label={`Ubah data gaji ${item.nama}`}
+                              title="Ubah data karyawan"
+                              className={s.actionButton}
+                            >
+                              <span aria-hidden="true" className={s.iconSm}>
+                                edit
+                              </span>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => bayarGaji(item.id, new Date().toISOString().slice(0, 10))}
+                              disabled={item.statusBayar === "terbayar"}
+                              aria-label={`Tandai terbayar gaji ${item.nama}`}
+                              title="Tandai terbayar"
+                              className={s.actionButton}
+                            >
+                              <span aria-hidden="true" className={s.iconSm}>
+                                paid
+                              </span>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setHapus(item)}
+                              aria-label={`Hapus karyawan ${item.nama}`}
+                              title="Hapus karyawan"
+                              className={s.actionButtonDanger}
+                            >
+                              <span aria-hidden="true" className={s.iconSm}>
+                                delete
+                              </span>
+                            </button>
+                          </>
+                        )}
                       </div>
                     </td>
                   </tr>
@@ -869,51 +880,55 @@ Belum ada data karyawan. Tekan &ldquo;Tambah Karyawan&rdquo; untuk menambah, ata
                     </span>
                     Slip Gaji
                   </button>
-                  <button
-                    type="button"
-                    onClick={() => setGajiLagiRow(item)}
-                    aria-label={`Gaji lagi ${item.nama} di tanggal lain`}
-                    className={s.ghostButton}
-                  >
-                    <span aria-hidden="true" className={s.iconSm}>
-                      event_repeat
-                    </span>
-                    Gaji lagi
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => mulaiUbah(item)}
-                    aria-label={`Ubah data gaji ${item.nama}`}
-                    title="Ubah data karyawan"
-                    className={s.actionButton}
-                  >
-                    <span aria-hidden="true" className={s.iconSm}>
-                      edit
-                    </span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => bayarGaji(item.id, new Date().toISOString().slice(0, 10))}
-                    disabled={item.statusBayar === "terbayar"}
-                    aria-label={`Tandai terbayar gaji ${item.nama}`}
-                    title="Tandai terbayar"
-                    className={s.actionButton}
-                  >
-                    <span aria-hidden="true" className={s.iconSm}>
-                      paid
-                    </span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setHapus(item)}
-                    aria-label={`Hapus karyawan ${item.nama}`}
-                    title="Hapus karyawan"
-                    className={s.actionButtonDanger}
-                  >
-                    <span aria-hidden="true" className={s.iconSm}>
-                      delete
-                    </span>
-                  </button>
+                  {!readOnly && (
+                    <>
+                      <button
+                        type="button"
+                        onClick={() => setGajiLagiRow(item)}
+                        aria-label={`Gaji lagi ${item.nama} di tanggal lain`}
+                        className={s.ghostButton}
+                      >
+                        <span aria-hidden="true" className={s.iconSm}>
+                          event_repeat
+                        </span>
+                        Gaji lagi
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => mulaiUbah(item)}
+                        aria-label={`Ubah data gaji ${item.nama}`}
+                        title="Ubah data karyawan"
+                        className={s.actionButton}
+                      >
+                        <span aria-hidden="true" className={s.iconSm}>
+                          edit
+                        </span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => bayarGaji(item.id, new Date().toISOString().slice(0, 10))}
+                        disabled={item.statusBayar === "terbayar"}
+                        aria-label={`Tandai terbayar gaji ${item.nama}`}
+                        title="Tandai terbayar"
+                        className={s.actionButton}
+                      >
+                        <span aria-hidden="true" className={s.iconSm}>
+                          paid
+                        </span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setHapus(item)}
+                        aria-label={`Hapus karyawan ${item.nama}`}
+                        title="Hapus karyawan"
+                        className={s.actionButtonDanger}
+                      >
+                        <span aria-hidden="true" className={s.iconSm}>
+                          delete
+                        </span>
+                      </button>
+                    </>
+                  )}
                 </div>
               </article>
             );

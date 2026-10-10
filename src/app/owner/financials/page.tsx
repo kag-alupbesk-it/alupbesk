@@ -1,7 +1,5 @@
-import { FinancialsSection as FinancialsPage } from "@/frontend/(owner)/components/financials";
-
-export const metadata = { title: "Financials | ALUPBESK Owner" };
+import { redirect } from "next/navigation";
 
 export default function Page() {
-  return <FinancialsPage />;
+  redirect("/owner/keuangan");
 }

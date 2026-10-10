@@ -5,16 +5,8 @@ import { usePathname } from "next/navigation";
 import { getRolePagePath } from "@/frontend/shared/navigation/getRolePagePath";
 import { clsx } from "clsx";
 import { useSidebar } from "../SidebarProvider/SidebarProvider";
+import { navGroups } from "../nav/navItems";
 import * as styles from "../style/style";
-
-const navItems = [
-  { href: "/owner", label: "Overview", icon: "dashboard" },
-  { href: "/owner/pesanan", label: "Pesanan Masuk", icon: "receipt_long" },
-  { href: "/owner/financials", label: "Financials", icon: "payments" },
-  { href: "/owner/users", label: "User Management", icon: "group" },
-  { href: "/owner/inventory", label: "Inventory", icon: "inventory_2" },
-  { href: "/owner/reports", label: "Reports", icon: "assessment" },
-];
 
 export default function Sidebar() {
   const pathname = getRolePagePath(usePathname());
@@ -40,20 +32,33 @@ export default function Sidebar() {
       </div>
 
       <nav className={styles.nav}>
-        {navItems.map((item) => {
-          const active = isActive(item.href);
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              onClick={close}
-              className={clsx(styles.navLink, active ? styles.navLinkActive : styles.navLinkInactive)}
-            >
-              <span className={styles.navIcon}>{item.icon}</span>
-              <span className={styles.navLabel}>{item.label}</span>
-            </Link>
-          );
-        })}
+        {navGroups.map((group, groupIndex) => (
+          <div key={group.title ?? "utama"} className={styles.navGroup}>
+            {group.title && (
+              <p className={styles.navGroupTitle}>{group.title}</p>
+            )}
+            <div className={styles.navGroupItems}>
+              {group.items.map((item) => {
+                const active = isActive(item.href);
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    onClick={close}
+                    className={clsx(
+                      styles.navLink,
+                      active ? styles.navLinkActive : styles.navLinkInactive
+                    )}
+                  >
+                    <span className={styles.navIcon}>{item.icon}</span>
+                    <span className={styles.navLabel}>{item.label}</span>
+                  </Link>
+                );
+              })}
+            </div>
+            {groupIndex < navGroups.length - 1 && <div className={styles.navDivider} />}
+          </div>
+        ))}
       </nav>
       <div className={styles.footer}>
         <Link href="#" onClick={close} className={styles.footerLink}>
