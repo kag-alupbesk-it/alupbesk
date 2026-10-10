@@ -7,7 +7,6 @@ import type { Product } from "@/services/catalog/index";
 import { catalogApi } from "@/services/api/index";
 import { useDebounce } from "@/frontend/(pelanggan)/hooks/useDebounce/useDebounce";
 import { usePollingResource } from "@/frontend/shared/hooks/usePollingResource";
-import BestSellerSection from "../BestSellerSection/BestSellerSection";
 import { ProductCard } from "../../../product/ProductCard/ProductCard";
 import { useLanguage } from "@/frontend/shared/i18n/LanguageProvider";
 
@@ -82,7 +81,7 @@ export default function KatalogSection() {
   return (
     <section className="py-section-gap-desktop bg-primary-container" id="katalog">
       <div className="max-w-container-max mx-auto px-margin-x-mobile md:px-margin-x-desktop">
-        <BestSellerSection products={catalogProducts} />
+        {/* <BestSellerSection products={catalogProducts} /> */}
 
         <div className="flex flex-col md:flex-row justify-between items-end mb-8 gap-6">
           <div>
