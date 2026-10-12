@@ -9,18 +9,15 @@ interface PesananDetailModalProps {
   isOpen: boolean;
   order: MarketingOrder | null;
   onClose: () => void;
-  onConfirm: (order: MarketingOrder) => void;
 }
 
-export default function PesananDetailModal({ isOpen, order, onClose, onConfirm }: PesananDetailModalProps) {
+export default function PesananDetailModal({ isOpen, order, onClose }: PesananDetailModalProps) {
   if (!isOpen || !order) return null;
 
   function handleBackdrop(e: React.MouseEvent<HTMLDivElement>) {
     if (e.target === e.currentTarget) onClose();
   }
 
-  const canConfirm = order.status === "pending";
-  const isPendingManager = order.status === "submitted_to_manager";
   const isRejected = order.status === "rejected_by_manager";
 
   return (
@@ -98,18 +95,7 @@ export default function PesananDetailModal({ isOpen, order, onClose, onConfirm }
         )}
 
         <div className={s.actionsWrapper}>
-          {canConfirm && (
-            <>
-              <button onClick={onClose} className={s.secondaryButton}>Tutup</button>
-              <button onClick={() => onConfirm(order)} className={s.primaryButton}>
-                <span className={s.icon}>check_circle</span>
-                Konfirmasi &amp; Ajukan ke Manager
-              </button>
-            </>
-          )}
-          {(isPendingManager || isRejected) && (
-            <button onClick={onClose} className={s.secondaryButton}>Tutup</button>
-          )}
+          <button onClick={onClose} className={s.secondaryButton}>Tutup</button>
         </div>
       </div>
     </div>

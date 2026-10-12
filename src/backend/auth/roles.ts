@@ -35,6 +35,8 @@ function ownerReadOnly(role: string, pathname: string, method: string): boolean 
   if (role !== "owner" || READ_ONLY_METHODS.has(method.toUpperCase())) return false;
   return (
     isDivisionPath(pathname) ||
+    // Modul "Pesanan Masuk" Owner bersifat pemantau: baca saja, tanpa mutasi.
+    matchesPath(pathname, "/api/owner/orders") ||
     // Endpoint manager: keputusan order & CRUD user. Owner punya kanal sendiri
     // (`/api/owner/users`, `/api/owner/role-requests`), jadi tulisan di sini ditutup.
     matchesPath(pathname, "/api/manager") ||

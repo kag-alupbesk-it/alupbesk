@@ -4,9 +4,8 @@ import { useCallback, useState } from "react";
 import * as s from "../../style/style";
 import PesananTable from "../PesananTable/PesananTable";
 import PesananDetailModal from "../PesananDetailModal/PesananDetailModal";
-import KonfirmasiModal from "../KonfirmasiModal/KonfirmasiModal";
 import TolakModal from "../TolakModal/TolakModal";
-import { getPesanan, submitPesanan } from "@/frontend/(owner)/services/pesanan/pesanan";
+import { getPesanan } from "@/frontend/(owner)/services/pesanan/pesanan";
 import type { MarketingOrder } from "@/backend/modules/marketing/index";
 import { STATUS_LABELS, STATUS_OPTIONS } from "../data/data";
 import { isNewOrder } from "../helpers/helpers";
@@ -15,17 +14,14 @@ import { useFocusValue } from "@/frontend/shared/focus/focusStore";
 
 export default function PesananSection() {
   const loadOrders = useCallback(() => getPesanan(), []);
-  const { data: orders, loading, error: loadError, refresh } = usePollingResource<MarketingOrder[]>(loadOrders, []);
-  const [error, setError] = useState("");
+  const { data: orders, loading, error: loadError } = usePollingResource<MarketingOrder[]>(loadOrders, []);
   const [searchOverride, setSearchOverride] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState("ALL");
   const [showStatusDropdown, setShowStatusDropdown] = useState(false);
   const [page, setPage] = useState(1);
   const [selectedOrder, setSelectedOrder] = useState<MarketingOrder | null>(null);
   const [showDetail, setShowDetail] = useState(false);
-  const [showConfirm, setShowConfirm] = useState(false);
   const [showRejected, setShowRejected] = useState(false);
-  const [confirmOrder, setConfirmOrder] = useState<MarketingOrder | null>(null);
   const focus = useFocusValue();
 
   // Deep-link dari Overview (/owner/pesanan?focus=order-<id>): awali pencarian
@@ -53,26 +49,6 @@ export default function PesananSection() {
     }
   }
 
-  function handleOpenConfirm(order: MarketingOrder) {
-    setConfirmOrder(order);
-    setShowDetail(false);
-    setShowConfirm(true);
-  }
-
-  async function handleConfirmOrder() {
-    if (!confirmOrder) return;
-    setError("");
-    try {
-      await submitPesanan(confirmOrder.id);
-      refresh();
-      setShowConfirm(false);
-      setConfirmOrder(null);
-      setPage(1);
-    } catch (reason) {
-      setError(reason instanceof Error ? reason.message : "Pesanan gagal dikonfirmasi.");
-    }
-  }
-
   const newOrders = orders.filter(isNewOrder);
   const pendingManager = orders.filter((o) => o.status === "submitted_to_manager");
   const confirmed = orders.filter((o) => o.status === "confirmed");
@@ -84,12 +60,12 @@ export default function PesananSection() {
         <div>
           <h3 className={s.title}>Pesanan Masuk</h3>
           <p className={s.subtitle}>
-            Tinjau semua Purchase Order dari website, cek kelengkapan data, konfirmasi, dan ajukan verifikasi ke Manajer.
+            Pantau semua Purchase Order dari website beserta statusnya. Mode pemantauan (read-only) tanpa aksi.
           </p>
         </div>
       </div>
 
-      {(error || loadError) && <p className="mb-4 text-sm text-red-400">{error || loadError}</p>}
+      {loadError && <p className="mb-4 text-sm text-red-400">{loadError}</p>}
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
         <div className="bg-primary-container border border-outline/30 rounded-xl p-5">
@@ -169,14 +145,6 @@ export default function PesananSection() {
         isOpen={showDetail}
         order={selectedOrder}
         onClose={() => { setShowDetail(false); setSelectedOrder(null); }}
-        onConfirm={handleOpenConfirm}
-      />
-
-      <KonfirmasiModal
-        isOpen={showConfirm}
-        order={confirmOrder}
-        onClose={() => { setShowConfirm(false); setConfirmOrder(null); }}
-        onConfirm={handleConfirmOrder}
       />
 
       <TolakModal
