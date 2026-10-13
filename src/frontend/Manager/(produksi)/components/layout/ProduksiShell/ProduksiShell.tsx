@@ -9,6 +9,7 @@ import { useProduksi } from "../../../context/ProduksiContext/ProduksiContext";
 const BOTTOM_NAV = [
   { href: "/produksi", label: "Produksi", icon: "precision_manufacturing" },
   { href: "/produksi/drawings", label: "Gambar", icon: "upload_file" },
+  { href: "/produksi/permintaan", label: "Material", icon: "package_2" },
 ];
 
 export function ProduksiShell({ children }: { children: ReactNode }) {
