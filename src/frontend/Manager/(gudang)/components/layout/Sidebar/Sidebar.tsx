@@ -7,8 +7,6 @@ import { useSidebar } from "../SidebarProvider/SidebarProvider";
 
 const navItems = [
   { href: "/gudang", label: "Data Gudang", icon: "inventory_2" },
-  { href: "/gudang/pesanan", label: "Pesanan Gudang", icon: "assignment" },
-  { href: "/gudang/pesanan-proyek", label: "Pesanan Proyek", icon: "apartment" },
 ];
 
 export default function Sidebar() {

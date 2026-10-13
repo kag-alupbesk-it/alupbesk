@@ -6,10 +6,8 @@ import { gudangItems } from "../backend/modules/gudang/items/store";
 import type { GudangItem } from "../backend/modules/gudang/items/types";
 import { gudangMovements } from "../backend/modules/gudang/movements/store";
 import type { GudangMovement } from "../backend/modules/gudang/movements/types";
-import { projectOrders } from "../backend/modules/gudang/projectOrders/store";
-import type { ProjectOrder, ProjectOrderItem } from "../backend/modules/gudang/projectOrders/types";
 import { customRequests } from "../backend/modules/custom/requests/store";
-import type { CustomRequest } from "../backend/modules/custom/requests/types";
+import type { CustomRequest, CustomRequestItem } from "../backend/modules/custom/requests/types";
 import { kasEntries } from "../backend/modules/keuangan/kas/store";
 import { syncKasDariPesanan } from "../backend/modules/keuangan/kas/sync";
 import { pembayaran } from "../backend/modules/keuangan/penagihan/store";
@@ -22,6 +20,17 @@ import { customServices } from "../backend/modules/content/services/store";
 import { siteContent } from "../backend/modules/content/sitecontent/store";
 import { portfolioItems, caseStudies } from "./portfolio/store";
 import type { PortfolioItem, CaseStudy } from "./portfolio/data";
+import {
+  gudangCategories,
+  seedDefaultCategories,
+} from "../backend/modules/gudangInventory/categories/store";
+import { gudangInventoryItems } from "../backend/modules/gudangInventory/items/store";
+import {
+  gudangInTransactions,
+  gudangOutTransactions,
+} from "../backend/modules/gudangInventory/transactions/store";
+import { productionRequests } from "../backend/modules/gudangInventory/productionRequests/store";
+import type { ProductionRequestItem } from "../backend/modules/gudangInventory/productionRequests/types";
 
 let hydrated: Promise<void> | null = null;
 let hydratedAt = 0;
@@ -217,69 +226,162 @@ async function hydrateGudang(): Promise<void> {
   }
 }
 
-async function hydrateProjectOrders(): Promise<void> {
+// Toleran terhadap tabel yang belum ada: modul lain tidak boleh gagal hydrate
+// hanya karena migrasi gudang inventaris belum dijalankan.
+async function hydrateGudangInventory(): Promise<void> {
   if (!db) return;
-  const orderRows = await readRows(db.from("project_orders").select("*"));
-  const itemRows = await readRows(
-    db
-      .from("project_order_items")
-      .select("project_order_id, gudang_item_id, sku, jenis_barang, merek, warna, satuan, quantity"),
-  );
 
-  const itemsByOrder = new Map<string, ProjectOrderItem[]>();
-  for (const row of itemRows) {
-    const list = itemsByOrder.get(row.project_order_id) ?? [];
-    list.push({
-      gudangItemId: row.gudang_item_id,
-      sku: row.sku,
-      jenisBarang: row.jenis_barang,
-      merek: row.merek ?? "",
-      warna: row.warna ?? "",
-      satuan: row.satuan ?? "",
-      quantity: row.quantity,
+  try {
+    await hydrateGudangInventoryTables();
+  } catch (error) {
+    console.error("[supabase] gagal hydrate gudang inventaris:", error);
+  }
+}
+
+async function hydrateGudangInventoryTables(): Promise<void> {
+  if (!db) return;
+
+  const categoryRows = await readRows(db.from("gudang_categories").select("*"));
+  gudangCategories.clear();
+  for (const row of categoryRows) {
+    gudangCategories.set(row.id, {
+      id: row.id,
+      name: row.name,
+      createdAt: row.created_at ?? "",
     });
-    itemsByOrder.set(row.project_order_id, list);
+  }
+  if (categoryRows.length === 0) seedDefaultCategories();
+
+  const itemRows = await readRows(db.from("gudang_inventory_items").select("*"));
+  gudangInventoryItems.clear();
+  for (const row of itemRows) {
+    gudangInventoryItems.set(row.id, {
+      id: row.id,
+      categoryId: row.category_id,
+      itemName: row.item_name,
+      brand: row.brand ?? "",
+      modelNo: row.model_no ?? "",
+      color: row.color ?? "",
+      rackGroup: row.rack_group ?? "",
+      subRow: row.sub_row ?? "",
+      currentStock: Number(row.current_stock),
+      createdAt: row.created_at ?? "",
+      updatedAt: row.updated_at ?? "",
+    });
   }
 
-  projectOrders.clear();
-  for (const row of orderRows) {
-      const order: ProjectOrder = {
-        id: row.id,
-        requestId: row.request_id ?? undefined,
-        namaProyek: row.nama_proyek,
-        pelanggan: row.pelanggan,
-        perusahaan: row.perusahaan ?? undefined,
-        telepon: row.telepon ?? undefined,
-        catatan: row.catatan ?? undefined,
-        items: itemsByOrder.get(row.id) ?? [],
-        totalQuantity: row.total_quantity,
-        status: row.status,
-        createdAt: row.created_at,
-        updatedAt: row.updated_at,
-        processedAt: row.processed_at ?? undefined,
-        completedAt: row.completed_at ?? undefined,
-      };
-      projectOrders.set(order.id, order);
+  const inRows = await readRows(db.from("gudang_in_transactions").select("*"));
+  gudangInTransactions.clear();
+  for (const row of inRows) {
+    gudangInTransactions.set(row.id, {
+      id: row.id,
+      transactionDate: row.transaction_date,
+      categoryId: row.category_id,
+      itemId: row.item_id,
+      quantity: Number(row.quantity),
+      createdBy: row.created_by ?? "",
+      createdAt: row.created_at ?? "",
+    });
+  }
+
+  const outRows = await readRows(db.from("gudang_out_transactions").select("*"));
+  gudangOutTransactions.clear();
+  for (const row of outRows) {
+    gudangOutTransactions.set(row.id, {
+      id: row.id,
+      transactionDate: row.transaction_date,
+      categoryId: row.category_id,
+      itemId: row.item_id,
+      projectId: row.project_id ?? null,
+      projectName: row.project_name ?? "",
+      source: row.source === "produksi" ? "produksi" : "manual",
+      quantity: Number(row.quantity),
+      createdBy: row.created_by ?? "",
+      createdAt: row.created_at ?? "",
+    });
+  }
+
+  const requestRows = await readRows(
+    db.from("gudang_production_requests").select("*"),
+  );
+  const requestItemRows = await readRows(
+    db.from("gudang_production_request_items").select("*"),
+  );
+  const requestItemsByRequest = new Map<string, ProductionRequestItem[]>();
+  for (const row of requestItemRows) {
+    const list = requestItemsByRequest.get(row.request_id) ?? [];
+    list.push({
+      id: row.id,
+      itemId: row.item_id ?? null,
+      categoryId: row.category_id ?? "",
+      categoryName: row.category_name ?? "",
+      itemName: row.item_name ?? "",
+      modelNo: row.model_no ?? "",
+      brand: row.brand ?? "",
+      color: row.color ?? "",
+      rackGroup: row.rack_group ?? "",
+      subRow: row.sub_row ?? "",
+      quantity: Number(row.quantity),
+    });
+    requestItemsByRequest.set(row.request_id, list);
+  }
+  productionRequests.clear();
+  for (const row of requestRows) {
+    productionRequests.set(row.id, {
+      id: row.id,
+      requestDate: row.request_date,
+      spkRef: row.spk_ref ?? "",
+      spkLabel: row.spk_label ?? "",
+      requesterName: row.requester_name ?? "",
+      note: row.note ?? "",
+      status: row.status ?? "diajukan",
+      approvedBy: row.approved_by ?? undefined,
+      approvedAt: row.approved_at ?? undefined,
+      rejectReason: row.reject_reason ?? undefined,
+      items: requestItemsByRequest.get(row.id) ?? [],
+      createdAt: row.created_at ?? "",
+      updatedAt: row.updated_at ?? "",
+    });
   }
 }
 
 async function hydrateCustomRequests(): Promise<void> {
   if (!db) return;
   const rows = await readRows(db.from("custom_requests").select("*"));
+  const itemRows = await readRows(
+    db.from("custom_request_items").select("*"),
+  );
+  const itemsByRequest = new Map<string, CustomRequestItem[]>();
+  for (const row of itemRows) {
+    const list = itemsByRequest.get(row.request_id) ?? [];
+    list.push({
+      id: row.id,
+      name: row.name ?? "",
+      quantity: Number(row.quantity),
+      unit: row.unit ?? "pcs",
+      technicalNote: row.technical_note ?? "",
+      sortOrder: Number(row.sort_order ?? 0),
+    });
+    itemsByRequest.set(row.request_id, list);
+  }
   customRequests.clear();
   for (const row of rows) {
     const request: CustomRequest = {
       id: row.id,
       nama: row.nama,
+      kode: row.kode ?? undefined,
       perusahaan: row.perusahaan ?? undefined,
       email: row.email ?? undefined,
       telp: row.telp,
+      projectAddress: row.project_address ?? undefined,
       layanan: row.layanan,
       deskripsi: row.deskripsi,
-      dimensi: row.dimensi ?? undefined,
-      kuantitas: row.kuantitas ?? undefined,
       deadline: row.deadline ?? undefined,
+      rawImage: row.raw_image ?? undefined,
+      rawImageName: row.raw_image_name ?? undefined,
+      source: row.source === "MANUAL" ? "MANUAL" : "WEBSITE_JASA_CUSTOM",
       status: row.status,
+      items: itemsByRequest.get(row.id) ?? [],
       createdAt: row.created_at,
       updatedAt: row.updated_at,
     };
@@ -454,7 +556,7 @@ export function ensureHydrated(): Promise<void> {
         await hydrateProducts();
         await hydrateOrders();
         await hydrateGudang();
-        await hydrateProjectOrders();
+        await hydrateGudangInventory();
         await hydrateCustomRequests();
         await hydrateKas();
         await hydratePenagihan();

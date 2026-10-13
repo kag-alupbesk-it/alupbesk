@@ -7,8 +7,6 @@ import { useSidebar } from "../SidebarProvider/SidebarProvider";
 
 const BOTTOM_NAV = [
   { href: "/gudang", label: "Gudang", icon: "inventory_2" },
-  { href: "/gudang/pesanan", label: "Pesanan", icon: "assignment" },
-  { href: "/gudang/pesanan-proyek", label: "Proyek", icon: "apartment" },
 ];
 
 export default function GudangShell({ children }: { children: React.ReactNode }) {
