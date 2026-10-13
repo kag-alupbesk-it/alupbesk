@@ -7,12 +7,14 @@ import { clsx } from "clsx";
 import {
   ClipboardCheck,
   FilePlus2,
+  Inbox,
   LayoutDashboard,
   X,
   type LucideIcon,
 } from "lucide-react";
 import { usePMOrders } from "../../../context/PMOrderContext/PMOrderContext";
 import { needsDrawingApproval } from "../../../orderStatus/orderStatus";
+import { useCustomRequests } from "@/frontend/shared/customRequests/useCustomRequests";
 import { usePMSidebar } from "../PMSidebarProvider/PMSidebarProvider";
 
 interface NavigationItem {
@@ -26,10 +28,13 @@ export function PMSidebar() {
   const pathname = getRolePagePath(usePathname());
   const { open, close, desktopOpen } = usePMSidebar();
   const { orders } = usePMOrders();
+  const { data: customRequests } = useCustomRequests();
   const pendingApproval = orders.filter(needsDrawingApproval).length;
+  const pendingCustom = customRequests.filter((request) => request.status !== "accepted" && request.status !== "rejected").length;
 
   const navigation: NavigationItem[] = [
     { href: "/pm", label: "Overview", icon: LayoutDashboard },
+    { href: "/pm/pesanan", label: "Pesanan Masuk", icon: Inbox, badge: pendingCustom },
     { href: "/pm/approval", label: "Approval Gambar", icon: ClipboardCheck, badge: pendingApproval },
   ];
 
