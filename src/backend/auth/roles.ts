@@ -37,6 +37,8 @@ function ownerReadOnly(role: string, pathname: string, method: string): boolean 
     isDivisionPath(pathname) ||
     // Modul "Pesanan Masuk" Owner bersifat pemantau: baca saja, tanpa mutasi.
     matchesPath(pathname, "/api/owner/orders") ||
+    // Request custom juga pemantauan: Owner tidak mengubah status.
+    matchesPath(pathname, "/api/custom") ||
     // Endpoint manager: keputusan order & CRUD user. Owner punya kanal sendiri
     // (`/api/owner/users`, `/api/owner/role-requests`), jadi tulisan di sini ditutup.
     matchesPath(pathname, "/api/manager") ||
@@ -59,10 +61,15 @@ export function roleCanAccess(
   if (ownerReadOnly(role, path, method)) return false;
 
   if (matchesPath(path, "/api/upload")) {
-    return role === "marketing" || elevated;
+    // Marketing unggah gambar konten; PM (proyek) unggah gambar mentah
+    // kontraktor saat membuat order.
+    return role === "marketing" || role === "proyek" || elevated;
   }
   if (matchesPath(path, "/api/custom")) {
-    return method === "POST" || role === "marketing" || elevated;
+    // Form publik selalu boleh kirim POST. Baca & ubah status: marketing,
+    // PM (proyek), manager, owner (owner read-only via ownerReadOnly).
+    if (method === "POST") return true;
+    return role === "marketing" || role === "proyek" || elevated;
   }
   if (matchesPath(path, "/api/contact")) {
     return method === "POST" || role === "marketing" || elevated;
@@ -84,6 +91,8 @@ export function roleCanAccess(
     return role === "gudang" || elevated;
   }
   if (["/marketing", "/api/marketing"].some((prefix) => matchesPath(path, prefix))) {
+    // PM (proyek) hanya membaca order produk untuk Pesanan Masuk gabungan.
+    if (role === "proyek") return READ_ONLY_METHODS.has(method.toUpperCase());
     return role === "marketing" || elevated;
   }
   if (matchesPath(path, "/api/pm")) {
