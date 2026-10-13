@@ -1,7 +1,8 @@
 import { z } from "zod";
 import { db } from "@/services/supabase";
 import { readJsonBody } from "@/backend/http/readJsonBody";
-import { sendPushToRoles } from "@/services/push/send";
+import { checkRateLimit } from "@/backend/http/rateLimit";
+import { notifyVerifiedRoleRequest } from "@/backend/modules/roleRequests";
 
 export const dynamic = "force-dynamic";
 
@@ -28,21 +29,22 @@ function errorResponse(code: string, message: string, status: number) {
   return Response.json({ success: false, error: { code, message } }, { status });
 }
 
-function notifyOwner(name: string, role: string) {
-  void sendPushToRoles(["owner"], {
-    title: "Permintaan Role Baru",
-    body: `${name} mengajukan role ${role} dan menunggu persetujuan.`,
-    url: "/admin/owner",
-  });
-}
-
 export async function POST(request: Request) {
+  if (checkRateLimit(request, 5, 15 * 60_000).limited) {
+    return errorResponse("RATE_LIMITED", "Terlalu banyak percobaan pendaftaran. Coba lagi nanti.", 429);
+  }
   const parsed = registerSchema.safeParse(await readJsonBody(request));
   if (!parsed.success) {
     return errorResponse("INVALID_REGISTRATION", "Data pendaftaran tidak valid.", 400);
   }
+  const registration = parsed.data;
   if (!db) {
     return errorResponse("DATABASE_UNAVAILABLE", "Pendaftaran belum dapat diproses.", 503);
+  }
+
+  const { data: authUser, error: authLookupError } = await db.auth.admin.getUserById(parsed.data.userId);
+  if (authLookupError || !authUser.user || authUser.user.email?.toLowerCase() !== parsed.data.email.toLowerCase()) {
+    return errorResponse("AUTH_USER_NOT_FOUND", "Akun Auth pendaftaran tidak ditemukan.", 400);
   }
 
   const email = parsed.data.email.toLowerCase();
@@ -54,6 +56,23 @@ export async function POST(request: Request) {
     status: "PENDING",
     active: false,
   };
+
+  async function ensurePendingRoleRequest(profileId: string) {
+    const { data: pendingRequest, error: requestLookupError } = await db!
+      .from("role_requests")
+      .select("id")
+      .eq("auth_user_id", registration.userId)
+      .eq("status", "PENDING")
+      .maybeSingle();
+    if (requestLookupError) throw requestLookupError;
+    if (pendingRequest) return;
+    const { error: requestInsertError } = await db!.from("role_requests").insert({
+      auth_user_id: registration.userId,
+      profile_id: profileId,
+      requested_role: registration.role,
+    });
+    if (requestInsertError) throw requestInsertError;
+  }
 
   try {
     const { data: existing, error: lookupError } = await db
@@ -70,7 +89,8 @@ export async function POST(request: Request) {
     if (existing) {
       const { error } = await db.from("users").update(profile).eq("id", existing.id);
       if (error) throw error;
-      notifyOwner(parsed.data.name, parsed.data.role);
+      await ensurePendingRoleRequest(existing.id);
+      if (authUser.user.email_confirmed_at) await notifyVerifiedRoleRequest(parsed.data.userId);
       return Response.json({ success: true, data: { id: existing.id, status: "PENDING" } });
     }
 
@@ -80,8 +100,8 @@ export async function POST(request: Request) {
       .select("id")
       .single();
     if (insertError) throw insertError;
-
-    notifyOwner(parsed.data.name, parsed.data.role);
+    await ensurePendingRoleRequest(created.id);
+    if (authUser.user.email_confirmed_at) await notifyVerifiedRoleRequest(parsed.data.userId);
 
     return Response.json(
       { success: true, data: { id: created.id, status: "PENDING" } },

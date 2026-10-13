@@ -10,13 +10,13 @@ export function LanguageSwitcher({ className = "" }: { className?: string }) {
   }
 
   return (
-    <label className={`inline-flex min-h-10 items-center rounded-full border border-outline/30 bg-surface-container/70 px-3 ${className}`}>
-      <span className="sr-only">{t("language")}</span>
+    <label title={t("language")} className={`relative inline-flex h-9 w-9 cursor-pointer items-center justify-center rounded-full border border-outline/30 bg-surface-container/70 text-on-surface-variant hover:text-secondary ${className}`}>
+      <span aria-hidden="true" className="material-symbols-outlined text-[19px]">translate</span>
       <select
         aria-label={t("language")}
         value={language}
         onChange={(event) => handleLanguageChange(event.currentTarget.value)}
-        className="min-h-9 cursor-pointer border-0 bg-transparent py-1 pl-1 pr-2 text-xs font-bold text-on-surface outline-none focus:ring-0"
+        className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
       >
         <option className="bg-surface text-on-surface" value="en">
           English

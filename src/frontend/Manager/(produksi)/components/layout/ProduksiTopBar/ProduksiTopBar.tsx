@@ -5,6 +5,7 @@ import { getRolePagePath } from "@/frontend/shared/navigation/getRolePagePath";
 import { Menu, PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import { useProduksiSidebar } from "../ProduksiSidebarProvider/ProduksiSidebarProvider";
 import ThemeToggle from "@/app/ThemeToggle";
+import NotificationBell from "@/frontend/(owner)/components/layout/TopBar/NotificationBell";
 import { LogoutButton } from "@/frontend/auth/LogoutButton";
 
 function getPageTitle(pathname: string) {
@@ -52,6 +53,7 @@ export function ProduksiTopBar() {
       </div>
 
       <div className="ml-auto flex items-center gap-3">
+        <NotificationBell />
         <ThemeToggle />
         <LogoutButton />
         <div className="flex items-center gap-2.5">

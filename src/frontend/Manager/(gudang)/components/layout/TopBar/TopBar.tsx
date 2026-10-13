@@ -3,6 +3,7 @@
 import { clsx } from "clsx";
 import { useSidebar } from "../SidebarProvider/SidebarProvider";
 import ThemeToggle from "@/app/ThemeToggle";
+import NotificationBell from "@/frontend/(owner)/components/layout/TopBar/NotificationBell";
 import { LogoutButton } from "@/frontend/auth/LogoutButton";
 
 export default function TopBar({ title }: { title: string }) {
@@ -46,10 +47,7 @@ export default function TopBar({ title }: { title: string }) {
             type="text"
           />
         </div>
-        <button className="text-on-surface-variant hover:text-secondary transition-colors relative">
-          <span className="material-symbols-outlined text-[18px] lg:text-[20px]">notifications</span>
-          <span className="absolute top-0 right-0 w-1.5 h-1.5 bg-secondary rounded-full animate-pulse" />
-        </button>
+        <NotificationBell />
         {/* ── Theme toggle ── */}
         <ThemeToggle />
         <LogoutButton />

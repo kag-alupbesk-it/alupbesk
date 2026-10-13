@@ -2,6 +2,8 @@ import { useCallback } from "react";
 import { contentApi } from "@/services/api/index";
 import { usePollingResource } from "@/frontend/shared/hooks/usePollingResource";
 import { customStyles as styles } from "../../style/style";
+import { CaptchaChallenge } from "@/frontend/auth/CaptchaChallenge";
+import { useLanguage } from "@/frontend/shared/i18n/LanguageProvider";
 
 interface CustomSidebarContent {
   steps: string[];
@@ -18,6 +20,10 @@ export default function RequestSidebar({
   hasService,
   hasDescription,
   hasDeadline,
+  hasCaptcha,
+  captchaVersion,
+  onCaptchaVerify,
+  onCaptchaReset,
 }: {
   isValid: boolean;
   onSubmit: () => void;
@@ -28,15 +34,26 @@ export default function RequestSidebar({
   hasService: boolean;
   hasDescription: boolean;
   hasDeadline: boolean;
+  hasCaptcha: boolean;
+  captchaVersion: number;
+  onCaptchaVerify: (token: string) => void;
+  onCaptchaReset: () => void;
 }) {
+  const { language } = useLanguage();
   const loadContent = useCallback(async (): Promise<CustomSidebarContent> => {
     const [stepsContent, capacityContent] = await Promise.all([
       contentApi.getSiteContent("custom_steps"),
       contentApi.getSiteContent("custom_capacities"),
     ]);
 
-    const steps = stepsContent.value.steps;
-    const capacities = capacityContent.value.capacities;
+    const stepsValue = stepsContent.value.id && typeof stepsContent.value.id === "object"
+      ? (stepsContent.value[language] as typeof stepsContent.value | undefined) ?? stepsContent.value.id as typeof stepsContent.value
+      : stepsContent.value;
+    const capacitiesValue = capacityContent.value.id && typeof capacityContent.value.id === "object"
+      ? (capacityContent.value[language] as typeof capacityContent.value | undefined) ?? capacityContent.value.id as typeof capacityContent.value
+      : capacityContent.value;
+    const steps = stepsValue.steps;
+    const capacities = capacitiesValue.capacities;
 
     return {
       steps: Array.isArray(steps) ? steps.filter((step): step is string => typeof step === "string") : [],
@@ -51,7 +68,7 @@ export default function RequestSidebar({
           )
         : [],
     };
-  }, []);
+  }, [language]);
   const { data: content, loading, error } = usePollingResource<CustomSidebarContent>(
     loadContent,
     { steps: [], capacities: [] },
@@ -64,6 +81,7 @@ export default function RequestSidebar({
     [itemsCount > 0, "Minimal satu item spesifikasi"],
     [hasDeadline, "Target deadline ditentukan"],
     [hasDescription, "Deskripsi kebutuhan lengkap"],
+    [hasCaptcha, "Verifikasi keamanan selesai"],
   ];
 
   return (
@@ -106,6 +124,8 @@ export default function RequestSidebar({
             ))}
           </div>
         </div>
+
+        <CaptchaChallenge key={captchaVersion} onVerify={onCaptchaVerify} onReset={onCaptchaReset} />
 
         <button
           onClick={onSubmit}

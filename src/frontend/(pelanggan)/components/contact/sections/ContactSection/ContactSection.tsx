@@ -1,22 +1,31 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useCallback, useState, type FormEvent } from "react";
 import ContactDetail from "../../../shared/ContactDetail/ContactDetail";
 import FormField from "../../../shared/FormField/FormField";
 import { contactDefaults } from "@/frontend/(pelanggan)/data/siteContentDefaults";
 import { usePublicSiteContent } from "@/frontend/(pelanggan)/hooks/usePublicSiteContent";
 import { contactApi } from "@/services/api/index";
 import { useLanguage } from "@/frontend/shared/i18n/LanguageProvider";
+import { catalogApi } from "@/services/api";
+import type { Product } from "@/services/catalog";
+import { usePollingResource } from "@/frontend/shared/hooks/usePollingResource";
+import { CaptchaChallenge } from "@/frontend/auth/CaptchaChallenge";
 
 const emptyForm = { name: "", email: "", category: "", message: "" };
 
 export default function ContactSection() {
   const { t } = useLanguage();
   const { data: contact } = usePublicSiteContent("contact", contactDefaults);
+  const loadProducts = useCallback(() => catalogApi.getProducts(), []);
+  const { data: products } = usePollingResource<Product[]>(loadProducts, []);
+  const productCategories = [...new Set(products.map((product) => product.category.trim()).filter(Boolean))].sort((a, b) => a.localeCompare(b));
   const [form, setForm] = useState(emptyForm);
   const [pending, setPending] = useState(false);
   const [notice, setNotice] = useState("");
   const [error, setError] = useState("");
+  const [captchaToken, setCaptchaToken] = useState("");
+  const [captchaVersion, setCaptchaVersion] = useState(0);
 
   const submitMessage = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -25,13 +34,15 @@ export default function ContactSection() {
     setNotice("");
     setError("");
     try {
-      await contactApi.createMessage(form);
+      await contactApi.createMessage({ ...form, captchaToken });
       setForm(emptyForm);
       setNotice(t("messageSent"));
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : t("sendFailed"));
     } finally {
       setPending(false);
+      setCaptchaToken("");
+      setCaptchaVersion((version) => version + 1);
     }
   };
 
@@ -42,10 +53,10 @@ export default function ContactSection() {
           <div className="flex flex-col justify-between bg-primary p-12 text-on-primary lg:w-2/5">
             <div>
               <h2 className="text-headline-h1 font-headline-h1 mb-6">
-                {contact.title === contactDefaults.title ? t("contactTitle") : contact.title}
+                {contact.title}
               </h2>
               <p className="text-on-primary/70 mb-12">
-                {contact.subtitle === contactDefaults.subtitle ? t("contactSubtitle") : contact.subtitle}
+                {contact.subtitle}
               </p>
               <div className="space-y-8">
                 <ContactDetail
@@ -122,10 +133,8 @@ export default function ContactSection() {
                   className="w-full rounded-xl border border-outline/30 bg-surface-container p-4 text-on-surface focus:border-secondary focus:outline-none"
                 >
                   <option value="" className="bg-surface-container text-on-surface">{t("chooseCategory")}</option>
-                  <option value="Profil Ekstrusi" className="bg-surface-container text-on-surface">{t("extrusionProfile")}</option>
-                  <option value="Linear Motion" className="bg-surface-container text-on-surface">Linear Motion</option>
-                  <option value="Aksesoris Framing" className="bg-surface-container text-on-surface">{t("framingAccessories")}</option>
-                  <option value="Lainnya" className="bg-surface-container text-on-surface">{t("otherCategory")}</option>
+                  {productCategories.map((category) => <option key={category} value={category} className="bg-surface-container text-on-surface">{category}</option>)}
+                  {!productCategories.includes("Lainnya") && <option value="Lainnya" className="bg-surface-container text-on-surface">{t("otherCategory")}</option>}
                 </select>
               </label>
               <label className="block space-y-2">
@@ -142,6 +151,7 @@ export default function ContactSection() {
                   onChange={(event) => setForm((current) => ({ ...current, message: event.target.value }))}
                 />
               </label>
+              <CaptchaChallenge key={captchaVersion} onVerify={setCaptchaToken} onReset={() => setCaptchaToken("")} />
               <button
                 className="flex w-full items-center justify-center gap-2 rounded-xl bg-secondary py-4 font-bold text-primary transition-all hover:bg-secondary-800"
                 type="submit"

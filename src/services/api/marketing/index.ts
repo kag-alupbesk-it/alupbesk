@@ -2,6 +2,7 @@ import type { MarketingBanner, MarketingBannerInput, MarketingOrder, MarketingPr
 import { request } from "../request";
 export const marketingApi = {
   getBanners: (): Promise<MarketingBanner[]> => request("/marketing/banners"),
+  getPublicBanners: (): Promise<MarketingBanner[]> => request("/public/marketing/banners"),
   createBanner: (input: MarketingBannerInput): Promise<MarketingBanner> => request("/marketing/banners", { method: "POST", body: JSON.stringify(input) }),
   updateBanner: (id: string, input: MarketingBannerInput): Promise<MarketingBanner> => request(`/marketing/banners/${id}`, { method: "PUT", body: JSON.stringify(input) }),
   deleteBanner: (id: string): Promise<void> => request(`/marketing/banners/${id}`, { method: "DELETE" }),

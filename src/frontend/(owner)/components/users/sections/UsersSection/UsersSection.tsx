@@ -50,7 +50,7 @@ export default function UsersSection() {
       .channel("owner-role-requests")
       .on(
         "postgres_changes",
-        { event: "*", schema: "public", table: "users" },
+        { event: "*", schema: "public", table: "role_requests" },
         () => void refetchRoleRequests(),
       )
       .subscribe();
@@ -67,10 +67,7 @@ export default function UsersSection() {
     setReviewingRequestId(request.id);
     setReviewError("");
     try {
-      await decideRoleRequest(request.id, decision, {
-        role: request.requestedRole,
-        dept: request.department,
-      });
+      await decideRoleRequest(request.id, decision);
       await Promise.all([refetchRoleRequests(), refetchUsers()]);
     } catch (reason) {
       setReviewError(reason instanceof Error ? reason.message : "Permintaan role gagal diproses.");
@@ -141,6 +138,9 @@ export default function UsersSection() {
                   <div className="min-w-0">
                     <p className="break-words text-sm font-bold text-on-surface">{request.name}</p>
                     <p className="break-all text-xs text-on-surface-variant">{request.email}</p>
+                    <span className={`mt-2 inline-flex rounded-full px-2.5 py-1 text-[10px] font-bold ${request.emailVerified ? "bg-emerald-500/10 text-emerald-500" : "bg-amber-500/10 text-amber-500"}`}>
+                      {request.emailVerified ? "Email terverifikasi" : "Email belum diverifikasi"}
+                    </span>
                     <p className="mt-1 break-words text-xs text-on-surface-variant">
                       {request.department || "Departemen belum diisi"}
                     </p>
@@ -163,11 +163,11 @@ export default function UsersSection() {
                   </button>
                   <button
                     type="button"
-                    disabled={reviewingRequestId !== null}
+                    disabled={reviewingRequestId !== null || !request.emailVerified}
                     onClick={() => void handleRoleDecision(request, "approve")}
                     className="min-h-11 rounded-xl bg-secondary px-4 text-xs font-bold text-primary disabled:opacity-50"
                   >
-                    {reviewingRequestId === request.id ? "Memproses..." : "Setujui role"}
+                    {reviewingRequestId === request.id ? "Memproses..." : request.emailVerified ? "Setujui role" : "Verifikasi email dahulu"}
                   </button>
                 </div>
               </article>

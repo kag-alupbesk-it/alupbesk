@@ -6,13 +6,12 @@ import { contentApi } from "@/services/api/index";
 import type { Partner } from "@/backend/modules/content/index";
 import { usePollingResource } from "@/frontend/shared/hooks/usePollingResource";
 import { useLanguage } from "@/frontend/shared/i18n/LanguageProvider";
-import { getFallbackPartners } from "../getFallbackPartners";
 
 export function PartnerCarousel() {
   const { t } = useLanguage();
   const loadPartners = useCallback(() => contentApi.getPartners(), []);
   const { data: partnerData, loading } = usePollingResource<Partner[]>(loadPartners, []);
-  const partners = (partnerData.length ? partnerData : getFallbackPartners()).filter((partner) => partner.active);
+  const partners = partnerData.filter((partner) => partner.active);
 
   if (loading && partners.length === 0) {
     return <div className="rounded-2xl border border-outline/20 bg-surface-container p-8 text-center text-sm text-on-surface/50">Memuat mitra...</div>;

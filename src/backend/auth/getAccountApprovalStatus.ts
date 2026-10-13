@@ -25,6 +25,7 @@ export async function getAccountApprovalStatus(): Promise<string | null> {
 
   const { data: { user }, error: authError } = await client.auth.getUser();
   if (authError || !user?.email) return null;
+  if (!user.email_confirmed_at) return "EMAIL_UNVERIFIED";
 
   const { data, error } = await db
     .from("users")

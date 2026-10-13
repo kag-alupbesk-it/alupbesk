@@ -7,21 +7,17 @@ import { heroDefaults } from "@/frontend/(pelanggan)/data/siteContentDefaults";
 import { usePollingResource } from "@/frontend/shared/hooks/usePollingResource";
 import { usePublicSiteContent } from "@/frontend/(pelanggan)/hooks/usePublicSiteContent";
 import { useLanguage } from "@/frontend/shared/i18n/LanguageProvider";
-
-function isWithinRange(banner: MarketingBanner): boolean {
-  if (banner.startDate && new Date(banner.startDate).getTime() > Date.now()) return false;
-  if (banner.endDate && new Date(banner.endDate).getTime() < Date.now()) return false;
-  return true;
-}
+import { contactDefaults } from "@/frontend/(pelanggan)/data/siteContentDefaults";
+import { getWhatsAppUrl } from "@/frontend/(pelanggan)/utils/getWhatsAppUrl";
 
 export default function HeroSection() {
   const { t } = useLanguage();
-  const loadBanners = useCallback(() => marketingApi.getBanners(), []);
+  const loadBanners = useCallback(() => marketingApi.getPublicBanners(), []);
   const { data: bannerData } = usePollingResource<MarketingBanner[]>(loadBanners, []);
   const { data: hero } = usePublicSiteContent("hero", heroDefaults);
-  const banners = bannerData
-    .filter((banner) => banner.active && isWithinRange(banner))
-    .sort((left, right) => left.order - right.order);
+  const { data: contact } = usePublicSiteContent("contact", contactDefaults);
+  const whatsappUrl = getWhatsAppUrl(contact.whatsapp) ?? "#kontak";
+  const banners = bannerData;
   const [activeIndex, setActiveIndex] = useState(0);
   const safeActiveIndex = banners.length ? activeIndex % banners.length : 0;
 
@@ -49,24 +45,26 @@ export default function HeroSection() {
         <div className="relative z-10 max-w-container-max mx-auto px-margin-x-mobile md:px-margin-x-desktop grid lg:grid-cols-2 gap-12 items-center">
           <div className="space-y-8">
             <h1 className="text-display-hero-mobile md:text-display-hero font-display-hero text-on-surface leading-tight">
-              {hero.title === heroDefaults.title ? t("heroTitle") : hero.title}
+              {hero.title}
             </h1>
             <p className="text-on-surface-variant text-body-lg max-w-xl">
-              {hero.subtitle === heroDefaults.subtitle ? t("heroDescription") : hero.subtitle}
+              {hero.subtitle}
             </p>
             <div className="flex flex-col sm:flex-row gap-4 pt-4">
               <a
                 className="px-8 py-4 bg-secondary text-primary font-bold rounded-full flex items-center justify-center gap-2 hover:bg-secondary-fixed transition-all group"
                 href={hero.primaryLink || "#katalog"}
               >
-                {hero.primaryCta ? (hero.primaryCta === heroDefaults.primaryCta ? t("viewCatalog") : hero.primaryCta) : t("viewCatalog")}
+                {hero.primaryCta || t("viewCatalog")}
                 <span className="material-symbols-outlined group-hover:translate-x-1 transition-transform">
                   arrow_forward
                 </span>
               </a>
               <a
                 className="px-8 py-4 border border-on-surface text-on-surface font-bold rounded-full flex items-center justify-center gap-2 hover:bg-on-surface hover:text-primary-container transition-all"
-                href="#"
+                href={whatsappUrl}
+                target={whatsappUrl.startsWith("https://") ? "_blank" : undefined}
+                rel={whatsappUrl.startsWith("https://") ? "noreferrer" : undefined}
               >
                 <span className="material-symbols-outlined">chat</span>
                 {t("contactWhatsApp")}

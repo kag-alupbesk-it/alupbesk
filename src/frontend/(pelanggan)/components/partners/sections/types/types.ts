@@ -1,1 +1,1 @@
-export type { Partner } from "../data/data";
+export type { Partner } from "@/backend/modules/content";

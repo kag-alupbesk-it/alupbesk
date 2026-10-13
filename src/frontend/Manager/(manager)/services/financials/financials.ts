@@ -37,5 +37,8 @@ export interface FinancialsData {
 }
 
 export function fetchFinancialsData(period: Period = "monthly", opts?: { startDate?: string; endDate?: string }): Promise<FinancialsData> {
-  return request<FinancialsData>(`/manager/financials?period=${period}`);
+  const params = new URLSearchParams({ period });
+  if (opts?.startDate) params.set("startDate", opts.startDate);
+  if (opts?.endDate) params.set("endDate", opts.endDate);
+  return request<FinancialsData>(`/manager/financials?${params.toString()}`);
 }

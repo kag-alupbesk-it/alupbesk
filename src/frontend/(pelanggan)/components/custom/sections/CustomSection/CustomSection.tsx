@@ -26,6 +26,8 @@ export default function CustomSection() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
   const [whatsappHref, setWhatsappHref] = useState<string | null>(null);
+  const [captchaToken, setCaptchaToken] = useState("");
+  const [captchaVersion, setCaptchaVersion] = useState(0);
 
   const [imagePreview, setImagePreview] = useState<string | undefined>();
   const [imageName, setImageName] = useState("");
@@ -44,6 +46,7 @@ export default function CustomSection() {
       form.layanan &&
       form.deskripsi &&
       form.deadline &&
+      captchaToken &&
       validItems.length > 0 &&
       !isReadingImage,
   );
@@ -152,6 +155,7 @@ export default function CustomSection() {
         items,
         rawImage: imageUrl,
         rawImageName: uploadedImageName,
+        captchaToken,
       });
 
       const message = buildCustomRequestMessage(
@@ -174,6 +178,8 @@ export default function CustomSection() {
     } catch (error) {
       setSubmitError(error instanceof Error ? error.message : "Request gagal dikirim.");
     } finally {
+      setCaptchaToken("");
+      setCaptchaVersion((version) => version + 1);
       setIsSubmitting(false);
     }
   };
@@ -212,7 +218,7 @@ export default function CustomSection() {
               <RequestForm form={form} setForm={setForm} upload={upload} />
             </div>
 
-            <RequestSidebar isValid={isValid} onSubmit={submit} checking={isSubmitting} itemsCount={validItems.length} hasName={Boolean(form.nama)} hasPhone={Boolean(form.telp)} hasService={Boolean(form.layanan)} hasDescription={Boolean(form.deskripsi)} hasDeadline={Boolean(form.deadline)} />
+            <RequestSidebar captchaVersion={captchaVersion} isValid={isValid} onSubmit={submit} checking={isSubmitting} itemsCount={validItems.length} hasName={Boolean(form.nama)} hasPhone={Boolean(form.telp)} hasService={Boolean(form.layanan)} hasDescription={Boolean(form.deskripsi)} hasDeadline={Boolean(form.deadline)} hasCaptcha={Boolean(captchaToken)} onCaptchaVerify={setCaptchaToken} onCaptchaReset={() => setCaptchaToken("")} />
             {submitError && <p className="text-sm text-red-400 sm:col-span-2">{submitError}</p>}
           </div>
         )}

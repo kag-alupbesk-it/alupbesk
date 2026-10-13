@@ -77,7 +77,7 @@ export async function exportCashflowToExcel(transaksi?: TransaksiKas[]) {
     };
   }
 
-  let dataRowStart = 6;
+  const dataRowStart = 6;
   let currentRow = 6;
   worksheet.getCell(`B${currentRow}`).value = new Date(sorted[0]?.tanggal || new Date());
   worksheet.getCell(`B${currentRow}`).numFmt = "DD/MM/YYYY";
@@ -94,7 +94,7 @@ export async function exportCashflowToExcel(transaksi?: TransaksiKas[]) {
     worksheet.getCell(`E${r}`).value = trx.jenis === "kas_masuk" ? "Kas Masuk" : trx.jenis === "kas_keluar" ? "Kas Keluar" : "Kas Beredar";
     worksheet.getCell(`F${r}`).value = trx.uraian;
     worksheet.getCell(`G${r}`).value = trx.person || "";
-    worksheet.getCell(`H${r}`).value = (trx as any).accountCode || trx.kategori || "";
+    worksheet.getCell(`H${r}`).value = trx.kategori || "";
     worksheet.getCell(`L${r}`).value = trx.posProyek || trx.kategori || "";
     
     if (trx.jenis === "kas_masuk") {
@@ -188,7 +188,7 @@ export async function exportCashflowToExcel(transaksi?: TransaksiKas[]) {
   } else {
     filename = `CASHFLOW_${monthYearLabel.replace(/\s+/g, "_")}.xlsx`;
   }
-  const blob = new Blob([buffer as any], {
+  const blob = new Blob([buffer as BlobPart], {
     type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
   });
   const url = window.URL.createObjectURL(blob);

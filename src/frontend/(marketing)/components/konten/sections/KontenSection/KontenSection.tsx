@@ -27,7 +27,7 @@ export default function KontenSection() {
     <div>
       <div className="px-10 pt-10">
         <h3 className={s.title}>Kelola Konten Website</h3>
-        <p className={s.subtitle}>Kelola mitra, FAQ, layanan custom, konten statis, dan portofolio untuk halaman depan publik.</p>
+        <p className={s.subtitle}>Kelola mitra, FAQ, layanan custom, konten website, dan portofolio untuk halaman publik.</p>
         <nav className={`${s.tabs} mt-6`}>
           {tabs.map((t) => (
             <button

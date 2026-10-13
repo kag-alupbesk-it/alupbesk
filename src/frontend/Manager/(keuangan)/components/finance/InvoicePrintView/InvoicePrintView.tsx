@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useFinance } from "../FinanceStore/FinanceStore";
 import type { Invoice } from "../types/types";
@@ -68,29 +67,14 @@ interface Props {
 }
 
 export function InvoicePrintView({ invoiceId }: Props) {
-  const { invoiceRingkas } = useFinance();
-  const [invoice, setInvoice] = useState<Invoice | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (invoiceRingkas.length === 0) return;
-    const found = invoiceRingkas.find((item) => item.invoice.id === invoiceId);
-    if (found) {
-      setInvoice(found.invoice);
-      setError(null);
-    } else {
-      setInvoice(null);
-      setError("Invoice tidak ditemukan.");
-    }
-    setLoading(false);
-  }, [invoiceId, invoiceRingkas]);
+  const { invoiceRingkas, loading } = useFinance();
+  const invoice = invoiceRingkas.find((item) => item.invoice.id === invoiceId)?.invoice;
 
   if (loading) return <div className="p-10 text-center text-xs text-on-surface-variant">Memuat invoice...</div>;
-  if (error || !invoice)
+  if (!invoice)
     return (
       <div className="p-10 text-center">
-        <div className="text-xs text-error mb-4">{error ?? "Data tidak ditemukan."}</div>
+        <div className="text-xs text-error mb-4">Invoice tidak ditemukan.</div>
         <Link href="/keuangan" className="text-xs font-bold text-secondary uppercase tracking-wide">
           ← Kembali ke Keuangan
         </Link>

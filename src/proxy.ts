@@ -154,6 +154,19 @@ function denied(request: NextRequest, api: boolean, status: 401 | 403) {
   return NextResponse.redirect(login);
 }
 
+function emailUnverified(request: NextRequest, api: boolean) {
+  if (api) {
+    return NextResponse.json(
+      { success: false, error: { code: "EMAIL_UNVERIFIED", message: "Verifikasi email sebelum melanjutkan." } },
+      { status: 403 },
+    );
+  }
+  const login = new URL("/admin/login", request.url);
+  login.searchParams.set("error", "email_unverified");
+  login.searchParams.set("next", request.nextUrl.pathname + request.nextUrl.search);
+  return NextResponse.redirect(login);
+}
+
 export async function proxy(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
   const api = pathname.startsWith("/api/");
@@ -233,6 +246,7 @@ export async function proxy(request: NextRequest) {
     error: authError,
   } = await supabase.auth.getUser();
   if (authError || !user?.email) return denied(request, api, 401);
+  if (!user.email_confirmed_at) return emailUnverified(request, api);
   const { data: profile, error: profileError } = await db
     .from("users")
     .select("role, active")

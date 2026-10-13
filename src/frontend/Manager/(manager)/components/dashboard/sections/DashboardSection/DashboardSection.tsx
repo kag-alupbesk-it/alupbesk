@@ -57,10 +57,7 @@ export default function DashboardSection() {
     setReviewingRequestId(registration.id);
     setActionError("");
     try {
-      await reviewRoleRequest(registration.id, decision, {
-        role: registration.requestedRole,
-        dept: registration.dept,
-      });
+      await reviewRoleRequest(registration.id, decision);
       await refetch();
     } catch (reason) {
       setActionError(reason instanceof Error ? reason.message : "Permintaan role gagal diproses.");

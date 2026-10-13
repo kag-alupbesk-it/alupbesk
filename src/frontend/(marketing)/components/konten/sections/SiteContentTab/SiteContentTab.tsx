@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import * as s from "../../style/style";
 import { contentApi } from "@/services/api";
 import FileUploadInput from "../../../shared/FileUploadInput/FileUploadInput";
+import type { Language } from "@/frontend/shared/i18n/translations";
 
 type HeroValue = { title: string; subtitle: string; imageUrl: string; primaryCta: string; primaryLink: string };
 type ProfileValue = { title: string; description1: string; description2: string; visionTitle: string; visionText: string; missionTitle: string; missionText: string; imageUrl: string; quote: string; quoteAuthor: string };
@@ -17,16 +18,21 @@ const emptyContact: ContactValue = { title: "", subtitle: "", address: "", email
 const emptySteps: StepsValue = { steps: [] };
 const emptyCapacities: CapacitiesValue = { capacities: [] };
 
-async function loadValue<T>(key: string, fallback: T): Promise<T> {
+async function loadValue<T>(key: string, fallback: T, language: Language): Promise<T> {
   try {
     const res = await contentApi.getSiteContent(key);
-    return (res.value as unknown as T) ?? fallback;
+    const value = res.value as Record<string, unknown>;
+    const localized = value["id"] && typeof value["id"] === "object"
+      ? (value[language] as Record<string, unknown> | undefined) ?? value.id as Record<string, unknown>
+      : value;
+    return (localized as T) ?? fallback;
   } catch {
     return fallback;
   }
 }
 
 export default function SiteContentTab() {
+  const [language, setLanguage] = useState<Language>("id");
   const [hero, setHero] = useState<HeroValue>(emptyHero);
   const [profile, setProfile] = useState<ProfileValue>(emptyProfile);
   const [contact, setContact] = useState<ContactValue>(emptyContact);
@@ -41,11 +47,11 @@ export default function SiteContentTab() {
     let active = true;
     (async () => {
       const [h, p, c, stepVal, capVal] = await Promise.all([
-        loadValue<HeroValue>("hero", emptyHero),
-        loadValue<ProfileValue>("profile", emptyProfile),
-        loadValue<ContactValue>("contact", emptyContact),
-        loadValue<StepsValue>("custom_steps", emptySteps),
-        loadValue<CapacitiesValue>("custom_capacities", emptyCapacities),
+        loadValue<HeroValue>("hero", emptyHero, language),
+        loadValue<ProfileValue>("profile", emptyProfile, language),
+        loadValue<ContactValue>("contact", emptyContact, language),
+        loadValue<StepsValue>("custom_steps", emptySteps, language),
+        loadValue<CapacitiesValue>("custom_capacities", emptyCapacities, language),
       ]);
       if (!active) return;
       setHero({ ...emptyHero, ...h });
@@ -59,14 +65,19 @@ export default function SiteContentTab() {
     return () => {
       active = false;
     };
-  }, []);
+  }, [language]);
 
   async function save(key: string, value: Record<string, unknown>) {
     setSavingKey(key);
     setError("");
     setNotice("");
     try {
-      await contentApi.saveSiteContent(key, value);
+      const current = await contentApi.getSiteContent(key);
+      const stored = current.value as Record<string, unknown>;
+      const localized = stored.id && typeof stored.id === "object"
+        ? { ...stored, [language]: value }
+        : { id: language === "id" ? value : stored, en: language === "en" ? value : stored };
+      await contentApi.saveSiteContent(key, localized);
       setNotice(`Konten "${key}" berhasil disimpan.`);
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : "Konten gagal disimpan.");
@@ -83,13 +94,21 @@ export default function SiteContentTab() {
     <div className={s.container}>
       <div className={s.header}>
         <div>
-          <h3 className={s.title}>Konten Statis Website</h3>
+          <h3 className={s.title}>Konten Website</h3>
           <p className={s.subtitle}>Kelola teks dan gambar untuk bagian Hero, Profil, Kontak, serta Alur &amp; Kapasitas pada halaman Jasa Custom.</p>
         </div>
       </div>
 
       {error && <p className="mb-4 text-sm text-red-400">{error}</p>}
       {notice && <p className="mb-4 text-sm text-emerald-400">{notice}</p>}
+
+      <div className="mb-6 flex gap-2" role="group" aria-label="Bahasa konten">
+        {(["id", "en"] as const).map((value) => (
+          <button key={value} type="button" onClick={() => setLanguage(value)} aria-pressed={language === value} className={`${s.saveButton} ${language !== value ? "opacity-60" : ""}`}>
+            {value === "id" ? "Bahasa Indonesia" : "English"}
+          </button>
+        ))}
+      </div>
 
       <div className="space-y-8">
         <section className={s.card}>

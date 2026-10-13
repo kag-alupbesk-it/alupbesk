@@ -12,6 +12,13 @@ export interface AuthenticatedProfile {
   active: boolean;
 }
 
+export class UnverifiedEmailError extends Error {
+  constructor() {
+    super("EMAIL_UNVERIFIED");
+    this.name = "UnverifiedEmailError";
+  }
+}
+
 export async function getAuthenticatedProfile(): Promise<AuthenticatedProfile | null> {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -34,6 +41,7 @@ export async function getAuthenticatedProfile(): Promise<AuthenticatedProfile | 
   });
   const { data: { user }, error: authError } = await client.auth.getUser();
   if (authError || !user?.email) return null;
+  if (!user.email_confirmed_at) throw new UnverifiedEmailError();
 
   const { data, error } = await db
     .from("users")

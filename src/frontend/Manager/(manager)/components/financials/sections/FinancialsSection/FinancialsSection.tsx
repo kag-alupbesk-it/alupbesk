@@ -257,24 +257,3 @@ export default function FinancialsSection() {
     </div>
   );
 }
-
-function formatDateForInput(date: Date) {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
-}
-
-function setPreset(type: string, setStart: (v: string) => void, setEnd: (v: string) => void) {
-  const now = new Date(); now.setHours(0,0,0,0);
-  if (type === "today") { const s=formatDateForInput(now); setStart(s); setEnd(s); return; }
-  if (type === "yesterday") { const d=new Date(now); d.setDate(d.getDate()-1); const s=formatDateForInput(d); setStart(s); setEnd(s); return; }
-  if (type === "thisWeek") { const d=new Date(now); const day=d.getDay(); const diff=day===0?6:day-1; const start=new Date(d); start.setDate(d.getDate()-diff); setStart(formatDateForInput(start)); setEnd(formatDateForInput(now)); return; }
-  if (type === "lastWeek") { const d=new Date(now); const day=d.getDay(); const diff=day===0?6:day-1; const end=new Date(d); end.setDate(d.getDate()-diff-1); const start=new Date(end); start.setDate(end.getDate()-6); setStart(formatDateForInput(start)); setEnd(formatDateForInput(end)); return; }
-  if (type === "thisMonth") { const start=new Date(now.getFullYear(), now.getMonth(),1); setStart(formatDateForInput(start)); setEnd(formatDateForInput(now)); return; }
-  if (type === "lastMonth") { const start=new Date(now.getFullYear(), now.getMonth()-1,1); const end=new Date(now.getFullYear(), now.getMonth(),0); setStart(formatDateForInput(start)); setEnd(formatDateForInput(end)); return; }
-  if (type === "last3Months") { const start=new Date(now.getFullYear(), now.getMonth()-3,1); const end=new Date(now.getFullYear(), now.getMonth(),0); setStart(formatDateForInput(start)); setEnd(formatDateForInput(end)); return; }
-  if (type === "last6Months") { const start=new Date(now.getFullYear(), now.getMonth()-6,1); const end=new Date(now.getFullYear(), now.getMonth(),0); setStart(formatDateForInput(start)); setEnd(formatDateForInput(end)); return; }
-  if (type === "thisYear") { const start=new Date(now.getFullYear(),0,1); setStart(formatDateForInput(start)); setEnd(formatDateForInput(now)); return; }
-  if (type === "lastYear") { const start=new Date(now.getFullYear()-1,0,1); const end=new Date(now.getFullYear()-1,11,31); setStart(formatDateForInput(start)); setEnd(formatDateForInput(end)); return; }
-}

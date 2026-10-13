@@ -14,7 +14,7 @@ export function InvoicePreviewModal({
   data: InvoiceRingkas;
   onTutup: () => void;
 }) {
-  const { lunasTermin, setToast } = useFinance();
+  const { lunasTermin } = useFinance();
   const readOnly = useReadOnly();
   const { invoice, totalTagihan, terbayar, sisaTagihan, jatuhTempo } = data;
 

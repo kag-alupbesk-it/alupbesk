@@ -8,6 +8,7 @@ export interface RoleRequest {
   department: string;
   requestedRole: AppRole;
   createdAt: string;
+  emailVerified: boolean;
 }
 
 export type RoleRequestDecision = "approve" | "reject";
