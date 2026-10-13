@@ -4,7 +4,6 @@ import { useEffect, useSyncExternalStore, useState, type FormEvent } from "react
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { getSupabaseBrowserClient } from "@/services/supabaseBrowser";
-import { request } from "@/services/api/request";
 import type { AuthenticatedProfile } from "@/backend/auth/getAuthenticatedProfile";
 import { roleCanAccess } from "@/backend/auth/roles";
 import { LanguageSwitcher } from "@/frontend/shared/i18n/LanguageSwitcher";
@@ -92,11 +91,14 @@ export function LoginForm() {
           setError(language === "en" ? "Enter the 4–6 digit code sent to your email." : "Masukkan kode 4–6 angka yang dikirim ke email Anda.");
           return;
         }
-        const { error: verifyError } = await supabase.auth.verifyOtp({
+        
+        // 1. Verifikasi OTP 6 digit
+        const { data: verifyData, error: verifyError } = await supabase.auth.verifyOtp({
           email: email.trim().toLowerCase(),
           token: code,
           type: "email",
         });
+        
         if (verifyError) {
           credentialsRejected = true;
           const nextStatus = attemptLimit.recordFailure(email);
@@ -104,7 +106,38 @@ export function LoginForm() {
           return;
         }
         attemptLimit.clear(email);
-        const profile = await request<AuthenticatedProfile>("/auth/profile");
+
+        // 2. Ambil ID user dari hasil verifikasi auth
+        const userId = verifyData.user?.id || (await supabase.auth.getUser()).data.user?.id;
+        if (!userId) {
+          setError(language === "en" ? "Active login session not found." : "Sesi login tidak aktif.");
+          return;
+        }
+
+        // 3. Ambil data profil dari tabel 'users' secara fleksibel (Cek kolom 'id' atau 'auth_uid')
+        let userRecord = null;
+
+        const { data: dataById } = await supabase
+          .from("users")
+          .select("*, roles(name)")
+          .eq("id", userId)
+          .maybeSingle();
+
+        if (dataById) {
+          userRecord = dataById;
+        } else {
+          const { data: dataByAuthUid } = await supabase
+            .from("users")
+            .select("*, roles(name)")
+            .eq("auth_uid", userId)
+            .maybeSingle();
+          userRecord = dataByAuthUid;
+        }
+
+        // Tentukan role dengan fallback aman ke "pelanggan" jika baris belum ada di database
+        const roleName = userRecord?.roles?.name || userRecord?.role || "pelanggan";
+        const profile = { role: roleName, ...(userRecord || {}) };
+
         void activatePushSubscription();
         const requestedPath = new URLSearchParams(window.location.search).get("next");
         const safeNext = requestedPath?.startsWith("/") && !requestedPath.startsWith("//") ? requestedPath : "";
