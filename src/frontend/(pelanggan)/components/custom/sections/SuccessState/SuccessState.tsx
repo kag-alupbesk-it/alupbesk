@@ -4,9 +4,11 @@ import { customStyles as styles } from "../../style/style";
 export default function SuccessState({
   onReset,
   whatsappHref,
+  requestId,
 }: {
   onReset: () => void;
   whatsappHref: string | null;
+  requestId: string | null;
 }) {
   return (
     <section className={styles.success}>
@@ -15,11 +17,19 @@ export default function SuccessState({
       </span>
 
       <h2 className="text-[24px] font-bold text-on-surface mb-3">
-        Permintaan Tersimpan!
+        Request Berhasil Dikirim!
       </h2>
 
       <p className="text-on-surface/50 text-sm max-w-md">
-        Permintaan tersimpan. Anda dapat melanjutkan percakapan dengan tim kami melalui WhatsApp.
+        Tim kami akan segera menghubungi Anda untuk diskusi lebih lanjut melalui WhatsApp.
+        {requestId && (
+          <>
+            <br />
+            <span className="text-on-surface/30 text-xs">
+              No. Request: {requestId.slice(0, 8)}
+            </span>
+          </>
+        )}
       </p>
 
       <div className="flex gap-3 mt-8">
