@@ -1,4 +1,4 @@
-import { GudangSection } from "@/frontend/Manager/(gudang)/components";
+import { InventorySection } from "@/frontend/Manager/(gudang)/components";
 
 export const metadata = {
   title: "Inventory | ALUPBESK Owner",
@@ -6,5 +6,5 @@ export const metadata = {
 };
 
 export default function Page() {
-  return <GudangSection initialItems={[]} />;
+  return <InventorySection />;
 }

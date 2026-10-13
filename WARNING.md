@@ -1,10 +1,10 @@
 # Pekerjaan lanjutan sebelum produksi
 
-Beberapa fitur sudah tersambung ke Supabase, tetapi deployment database belum bisa diverifikasi dari workspace ini. Terapkan skema dan migrasi sebelum memakai data operasional.
+Beberapa fitur sudah tersambung ke Supabase, tetapi deployment database belum bisa diverifikasi dari workspace ini. Terapkan skema sebelum memakai data operasional.
 
 ## Prioritas wajib
 
-1. Buat project Supabase, isi `.env.local` dari `.env.example`, lalu jalankan `database/schema.sql` untuk database baru atau jalankan migrasi yang belum diterapkan dari `database/migrations/` secara berurutan.
+1. Buat project Supabase, isi `.env.local` dari `.env.example`, lalu jalankan `database/schema.sql` di SQL Editor. File ini adalah skema final tunggal untuk seluruh database.
 2. Siapkan Owner pertama melalui `/owner-setup`: buat akun di Supabase Auth, lalu buat profil `owner` dengan email yang sama di `public.users`. Tidak ada pendaftaran Owner publik.
 3. Next Proxy sudah mewajibkan sesi aktif dan mencocokkan role untuk halaman operasional serta Route Handler berdasarkan prefix. Sebelum produksi, tambahkan pemeriksaan role di setiap handler dan proteksi untuk Express API; Express saat ini hanya bind ke loopback.
 4. Profil di `public.users` belum membuat atau mengelola identitas di `auth.users`; tambah/edit role hanya mengubah profil database.

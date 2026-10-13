@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { getRolePagePath } from "@/frontend/shared/navigation/getRolePagePath";
 import { clsx } from "clsx";
-import { Factory, FileUp, LayoutDashboard, X, type LucideIcon } from "lucide-react";
+import { Factory, FileUp, LayoutDashboard, PackageSearch, X, type LucideIcon } from "lucide-react";
 import { useProduksi } from "../../../context/ProduksiContext/ProduksiContext";
 import { alurSPK } from "../../../utils/alur/alur";
 import { useProduksiSidebar } from "../ProduksiSidebarProvider/ProduksiSidebarProvider";
@@ -24,6 +24,7 @@ export function ProduksiSidebar() {
   const navigation: NavigationItem[] = [
     { href: "/produksi", label: "Antrean Produksi", icon: LayoutDashboard },
     { href: "/produksi/drawings", label: "Upload Gambar Teknik", icon: FileUp, badge: spkPerluGambar.length },
+    { href: "/produksi/permintaan", label: "Permintaan Material", icon: PackageSearch },
   ];
 
   // Detail SPK tidak punya halaman daftar sendiri, jadi itemnya ditandai aktif

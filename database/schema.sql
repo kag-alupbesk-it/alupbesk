@@ -1,39 +1,49 @@
 -- =====================================================================
--- ALUPBESK — Database Schema (PostgreSQL / Supabase)
--- Skema ini memetakan seluruh entitas yang saat ini disimpan in-memory
--- (src/services/* dan src/backend/modules/*/store.ts) ke tabel relasional.
+-- ALUPBESK — Database Schema Final (PostgreSQL / Supabase)
+-- Skema tunggal untuk seluruh entitas aplikasi.
+-- Jalankan SELURUH file ini sekali di Supabase Dashboard > SQL Editor.
+-- Bersifat idempotent: aman dijalankan pada database baru maupun pada
+-- database yang sudah berisi sebagian tabel (tabel/enum yang ada dilewati,
+-- kolom baru ditambahkan bila belum ada).
 -- =====================================================================
 
 -- ---------------------------------------------------------------------
 -- 1. USERS — pengguna sistem (role sesuai folder frontend)
 -- ---------------------------------------------------------------------
-create type user_role as enum (
-    'pelanggan',
-    'marketing',
-    'gudang',
-    'keuangan',
-    'proyek',
-    'field',
-    'produksi',
-    'manager',
-    'owner'
-);
+do $$ begin
+    create type user_role as enum (
+        'pelanggan',
+        'marketing',
+        'gudang',
+        'keuangan',
+        'proyek',
+        'field',
+        'produksi',
+        'manager',
+        'owner'
+    );
+exception when duplicate_object then null; end $$;
 
-create table users (
+-- Pastikan role operasional tersedia pada database yang sudah ada.
+alter type user_role add value if not exists 'proyek';
+alter type user_role add value if not exists 'field';
+alter type user_role add value if not exists 'produksi';
+
+create table if not exists users (
     id          uuid primary key default gen_random_uuid(),
     name        text not null,
     email       text unique,
     phone       text,
     dept        text,                -- departemen/layanan
     role        user_role not null default 'pelanggan',
-    status      text not null default 'ACTIVE', -- ACTIVE | INACTIVE | PENDING
+    status      text not null default 'ACTIVE', -- ACTIVE | PENDING | SUSPENDED | INACTIVE
     active      boolean not null default true,
     created_at  timestamptz not null default now()
 );
 
 alter table users enable row level security;
 
-create table role_requests (
+create table if not exists role_requests (
     id              uuid primary key default gen_random_uuid(),
     auth_user_id    uuid not null references auth.users(id) on delete cascade,
     profile_id      uuid not null references users(id) on delete cascade,
@@ -45,10 +55,10 @@ create table role_requests (
     created_at      timestamptz not null default now()
 );
 
-create index idx_role_requests_pending
+create index if not exists idx_role_requests_pending
     on role_requests(created_at desc)
     where status = 'PENDING';
-create unique index idx_role_requests_one_pending_per_user
+create unique index if not exists idx_role_requests_one_pending_per_user
     on role_requests(auth_user_id)
     where status = 'PENDING';
 alter table role_requests enable row level security;
@@ -56,7 +66,7 @@ alter table role_requests enable row level security;
 -- ---------------------------------------------------------------------
 -- 2. PRODUCTS — katalog produk (dikelola divisi marketing, stok di gudang)
 -- ---------------------------------------------------------------------
-create table products (
+create table if not exists products (
     id          serial primary key,
     sku         text unique not null,          -- dipakai sebagai kunci relasi ke gudang_items
     category    text not null,
@@ -75,7 +85,7 @@ create table products (
 );
 
 -- Varian produk (Ukuran, Panjang, Warna) — dinormalisasi dari ProductVariant
-create table product_variants (
+create table if not exists product_variants (
     id          serial primary key,
     product_id  integer not null references products(id) on delete cascade,
     name        text not null,                 -- "Ukuran" | "Panjang" | "Warna"
@@ -86,20 +96,21 @@ create table product_variants (
 -- ---------------------------------------------------------------------
 -- 3. ORDERS + ORDER LINES — pesanan checkout pelanggan
 -- ---------------------------------------------------------------------
--- Status pesanan mengikuti alur: marketing → manager → gudang
-
+-- Status pesanan mengikuti alur: marketing → manager (gudang memproses bila perlu)
 -- (pending → submitted_to_manager → confirmed/rejected → processing → completed/cancelled)
-create type order_status as enum (
-    'pending',
-    'submitted_to_manager',
-    'confirmed',
-    'rejected_by_manager',
-    'processing',
-    'completed',
-    'cancelled'
-);
+do $$ begin
+    create type order_status as enum (
+        'pending',
+        'submitted_to_manager',
+        'confirmed',
+        'rejected_by_manager',
+        'processing',
+        'completed',
+        'cancelled'
+    );
+exception when duplicate_object then null; end $$;
 
-create table orders (
+create table if not exists orders (
     id                  text primary key,      -- format "ord-<random>"
     status              order_status not null default 'pending',
     customer_name       text not null,
@@ -118,7 +129,7 @@ create table orders (
 );
 
 -- Baris detail pesanan (OrderLine: snapshot title/harga saat pesanan dibuat)
-create table order_lines (
+create table if not exists order_lines (
     id          serial primary key,
     order_id    text not null references orders(id) on delete cascade,
     product_id  integer not null references products(id),
@@ -131,7 +142,7 @@ create table order_lines (
 );
 
 -- Riwayat perubahan status pesanan (untuk timeline / activity log)
-create table order_status_events (
+create table if not exists order_status_events (
     id          bigserial primary key,
     order_id    text not null references orders(id) on delete cascade,
     status      order_status not null,
@@ -139,11 +150,13 @@ create table order_status_events (
 );
 
 -- ---------------------------------------------------------------------
--- 4. CUSTOM REQUESTS — permintaan jasa custom (asal proyek & user manager)
+-- 4. CUSTOM REQUESTS — permintaan jasa custom
 -- ---------------------------------------------------------------------
-create type custom_request_status as enum ('submitted', 'reviewed', 'quoted', 'accepted', 'rejected');
+do $$ begin
+    create type custom_request_status as enum ('submitted', 'reviewed', 'quoted', 'accepted', 'rejected');
+exception when duplicate_object then null; end $$;
 
-create table custom_requests (
+create table if not exists custom_requests (
     id          text primary key,
     nama        text not null,
     perusahaan  text,
@@ -159,12 +172,40 @@ create table custom_requests (
     updated_at  timestamptz not null default now()
 );
 
--- ---------------------------------------------------------------------
--- 5. GUDANG — item barang & pergerakan stok
--- ---------------------------------------------------------------------
-create type kategori_barang as enum ('eceran', 'proyek');
+-- Kolom tambahan: sumber request, kode produksi, alamat proyek, dan gambar mentah.
+-- (dimensi/kuantitas lama tetap disimpan untuk data request versi awal.)
+alter table custom_requests add column if not exists source text not null default 'WEBSITE_JASA_CUSTOM';
+alter table custom_requests add column if not exists kode text;
+alter table custom_requests add column if not exists project_address text;
+alter table custom_requests add column if not exists raw_image text;
+alter table custom_requests add column if not exists raw_image_name text;
 
-create table gudang_items (
+-- Spesifikasi item (format sama dengan pm_order_items agar mudah dikonversi
+-- menjadi order PM oleh Project Manager).
+create table if not exists custom_request_items (
+    id              text primary key,
+    request_id      text not null references custom_requests(id) on delete cascade,
+    name            text not null,
+    quantity        integer not null check (quantity > 0),
+    unit            text not null default 'pcs',
+    technical_note  text not null default '',
+    sort_order      integer not null default 0,
+    created_at      timestamptz not null default now()
+);
+
+create index if not exists idx_custom_request_items_request
+    on custom_request_items(request_id, sort_order);
+
+alter table custom_request_items enable row level security;
+
+-- ---------------------------------------------------------------------
+-- 5a. GUDANG (LAMA) — item barang & pergerakan stok
+-- ---------------------------------------------------------------------
+do $$ begin
+    create type kategori_barang as enum ('eceran', 'proyek');
+exception when duplicate_object then null; end $$;
+
+create table if not exists gudang_items (
     id              text primary key,           -- format "gd-<n>"
     sku             text unique not null,       -- cocok dengan products.sku
     jenis_barang    text not null,
@@ -180,10 +221,12 @@ create table gudang_items (
     created_at      timestamptz not null default now()
 );
 
-create type movement_tipe as enum ('masuk', 'keluar');
+do $$ begin
+    create type movement_tipe as enum ('masuk', 'keluar');
+exception when duplicate_object then null; end $$;
 
 -- Riwayat barang masuk (supplier + bukti nota) & keluar (tujuan + penerima)
-create table gudang_movements (
+create table if not exists gudang_movements (
     id            uuid primary key default gen_random_uuid(),
     item_id       text not null references gudang_items(id) on delete cascade,
     tipe          movement_tipe not null,
@@ -199,59 +242,120 @@ create table gudang_movements (
     created_at    timestamptz not null default now()
 );
 
--- Segmen pesanan di gudang (barang proyek / eceran / campuran)
-create type gudang_order_segment as enum ('eceran', 'proyek', 'mixed');
-
--- Pesanan yang ditangani gudang: status subset dari orders + metadata gudang
-create table gudang_orders (
-    order_id      text primary key references orders(id) on delete cascade,
-    status        text not null check (status in ('confirmed', 'processing', 'completed')),
-    segmen        gudang_order_segment not null,
-    processed_at  timestamptz
+-- ---------------------------------------------------------------------
+-- 5b. GUDANG INVENTARIS — kategori, master stok, barang masuk & keluar
+-- ---------------------------------------------------------------------
+create table if not exists gudang_categories (
+    id          text primary key,
+    name        text not null unique,
+    created_at  timestamptz not null default now()
 );
 
--- ---------------------------------------------------------------------
--- 6. PROJECT ORDERS — pesanan proyek dari request custom, barang dari gudang
--- ---------------------------------------------------------------------
-create type project_order_status as enum ('diajukan', 'diproses', 'selesai');
+insert into gudang_categories (id, name) values
+    ('cat-aksesoris', 'Aksesoris'),
+    ('cat-handle-lock', 'Handle & Lock'),
+    ('cat-alumunium', 'Alumunium'),
+    ('cat-fastener', 'Fastener/Baut')
+on conflict (id) do nothing;
 
-create table project_orders (
-    id              text primary key,           -- format "prj-<random>"
-    request_id      text references custom_requests(id),
-    nama_proyek     text not null,
-    pelanggan       text not null,
-    perusahaan      text,
-    telepon         text,
-    catatan         text,
-    total_quantity  integer not null default 0 check (total_quantity >= 0),
-    status          project_order_status not null default 'diajukan',
-    processed_at    timestamptz,
-    completed_at    timestamptz,
-    created_at      timestamptz not null default now(),
-    updated_at      timestamptz not null default now()
+create table if not exists gudang_inventory_items (
+    id            text primary key,
+    category_id   text not null references gudang_categories(id) on delete restrict,
+    item_name     text not null,
+    brand         text not null default '',
+    model_no      text not null default '',
+    color         text not null default '',
+    rack_group    text not null default '',
+    sub_row       text not null default '',
+    current_stock numeric(15,2) not null default 0 check (current_stock >= 0),
+    created_at    timestamptz not null default now(),
+    updated_at    timestamptz not null default now()
 );
 
--- Snapshot barang proyek saat pesanan dibuat
-create table project_order_items (
-    id              serial primary key,
-    project_order_id text not null references project_orders(id) on delete cascade,
-    gudang_item_id  text not null references gudang_items(id),
-    sku             text not null,
-    jenis_barang    text not null,
-    merek           text,
-    warna           text,
-    satuan          text,
-    quantity        integer not null check (quantity > 0)
+create table if not exists gudang_in_transactions (
+    id               uuid primary key default gen_random_uuid(),
+    transaction_date date not null default current_date,
+    category_id      text references gudang_categories(id) on delete set null,
+    item_id          text not null references gudang_inventory_items(id) on delete cascade,
+    quantity         numeric(15,2) not null check (quantity > 0),
+    created_by       text not null default '',
+    created_at       timestamptz not null default now()
 );
 
--- ---------------------------------------------------------------------
--- 7. KEUANGAN — buku kas & penagihan
--- ---------------------------------------------------------------------
-create type kas_tipe as enum ('masuk', 'keluar');
-create type kas_kategori as enum ('eceran', 'proyek', 'operasional');
-create type payment_status as enum ('belum_bayar', 'lunas');
+create table if not exists gudang_out_transactions (
+    id               uuid primary key default gen_random_uuid(),
+    transaction_date date not null default current_date,
+    category_id      text references gudang_categories(id) on delete set null,
+    item_id          text not null references gudang_inventory_items(id) on delete cascade,
+    project_id       text,                                  -- referensi proyek opsional (bebas)
+    project_name     text not null default '',
+    source           text not null default 'manual',        -- 'manual' | 'produksi'
+    quantity         numeric(15,2) not null check (quantity > 0),
+    created_by       text not null default '',
+    created_at       timestamptz not null default now()
+);
 
-create table kas_entries (
+-- Penjaga untuk database yang sudah memiliki tabel versi lama.
+alter table gudang_out_transactions add column if not exists project_id text;
+alter table gudang_out_transactions add column if not exists project_name text not null default '';
+alter table gudang_out_transactions add column if not exists source text not null default 'manual';
+
+-- ---------------------------------------------------------------------
+-- 5c. PERMINTAAN PRODUKSI — pengajuan material dari divisi produksi
+-- ---------------------------------------------------------------------
+create table if not exists gudang_production_requests (
+    id             text primary key,
+    request_date   date not null default current_date,
+    spk_ref        text not null,
+    spk_label      text not null default '',
+    requester_name text not null default '',
+    note           text not null default '',
+    status         text not null default 'diajukan'
+                   check (status in ('diajukan', 'disetujui', 'ditolak')),
+    approved_by    text,
+    approved_at    timestamptz,
+    reject_reason  text,
+    created_at     timestamptz not null default now(),
+    updated_at     timestamptz not null default now()
+);
+
+create table if not exists gudang_production_request_items (
+    id            text primary key,
+    request_id    text not null references gudang_production_requests(id) on delete cascade,
+    item_id       text references gudang_inventory_items(id) on delete set null,
+    category_id   text not null default '',
+    category_name text not null default '',
+    item_name     text not null default '',
+    model_no      text not null default '',
+    brand         text not null default '',
+    color         text not null default '',
+    rack_group    text not null default '',
+    sub_row       text not null default '',
+    quantity      numeric(15,2) not null check (quantity > 0)
+);
+
+-- Penjaga untuk database yang sudah memiliki tabel versi lama.
+alter table gudang_production_request_items add column if not exists category_id text not null default '';
+alter table gudang_production_request_items add column if not exists category_name text not null default '';
+alter table gudang_production_request_items add column if not exists rack_group text not null default '';
+alter table gudang_production_request_items add column if not exists sub_row text not null default '';
+
+-- ---------------------------------------------------------------------
+-- 6. KEUANGAN — buku kas & penagihan
+-- ---------------------------------------------------------------------
+do $$ begin
+    create type kas_tipe as enum ('masuk', 'keluar');
+exception when duplicate_object then null; end $$;
+
+do $$ begin
+    create type kas_kategori as enum ('eceran', 'proyek', 'operasional');
+exception when duplicate_object then null; end $$;
+
+do $$ begin
+    create type payment_status as enum ('belum_bayar', 'lunas');
+exception when duplicate_object then null; end $$;
+
+create table if not exists kas_entries (
     id          text primary key,               -- "kas-<uuid>" atau "masuk-<orderId>" (otomatis)
     tipe        kas_tipe not null,
     sumber      text not null,                  -- "Pesanan ord-..." | "Pesanan proyek prj-..."
@@ -263,17 +367,17 @@ create table kas_entries (
 );
 
 -- Status pembayaran per pesanan (penagihan). Key = id pesanan (ord-*/prj-*).
-create table penagihan (
-    order_id    text primary key,               -- FK ke orders / project_orders
+create table if not exists penagihan (
+    order_id    text primary key,
     order_type  text not null check (order_type in ('pesanan', 'proyek')),
     status      payment_status not null default 'belum_bayar',
     updated_at  timestamptz not null default now()
 );
 
 -- ---------------------------------------------------------------------
--- 8. MARKETING — banner promo
+-- 7. MARKETING — banner promo
 -- ---------------------------------------------------------------------
-create table marketing_banners (
+create table if not exists marketing_banners (
     id          uuid primary key default gen_random_uuid(),
     title       text not null,
     subtitle    text,
@@ -287,9 +391,9 @@ create table marketing_banners (
 );
 
 -- ---------------------------------------------------------------------
--- 9. PORTOFOLIO — proyek & studi kasus
+-- 8. PORTOFOLIO — proyek & studi kasus
 -- ---------------------------------------------------------------------
-create table portfolio_items (
+create table if not exists portfolio_items (
     id          serial primary key,
     client      text not null,
     industry    text not null,
@@ -302,7 +406,7 @@ create table portfolio_items (
     year        integer
 );
 
-create table case_studies (
+create table if not exists case_studies (
     id          serial primary key,
     client      text not null,
     logo        text,                           -- inisial/abbrev placeholder
@@ -315,11 +419,11 @@ create table case_studies (
 );
 
 -- ---------------------------------------------------------------------
--- 10. KONTEN WEBSITE — data CMS yang dikelola admin marketing
+-- 9. KONTEN WEBSITE — data CMS yang dikelola admin marketing
 -- ---------------------------------------------------------------------
 
 -- Mitra / partner (logo ditampilkan sebagai strip di beranda)
-create table partners (
+create table if not exists partners (
     id          uuid primary key default gen_random_uuid(),
     name        text not null,
     initials    text not null,
@@ -330,7 +434,7 @@ create table partners (
 );
 
 -- FAQ (tanya-jawab ditampilkan di beranda)
-create table faq_items (
+create table if not exists faq_items (
     id          uuid primary key default gen_random_uuid(),
     question    text not null,
     answer      text not null,
@@ -340,7 +444,7 @@ create table faq_items (
 );
 
 -- Layanan jasa custom
-create table custom_services (
+create table if not exists custom_services (
     id          uuid primary key default gen_random_uuid(),
     icon        text not null,
     title       text not null,
@@ -352,16 +456,16 @@ create table custom_services (
 
 -- Konten situs dinamis (hero, profil/tentang, kontak, steps custom, kapasitas)
 -- Data berbentuk key-value; value disimpan sebagai jsonb untuk fleksibilitas.
-create table site_content (
+create table if not exists site_content (
     key         text primary key,
     value       jsonb not null,
     updated_at  timestamptz not null default now()
 );
 
 -- ---------------------------------------------------------------------
--- 11. PM PROJECT WORKFLOW â€” orders and their item snapshots
+-- 10. PM PROJECT WORKFLOW — orders and their item snapshots
 -- ---------------------------------------------------------------------
-create table pm_orders (
+create table if not exists pm_orders (
     id                      text primary key,
     contractor_name         text not null,
     contractor_code         text not null,
@@ -389,7 +493,11 @@ create table pm_orders (
     updated_at              timestamptz not null default now()
 );
 
-create table pm_order_items (
+-- Penjaga untuk database yang sudah memiliki tabel pm_orders versi lama.
+alter table pm_orders add column if not exists contractor_phone text;
+alter table pm_orders add column if not exists project_address text;
+
+create table if not exists pm_order_items (
     id              text primary key,
     order_id        text not null references pm_orders(id) on delete cascade,
     name            text not null,
@@ -402,25 +510,10 @@ create table pm_order_items (
 alter table pm_orders enable row level security;
 alter table pm_order_items enable row level security;
 
--- =====================================================================
--- INDEX
--- =====================================================================
-create index idx_products_category on products(category);
-create index idx_products_sku on products(sku);
-create index idx_orders_status on orders(status);
-create index idx_orders_created_at on orders(created_at desc);
-create index idx_order_lines_order_id on order_lines(order_id);
-create index idx_gudang_items_kategori on gudang_items(kategori_barang);
-create index idx_gudang_items_sku on gudang_items(sku);
-create index idx_gudang_movements_item_id on gudang_movements(item_id);
-create index idx_kas_entries_tanggal on kas_entries(tanggal);
-create index idx_custom_requests_status on custom_requests(status);
-create index idx_project_orders_status on project_orders(status);
-create index idx_pm_orders_status on pm_orders(project_status, drawing_status);
-create index idx_pm_orders_target_date on pm_orders(target_date);
-create index idx_pm_order_items_order_id on pm_order_items(order_id, sort_order);
-
-create table field_deliveries (
+-- ---------------------------------------------------------------------
+-- 11. FIELD — pengiriman & bukti terima (POD)
+-- ---------------------------------------------------------------------
+create table if not exists field_deliveries (
     id text primary key,
     pm_order_id text not null unique references pm_orders(id) on delete cascade,
     contractor_name text not null,
@@ -439,7 +532,7 @@ create table field_deliveries (
     updated_at timestamptz not null default now()
 );
 
-create table field_delivery_items (
+create table if not exists field_delivery_items (
     id text primary key,
     delivery_id text not null references field_deliveries(id) on delete cascade,
     name text not null,
@@ -451,13 +544,27 @@ create table field_delivery_items (
     sort_order integer not null default 0
 );
 
-create table finance_dashboard (
+create index if not exists idx_field_deliveries_status on field_deliveries(status, updated_at desc);
+create index if not exists idx_field_delivery_items_delivery on field_delivery_items(delivery_id, sort_order);
+
+alter table field_deliveries enable row level security;
+alter table field_delivery_items enable row level security;
+
+-- ---------------------------------------------------------------------
+-- 12. DASHBOARD KEUANGAN — state laporan (single row)
+-- ---------------------------------------------------------------------
+create table if not exists finance_dashboard (
     id smallint primary key check (id = 1),
     state jsonb not null,
     updated_at timestamptz not null default now()
 );
 
-create table contact_messages (
+alter table finance_dashboard enable row level security;
+
+-- ---------------------------------------------------------------------
+-- 13. PESAN KONTAK — dari formulir publik
+-- ---------------------------------------------------------------------
+create table if not exists contact_messages (
     id uuid primary key default gen_random_uuid(),
     name text not null check (char_length(name) between 2 and 120),
     email text,
@@ -466,15 +573,62 @@ create table contact_messages (
     created_at timestamptz not null default now()
 );
 
-alter table finance_dashboard enable row level security;
+create index if not exists idx_contact_messages_created_at on contact_messages(created_at desc);
 alter table contact_messages enable row level security;
 
-alter table field_deliveries enable row level security;
-alter table field_delivery_items enable row level security;
-create index idx_field_deliveries_status on field_deliveries(status, updated_at desc);
-create index idx_field_delivery_items_delivery on field_delivery_items(delivery_id, sort_order);
-create index idx_contact_messages_created_at on contact_messages(created_at desc);
+-- ---------------------------------------------------------------------
+-- 14. PUSH SUBSCRIPTIONS — notifikasi web push per pengguna
+-- ---------------------------------------------------------------------
+create table if not exists push_subscriptions (
+    id          uuid primary key default gen_random_uuid(),
+    user_id     uuid not null references users(id) on delete cascade,
+    endpoint    text not null unique,
+    auth        text not null,
+    p256dh      text not null,
+    user_agent  text,
+    created_at  timestamptz not null default now(),
+    updated_at  timestamptz not null default now()
+);
 
+create index if not exists idx_push_subscriptions_user on push_subscriptions(user_id);
+alter table push_subscriptions enable row level security;
+
+-- =====================================================================
+-- INDEX
+-- =====================================================================
+create index if not exists idx_products_category on products(category);
+create index if not exists idx_products_sku on products(sku);
+create index if not exists idx_orders_status on orders(status);
+create index if not exists idx_orders_created_at on orders(created_at desc);
+create index if not exists idx_order_lines_order_id on order_lines(order_id);
+create index if not exists idx_gudang_items_kategori on gudang_items(kategori_barang);
+create index if not exists idx_gudang_items_sku on gudang_items(sku);
+create index if not exists idx_gudang_movements_item_id on gudang_movements(item_id);
+create index if not exists idx_gudang_inventory_items_category on gudang_inventory_items(category_id);
+create index if not exists idx_gudang_inventory_items_rack on gudang_inventory_items(rack_group);
+create index if not exists idx_gudang_inventory_items_model on gudang_inventory_items(model_no);
+create index if not exists idx_gudang_in_transactions_item on gudang_in_transactions(item_id);
+create index if not exists idx_gudang_in_transactions_date on gudang_in_transactions(transaction_date desc);
+create index if not exists idx_gudang_out_transactions_item on gudang_out_transactions(item_id);
+create index if not exists idx_gudang_out_transactions_date on gudang_out_transactions(transaction_date desc);
+create index if not exists idx_gudang_production_requests_status
+    on gudang_production_requests(status, created_at desc);
+create index if not exists idx_gudang_production_requests_spk
+    on gudang_production_requests(spk_ref);
+create index if not exists idx_gudang_production_request_items_request
+    on gudang_production_request_items(request_id);
+create index if not exists idx_kas_entries_tanggal on kas_entries(tanggal);
+create index if not exists idx_custom_requests_status on custom_requests(status);
+create index if not exists idx_pm_orders_status on pm_orders(project_status, drawing_status);
+create index if not exists idx_pm_orders_target_date on pm_orders(target_date);
+create index if not exists idx_pm_order_items_order_id on pm_order_items(order_id, sort_order);
+create index if not exists idx_partners_active_sort on partners(active, sort_order);
+create index if not exists idx_faq_items_active_sort on faq_items(active, sort_order);
+create index if not exists idx_custom_services_active_sort on custom_services(active, sort_order);
+
+-- =====================================================================
+-- FUNGSI
+-- =====================================================================
 create or replace function delete_gudang_item_if_unused(item_id_input text)
 returns boolean
 language plpgsql
@@ -522,6 +676,9 @@ begin
 end;
 $$;
 
+-- =====================================================================
+-- SEED KONTEN
+-- =====================================================================
 insert into faq_items (id, question, answer, sort_order, active)
 values
     ('a4000000-0000-4000-8000-000000000001', 'Apakah Alupbesk melayani pemotongan custom?', 'Ya, kami menyediakan layanan pemotongan presisi sesuai gambar teknis Anda menggunakan mesin CNC cutting untuk memastikan akurasi dimensi.', 1, true),
@@ -548,34 +705,26 @@ values
 on conflict (key) do nothing;
 
 -- =====================================================================
--- CATATAN UNTUK SUPABASE
+-- ROW LEVEL SECURITY — semua akses data melalui Route Handler (service role)
 -- =====================================================================
 -- Akses tabel data dilakukan melalui Route Handler server dengan service role.
--- Migrasi 20261013_lockdown_public_tables.sql mengaktifkan RLS pada seluruh
--- tabel sehingga anon/authenticated tidak dapat melewati otorisasi backend.
---
---   alter table orders enable row level security;
---   create policy "marketing lihat pesanan" on orders
---     for select to authenticated
---     using (auth.jwt() ->> 'role' in ('marketing','gudang','keuangan','manager','owner'));
---
--- Kolom auth users (auth.users) bisa disambungkan ke public.users via
--- trigger on auth.users insert / on update jika autentikasi diaktifkan.
--- Auto-timestamp: gunakan trigger update kolom updated_at bila dibutuhkan.
-
+-- RLS diaktifkan pada seluruh tabel sehingga anon/authenticated tidak dapat
+-- melewati otorisasi backend. Beberapa policy select khusus ditambahkan di bawah.
 do $$
 declare
     table_name text;
 begin
     foreach table_name in array array[
-        'users', 'products', 'product_variants', 'orders', 'order_lines',
-        'order_status_events', 'custom_requests', 'gudang_items',
-        'gudang_movements', 'gudang_orders', 'project_orders',
-        'project_order_items', 'kas_entries', 'penagihan',
-        'marketing_banners', 'portfolio_items', 'case_studies', 'partners',
-        'faq_items', 'custom_services', 'site_content', 'pm_orders',
-        'pm_order_items', 'field_deliveries', 'field_delivery_items',
-        'finance_dashboard', 'contact_messages', 'role_requests'
+        'users', 'role_requests', 'products', 'product_variants', 'orders',
+        'order_lines', 'order_status_events', 'custom_requests', 'custom_request_items', 'gudang_items',
+        'gudang_movements', 'gudang_categories', 'gudang_inventory_items',
+        'gudang_in_transactions', 'gudang_out_transactions',
+        'gudang_production_requests', 'gudang_production_request_items',
+        'kas_entries', 'penagihan', 'marketing_banners', 'portfolio_items',
+        'case_studies', 'partners', 'faq_items', 'custom_services',
+        'site_content', 'pm_orders', 'pm_order_items', 'field_deliveries',
+        'field_delivery_items', 'finance_dashboard', 'contact_messages',
+        'push_subscriptions'
     ] loop
         if to_regclass(format('public.%I', table_name)) is not null then
             execute format(
@@ -587,6 +736,9 @@ begin
 end;
 $$;
 
+-- ---------------------------------------------------------------------
+-- Registrasi & review permintaan role
+-- ---------------------------------------------------------------------
 create or replace function public.create_role_request_for_auth_user()
 returns trigger
 language plpgsql
@@ -741,6 +893,9 @@ revoke all on function public.review_role_request(uuid, text, uuid)
 grant execute on function public.review_role_request(uuid, text, uuid)
     to service_role;
 
+-- ---------------------------------------------------------------------
+-- POLICY & GRANT
+-- ---------------------------------------------------------------------
 drop policy if exists "owners read role requests" on role_requests;
 create policy "owners read role requests" on role_requests
     for select to authenticated
@@ -752,13 +907,36 @@ create policy "owners read role requests" on role_requests
                and role = 'owner'
         )
     );
+
 drop policy if exists "users read own auth profile" on users;
 create policy "users read own auth profile" on users
     for select to authenticated
     using (lower(email) = lower(auth.jwt() ->> 'email'));
+
+drop policy if exists "users manage own push subscriptions" on public.push_subscriptions;
+create policy "users manage own push subscriptions" on public.push_subscriptions
+    for all to authenticated
+    using (
+        exists (
+            select 1 from public.users
+             where lower(email) = lower(auth.jwt() ->> 'email')
+               and id = push_subscriptions.user_id
+        )
+    )
+    with check (
+        exists (
+            select 1 from public.users
+             where lower(email) = lower(auth.jwt() ->> 'email')
+               and id = push_subscriptions.user_id
+        )
+    );
+
 grant select on users to authenticated;
 grant select on role_requests to authenticated;
+revoke all on public.push_subscriptions from public, anon;
+grant select, insert, update, delete on public.push_subscriptions to service_role;
 
+-- Realtime untuk notifikasi role request
 do $$
 begin
     if exists (select 1 from pg_publication where pubname = 'supabase_realtime')
@@ -772,3 +950,11 @@ begin
     end if;
 end;
 $$;
+
+-- =====================================================================
+-- CATATAN
+-- =====================================================================
+-- Akses tabel data dilakukan melalui Route Handler server dengan service role.
+-- Kolom auth users (auth.users) disambungkan ke public.users via trigger
+-- on_auth_user_role_request. Auto-timestamp updated_at perlu trigger tambahan
+-- bila dibutuhkan.

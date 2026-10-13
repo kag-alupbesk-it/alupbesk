@@ -5,7 +5,7 @@ Website katalog aluminium dan komponen industri berbasis Next.js 16 dan Tailwind
 ## Menjalankan project
 
 1. Install Node.js 20 atau lebih baru.
-2. Buat project Supabase. Untuk database baru, jalankan `database/schema.sql`. Untuk database yang sudah ada, jalankan migrasi yang belum diterapkan dari `database/migrations/` secara berurutan.
+2. Buat project Supabase, lalu jalankan `database/schema.sql` di SQL Editor. File ini adalah skema final tunggal untuk seluruh database.
 3. Salin `.env.example` menjadi `.env.local` dan isi `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, serta `SUPABASE_SERVICE_ROLE_KEY`. Service role key hanya digunakan di server. Untuk validasi bot, isi `NEXT_PUBLIC_HCAPTCHA_SITE_KEY` dan aktifkan hCaptcha di pengaturan Auth Supabase.
 4. Install paket dan jalankan Next.js:
 
@@ -30,7 +30,7 @@ npm run build     # Build produksi
 
 ## Persistensi Supabase
 
-- Skema database ada di `database/schema.sql`; migrasi tambahan ada di `database/migrations/`.
+- Skema database final ada di `database/schema.sql` (satu file untuk seluruh entitas).
 - `src/instrumentation.ts` memuat data awal; Route Handler yang memakai cache store menyegarkan data paling lama setiap 15 detik.
 - Perubahan store dikirim lewat `src/services/supabase.ts`. Jika tulis ke Supabase gagal, request mutasi ikut gagal dan operasi tetap di antrean untuk dicoba kembali.
 - PM, Pengiriman Lapangan, dan ringkasan Keuangan menggunakan query Supabase langsung.
@@ -40,7 +40,7 @@ npm run build     # Build produksi
 
 Halaman operasional memakai `/login` dan mencocokkan akun Supabase Auth dengan profil aktif di `public.users`. Buat akun owner awal di Supabase Auth, kemudian tambahkan profil `owner` dengan email yang sama, status `ACTIVE`, dan `active = true`. Profil yang dibuat dari halaman Manager belum membuat kredensial Auth.
 
-Pendaftaran staf dilakukan di `/register`. Pemohon memilih role `keuangan`, `proyek`, `field`, `produksi`, `gudang`, atau `marketing`; `owner` dan `manager` tidak bisa diminta dari formulir publik. Role dan dept hasil pilihan formulir disimpan di metadata Supabase Auth dan di tulis ke `public.users` melalui `POST /api/auth/register` (nilai default `pelanggan` tidak dipakai). Permintaan disimpan sebagai `PENDING` dan hanya Owner aktif yang dapat menyetujui (`ACTIVE`) atau menolak (`SUSPENDED`) melalui dashboard/pengelolaan pengguna; kartu "Permintaan akses role" membaca user dengan status `PENDING` dari `public.users`. Untuk database yang sudah berjalan, terapkan migrasi `20261014_operational_roles.sql`, `20261015_role_requests.sql`, lalu `20261016_register_profile_role.sql` sesuai urutan. Untuk database baru, `database/schema.sql` sudah memuat ketiganya.
+Pendaftaran staf dilakukan di `/register`. Pemohon memilih role `keuangan`, `proyek`, `field`, `produksi`, `gudang`, atau `marketing`; `owner` dan `manager` tidak bisa diminta dari formulir publik. Role dan dept hasil pilihan formulir disimpan di metadata Supabase Auth dan di tulis ke `public.users` melalui `POST /api/auth/register` (nilai default `pelanggan` tidak dipakai). Permintaan disimpan sebagai `PENDING` dan hanya Owner aktif yang dapat menyetujui (`ACTIVE`) atau menolak (`SUSPENDED`) melalui dashboard/pengelolaan pengguna; kartu "Permintaan akses role" membaca user dengan status `PENDING` dari `public.users`. Trigger registrasi, tabel `role_requests`, dan fungsi review sudah termuat di `database/schema.sql`.
 
 Permintaan pendaftaran dibuat oleh trigger Supabase Auth dan disinkronkan oleh `POST /api/auth/register`. Karena itu, pastikan skema/migrasi diterapkan sebelum membuka `/register`, serta setel redirect konfirmasi email Supabase ke halaman aplikasi yang sesuai. Owner pertama tetap perlu dibuat melalui Supabase secara manual sebelum ada yang dapat menyetujui permintaan role.
 

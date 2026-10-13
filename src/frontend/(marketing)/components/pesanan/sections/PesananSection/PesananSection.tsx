@@ -6,15 +6,26 @@ import PesananTable from "../PesananTable/PesananTable";
 import PesananDetailModal from "../PesananDetailModal/PesananDetailModal";
 import KonfirmasiModal from "../KonfirmasiModal/KonfirmasiModal";
 import TolakModal from "../TolakModal/TolakModal";
+import CustomRequestsSection from "../CustomRequestsSection/CustomRequestsSection";
 import { marketingApi } from "@/services/api/index";
 import type { MarketingOrder } from "@/backend/modules/marketing/index";
 import { STATUS_LABELS, STATUS_OPTIONS } from "../data/data";
 import { isNewOrder } from "../helpers/helpers";
 import { usePollingResource } from "@/frontend/shared/hooks/usePollingResource";
+import { useCustomRequests } from "@/frontend/shared/customRequests/useCustomRequests";
+
+type PesananTab = "produk" | "kustom";
 
 export default function PesananSection() {
+  const [tab, setTab] = useState<PesananTab>("produk");
   const loadOrders = useCallback(() => marketingApi.getOrders(), []);
   const { data: orders, loading, error: loadError, refresh } = usePollingResource<MarketingOrder[]>(loadOrders, []);
+  const {
+    data: customRequests,
+    loading: customLoading,
+    error: customError,
+    refresh: refreshCustom,
+  } = useCustomRequests();
   const [error, setError] = useState("");
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("ALL");
@@ -75,11 +86,22 @@ export default function PesananSection() {
         <div>
           <h3 className={s.title}>Daftar Pesanan Masuk</h3>
           <p className={s.subtitle}>
-            Kelola semua Purchase Order dari website, cek kelengkapan data, konfirmasi, dan ajukan verifikasi ke Manajer.
+            Kelola Purchase Order produk dan request kustom dari website.
           </p>
         </div>
       </div>
 
+      <div className="mb-6 inline-flex items-center gap-1 rounded-xl border border-outline/25 bg-primary-container p-1">
+        <button type="button" aria-pressed={tab === "produk"} onClick={() => setTab("produk")} className={`rounded-lg px-4 py-2 text-xs font-bold transition-colors ${tab === "produk" ? "bg-secondary text-primary shadow-sm" : "text-on-surface-variant hover:text-on-surface"}`}>
+          Pesanan Produk <span className="ml-1 opacity-70">{orders.length}</span>
+        </button>
+        <button type="button" aria-pressed={tab === "kustom"} onClick={() => setTab("kustom")} className={`rounded-lg px-4 py-2 text-xs font-bold transition-colors ${tab === "kustom" ? "bg-secondary text-primary shadow-sm" : "text-on-surface-variant hover:text-on-surface"}`}>
+          Request Kustom <span className={`ml-1 ${customRequests.length > 0 ? "text-secondary" : "opacity-70"}`}>{customRequests.length}</span>
+        </button>
+      </div>
+
+      {tab === "produk" && (
+        <>
       {(error || loadError) && <p className="mb-4 text-sm text-red-400">{error || loadError}</p>}
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
@@ -175,6 +197,17 @@ export default function PesananSection() {
         order={selectedOrder}
         onClose={() => { setShowRejected(false); setSelectedOrder(null); }}
       />
+        </>
+      )}
+
+      {tab === "kustom" && (
+        <CustomRequestsSection
+          requests={customRequests}
+          loading={customLoading}
+          error={customError}
+          refresh={refreshCustom}
+        />
+      )}
     </div>
   );
 }

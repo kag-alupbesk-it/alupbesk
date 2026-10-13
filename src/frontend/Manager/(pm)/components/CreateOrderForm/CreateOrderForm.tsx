@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useId, useRef, useState, type ChangeEvent, type DragEvent, type FormEvent } from "react";
+import { useId, useEffect, useRef, useState, type ChangeEvent, type DragEvent, type FormEvent } from "react";
 import {
   ArrowLeft,
   ArrowRight,
@@ -11,11 +11,13 @@ import {
   FileImage,
   Info,
   Layers3,
+  Plus,
   Save,
   Trash2,
   UploadCloud,
 } from "lucide-react";
 import { usePMOrders } from "../../context/PMOrderContext/PMOrderContext";
+import { customApi } from "@/services/api/index";
 
 interface FormItem {
   id: string;
@@ -54,6 +56,56 @@ export function CreateOrderForm() {
   const [isDragging, setIsDragging] = useState(false);
   const imageInputRef = useRef<HTMLInputElement>(null);
   const [error, setError] = useState("");
+  const [fromCustomId, setFromCustomId] = useState<string | null>(null);
+  const [carriedRawImage, setCarriedRawImage] = useState<string | undefined>();
+
+  // Pre-fill dari Request Kustom (/pm/orders/create?from=<customId>) agar PM
+  // tidak mengetik ulang data yang sudah dikirim pelanggan.
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const customId = params.get("from");
+    if (!customId) return;
+
+    let active = true;
+    const prefillFromCustom = async () => {
+      try {
+        const requests = await customApi.getRequests();
+        const match = requests.find((request) => request.id === customId);
+        if (!active || !match) return;
+
+        const generatedCode = `CST-${new Date().toISOString().slice(2, 4)}${new Date().toISOString().slice(5, 7)}-${customId.slice(-4).toUpperCase()}`;
+        setFromCustomId(match.id);
+        setContractorName(match.nama);
+        setContractorCode(match.kode?.trim() || generatedCode);
+        setContractorPhone(match.telp);
+        setProjectAddress(match.projectAddress ?? "");
+        setTargetDate(match.deadline ?? "");
+        setItems(
+          match.items.length > 0
+            ? match.items.slice().sort((a, b) => a.sortOrder - b.sortOrder).map((item, index) => ({
+                id: `${formId}-item-from-${index + 1}`,
+                name: item.name,
+                quantity: String(item.quantity),
+                unit: item.unit || "pcs",
+                technicalNote: item.technicalNote ?? "",
+              }))
+            : [createItem(`${formId}-item-1`)],
+        );
+        if (match.rawImage) {
+          setCarriedRawImage(match.rawImage);
+          setImagePreview(match.rawImage);
+          setImageName(match.rawImageName ?? "");
+        }
+      } catch {
+        // Gagal memuat request kustom: biarkan form kosong (masih bisa diisi manual).
+      }
+    };
+
+    void prefillFromCustom();
+    return () => {
+      active = false;
+    };
+  }, [formId]);
 
   const updateItem = (id: string, field: keyof Omit<FormItem, "id">, value: string) => {
     setItems((currentItems) => currentItems.map((item) => (item.id === id ? { ...item, [field]: value } : item)));
@@ -64,6 +116,13 @@ export function CreateOrderForm() {
       if (currentItems.length === 1) return currentItems;
       return currentItems.filter((item) => item.id !== id);
     });
+  };
+
+  const addItem = () => {
+    setItems((currentItems) => [
+      ...currentItems,
+      createItem(`${formId}-item-${currentItems.length + 1}`),
+    ]);
   };
 
   const readFile = (file: File | undefined) => {
@@ -162,6 +221,9 @@ export function CreateOrderForm() {
           throw new Error(uploadResult.error?.message ?? "Gambar gagal diunggah.");
         }
         imageUrl = uploadResult.data.url;
+      } else {
+        // Pre-fill dari Request Kustom: gambar sudah terunggah, gunakan URL-nya.
+        imageUrl = carriedRawImage;
       }
 
       const saved = await addOrder({
@@ -179,7 +241,17 @@ export function CreateOrderForm() {
         rawImage: imageUrl,
         rawImageName: imageUrl ? imageName || undefined : undefined,
       });
-      if (saved) router.push("/pm");
+      if (saved) {
+        // Request kustom yang dikonversi otomatis berstatus Approved.
+        if (fromCustomId) {
+          try {
+            await customApi.updateStatus(fromCustomId, "accepted");
+          } catch {
+            // Status request kustom hanya best-effort; order PM sudah tersimpan.
+          }
+        }
+        router.push(fromCustomId ? "/pm/pesanan" : "/pm");
+      }
     } catch (saveError) {
       setError(
         saveError instanceof Error ? saveError.message : "Order gagal disimpan.",
@@ -197,6 +269,12 @@ export function CreateOrderForm() {
         </Link>
         <h2 className="font-headline text-3xl font-extrabold tracking-tight text-on-surface">Tambah Order Baru</h2>
         <p className="mt-2 max-w-2xl text-sm text-on-surface-variant">Catat kebutuhan kontraktor dan referensi desain sebelum meneruskan order ke tim teknis.</p>
+        {fromCustomId && (
+          <div className="mt-4 flex items-start gap-2 rounded-xl border border-violet-400/25 bg-violet-400/8 px-4 py-3 text-xs text-violet-200">
+            <Info size={15} className="mt-0.5 shrink-0" />
+            <span>Form terisi otomatis dari <strong>Request Kustom</strong>. Periksa kembali data, kode produksi, dan spesifikasi item sebelum menyimpan — request akan otomatis berstatus Approved.</span>
+          </div>
+        )}
       </div>
 
       <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_310px]">
@@ -241,6 +319,13 @@ export function CreateOrderForm() {
                 <h3 className="font-headline text-base font-bold text-on-surface">Spesifikasi Item</h3>
                 <p className="mt-1 text-[10px] text-on-surface-variant">Tambahkan detail barang yang perlu diproduksi.</p>
               </div>
+              <button
+                type="button"
+                onClick={addItem}
+                className="ml-auto inline-flex items-center gap-1.5 rounded-lg border border-secondary/30 bg-secondary/10 px-3 py-2 text-[10px] font-bold text-secondary transition-colors hover:bg-secondary/20"
+              >
+                <Plus size={13} /> Tambah Item
+              </button>
             </div>
             <div className="mt-5 space-y-3">
               {items.map((item, index) => (

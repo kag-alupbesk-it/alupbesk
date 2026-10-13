@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { z } from "zod";
-import { getGudangItems, updateGudangStock, getGudangMovements, createGudangMasuk, createGudangKeluar, createGudangItem, getGudangOrders, processGudangOrder, completeGudangOrder } from ".";
+import { getGudangItems, updateGudangStock, getGudangMovements, createGudangMasuk, createGudangKeluar, createGudangItem } from ".";
 
 const router = Router();
 
@@ -104,56 +104,6 @@ router.put("/items/:id", (request, response) => {
 router.get("/movements", (request, response) => {
   const itemId = typeof request.query.itemId === "string" ? request.query.itemId : undefined;
   return response.json({ success: true, data: getGudangMovements(itemId) });
-});
-
-// Pesanan yang masuk ke gudang (confirmed / processing / completed)
-router.get("/orders", (_request, response) =>
-  response.json({ success: true, data: getGudangOrders() }),
-);
-
-// Gudang menerima pesanan: status -> processing, stok gudang dipotong
-router.post("/orders/:id/process", (request, response) => {
-  const result = processGudangOrder(request.params.id);
-  if (result.ok) return response.json({ success: true, data: result });
-  if (result.code === "ORDER_NOT_FOUND")
-    return response
-      .status(404)
-      .json({
-        success: false,
-        error: { code: result.code, message: "Pesanan tidak ditemukan." },
-      });
-  if (result.code === "STOCK_NOT_ENOUGH")
-    return response
-      .status(422)
-      .json({
-        success: false,
-        error: { code: result.code, message: "Stok gudang tidak cukup untuk pesanan ini." },
-      });
-  return response
-    .status(400)
-    .json({
-      success: false,
-      error: { code: result.code, message: "Pesanan belum bisa diproses gudang." },
-    });
-});
-
-// Gudang menandai pesanan selesai dikirim
-router.post("/orders/:id/complete", (request, response) => {
-  const result = completeGudangOrder(request.params.id);
-  if (result.ok) return response.json({ success: true, data: result });
-  if (result.code === "ORDER_NOT_FOUND")
-    return response
-      .status(404)
-      .json({
-        success: false,
-        error: { code: result.code, message: "Pesanan tidak ditemukan." },
-      });
-  return response
-    .status(400)
-    .json({
-      success: false,
-      error: { code: result.code, message: "Pesanan belum bisa ditandai selesai." },
-    });
 });
 
 // Catat barang masuk: stok bertambah otomatis

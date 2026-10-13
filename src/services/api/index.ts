@@ -3,6 +3,8 @@ export * from "./catalog/index";
 export * from "./portfolio/index";
 export * from "./custom/index";
 export * from "./gudang/index";
+export * from "./gudangInventory/index";
+export * from "./productionRequests/index";
 export * from "./keuangan/index";
 export * from "./marketing/index";
 export * from "./content";
