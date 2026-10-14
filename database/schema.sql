@@ -792,10 +792,21 @@ begin
      limit 1;
     -- Some installations already have an auth.users trigger that creates a
     -- default ACTIVE customer profile. If it belongs to this same auth user,
-    -- this role request must still be forced to PENDING below. A profile with
-    -- the same email but a different auth ID remains a duplicate account.
+    -- this role request must still be forced to PENDING below.
+    -- A profile with the same email but a different auth ID is usually an
+    -- orphan left behind when the auth user was deleted without its profile.
+    -- Reclaim it when the profile is not active; only a genuinely active
+    -- account with the same email stays a duplicate and blocks the signup.
     if profile_id_value is not null and profile_id_value <> new.id then
-        raise exception 'PROFILE_ALREADY_ACTIVE';
+        if exists (
+            select 1 from public.users
+             where id = profile_id_value
+               and active = true
+        ) then
+            raise exception 'PROFILE_ALREADY_ACTIVE';
+        end if;
+        delete from public.users where id = profile_id_value;
+        profile_id_value := null;
     end if;
 
     if profile_id_value is null then
@@ -855,6 +866,25 @@ drop trigger if exists on_auth_user_role_request on auth.users;
 create trigger on_auth_user_role_request
 after insert on auth.users
 for each row execute function public.create_role_request_for_auth_user();
+
+-- Hapus profil public.users saat auth user dihapus agar tidak meninggalkan
+-- profil yatim (email sama, id berbeda) yang memblokir pendaftaran ulang.
+create or replace function public.delete_profile_for_auth_user()
+returns trigger
+language plpgsql
+security definer
+set search_path = public, auth
+as $$
+begin
+    delete from public.users where id = old.id;
+    return old;
+end;
+$$;
+
+drop trigger if exists on_auth_user_deleted on auth.users;
+create trigger on_auth_user_deleted
+after delete on auth.users
+for each row execute function public.delete_profile_for_auth_user();
 
 create or replace function public.review_role_request(
     request_id_input uuid,

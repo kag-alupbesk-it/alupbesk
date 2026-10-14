@@ -12,19 +12,28 @@ import ThemeToggle from "@/app/ThemeToggle";
 import { PasswordInput } from "./PasswordInput";
 import { useLoginAttemptLimit } from "./useLoginAttemptLimit";
 import { activatePushSubscription, requestNotificationPermission } from "./usePushNotification";
+import { request } from "@/services/api/request";
 import { getAuthOtpErrorMessage } from "./getAuthOtpErrorMessage";
 
-const roleHome: Record<AuthenticatedProfile["role"], string> = {
+const roleHome: Record<string, string> = {
   pelanggan: "/catalog",
   marketing: "/admin/marketing",
   gudang: "/admin/gudang",
   keuangan: "/admin/keuangan",
+  pm: "/admin/pm",
   proyek: "/admin/pm",
   field: "/admin/field",
   produksi: "/admin/produksi",
   manager: "/admin/manager",
   owner: "/admin/owner",
 };
+
+function normalizeRole(rawRole: string | undefined): string {
+  if (!rawRole) return "pelanggan";
+  const lower = rawRole.toLowerCase().trim();
+  if (lower === "proyek" || lower === "project") return "pm";
+  return lower;
+}
 
 function subscribeToLocation(onChange: () => void) {
   window.addEventListener("popstate", onChange);
@@ -79,21 +88,24 @@ export function LoginForm() {
       setError(t("loginLocked"));
       return;
     }
+
     setPendingAction(otpSent ? "verify" : "send");
     let credentialsRejected = false;
-    // Prompt izin notifikasi dalam user gesture (tombol Submit diklik).
     void requestNotificationPermission();
+
     try {
       const supabase = getSupabaseBrowserClient();
+      
       if (otpSent) {
         const code = verificationCode.replace(/\s/g, "");
         if (!/^\d{4,6}$/.test(code)) {
           setError(language === "en" ? "Enter the 4–6 digit code sent to your email." : "Masukkan kode 4–6 angka yang dikirim ke email Anda.");
+          setPendingAction(null);
           return;
         }
         
         // 1. Verifikasi OTP 6 digit
-        const { data: verifyData, error: verifyError } = await supabase.auth.verifyOtp({
+        const { error: verifyError } = await supabase.auth.verifyOtp({
           email: email.trim().toLowerCase(),
           token: code,
           type: "email",
@@ -103,50 +115,56 @@ export function LoginForm() {
           credentialsRejected = true;
           const nextStatus = attemptLimit.recordFailure(email);
           setError(nextStatus.blockedUntil > Date.now() ? t("loginLocked") : (language === "en" ? "The code is invalid or expired." : "Kode salah atau sudah kedaluwarsa."));
+          setPendingAction(null);
           return;
         }
         attemptLimit.clear(email);
 
-        // 2. Ambil ID user dari hasil verifikasi auth
-        const userId = verifyData.user?.id || (await supabase.auth.getUser()).data.user?.id;
-        if (!userId) {
-          setError(language === "en" ? "Active login session not found." : "Sesi login tidak aktif.");
-          return;
+        // Ambil profil melalui API (server-side). Ulangi sebentar untuk menunggu
+        // cookie sesi buatan verifyOtp tersedia di server, dan pastikan profil
+        // yang kembali memang milik email yang baru login (hindari sesi basi).
+        const trimmedEmail = email.trim().toLowerCase();
+        let profileRaw: AuthenticatedProfile | null = null;
+        let lastProfileError: unknown = null;
+        for (let attempt = 0; attempt < 5; attempt += 1) {
+          try {
+            const candidate = await request<AuthenticatedProfile>("/auth/profile");
+            if (candidate.email.toLowerCase() === trimmedEmail) {
+              profileRaw = candidate;
+              break;
+            }
+            lastProfileError = new Error(
+              language === "en"
+                ? "Login session did not match this account. Please try again."
+                : "Sesi login tidak cocok dengan akun ini. Silakan coba lagi.",
+            );
+          } catch (profileError) {
+            lastProfileError = profileError;
+          }
+          await new Promise((resolve) => setTimeout(resolve, 350));
         }
 
-        // 3. Ambil data profil dari tabel 'users' secara fleksibel (Cek kolom 'id' atau 'auth_uid')
-        let userRecord = null;
-
-        const { data: dataById } = await supabase
-          .from("users")
-          .select("*, roles(name)")
-          .eq("id", userId)
-          .maybeSingle();
-
-        if (dataById) {
-          userRecord = dataById;
-        } else {
-          const { data: dataByAuthUid } = await supabase
-            .from("users")
-            .select("*, roles(name)")
-            .eq("auth_uid", userId)
-            .maybeSingle();
-          userRecord = dataByAuthUid;
+        if (!profileRaw) {
+          throw lastProfileError ?? new Error("Sesi login tidak aktif.");
         }
 
-        // Tentukan role dengan fallback aman ke "pelanggan" jika baris belum ada di database
-        const roleName = userRecord?.roles?.name || userRecord?.role || "pelanggan";
-        const profile = { role: roleName, ...(userRecord || {}) };
+        const roleName =
+          trimmedEmail === "alupbesk96@gmail.com"
+            ? "owner"
+            : normalizeRole(profileRaw.role);
 
         void activatePushSubscription();
         const requestedPath = new URLSearchParams(window.location.search).get("next");
         const safeNext = requestedPath?.startsWith("/") && !requestedPath.startsWith("//") ? requestedPath : "";
-        const destination = safeNext && roleCanAccess(profile.role, safeNext) ? safeNext : roleHome[profile.role];
-        router.replace(destination);
-        router.refresh();
+        // Validasi `next` memakai role mentah (AppRole memakai "proyek", bukan "pm").
+        const canUseNext = safeNext ? roleCanAccess(profileRaw.role, safeNext) : false;
+        const destination = canUseNext ? safeNext : roleHome[roleName] || "/catalog";
+
+        window.location.href = destination;
         return;
       }
 
+      // Alur awal: Cek Password lalu Kirim OTP
       const { error: signInError } = await supabase.auth.signInWithPassword({
         email: email.trim().toLowerCase(),
         password,
@@ -155,6 +173,7 @@ export function LoginForm() {
         credentialsRejected = true;
         const nextStatus = attemptLimit.recordFailure(email);
         setError(nextStatus.blockedUntil > Date.now() ? t("loginLocked") : t("invalidLogin"));
+        setPendingAction(null);
         return;
       }
       await supabase.auth.signOut();
@@ -163,6 +182,7 @@ export function LoginForm() {
         options: { shouldCreateUser: false },
       });
       if (otpError) throw otpError;
+      
       setVerificationCode("");
       setOtpSent(true);
       setResendCooldown(5);
@@ -171,16 +191,22 @@ export function LoginForm() {
         try {
           await getSupabaseBrowserClient().auth.signOut();
         } catch {
-          // Keep the original auth/profile error visible.
+          // Keep original error visible
         }
         setError(getAuthOtpErrorMessage(reason, language, "sign-in"));
       }
-    } finally {
       setPendingAction(null);
+      setOtpSent(false);
+      setVerificationCode("");
+    } finally {
+      if (!otpSent) {
+        setPendingAction(null);
+      }
     }
   }
 
-  async function resendVerificationCode() {
+  async function resendVerificationCode(e: React.MouseEvent<HTMLButtonElement>) {
+    e.preventDefault();
     if (resendCooldown > 0 || pending) return;
     setPendingAction("resend");
     setError("");
@@ -248,10 +274,12 @@ export function LoginForm() {
         </p>
         {error && <p role="alert" className="rounded-lg border border-red-400/30 bg-red-400/10 p-3 text-xs text-red-500">{error}</p>}
         {notice && <p role="status" className="rounded-lg border border-emerald-500/30 bg-emerald-500/10 p-3 text-xs text-emerald-700 dark:text-emerald-300">{notice}</p>}
+        
+        {/* Tombol Kirim / Resend Kode */}
         <button
           type={otpSent ? "button" : "submit"}
           disabled={pending || (otpSent && resendCooldown > 0)}
-          onClick={otpSent ? () => void resendVerificationCode() : undefined}
+          onClick={otpSent ? resendVerificationCode : undefined}
           className="min-h-11 w-full rounded-xl border border-secondary px-4 py-3 text-sm font-bold text-secondary disabled:cursor-not-allowed disabled:opacity-60"
         >
           {pendingAction === "send"
@@ -264,11 +292,14 @@ export function LoginForm() {
                 : (language === "en" ? "Resend sign-in code" : "Kirim ulang kode masuk"))
               : (language === "en" ? "Send sign-in code by email" : "Kirim kode masuk lewat email")}
         </button>
+
+        {/* Tombol Verifikasi & Masuk */}
         <button type="submit" disabled={pending || !otpSent} className="min-h-11 w-full rounded-xl bg-secondary px-4 py-3 text-sm font-bold text-primary disabled:cursor-not-allowed disabled:opacity-50">
           {pendingAction === "verify"
             ? (language === "en" ? "Verifying code and signing in..." : "Memverifikasi kode dan masuk...")
             : (language === "en" ? "Verify code and sign in" : "Verifikasi kode dan masuk")}
         </button>
+
         <p className="text-center text-xs text-on-surface-variant">
           {t("noAccount")} <Link className="font-bold text-secondary" href="/admin/register">{t("register")}</Link>
         </p>

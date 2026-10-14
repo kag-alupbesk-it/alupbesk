@@ -122,6 +122,15 @@ export function RegisterForm() {
           : "Verifikasi email belum aktif di Supabase. Aktifkan konfirmasi email dan template kode {{ .Token }} sebelum mendaftar.");
       }
 
+      // Supabase mengembalikan user tanpa identitas saat email sudah terdaftar
+      // (anti-enumeration). Jangan lanjut ke /api/auth/register karena userId-nya
+      // palsu dan akan memicu AUTH_USER_NOT_FOUND.
+      if (data.user.identities && data.user.identities.length === 0) {
+        throw new Error(language === "en"
+          ? "This email is already registered. Please sign in instead, or wait for Owner approval."
+          : "Email ini sudah terdaftar. Silakan login, atau tunggu persetujuan Owner.");
+      }
+
       // Simpan role & dept pilihan pemohon ke public.users agar tidak jatuh ke
       // nilai default (pelanggan) yang ditulis trigger/auth.
       const profileResponse = await fetch("/api/auth/register", {
