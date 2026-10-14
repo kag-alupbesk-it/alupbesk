@@ -3,17 +3,8 @@
 import { usePathname } from "next/navigation";
 import { clsx } from "clsx";
 import TopBar from "../TopBar/TopBar";
-import MobileBottomNav from "@/app/MobileBottomNav";
 import { useSidebar } from "../SidebarProvider/SidebarProvider";
 import { getRolePagePath } from "@/frontend/shared/navigation/getRolePagePath";
-
-const BOTTOM_NAV = [
-  { href: "/manager", label: "Overview", icon: "dashboard" },
-  { href: "/manager/financials", label: "Financials", icon: "payments" },
-  { href: "/manager/users", label: "Users", icon: "group" },
-  { href: "/manager/inventory", label: "Inventory", icon: "inventory_2" },
-  { href: "/manager/reports", label: "Reports", icon: "assessment" },
-];
 
 const pageTitles: Record<string, string> = {
   "/manager": "Overview",
@@ -26,7 +17,7 @@ const pageTitles: Record<string, string> = {
 export default function ManagerShell({ children }: { children: React.ReactNode }) {
   const pathname = getRolePagePath(usePathname());
   const title = pageTitles[pathname] || "Dashboard";
-  const { desktopOpen, toggle } = useSidebar();
+  const { desktopOpen } = useSidebar();
 
   return (
     <div
@@ -36,8 +27,7 @@ export default function ManagerShell({ children }: { children: React.ReactNode }
       )}
     >
       <TopBar title={title} />
-      <main className="flex-1 pt-12 pb-24 lg:pt-16 lg:pb-0">{children}</main>
-      <MobileBottomNav items={BOTTOM_NAV} onMore={toggle} />
+      <main className="roleMobileTypography flex-1 pb-24 pt-12 lg:pb-0 lg:pt-16">{children}</main>
     </div>
   );
 }

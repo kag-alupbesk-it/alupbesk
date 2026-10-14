@@ -8,15 +8,18 @@ import { KasSection } from "../KasSection/KasSection";
 import { PayrollSection } from "../PayrollSection/PayrollSection";
 import { TerminSection } from "../TerminSection/TerminSection";
 import Sidebar from "@/frontend/Manager/(keuangan)/components/layout/Sidebar/Sidebar";
+import ThemeToggle from "@/app/ThemeToggle";
+import { LogoutButton } from "@/frontend/auth/LogoutButton";
+import { financeNavigationItems, type FinanceTabKey } from "@/frontend/shared/navigation/roleNavigation";
 
-export type TabKey = "kas" | "grafik" | "termin" | "payroll";
+export type TabKey = FinanceTabKey;
 
-const TABS: { key: TabKey; label: string; ikon: string; ringkasan: string }[] = [
-  { key: "kas", label: "Kas", ikon: "payments", ringkasan: "Saldo, pemasukan, pengeluaran, dan kas beredar" },
-  { key: "grafik", label: "Grafik", ikon: "show_chart", ringkasan: "Arus kas dan rekap pengeluaran otomatis" },
-  { key: "termin", label: "Termin", ikon: "receipt_long", ringkasan: "Invoice, termin, dan status pembayaran" },
-  { key: "payroll", label: "Payroll", ikon: "badge", ringkasan: "Gaji karyawan dan slip gaji" },
-];
+const TAB_SUMMARIES: Record<TabKey, string> = {
+  kas: "Saldo, pemasukan, pengeluaran, dan kas beredar",
+  grafik: "Arus kas dan rekap pengeluaran otomatis",
+  termin: "Invoice, termin, dan status pembayaran",
+  payroll: "Gaji karyawan dan slip gaji",
+};
 
 function IsiTab({ tab }: { tab: TabKey }) {
   const { state, clearToast } = useFinance();
@@ -27,21 +30,21 @@ function IsiTab({ tab }: { tab: TabKey }) {
     return () => window.clearTimeout(timer);
   }, [state.toast, clearToast]);
 
-  const tabAktif = TABS.find((item) => item.key === tab) ?? TABS[0];
+  const tabAktif = financeNavigationItems.find((item) => item.key === tab) ?? financeNavigationItems[0];
 
   return (
-    <div className="p-3 sm:p-4 md:p-6">
+    <div className="p-3 pb-24 sm:p-4 sm:pb-24 md:px-6 md:pt-6 md:pb-24 lg:pb-6">
       <div className="w-full space-y-5">
         <header className={s.pageHeader}>
           <p className={s.pageEyebrow}>Modul Keuangan</p>
           <h1 className={s.pageTitle}>{tabAktif.label}</h1>
-          <p className={s.pageSubtitle}>{tabAktif.ringkasan}</p>
+          <p className={s.pageSubtitle}>{TAB_SUMMARIES[tabAktif.key]}</p>
         </header>
 
         <div
           role="tabpanel"
-          id={`panel-${tab}`}
-          aria-labelledby={`tab-${tab}`}
+          id="panel-finance"
+          aria-label={tabAktif.label}
           tabIndex={-1}
           className="animate-fadeIn"
         >
@@ -57,39 +60,18 @@ function IsiTab({ tab }: { tab: TabKey }) {
 
 export function KeuanganDashboard() {
   const [tab, setTab] = useState<TabKey>("kas");
-  const [navOpen, setNavOpen] = useState(false);
-
-  useEffect(() => {
-    if (!navOpen) return;
-    const onKey = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setNavOpen(false);
-    };
-    document.body.style.overflow = "hidden";
-    window.addEventListener("keydown", onKey);
-    return () => {
-      document.body.style.overflow = "";
-      window.removeEventListener("keydown", onKey);
-    };
-  }, [navOpen]);
 
   return (
     <FinanceProvider>
       <div className="flex min-h-dvh w-full">
-        <Sidebar activeTab={tab} onTabChange={setTab} open={navOpen} onClose={() => setNavOpen(false)} />
-        <main className="min-w-0 flex-1 lg:pl-64">
-          <div className={s.mobileBar}>
-            <button
-              type="button"
-              onClick={() => setNavOpen(true)}
-              aria-label="Buka menu navigasi"
-              aria-expanded={navOpen}
-              className={s.mobileBarButton}
-            >
-              <span aria-hidden="true" className={s.iconMd}>
-                menu
-              </span>
-            </button>
-            <p className={s.navTitleMobile}>{TABS.find((item) => item.key === tab)?.label ?? "Kas"}</p>
+        <Sidebar activeTab={tab} onTabChange={setTab} />
+        <main className="roleMobileTypography min-w-0 flex-1 lg:ml-64">
+          <div className={`${s.mobileBar} justify-between`}>
+            <p className={s.navTitleMobile}>{financeNavigationItems.find((item) => item.key === tab)?.label ?? "Kas"}</p>
+            <div className="flex shrink-0 items-center gap-2">
+              <ThemeToggle />
+              <LogoutButton />
+            </div>
           </div>
           <IsiTab tab={tab} />
         </main>

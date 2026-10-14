@@ -138,7 +138,7 @@ export default function DashboardSection() {
               <h4 className={styles.chartTitle}>Pemasukan vs Pengeluaran</h4>
               <p className={styles.chartSubtitle}>Financial trend comparison (Q4)</p>
             </div>
-            <div className="flex items-center gap-4">
+            <div className="flex w-full min-w-0 flex-col items-start gap-3 sm:flex-row sm:flex-wrap sm:items-center lg:w-auto lg:gap-4">
               <div className={styles.toggleGroup}>
                 {(["daily", "weekly", "monthly", "yearly"] as Period[]).map((p) => (
                   <button key={p} onClick={() => setPeriod(p)} className={`${styles.toggleButton} ${period === p ? styles.toggleActive : styles.toggleInactive}`}>{periodLabels[p]}</button>

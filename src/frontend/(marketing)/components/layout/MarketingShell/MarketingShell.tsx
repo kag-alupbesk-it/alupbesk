@@ -2,19 +2,10 @@
 
 import { clsx } from "clsx";
 import TopBar from "../TopBar/TopBar";
-import MobileBottomNav from "@/app/MobileBottomNav";
 import { useSidebar } from "../SidebarProvider/SidebarProvider";
 
-const BOTTOM_NAV = [
-  { href: "/marketing", label: "Promosi", icon: "campaign" },
-  { href: "/marketing/produk", label: "Produk", icon: "inventory_2" },
-  { href: "/marketing/pesanan", label: "Pesanan", icon: "receipt_long" },
-  { href: "/marketing/konten", label: "Konten", icon: "edit_note" },
-  { href: "/marketing/laporan", label: "Laporan", icon: "bar_chart" },
-];
-
 export default function MarketingShell({ children, title }: { children: React.ReactNode; title?: string }) {
-  const { desktopOpen, toggle } = useSidebar();
+  const { desktopOpen } = useSidebar();
 
   return (
     <div
@@ -24,8 +15,7 @@ export default function MarketingShell({ children, title }: { children: React.Re
       )}
     >
       <TopBar title={title ?? "Marketing"} />
-      <main className="flex-1 pt-12 pb-24 lg:pt-16 lg:pb-0">{children}</main>
-      <MobileBottomNav items={BOTTOM_NAV} onMore={toggle} />
+      <main className="roleMobileTypography flex-1 pb-24 pt-12 lg:pb-0 lg:pt-16">{children}</main>
     </div>
   );
 }

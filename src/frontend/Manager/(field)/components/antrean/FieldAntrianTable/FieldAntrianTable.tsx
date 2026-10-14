@@ -48,7 +48,7 @@ export function FieldAntrianTable({ deliveries, onOpenDetail }: Props) {
     <>
       <div className={s.mobileList}>
         {deliveries.length === 0 && (
-          <div className={`${s.card} py-10 text-center text-xs text-on-surface-variant`}>
+          <div className={`${s.card} break-words py-10 text-center text-sm leading-relaxed text-on-surface-variant`}>
             Tidak ada data pengiriman.
           </div>
         )}
@@ -59,18 +59,18 @@ export function FieldAntrianTable({ deliveries, onOpenDetail }: Props) {
           return (
             <div key={delivery.id} className={s.card}>
               <div className={s.cardTop}>
-                <button className="min-w-0 text-left" onClick={() => onOpenDetail(delivery)}>
+                <button className="min-w-0 break-words text-left" onClick={() => onOpenDetail(delivery)}>
                   <div className={s.orderIdText}>{delivery.id}</div>
                   <div className={s.produksiText}>{delivery.kodeProduksi}</div>
                 </button>
                 <FieldStatusBadge status={delivery.status} />
               </div>
-              <div className={s.cardInfo}>
-                <div className="truncate">
+              <div className={`${s.cardInfo} min-w-0`}>
+                <div className="break-words">
                   {delivery.namaKontraktor}
                   {delivery.armada?.namaSopir ? ` · Sopir: ${delivery.armada.namaSopir}` : ""}
                 </div>
-                <div className="truncate">{delivery.alamatProyek}</div>
+                <div className="break-words">{delivery.alamatProyek}</div>
               </div>
               <div className={s.cardMeta}>
                 <span className={s.quantityText}>{total}</span>

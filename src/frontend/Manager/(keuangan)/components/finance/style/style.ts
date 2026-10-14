@@ -169,7 +169,7 @@ export const pageTitle = "font-headline mt-2 hidden text-2xl font-bold text-on-s
 export const navTitleMobile = "font-headline truncate text-lg font-bold text-on-surface";
 
 export const mobileBar =
-  "sticky top-0 z-30 flex items-center gap-3 border-b border-outline/30 bg-primary-container/95 px-3 py-3 backdrop-blur lg:hidden";
+  "sticky top-0 z-30 flex items-center gap-3 border-b border-outline/30 bg-primary-container/95 px-4 py-3 backdrop-blur lg:hidden";
 
 export const mobileBarButton =
   "inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-outline/30 text-on-surface-variant transition-colors hover:border-secondary/50 hover:text-secondary";

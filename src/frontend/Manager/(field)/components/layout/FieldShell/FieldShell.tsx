@@ -3,7 +3,6 @@
 import { clsx } from "clsx";
 import { usePathname } from "next/navigation";
 import TopBar from "../TopBar/TopBar";
-import BottomNav from "../BottomNav/BottomNav";
 import { useSidebar } from "../SidebarProvider/SidebarProvider";
 import { getRolePagePath } from "@/frontend/shared/navigation/getRolePagePath";
 
@@ -27,8 +26,7 @@ export default function FieldShell({ children }: { children: React.ReactNode }) 
       )}
     >
       <TopBar title={title} />
-      <main className="flex-1 pt-12 pb-24 lg:pt-16 lg:pb-0">{children}</main>
-      <BottomNav />
+      <main className="roleMobileTypography flex-1 pb-24 pt-12 lg:pb-0 lg:pt-16">{children}</main>
     </div>
   );
 }

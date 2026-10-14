@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useMemo, useRef, useState } from "react";
+import { usePathname } from "next/navigation";
 import { gudangInventoryApi, productionRequestsApi, type InventorySnapshot } from "@/services/api/index";
 import { usePollingResource } from "@/frontend/shared/hooks/usePollingResource";
 import { useReadOnly } from "@/frontend/shared/access/AccessModeProvider";
@@ -21,6 +22,10 @@ import { TransactionModal, type TransactionFormResult } from "../TransactionModa
 import { CategoryModal } from "../CategoryModal/CategoryModal";
 import { ConfirmModal } from "../ConfirmModal/ConfirmModal";
 import * as s from "../../style/style";
+import ResponsiveRoleNavigation from "@/frontend/shared/navigation/ResponsiveRoleNavigation";
+import { getRoleNavigationItems } from "@/frontend/shared/navigation/roleNavigation";
+import { useSidebar } from "@/frontend/Manager/(gudang)/components/layout/SidebarProvider/SidebarProvider";
+import { getRolePagePath } from "@/frontend/shared/navigation/getRolePagePath";
 
 const EMPTY_SNAPSHOT: InventorySnapshot = {
   categories: [],
@@ -32,15 +37,13 @@ const EMPTY_SNAPSHOT: InventorySnapshot = {
 
 type TabKey = "master" | "masuk" | "keluar" | "permintaan";
 
-const TABS: { key: TabKey; label: string; icon: string }[] = [
-  { key: "master", label: "Master Stok", icon: "inventory_2" },
-  { key: "masuk", label: "Barang Masuk", icon: "move_to_inbox" },
-  { key: "keluar", label: "Barang Keluar", icon: "outbox" },
-  { key: "permintaan", label: "Permintaan Produksi", icon: "assignment" },
-];
+const NAV_ITEMS = getRoleNavigationItems("gudang");
 
 export function InventorySection() {
   const readOnly = useReadOnly();
+  const pathname = getRolePagePath(usePathname());
+  const isOwnerInventoryPage = pathname === "/owner/gudang";
+  const { desktopOpen } = useSidebar();
   const loadSnapshot = useCallback(() => gudangInventoryApi.getSnapshot(), []);
   const { data, error: loadError, refresh } = usePollingResource<InventorySnapshot>(
     loadSnapshot,
@@ -60,6 +63,12 @@ export function InventorySection() {
   const [transactionMode, setTransactionMode] = useState<"in" | "out" | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<GudangInventoryItem | null>(null);
   const importInputRef = useRef<HTMLInputElement>(null);
+
+  const isTabKey = (key: string): key is TabKey =>
+    key === "master" || key === "masuk" || key === "keluar" || key === "permintaan";
+  const handleNavigationSelect = (key: string) => {
+    if (isTabKey(key)) setTab(key);
+  };
 
   const categoryNames = useMemo(
     () => new Map(data.categories.map((category) => [category.id, category.name])),
@@ -173,8 +182,18 @@ export function InventorySection() {
     tab === "master" ? "items" : tab === "masuk" ? "in" : "out";
 
   return (
-    <div className={s.container}>
-      <div className={s.wrapper}>
+    <>
+      {!isOwnerInventoryPage && (
+        <ResponsiveRoleNavigation
+          role="gudang"
+          items={NAV_ITEMS}
+          desktopOpen={desktopOpen}
+          selectedKey={tab}
+          onSelect={handleNavigationSelect}
+        />
+      )}
+      <div className={s.container}>
+        <div className={s.wrapper}>
         <div className={s.header}>
           <div>
             <h1 className={s.headerTitle}>Data Gudang Inventaris</h1>
@@ -213,8 +232,8 @@ export function InventorySection() {
               <span className={s.buttonIcon}>download</span>
               Export
             </button>
+            </div>
           </div>
-        </div>
 
         <div className={s.metricsRow}>
           <MetricCard icon="inventory" label="Jenis Barang" value={data.items.length} />
@@ -227,17 +246,19 @@ export function InventorySection() {
           />
         </div>
 
-        <div className={s.tabs}>
-          {TABS.map((item) => (
-            <button
-              key={item.key}
-              className={`${s.tab} ${tab === item.key ? s.tabActive : s.tabInactive}`}
-              onClick={() => setTab(item.key)}
-            >
-              {item.label}
-            </button>
-          ))}
-        </div>
+        {isOwnerInventoryPage && (
+          <div className={s.tabs}>
+            {NAV_ITEMS.map((item) => (
+              <button
+                key={item.key}
+                className={`${s.tab} ${tab === item.key ? s.tabActive : s.tabInactive}`}
+                onClick={() => handleNavigationSelect(item.key)}
+              >
+                {item.label}
+              </button>
+            ))}
+          </div>
+        )}
 
         {(actionError || loadError) && (
           <p className={s.errorBanner}>{actionError || loadError}</p>
@@ -353,6 +374,7 @@ export function InventorySection() {
         />
       )}
     </div>
+    </>
   );
 }
 
