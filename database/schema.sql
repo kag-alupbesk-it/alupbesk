@@ -38,8 +38,17 @@ create table if not exists users (
     role        user_role not null default 'pelanggan',
     status      text not null default 'ACTIVE', -- ACTIVE | PENDING | SUSPENDED | INACTIVE
     active      boolean not null default true,
+    email_confirmed_at timestamptz,
     created_at  timestamptz not null default now()
 );
+
+alter table users add column if not exists email_confirmed_at timestamptz;
+update public.users as profile
+   set email_confirmed_at = auth_user.email_confirmed_at
+  from auth.users as auth_user
+ where profile.id = auth_user.id
+   and profile.email_confirmed_at is null
+   and auth_user.email_confirmed_at is not null;
 
 alter table users enable row level security;
 
@@ -52,8 +61,11 @@ create table if not exists role_requests (
                     check (status in ('PENDING', 'APPROVED', 'REJECTED')),
     reviewed_by     uuid references users(id) on delete set null,
     reviewed_at     timestamptz,
+    owner_notified_at timestamptz,
     created_at      timestamptz not null default now()
 );
+
+alter table role_requests add column if not exists owner_notified_at timestamptz;
 
 create index if not exists idx_role_requests_pending
     on role_requests(created_at desc)
@@ -748,7 +760,6 @@ as $$
 declare
     requested_role_text text;
     profile_id_value uuid;
-    profile_active boolean;
     display_name text;
     department text;
 begin
@@ -774,20 +785,35 @@ begin
         nullif(trim(new.raw_user_meta_data ->> 'department'), '')
     );
 
-    select id, active
-      into profile_id_value, profile_active
+    select id
+      into profile_id_value
       from public.users
      where lower(email) = lower(new.email)
      limit 1;
-    if profile_active is true then
-        raise exception 'PROFILE_ALREADY_ACTIVE';
+    -- Some installations already have an auth.users trigger that creates a
+    -- default ACTIVE customer profile. If it belongs to this same auth user,
+    -- this role request must still be forced to PENDING below.
+    -- A profile with the same email but a different auth ID is usually an
+    -- orphan left behind when the auth user was deleted without its profile.
+    -- Reclaim it when the profile is not active; only a genuinely active
+    -- account with the same email stays a duplicate and blocks the signup.
+    if profile_id_value is not null and profile_id_value <> new.id then
+        if exists (
+            select 1 from public.users
+             where id = profile_id_value
+               and active = true
+        ) then
+            raise exception 'PROFILE_ALREADY_ACTIVE';
+        end if;
+        delete from public.users where id = profile_id_value;
+        profile_id_value := null;
     end if;
 
     if profile_id_value is null then
-        insert into public.users (id, name, email, dept, role, status, active)
+        insert into public.users (id, name, email, dept, role, status, active, email_confirmed_at)
         values (
             new.id, display_name, lower(new.email), department,
-            requested_role_text::public.user_role, 'PENDING', false
+            requested_role_text::public.user_role, 'PENDING', false, new.email_confirmed_at
         )
         returning id into profile_id_value;
     else
@@ -796,6 +822,7 @@ begin
            set name = display_name,
                dept = department,
                role = requested_role_text::public.user_role,
+               email_confirmed_at = new.email_confirmed_at,
                status = 'PENDING',
                active = false
          where id = profile_id_value;
@@ -814,10 +841,50 @@ begin
 end;
 $$;
 
+create or replace function public.sync_auth_email_confirmation()
+returns trigger
+language plpgsql
+security definer
+set search_path = public, auth
+as $$
+begin
+    update public.users
+       set email_confirmed_at = new.email_confirmed_at
+     where id = new.id;
+    return new;
+end;
+$$;
+
+drop trigger if exists on_auth_email_confirmation_sync on auth.users;
+create trigger on_auth_email_confirmation_sync
+after update of email_confirmed_at on auth.users
+for each row
+when (old.email_confirmed_at is distinct from new.email_confirmed_at)
+execute function public.sync_auth_email_confirmation();
+
 drop trigger if exists on_auth_user_role_request on auth.users;
 create trigger on_auth_user_role_request
 after insert on auth.users
 for each row execute function public.create_role_request_for_auth_user();
+
+-- Hapus profil public.users saat auth user dihapus agar tidak meninggalkan
+-- profil yatim (email sama, id berbeda) yang memblokir pendaftaran ulang.
+create or replace function public.delete_profile_for_auth_user()
+returns trigger
+language plpgsql
+security definer
+set search_path = public, auth
+as $$
+begin
+    delete from public.users where id = old.id;
+    return old;
+end;
+$$;
+
+drop trigger if exists on_auth_user_deleted on auth.users;
+create trigger on_auth_user_deleted
+after delete on auth.users
+for each row execute function public.delete_profile_for_auth_user();
 
 create or replace function public.review_role_request(
     request_id_input uuid,
@@ -857,6 +924,13 @@ begin
     end if;
 
     if decision_input = 'approve' then
+        if not exists (
+            select 1 from auth.users
+             where id = request_row.auth_user_id
+               and email_confirmed_at is not null
+        ) then
+            raise exception 'EMAIL_NOT_CONFIRMED';
+        end if;
         update public.users
            set role = request_row.requested_role,
                status = 'ACTIVE',
@@ -936,17 +1010,26 @@ grant select on role_requests to authenticated;
 revoke all on public.push_subscriptions from public, anon;
 grant select, insert, update, delete on public.push_subscriptions to service_role;
 
--- Realtime untuk notifikasi role request
+-- Realtime untuk antrean tugas yang tampil pada lonceng notifikasi.
 do $$
+declare
+    notification_table text;
 begin
-    if exists (select 1 from pg_publication where pubname = 'supabase_realtime')
-       and not exists (
-        select 1 from pg_publication_tables
-         where pubname = 'supabase_realtime'
-           and schemaname = 'public'
-           and tablename = 'role_requests'
-       ) then
-        alter publication supabase_realtime add table public.role_requests;
+    if exists (select 1 from pg_publication where pubname = 'supabase_realtime') then
+        foreach notification_table in array array[
+            'role_requests', 'orders', 'custom_requests',
+            'gudang_production_requests', 'pm_orders', 'field_deliveries'
+        ] loop
+            if to_regclass(format('public.%I', notification_table)) is not null
+               and not exists (
+                    select 1 from pg_publication_tables
+                     where pubname = 'supabase_realtime'
+                       and schemaname = 'public'
+                       and tablename = notification_table
+               ) then
+                execute format('alter publication supabase_realtime add table public.%I', notification_table);
+            end if;
+        end loop;
     end if;
 end;
 $$;

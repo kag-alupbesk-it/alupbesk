@@ -3,7 +3,7 @@ export default function FooterLinks({
   links,
 }: {
   title: string;
-  links: string[];
+  links: { label: string; href: string }[];
 }) {
   return (
     <div>
@@ -11,13 +11,13 @@ export default function FooterLinks({
         {title}
       </h4>
       <ul className="space-y-4 text-label-sm text-on-surface-variant">
-        {links.map((link) => (
-          <li key={link}>
+        {links.map(({ label, href }) => (
+          <li key={`${label}-${href}`}>
             <a
               className="transition-colors hover:text-secondary"
-              href={link === "FAQ" || link === "Pertanyaan Umum" ? "#faq" : "#"}
+              href={href}
             >
-              {link}
+              {label}
             </a>
           </li>
         ))}

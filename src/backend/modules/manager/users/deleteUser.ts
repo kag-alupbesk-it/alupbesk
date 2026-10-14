@@ -20,5 +20,13 @@ export async function deleteUser(id: string, actorRole: AppRole): Promise<boolea
     .select("id")
     .maybeSingle();
   if (error) throw error;
+  if (data) {
+    // Hapus juga kredensial Auth agar tidak meninggalkan profil yatim yang
+    // memblokir pendaftaran ulang dengan email yang sama.
+    const { error: authError } = await db.auth.admin.deleteUser(id);
+    if (authError) {
+      console.error(`[deleteUser] hapus auth user ${id} gagal:`, authError);
+    }
+  }
   return Boolean(data);
 }

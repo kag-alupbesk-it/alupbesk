@@ -7,6 +7,7 @@ import QuickSearch from "./QuickSearch";
 import NotificationBell from "./NotificationBell";
 import DateBadge from "./DateBadge";
 import ProfileMenu from "./ProfileMenu";
+import { LanguageSwitcher } from "@/frontend/shared/i18n/LanguageSwitcher";
 
 interface TopBarProps {
   title: string;
@@ -30,6 +31,7 @@ export default function TopBar({ title }: TopBarProps) {
       <div className="ml-auto flex items-center gap-2 lg:gap-4 pr-3 lg:pr-6">
         <QuickSearch />
         <NotificationBell />
+        <LanguageSwitcher className="h-8 w-8" />
         <DateBadge />
         {/* ── Theme toggle ── */}
         <ThemeToggle />

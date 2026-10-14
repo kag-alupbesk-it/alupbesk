@@ -2,9 +2,24 @@
 
 import FooterLinks from "../../shared/FooterLinks/FooterLinks";
 import { useLanguage } from "@/frontend/shared/i18n/LanguageProvider";
+import { catalogApi } from "@/services/api";
+import type { Product } from "@/services/catalog";
+import { useCallback } from "react";
+import { usePollingResource } from "@/frontend/shared/hooks/usePollingResource";
+import { contactDefaults, profileDefaults } from "@/frontend/(pelanggan)/data/siteContentDefaults";
+import { usePublicSiteContent } from "@/frontend/(pelanggan)/hooks/usePublicSiteContent";
 
 export default function Footer() {
   const { language, t } = useLanguage();
+  const { data: profile } = usePublicSiteContent("profile", profileDefaults);
+  const { data: contact } = usePublicSiteContent("contact", contactDefaults);
+  const loadProducts = useCallback(() => catalogApi.getProducts(), []);
+  const { data: products } = usePollingResource<Product[]>(loadProducts, []);
+  const productCategories = [...new Set(products.map((product) => product.category.trim()).filter(Boolean))].sort((a, b) => a.localeCompare(b));
+  const mapUrl = contact.address
+    ? `https://www.google.com/maps?q=${encodeURIComponent(contact.address)}&output=embed`
+    : "";
+
   return (
     <footer className="bg-primary-container py-16 text-on-surface">
       <div className="max-w-container-max mx-auto px-margin-x-mobile md:px-margin-x-desktop">
@@ -15,50 +30,44 @@ export default function Footer() {
                 ALUPBESK
               </span>
             </div>
-            <p className="text-label-sm leading-relaxed text-on-surface-variant">
-              {language === "en"
-                ? "Industrial aluminium solutions focused on precision, quality, and reliable material supply."
-                : "Penyedia solusi aluminium industrial dengan fokus pada presisi, kualitas, dan pasokan material yang andal."}
-            </p>
+            <p className="text-label-sm leading-relaxed text-on-surface-variant">{profile.description1}</p>
           </div>
           <FooterLinks
             title={t("quickLinks")}
             links={[
-              t("home"),
-              t("aboutCompany"),
-              t("productCatalog"),
-              t("partners"),
-              language === "en" ? "FAQ" : "Pertanyaan Umum",
+              { label: t("home"), href: "/catalog#beranda" },
+              { label: t("aboutCompany"), href: "/catalog#profile" },
+              { label: t("productCatalog"), href: "/catalog#katalog" },
+              { label: t("partners"), href: "/catalog#partners" },
+              { label: language === "en" ? "FAQ" : "Pertanyaan Umum", href: "/catalog#faq" },
             ]}
           />
           <FooterLinks
             title={t("mainProducts")}
-            links={[
-              "Aluminum Extrusion",
-              "Linear Guides",
-              "Structural Framing",
-              "Custom Machining",
-            ]}
+            links={productCategories.map((category) => ({
+              label: category,
+              href: `/catalog?kategori=${encodeURIComponent(category)}#katalog`,
+            }))}
           />
           <div className="space-y-4">
             <h3 className="text-headline-h3 font-semibold text-secondary">
               {t("ourLocation")}
             </h3>
-            <div className="overflow-hidden rounded-xl border border-outline/20">
+            {mapUrl && <div className="overflow-hidden rounded-xl border border-outline/20">
               <iframe
-                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3952.849310412219!2d110.444865!3d-7.832166!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x2e7a5100040e42c3%3A0xedafc0d0b2eb3e8d!2sCV%20ALUPBESK%20CONTRACTOR!5e0!3m2!1sid!2sid!4v1"
+                src={mapUrl}
                 width="100%"
                 height="180"
                 style={{ border: 0 }}
                 allowFullScreen
                 loading="lazy"
                 referrerPolicy="no-referrer-when-downgrade"
-                title="CV ALUPBESK CONTRACTOR - Google Maps"
+                title={`Lokasi ${contact.address}`}
                 className="rounded-xl"
               />
-            </div>
+            </div>}
             <p className="text-label-sm leading-relaxed text-on-surface-variant">
-            Karang Tengah Sitimulyo, Karang Anom, Sitimulyo, Piyungan, Bantul, Special Region of Yogyakarta, Indonesia
+              {contact.address}
             </p>
           </div>
         </div>

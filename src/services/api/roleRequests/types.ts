@@ -6,4 +6,5 @@ export interface RoleRequestItem {
   department: string;
   requestedRole: string;
   createdAt: string;
+  emailVerified: boolean;
 }

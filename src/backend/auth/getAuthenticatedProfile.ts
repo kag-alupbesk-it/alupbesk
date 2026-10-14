@@ -12,6 +12,17 @@ export interface AuthenticatedProfile {
   active: boolean;
 }
 
+export class UnverifiedEmailError extends Error {
+  constructor() {
+    super("EMAIL_UNVERIFIED");
+    this.name = "UnverifiedEmailError";
+  }
+}
+
+// Akun Owner bootstrap: dibuat manual di Supabase Auth tanpa baris public.users.
+// Diselaraskan dengan pengecualian yang sama di src/proxy.ts.
+const OWNER_BOOTSTRAP_EMAIL = "alupbesk96@gmail.com";
+
 export async function getAuthenticatedProfile(): Promise<AuthenticatedProfile | null> {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -34,11 +45,25 @@ export async function getAuthenticatedProfile(): Promise<AuthenticatedProfile | 
   });
   const { data: { user }, error: authError } = await client.auth.getUser();
   if (authError || !user?.email) return null;
+  if (!user.email_confirmed_at) throw new UnverifiedEmailError();
+
+  const userEmail = user.email.toLowerCase();
+
+  if (userEmail === OWNER_BOOTSTRAP_EMAIL) {
+    const metadataName = (user.user_metadata as { name?: string } | null)?.name;
+    return {
+      id: user.id,
+      name: typeof metadataName === "string" && metadataName.trim() ? metadataName : "Owner",
+      email: userEmail,
+      role: "owner",
+      active: true,
+    };
+  }
 
   const { data, error } = await db
     .from("users")
     .select("id, name, email, role, active")
-    .eq("email", user.email.toLowerCase())
+    .eq("email", userEmail)
     .maybeSingle();
   if (error || !data || !data.active) return null;
 

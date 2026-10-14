@@ -9,6 +9,7 @@ import {
   FilePlus2,
   Inbox,
   LayoutDashboard,
+  PackageSearch,
   X,
   type LucideIcon,
 } from "lucide-react";
@@ -35,6 +36,7 @@ export function PMSidebar() {
   const navigation: NavigationItem[] = [
     { href: "/pm", label: "Overview", icon: LayoutDashboard },
     { href: "/pm/pesanan", label: "Pesanan Masuk", icon: Inbox, badge: pendingCustom },
+    { href: "/pm/produk", label: "Katalog Produk", icon: PackageSearch },
     { href: "/pm/approval", label: "Approval Gambar", icon: ClipboardCheck, badge: pendingApproval },
   ];
 

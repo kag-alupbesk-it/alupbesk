@@ -5,20 +5,6 @@ import { readJsonBody } from "@/backend/http/readJsonBody";
 
 const decisionSchema = z.object({
   decision: z.enum(["approve", "reject"]),
-  role: z
-    .enum([
-      "pelanggan",
-      "marketing",
-      "gudang",
-      "keuangan",
-      "proyek",
-      "field",
-      "produksi",
-      "manager",
-      "owner",
-    ])
-    .optional(),
-  dept: z.string().trim().max(120).optional(),
 });
 
 export async function POST(
@@ -62,12 +48,13 @@ export async function POST(
       id,
       parsed.data.decision,
       access.profile.role,
-      { role: parsed.data.role, dept: parsed.data.dept },
+      access.profile.id,
     );
     return Response.json({ success: true, data: { id } });
   } catch (error) {
     const code = error instanceof Error ? error.message : "";
     const status = code === "DATABASE_UNAVAILABLE" ? 503
+      : code === "EMAIL_NOT_CONFIRMED" ? 409
       : code === "ROLE_FORBIDDEN" ? 403
         : code.includes("NOT_FOUND") ? 404
           : code.includes("ALREADY_REVIEWED") ? 409
@@ -79,7 +66,9 @@ export async function POST(
           code: status === 500 ? "DATABASE_ERROR" : code,
           message: status === 404
             ? "Permintaan role tidak ditemukan."
-            : status === 409
+            : code === "EMAIL_NOT_CONFIRMED"
+              ? "Email harus diverifikasi sebelum role dapat disetujui."
+              : status === 409
               ? "Permintaan ini sudah ditinjau. Muat ulang daftar."
               : status === 403
                 ? "Hanya Owner yang dapat menyetujui permintaan role."

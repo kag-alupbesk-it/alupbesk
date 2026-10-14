@@ -379,6 +379,7 @@ function reducer(state: FinanceState, action: FinanceAction): FinanceState {
 }
 
 type FinanceContextValue = {
+  loading: boolean;
   state: FinanceState;
   rekap: ReturnType<typeof REKAP_TRANSAKSI>;
   transaksiUrut: TransaksiKas[];
@@ -544,6 +545,7 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
     }));
     return {
       state,
+      loading: !loadedFromApi,
       rekap: REKAP_TRANSAKSI(state.transaksi),
       transaksiUrut,
       invoiceRingkas,
@@ -570,6 +572,7 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
     };
   }, [
     state,
+    loadedFromApi,
     tambahTransaksi,
     hapusTransaksi,
     tambahInvoice,

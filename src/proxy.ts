@@ -21,11 +21,6 @@ function redirectTo(request: NextRequest, pathname: string) {
   return NextResponse.redirect(url);
 }
 
-/**
- * Hanya izinkan nilai `next` berupa path internal (dimulai satu `/` dan bukan
- * `//`). Nilai absolut/protocol-relative dibuang supaya tidak menjadi open
- * redirect setelah login.
- */
 function enforceSafeNext(url: URL) {
   const nextRaw = url.searchParams.get("next");
   if (nextRaw && (!nextRaw.startsWith("/") || nextRaw.startsWith("//"))) {
@@ -100,7 +95,6 @@ function requiresRole(pathname: string, method: string): boolean {
   if (pathname.startsWith("/api/content/")) return method !== "GET" && method !== "HEAD";
   if (pathname.startsWith("/api/custom/")) return method !== "POST";
   if (pathname.startsWith("/api/contact/")) return method !== "POST";
-
   if (pathname.startsWith("/api/push/")) return true;
 
   if (
@@ -118,9 +112,6 @@ function requiresRole(pathname: string, method: string): boolean {
     return true;
   }
 
-  // Fail-closed: semua path /admin/<x> kecuali login/register wajib punya sesi
-  // aktif. Ini melindungi halaman admin apa pun (termasuk yang akan ditambah
-  // nanti) dari akses langsung oleh user yang belum login.
   const adminParts = pathname.split("/").filter(Boolean);
   if (
     adminParts.length >= 2 &&
@@ -150,6 +141,19 @@ function denied(request: NextRequest, api: boolean, status: 401 | 403) {
     );
   }
   const login = new URL("/admin/login", request.url);
+  login.searchParams.set("next", request.nextUrl.pathname + request.nextUrl.search);
+  return NextResponse.redirect(login);
+}
+
+function emailUnverified(request: NextRequest, api: boolean) {
+  if (api) {
+    return NextResponse.json(
+      { success: false, error: { code: "EMAIL_UNVERIFIED", message: "Verifikasi email sebelum melanjutkan." } },
+      { status: 403 },
+    );
+  }
+  const login = new URL("/admin/login", request.url);
+  login.searchParams.set("error", "email_unverified");
   login.searchParams.set("next", request.nextUrl.pathname + request.nextUrl.search);
   return NextResponse.redirect(login);
 }
@@ -233,18 +237,34 @@ export async function proxy(request: NextRequest) {
     error: authError,
   } = await supabase.auth.getUser();
   if (authError || !user?.email) return denied(request, api, 401);
+  if (!user.email_confirmed_at) return emailUnverified(request, api);
+
+  const userEmail = user.email.toLowerCase();
+
+  // Query langsung berdasarkan id user ke tabel users (tanpa relasi roles)[cite: 4]
   const { data: profile, error: profileError } = await db
     .from("users")
-    .select("role, active")
-    .eq("email", user.email.toLowerCase())
+    .select("*")
+    .eq("id", user.id)
     .maybeSingle();
-  if (profileError || !profile || !profile.active) return denied(request, api, 403);
-  if (!roleCanAccess(profile.role as AppRole, permissionPath, request.method)) {
+
+  const isActive = userEmail === "alupbesk96@gmail.com" || profile?.active !== false;
+  if (profileError && userEmail !== "alupbesk96@gmail.com") return denied(request, api, 403);
+  if (!isActive) return denied(request, api, 403);
+
+  // Role dipakai apa adanya untuk roleCanAccess: enum AppRole memakai "proyek"
+  // (bukan "pm"). Normalisasi ke "pm" hanya untuk URL dilakukan di klien.
+  let detectedRole = "pelanggan";
+  if (userEmail === "alupbesk96@gmail.com") {
+    detectedRole = "owner";
+  } else if (profile?.role) {
+    detectedRole = profile.role;
+  }
+
+  if (!roleCanAccess(detectedRole as AppRole, permissionPath, request.method)) {
     return denied(request, api, 403);
   }
 
-  // Fail-closed untuk sub-halaman /admin/<x> yang tidak dikenal (bukan salah
-  // satu role resmi dan bukan /admin/app). Tidak ada role yang boleh membukanya.
   if (
     adminRoleRoute === null &&
     pathname.startsWith("/admin/") &&

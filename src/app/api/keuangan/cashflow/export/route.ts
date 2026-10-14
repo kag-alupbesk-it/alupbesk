@@ -5,7 +5,7 @@ import { ensureHydrated } from "@/services/supabaseHydrate";
 
 export const dynamic = "force-dynamic";
 
-export async function GET(request: Request) {
+export async function GET() {
   try {
     await ensureHydrated();
     const kasData = getKasData();

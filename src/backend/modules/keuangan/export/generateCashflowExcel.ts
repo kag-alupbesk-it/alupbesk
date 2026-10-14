@@ -3,6 +3,12 @@ import type { KasEntry } from "../types";
 
 interface Transaction extends KasEntry {
   jenis: "kas_masuk" | "kas_keluar";
+  noNota?: string;
+  toko?: string;
+  person?: string;
+  accountCode?: string;
+  posProyek?: string;
+  pos?: string;
 }
 
 export interface CashflowExportResult {
@@ -11,7 +17,7 @@ export interface CashflowExportResult {
 }
 
 function toBuffer(workbook: ExcelJS.Workbook): Promise<Buffer> {
-  return workbook.xlsx.writeBuffer() as Promise<any>;
+  return workbook.xlsx.writeBuffer().then((value) => Buffer.from(value));
 }
 
 function getMonthYearLabel(tanggal?: string): string {
@@ -82,7 +88,7 @@ export async function generateCashflowExcel(transactions: Transaction[]): Promis
   }
   worksheet.getCell("I4").alignment = { horizontal: "center" };
 
-  let dataRowStart = 6;
+  const dataRowStart = 6;
   let currentRow = 6;
 
   // Saldo bulan lalu row
@@ -97,13 +103,13 @@ export async function generateCashflowExcel(transactions: Transaction[]): Promis
     const r = currentRow + idx;
     worksheet.getCell(`B${r}`).value = new Date(trx.tanggal);
     worksheet.getCell(`B${r}`).numFmt = "DD/MM/YYYY";
-    worksheet.getCell(`C${r}`).value = (trx as any).noNota || trx.sumber || trx.id;
-    worksheet.getCell(`D${r}`).value = (trx as any).toko || (trx as any).person || "";
+    worksheet.getCell(`C${r}`).value = trx.noNota || trx.sumber || trx.id;
+    worksheet.getCell(`D${r}`).value = trx.toko || trx.person || "";
     worksheet.getCell(`E${r}`).value = trx.jenis === "kas_masuk" ? "Kas Masuk" : "Kas Keluar";
     worksheet.getCell(`F${r}`).value = trx.deskripsi;
-    worksheet.getCell(`G${r}`).value = (trx as any).person || "";
-    worksheet.getCell(`H${r}`).value = (trx as any).accountCode || (trx as any).kategori || "";
-    worksheet.getCell(`L${r}`).value = (trx as any).posProyek || (trx as any).pos || (trx as any).kategori || "";
+    worksheet.getCell(`G${r}`).value = trx.person || "";
+    worksheet.getCell(`H${r}`).value = trx.accountCode || trx.kategori || "";
+    worksheet.getCell(`L${r}`).value = trx.posProyek || trx.pos || trx.kategori || "";
     
     if (trx.jenis === "kas_masuk" || trx.tipe === "masuk") {
       worksheet.getCell(`I${r}`).value = trx.jumlah;

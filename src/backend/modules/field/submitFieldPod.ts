@@ -1,6 +1,7 @@
 import { db } from "@/services/supabase";
 import type { FieldDelivery } from "@/services/field/types";
 import { mapFieldDelivery } from "./mapFieldDelivery";
+import { sendPushToRoles } from "@/services/push/send";
 
 interface Input {
   signatureImagePath: string;
@@ -36,5 +37,10 @@ export async function submitFieldPod(
     .select("*, field_delivery_items(*)")
     .single();
   if (error) throw error;
+  void sendPushToRoles(["proyek", "owner"], {
+    title: "Bukti pengiriman telah diunggah",
+    body: `Bukti terima untuk pengiriman ${id} telah dikirim tim lapangan.`,
+    url: "/admin/pm",
+  });
   return mapFieldDelivery(updated);
 }

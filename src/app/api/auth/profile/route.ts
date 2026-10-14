@@ -1,4 +1,4 @@
-import { getAuthenticatedProfile } from "@/backend/auth/getAuthenticatedProfile";
+import { getAuthenticatedProfile, UnverifiedEmailError } from "@/backend/auth/getAuthenticatedProfile";
 import { getAccountApprovalStatus } from "@/backend/auth/getAccountApprovalStatus";
 
 export const dynamic = "force-dynamic";
@@ -8,6 +8,12 @@ export async function GET() {
     const profile = await getAuthenticatedProfile();
     if (!profile) {
       const status = await getAccountApprovalStatus();
+      if (status === "EMAIL_UNVERIFIED") {
+        return Response.json(
+          { success: false, error: { code: "EMAIL_UNVERIFIED", message: "Verifikasi email sebelum melanjutkan." } },
+          { status: 403 },
+        );
+      }
       if (status === "PENDING") {
         return Response.json(
           { success: false, error: { code: "ACCOUNT_PENDING", message: "Akun menunggu persetujuan role dari Owner." } },
@@ -29,7 +35,14 @@ export async function GET() {
       { success: true, data: profile },
       { headers: { "Cache-Control": "no-store" } },
     );
-  } catch {
+  } catch (reason) {
+    // Authentication confirmation is a normal gate, not a server failure.
+    if (reason instanceof UnverifiedEmailError) {
+      return Response.json(
+        { success: false, error: { code: "EMAIL_UNVERIFIED", message: "Verifikasi email sebelum melanjutkan." } },
+        { status: 403 },
+      );
+    }
     return Response.json(
       { success: false, error: { code: "AUTH_ERROR", message: "Profil akun gagal dimuat." } },
       { status: 500 },
