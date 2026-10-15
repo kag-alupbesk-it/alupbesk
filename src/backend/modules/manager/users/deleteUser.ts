@@ -1,12 +1,13 @@
 import { db } from "@/services/supabase";
 import type { AppRole } from "@/backend/auth/roles";
+import { logAuditAction } from "@/backend/modules/audit/auditStore";
 
-export async function deleteUser(id: string, actorRole: AppRole): Promise<boolean> {
+export async function deleteUser(id: string, actorRole: AppRole, actorProfile?: { email?: string; name?: string; role?: string }): Promise<boolean> {
   if (!db) throw new Error("DATABASE_UNAVAILABLE");
   if (actorRole !== "owner") {
     const { data: current, error: readError } = await db
       .from("users")
-      .select("role")
+      .select("role, name, email")
       .eq("id", id)
       .maybeSingle();
     if (readError) throw readError;
@@ -17,7 +18,7 @@ export async function deleteUser(id: string, actorRole: AppRole): Promise<boolea
     .from("users")
     .delete()
     .eq("id", id)
-    .select("id")
+    .select("id, name, email")
     .maybeSingle();
   if (error) throw error;
   if (data) {
@@ -27,6 +28,12 @@ export async function deleteUser(id: string, actorRole: AppRole): Promise<boolea
     if (authError) {
       console.error(`[deleteUser] hapus auth user ${id} gagal:`, authError);
     }
+    logAuditAction({
+      profile: actorProfile,
+      action: "DELETE",
+      target: "User",
+      details: `Menghapus user: ${data.name ?? id} (${data.email ?? ""})`,
+    });
   }
   return Boolean(data);
 }

@@ -2,6 +2,7 @@
 
 import { useState, type ReactNode } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { clsx } from "clsx";
 import { getRolePagePath } from "./getRolePagePath";
@@ -63,7 +64,7 @@ export default function ResponsiveRoleNavigation({
 
   const itemClass = (active: boolean, usesMobileIndicator = false) =>
     clsx(
-      "relative z-10 flex w-full min-w-0 flex-col items-center justify-center gap-0.5 rounded-xl px-2 py-1.5 text-[10px] font-semibold leading-tight transition-colors lg:flex-none lg:flex-row lg:justify-start lg:gap-2 lg:rounded-lg lg:px-4 lg:py-3 lg:text-sm",
+      "relative z-10 flex w-full min-w-0 flex-col items-center justify-center gap-0.5 rounded-xl px-2 py-1.5 text-[10px] font-semibold leading-tight transition-colors lg:flex-none lg:flex-row lg:justify-start lg:gap-2 lg:rounded-md lg:px-3 lg:py-2 lg:text-sm",
       active
         ? clsx(
             "text-secondary lg:bg-secondary/10",
@@ -76,18 +77,20 @@ export default function ResponsiveRoleNavigation({
     <nav
       aria-label={`Navigasi ${role}`}
       className={clsx(
-        "fixed inset-x-0 bottom-0 z-50 flex flex-col border-t border-outline/40 bg-primary-container/95 px-2 pb-[env(safe-area-inset-bottom)] pt-1.5 shadow-2xl backdrop-blur-md lg:inset-y-0 lg:right-auto lg:w-64 lg:border-r lg:border-t-0 lg:px-3 lg:py-6",
+        "fixed inset-x-0 bottom-0 z-50 flex flex-col border-t border-outline/40 bg-primary-container/95 px-2 pb-[env(safe-area-inset-bottom)] pt-1.5 shadow-2xl backdrop-blur-md lg:inset-y-0 lg:right-auto lg:w-56 lg:border-r lg:border-t-0 lg:px-2.5 lg:py-6",
         desktopOpen ? "lg:flex" : "lg:hidden",
         expanded && "max-h-[75dvh] overflow-y-auto lg:max-h-none lg:overflow-visible",
       )}
     >
       <div className="mb-4 hidden items-center justify-center lg:flex lg:mb-8 lg:justify-start lg:px-3">
-        <span
-          aria-hidden="true"
-          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-secondary font-headline text-lg font-black text-primary"
-        >
-          A
-        </span>
+        <Image
+          alt="ALUPBESK"
+          width={120}
+          height={36}
+          unoptimized
+          className="h-8 w-auto"
+          src="https://lh3.googleusercontent.com/aida-public/AB6AXuCkO_l-9w6bkkBin3qoTG6N3CPGHRgmgHamUsLFsVuhUSz9-trFcZtc4J9-3VD2qtWy_mUatmgb-mBU2vA9Fo9eXrTZLsP7XYbnfpRDy4SxTPRtfcpkRFOmqJX2ICxC1DhosDrXu_ez0qbfpA9MFuX62sPdXm3UFe5lXo4TFu1a2NkAgqah8Xk4c8hy__wtXqML5NwpPBoCcLsq2DXxmxbTp5D4xmZfgk7jRZ59yEBHit7D8Nvon3bSuVUeVMKInwKE7xH4c39y5lI"
+        />
         <span className="ml-3 hidden min-w-0 lg:block">
           <span className="block truncate font-headline text-base font-extrabold tracking-[0.12em] text-on-surface">
             ALUPBESK
@@ -101,7 +104,7 @@ export default function ResponsiveRoleNavigation({
       <ul
         id={mobileNavId}
         className={clsx(
-          "relative w-full items-stretch gap-1 lg:flex-1 lg:gap-1",
+          "relative w-full items-stretch gap-1 lg:flex lg:flex-col lg:gap-1.5",
           expanded ? "grid grid-cols-2 lg:flex lg:flex-col" : "flex flex-row lg:flex-col",
         )}
       >

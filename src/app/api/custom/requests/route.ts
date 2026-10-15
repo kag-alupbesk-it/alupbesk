@@ -5,7 +5,6 @@ import { readJsonBody } from "@/backend/http/readJsonBody";
 import { isAllowedRawImage } from "@/backend/modules/custom/requests/validation";
 import { checkRateLimit } from "@/backend/http/rateLimit";
 import { ensureHydrated } from "@/services/supabaseHydrate";
-import { verifyHCaptchaToken } from "@/backend/http/verifyHCaptcha";
 
 const customRequestItemSchema = z.object({
   name: z.string().trim().min(1, "Nama item wajib diisi."),
@@ -24,11 +23,10 @@ const requestSchema = z
     projectAddress: z.string().trim().min(1, "Alamat proyek wajib diisi.").max(200),
     layanan: z.string().trim().min(1, "Layanan wajib dipilih."),
     deskripsi: z.string().trim().min(1, "Deskripsi kebutuhan wajib diisi.").max(4000),
-    deadline: z.string().trim().min(1, "Target deadline wajib diisi."),
     items: z.array(customRequestItemSchema).min(1, "Tambahkan minimal satu item spesifikasi."),
     rawImage: z.string().trim().min(1, "Gambar referensi wajib diunggah."),
     rawImageName: z.string().trim().min(1, "Nama file gambar wajib diisi.").max(255),
-    captchaToken: z.string().trim().min(1).max(4096),
+    deadline: z.string().trim().min(1, "Target deadline wajib diisi."),
   })
   .refine((data) => isAllowedRawImage(data.rawImage), {
     message: "URL gambar harus milik storage ALUPBESK.",
@@ -48,14 +46,7 @@ export async function POST(request: Request) {
   if (!parsed.success) {
     return Response.json({ success: false, error: { code: "INVALID_CUSTOM_REQUEST", message: parsed.error.issues[0]?.message ?? "Data request tidak valid." } }, { status: 400 });
   }
-  const captcha = await verifyHCaptchaToken(parsed.data.captchaToken);
-  if (captcha !== "valid") {
-    const unconfigured = captcha === "unconfigured";
-    return Response.json({ success: false, error: { code: unconfigured ? "CAPTCHA_UNAVAILABLE" : "CAPTCHA_INVALID", message: unconfigured ? "Verifikasi bot belum dikonfigurasi." : "Verifikasi CAPTCHA gagal. Silakan coba lagi." } }, { status: unconfigured ? 503 : 400 });
-  }
-  const { captchaToken: _captchaToken, ...requestInput } = parsed.data;
-  void _captchaToken;
-  const created = createCustomRequest(requestInput);
+  const created = createCustomRequest(parsed.data);
   await flushWrites();
   return Response.json({ success: true, data: created }, { status: 201 });
 }

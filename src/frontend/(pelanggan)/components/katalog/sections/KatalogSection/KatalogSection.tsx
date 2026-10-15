@@ -180,35 +180,27 @@ export default function KatalogSection() {
           </div>
         )}
 
-        <div className="mt-12 flex flex-col items-start gap-6 rounded-2xl border border-outline/20 bg-surface-container p-6 shadow-sm sm:flex-row sm:items-center sm:justify-between sm:p-8">
-          <div className="flex items-start gap-4">
-            <span
-              aria-hidden="true"
-              className="material-symbols-outlined rounded-xl bg-secondary/10 p-3 text-[24px] text-secondary"
+        <div className="mt-16 rounded-2xl border border-outline/20 bg-surface-container p-8 md:p-12 text-center shadow-sm">
+          <h3 className="text-[24px] font-bold text-on-surface mb-3">
+            {t("customCtaTitle")}
+          </h3>
+          <p className="text-on-surface/60 text-[14px] mt-2 max-w-xl mx-auto leading-relaxed">
+            {t("customCtaDescription")}
+          </p>
+          <div className="flex flex-col sm:flex-row gap-3 justify-center mt-6">
+            <Link
+              href="/catalog/jasa-custom"
+              className="px-8 py-3.5 bg-secondary text-primary font-bold rounded-xl hover:brightness-110 transition-all text-[14px]"
             >
-              design_services
-            </span>
-            <div>
-              <p className="text-[12px] font-bold uppercase tracking-wide text-secondary">
-                {t("customCtaEyebrow")}
-              </p>
-              <h3 className="mt-2 text-[20px] font-bold text-on-surface">
-                {t("customCtaTitle")}
-              </h3>
-              <p className="mt-2 max-w-2xl text-[13px] leading-relaxed text-on-surface/60">
-                {t("customCtaDescription")}
-              </p>
-            </div>
+              Request Custom Quote
+            </Link>
+            <Link
+              href="/catalog#kontak"
+              className="px-8 py-3.5 border border-outline text-on-surface font-bold rounded-xl hover:border-on-surface/40 transition-all text-[14px]"
+            >
+              Hubungi Tim Kami
+            </Link>
           </div>
-          <Link
-            href="/jasa-custom"
-            className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-secondary px-5 py-3 text-[13px] font-bold text-primary transition-all hover:brightness-110"
-          >
-            {t("customCtaButton")}
-            <span aria-hidden="true" className="material-symbols-outlined text-[18px]">
-              arrow_forward
-            </span>
-          </Link>
         </div>
       </div>
     </section>

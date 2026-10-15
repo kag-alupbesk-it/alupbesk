@@ -79,7 +79,7 @@ export function roleCanAccess(
   }
   if (matchesPath(path, "/api/admin")) return elevated;
   if (["/owner", "/api/owner"].some((prefix) => matchesPath(path, prefix))) {
-    return role === "owner";
+    return role === "owner" || role === "manager";
   }
   if (["/manager", "/api/manager"].some((prefix) => matchesPath(path, prefix))) {
     return role === "manager" || role === "owner";

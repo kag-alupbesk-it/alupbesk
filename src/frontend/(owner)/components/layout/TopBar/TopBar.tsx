@@ -6,7 +6,7 @@ import ThemeToggle from "@/app/ThemeToggle";
 import QuickSearch from "./QuickSearch";
 import NotificationBell from "./NotificationBell";
 import DateBadge from "./DateBadge";
-import ProfileMenu from "./ProfileMenu";
+import ProfileMenu from "@/frontend/shared/profile/ProfileMenu";
 import { LanguageSwitcher } from "@/frontend/shared/i18n/LanguageSwitcher";
 
 interface TopBarProps {

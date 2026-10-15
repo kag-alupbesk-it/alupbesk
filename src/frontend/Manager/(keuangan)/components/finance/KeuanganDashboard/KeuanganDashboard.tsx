@@ -65,7 +65,7 @@ export function KeuanganDashboard() {
     <FinanceProvider>
       <div className="flex min-h-dvh w-full">
         <Sidebar activeTab={tab} onTabChange={setTab} />
-        <main className="roleMobileTypography min-w-0 flex-1 lg:ml-64">
+        <main className="roleMobileTypography min-w-0 flex-1 lg:ml-56">
           <div className={`${s.mobileBar} justify-between`}>
             <p className={s.navTitleMobile}>{financeNavigationItems.find((item) => item.key === tab)?.label ?? "Kas"}</p>
             <div className="flex shrink-0 items-center gap-2">

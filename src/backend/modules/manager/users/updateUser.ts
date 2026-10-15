@@ -1,10 +1,11 @@
 import { db } from "@/services/supabase";
 import type { UserItem } from "../types";
 import type { AppRole } from "@/backend/auth/roles";
+import { logAuditAction } from "@/backend/modules/audit/auditStore";
 
 type Input = Pick<UserItem, "name" | "email" | "dept" | "role" | "status">;
 
-export async function updateUser(id: string, input: Input, actorRole: AppRole): Promise<UserItem | null> {
+export async function updateUser(id: string, input: Input, actorRole: AppRole, actorProfile?: { email?: string; name?: string; role?: string }): Promise<UserItem | null> {
   if (!db) throw new Error("DATABASE_UNAVAILABLE");
   if (actorRole !== "owner") {
     const { data: current, error: readError } = await db
@@ -41,5 +42,13 @@ export async function updateUser(id: string, input: Input, actorRole: AppRole): 
     .select("id, name, email, dept, role, status, active")
     .maybeSingle();
   if (error) throw error;
+  if (data) {
+    logAuditAction({
+      profile: actorProfile,
+      action: "EDIT",
+      target: "User",
+      details: `Mengubah data user: ${input.name} (${input.email})`,
+    });
+  }
   return data as UserItem | null;
 }

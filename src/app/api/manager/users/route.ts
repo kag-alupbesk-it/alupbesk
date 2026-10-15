@@ -66,7 +66,7 @@ export async function POST(request: Request) {
     );
   }
   try {
-    const user = await createUser(parsed.data, access.profile.role);
+    const user = await createUser(parsed.data, access.profile.role, access.profile);
     return Response.json({ success: true, data: user }, { status: 201 });
   } catch (error) {
     const forbidden = error instanceof Error && error.message === "ROLE_FORBIDDEN";

@@ -93,6 +93,30 @@ export default function CatalogPage() {
             </div>
           </>
         )}
+        {!isLoading && !loadError && (
+          <div className="mt-16 rounded-2xl border border-outline/20 bg-surface-container p-8 md:p-12 text-center shadow-sm">
+            <h3 className="text-[24px] font-bold text-on-surface mb-3">
+              Punya Proyek Serupa?
+            </h3>
+            <p className="text-on-surface/60 text-[14px] mt-2 max-w-xl mx-auto leading-relaxed">
+              Ceritakan kebutuhan Anda dan kami akan bantu wujudkan dengan material terbaik.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-3 justify-center mt-6">
+              <Link
+                href="/catalog/jasa-custom"
+                className="px-8 py-3.5 bg-secondary text-primary font-bold rounded-xl hover:brightness-110 transition-all text-[14px]"
+              >
+                Request Custom Quote
+              </Link>
+              <Link
+                href="/catalog#kontak"
+                className="px-8 py-3.5 border border-outline text-on-surface font-bold rounded-xl hover:border-on-surface/40 transition-all text-[14px]"
+              >
+                Hubungi Tim Kami
+              </Link>
+            </div>
+          </div>
+        )}
       </div>
     </main>
   );

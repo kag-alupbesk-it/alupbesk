@@ -6,7 +6,8 @@ import { PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import { usePMSidebar } from "../PMSidebarProvider/PMSidebarProvider";
 import ThemeToggle from "@/app/ThemeToggle";
 import NotificationBell from "@/frontend/(owner)/components/layout/TopBar/NotificationBell";
-import { LogoutButton } from "@/frontend/auth/LogoutButton";
+import { LanguageSwitcher } from "@/frontend/shared/i18n/LanguageSwitcher";
+import ProfileMenu from "@/frontend/shared/profile/ProfileMenu";
 
 function getPageTitle(pathname: string) {
   if (pathname === "/pm") return "Overview";
@@ -38,8 +39,9 @@ export function PMTopBar() {
 
       <div className="ml-auto flex items-center gap-3">
         <NotificationBell />
+        <LanguageSwitcher className="h-8 w-8" />
         <ThemeToggle />
-        <LogoutButton />
+        <ProfileMenu />
         <div className="flex items-center gap-2.5">
           <span className="flex h-8 w-8 items-center justify-center rounded-full bg-secondary/15 text-[10px] font-extrabold text-secondary">PM</span>
           <span className="hidden lg:block">

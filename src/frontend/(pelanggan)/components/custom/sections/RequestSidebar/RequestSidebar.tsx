@@ -2,7 +2,6 @@ import { useCallback } from "react";
 import { contentApi } from "@/services/api/index";
 import { usePollingResource } from "@/frontend/shared/hooks/usePollingResource";
 import { customStyles as styles } from "../../style/style";
-import { CaptchaChallenge } from "@/frontend/auth/CaptchaChallenge";
 import { useLanguage } from "@/frontend/shared/i18n/LanguageProvider";
 
 interface CustomSidebarContent {
@@ -20,10 +19,6 @@ export default function RequestSidebar({
   hasService,
   hasDescription,
   hasDeadline,
-  hasCaptcha,
-  captchaVersion,
-  onCaptchaVerify,
-  onCaptchaReset,
 }: {
   isValid: boolean;
   onSubmit: () => void;
@@ -34,10 +29,6 @@ export default function RequestSidebar({
   hasService: boolean;
   hasDescription: boolean;
   hasDeadline: boolean;
-  hasCaptcha: boolean;
-  captchaVersion: number;
-  onCaptchaVerify: (token: string) => void;
-  onCaptchaReset: () => void;
 }) {
   const { language } = useLanguage();
   const loadContent = useCallback(async (): Promise<CustomSidebarContent> => {
@@ -81,7 +72,6 @@ export default function RequestSidebar({
     [itemsCount > 0, "Minimal satu item spesifikasi"],
     [hasDeadline, "Target deadline ditentukan"],
     [hasDescription, "Deskripsi kebutuhan lengkap"],
-    [hasCaptcha, "Verifikasi keamanan selesai"],
   ];
 
   return (
@@ -124,8 +114,6 @@ export default function RequestSidebar({
             ))}
           </div>
         </div>
-
-        <CaptchaChallenge key={captchaVersion} onVerify={onCaptchaVerify} onReset={onCaptchaReset} />
 
         <button
           onClick={onSubmit}

@@ -4,7 +4,8 @@ import { clsx } from "clsx";
 import { useSidebar } from "../SidebarProvider/SidebarProvider";
 import ThemeToggle from "@/app/ThemeToggle";
 import NotificationBell from "@/frontend/(owner)/components/layout/TopBar/NotificationBell";
-import { LogoutButton } from "@/frontend/auth/LogoutButton";
+import { LanguageSwitcher } from "@/frontend/shared/i18n/LanguageSwitcher";
+import ProfileMenu from "@/frontend/shared/profile/ProfileMenu";
 
 export default function TopBar({ title }: { title: string }) {
   const { toggleDesktop, desktopOpen } = useSidebar();
@@ -41,14 +42,10 @@ export default function TopBar({ title }: { title: string }) {
           />
         </div>
         <NotificationBell />
+        <LanguageSwitcher className="h-8 w-8" />
         {/* ── Theme toggle ── */}
         <ThemeToggle />
-        <LogoutButton />
-        <div className="w-7 h-7 lg:w-8 lg:h-8 rounded-full overflow-hidden border-2 border-outline hover:border-secondary transition-colors cursor-pointer">
-          <div className="w-full h-full bg-surface-variant flex items-center justify-center">
-            <span className="material-symbols-outlined text-secondary text-xs lg:text-sm">person</span>
-          </div>
-        </div>
+        <ProfileMenu />
       </div>
     </header>
   );

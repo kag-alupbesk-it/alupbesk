@@ -5,14 +5,12 @@ import {
 } from "@/backend/modules/contact/index";
 import { readJsonBody } from "@/backend/http/readJsonBody";
 import { checkRateLimit } from "@/backend/http/rateLimit";
-import { verifyHCaptchaToken } from "@/backend/http/verifyHCaptcha";
 
 const contactMessageSchema = z.object({
   name: z.string().trim().min(2).max(120),
   email: z.union([z.string().trim().email().max(254), z.literal("")]).optional(),
   category: z.string().trim().min(1).max(100),
   message: z.string().trim().min(5).max(5000),
-  captchaToken: z.string().trim().min(1).max(4096),
 });
 
 export async function GET() {
@@ -56,20 +54,8 @@ export async function POST(request: Request) {
     );
   }
 
-  const captcha = await verifyHCaptchaToken(parsed.data.captchaToken);
-  if (captcha !== "valid") {
-    const unconfigured = captcha === "unconfigured";
-    return Response.json(
-      { success: false, error: { code: unconfigured ? "CAPTCHA_UNAVAILABLE" : "CAPTCHA_INVALID", message: unconfigured ? "Verifikasi bot belum dikonfigurasi." : "Verifikasi CAPTCHA gagal. Silakan coba lagi." } },
-      { status: unconfigured ? 503 : 400 },
-    );
-  }
-
-  const { captchaToken: _captchaToken, ...messageInput } = parsed.data;
-  void _captchaToken;
-
   try {
-    const message = await createContactMessage(messageInput);
+    const message = await createContactMessage(parsed.data);
     return Response.json(
       { success: true, data: { id: message.id, createdAt: message.createdAt } },
       { status: 201, headers: { "Cache-Control": "no-store" } },

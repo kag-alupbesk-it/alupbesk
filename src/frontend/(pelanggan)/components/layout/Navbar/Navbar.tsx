@@ -11,7 +11,7 @@ import { usePublicSiteContent } from "@/frontend/(pelanggan)/hooks/usePublicSite
 import { getWhatsAppUrl } from "@/frontend/(pelanggan)/utils/getWhatsAppUrl";
 
 const katalogDropdown = [
-  { name: "Produk", href: "/catalog#katalog", desc: "Browse semua produk aluminium & komponen" },
+  { name: "Portofolio", href: "/catalog#katalog", desc: "Proyek aluminium & komponen industrial" },
   { name: "Jasa Custom", href: "/catalog/jasa-custom", desc: "Request desain & fabrikasi custom" },
 ];
 
@@ -97,7 +97,7 @@ export default function Navbar() {
                    openDropdown === "katalog" ? "text-secondary" : activeSection === "katalog" ? "text-secondary" : "text-on-surface/70 hover:text-on-surface"
                  }`}
               >
-                {t("productCatalog")}
+                {t("home")}
                 <span className={`material-symbols-outlined text-[16px] transition-transform ${openDropdown === "katalog" ? "rotate-180" : ""}`}>expand_more</span>
               </button>
               {openDropdown === "katalog" && (
@@ -110,8 +110,8 @@ export default function Navbar() {
                         onClick={(event) => handleSectionNavigation(event, item.href)}
                         className="flex flex-col px-4 py-3 rounded-xl hover:bg-surface-container transition-colors group"
                       >
-                        <span className="text-[13px] font-semibold text-on-surface group-hover:text-secondary transition-colors">{t(item.href === "/catalog#katalog" ? "products" : "customService")}</span>
-                        <span className="text-[11px] text-on-surface/40 mt-0.5">{t(item.href === "/catalog#katalog" ? "productDropdownDescription" : "customDropdownDescription")}</span>
+                        <span className="text-[13px] font-semibold text-on-surface group-hover:text-secondary transition-colors">{item.href === "/catalog#katalog" ? t("portfolio") : t("customService")}</span>
+                        <span className="text-[11px] text-on-surface/40 mt-0.5">{item.desc}</span>
                       </Link>
                     ))}
                   </div>
