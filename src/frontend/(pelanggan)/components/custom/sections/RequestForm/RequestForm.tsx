@@ -64,7 +64,7 @@ export default function RequestForm({
           <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-secondary/10 text-secondary"><Layers3 size={17} /></div>
           <div>
             <h3 className={sectionTitle}>Informasi Order</h3>
-            <p className={sectionSubtitle}>Identitas pemesan dan referensi kode produksi agar mudah diproses.</p>
+            <p className={sectionSubtitle}>Identitas pemesan, referensi kode produksi, dan lampiran gambar referensi.</p>
           </div>
         </div>
         <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
@@ -73,12 +73,12 @@ export default function RequestForm({
             <input className={styles.field} placeholder="cth. Budi Santoso" value={form.nama} onChange={(event) => update("nama", event.target.value)} required />
           </label>
           <label className={gridField}>
-            <span className={styles.label}>Kode Produksi</span>
-            <input className={`${styles.field} font-mono uppercase`} placeholder="cth. BS-7842-A" value={form.kode} onChange={(event) => update("kode", event.target.value)} />
+            <span className={styles.label}>Kode Produksi <span className="text-secondary">*</span></span>
+            <input className={`${styles.field} font-mono uppercase`} placeholder="cth. BS-7842-A" value={form.kode} onChange={(event) => update("kode", event.target.value)} required />
           </label>
           <label className={gridField}>
-            <span className={styles.label}>Nama Perusahaan</span>
-            <input className={styles.field} placeholder="cth. PT Contoh Indonesia" value={form.perusahaan} onChange={(event) => update("perusahaan", event.target.value)} />
+            <span className={styles.label}>Nama Perusahaan <span className="text-secondary">*</span></span>
+            <input className={styles.field} placeholder="cth. PT Contoh Indonesia" value={form.perusahaan} onChange={(event) => update("perusahaan", event.target.value)} required />
           </label>
           <label className={gridField}>
             <span className={styles.label}>Email</span>
@@ -89,13 +89,52 @@ export default function RequestForm({
             <input type="tel" className={styles.field} placeholder="+62 812 3456 7890" value={form.telp} onChange={(event) => update("telp", event.target.value)} required />
           </label>
           <label className={gridField}>
-            <span className={styles.label}>Alamat Proyek</span>
-            <input className={styles.field} placeholder="Alamat tujuan pengiriman" value={form.projectAddress} onChange={(event) => update("projectAddress", event.target.value)} />
+            <span className={styles.label}>Alamat Proyek <span className="text-secondary">*</span></span>
+            <input className={styles.field} placeholder="Alamat tujuan pengiriman" value={form.projectAddress} onChange={(event) => update("projectAddress", event.target.value)} required />
           </label>
           <label className={gridField}>
             <span className={styles.label}>Target Deadline <span className="text-secondary">*</span></span>
             <input type="date" className={`${styles.field} max-w-xs`} value={form.deadline} onChange={(event) => update("deadline", event.target.value)} required />
           </label>
+        </div>
+
+        {/* Upload Gambar Mentah / Referensi */}
+        <div className="pt-4 border-t border-outline/15 space-y-3">
+          <div className="flex items-center gap-2">
+            <UploadCloud size={16} className="text-secondary" />
+            <span className="text-xs font-semibold text-on-surface">Upload Gambar / Sketsa Referensi <span className="text-secondary">*</span></span>
+          </div>
+          <div
+            onDragOver={(event) => { event.preventDefault(); }}
+            onDrop={upload.handleDrop}
+            className="rounded-xl border-2 border-dashed border-outline/30 bg-surface-container/60 p-4 text-center transition-colors hover:border-secondary/50"
+          >
+            {upload.isReadingImage ? (
+              <div className="flex flex-col items-center justify-center py-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-secondary/10 text-secondary"><UploadCloud size={18} className="animate-pulse" /></div>
+                <p className="mt-2 text-xs font-bold text-on-surface">Membaca preview gambar...</p>
+              </div>
+            ) : upload.imagePreview ? (
+              <div className="flex flex-col gap-3 text-left sm:flex-row sm:items-center">
+                <div className="relative h-28 w-full shrink-0 overflow-hidden rounded-lg border border-outline/30 bg-slate-100 sm:w-40">
+                  <Image src={upload.imagePreview} alt="Preview gambar mentah" fill unoptimized sizes="160px" className="object-contain" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-1.5 text-emerald-400"><Check size={14} /><span className="text-xs font-bold">Gambar siap dilampirkan</span></div>
+                  <p className="mt-1 truncate text-xs font-semibold text-on-surface">{upload.imageName}</p>
+                  <p className="mt-0.5 text-[10px] text-on-surface-variant">Preview lokal. File diunggah saat request dikirim.</p>
+                  <button type="button" onClick={upload.clearImage} className="mt-2 rounded-md px-2.5 py-1.5 text-[10px] font-bold text-red-400 hover:bg-error/10">Hapus preview</button>
+                </div>
+              </div>
+            ) : (
+              <label htmlFor="custom-raw-image" className="flex cursor-pointer flex-col items-center justify-center py-3 text-center">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-secondary/10 text-secondary"><UploadCloud size={18} /></div>
+                <p className="mt-2 text-xs font-bold text-on-surface">Drop gambar di sini atau <span className="text-secondary">browse file</span></p>
+                <p className="mt-1 text-[10px] text-on-surface-variant">PNG, JPG, atau WEBP · maksimal 5 MB</p>
+              </label>
+            )}
+            <input id="custom-raw-image" name="rawImage" type="file" accept="image/png,image/jpeg,image/webp" onChange={upload.handleFileChange} disabled={upload.isReadingImage} className="sr-only" />
+          </div>
         </div>
       </section>
 
@@ -139,47 +178,6 @@ export default function RequestForm({
               </label>
             </div>
           ))}
-        </div>
-      </section>
-
-      <section className={cardHeader}>
-        <div className="flex items-start gap-3">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-violet-400/10 text-violet-300"><UploadCloud size={17} /></div>
-          <div>
-            <h3 className={sectionTitle}>Upload Gambar Mentah</h3>
-            <p className={sectionSubtitle}>Sketsa, denah, atau referensi desain — opsional tapi membantu tim teknis.</p>
-          </div>
-        </div>
-        <div
-          onDragOver={(event) => { event.preventDefault(); }}
-          onDrop={upload.handleDrop}
-          className="rounded-2xl border-2 border-dashed border-outline/30 bg-surface-container/60 p-5 text-center transition-colors hover:border-secondary/50"
-        >
-          {upload.isReadingImage ? (
-            <div className="flex flex-col items-center justify-center py-5">
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-secondary/10 text-secondary"><UploadCloud size={22} className="animate-pulse" /></div>
-              <p className="mt-4 text-sm font-bold text-on-surface">Membaca preview gambar...</p>
-            </div>
-          ) : upload.imagePreview ? (
-            <div className="flex flex-col gap-4 text-left sm:flex-row sm:items-center">
-              <div className="relative h-36 w-full shrink-0 overflow-hidden rounded-xl border border-outline/30 bg-slate-100 sm:w-52">
-                <Image src={upload.imagePreview} alt="Preview gambar mentah" fill unoptimized sizes="208px" className="object-contain" />
-              </div>
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-2 text-emerald-300"><Check size={15} /><span className="text-xs font-bold">Gambar siap dilampirkan</span></div>
-                <p className="mt-2 truncate text-sm font-semibold text-on-surface">{upload.imageName}</p>
-                <p className="mt-1 text-[10px] text-on-surface-variant">Preview lokal. File diunggah saat request dikirim.</p>
-                <button type="button" onClick={upload.clearImage} className="mt-3 rounded-lg px-3 py-2 text-[10px] font-bold text-red-300 hover:bg-error/10">Hapus preview</button>
-              </div>
-            </div>
-          ) : (
-            <label htmlFor="custom-raw-image" className="flex cursor-pointer flex-col items-center justify-center py-5 text-center">
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-secondary/10 text-secondary"><UploadCloud size={22} /></div>
-              <p className="mt-4 text-sm font-bold text-on-surface">Drop gambar di sini atau <span className="text-secondary">browse file</span></p>
-              <p className="mt-1.5 text-[10px] text-on-surface-variant">PNG, JPG, atau WEBP · maksimal 5 MB</p>
-            </label>
-          )}
-          <input id="custom-raw-image" name="rawImage" type="file" accept="image/png,image/jpeg,image/webp" onChange={upload.handleFileChange} disabled={upload.isReadingImage} className="sr-only" />
         </div>
       </section>
 
