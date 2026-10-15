@@ -47,6 +47,10 @@ export function ItemFormModal({
     currentStock: String(item?.currentStock ?? 0),
   }));
   const [errors, setErrors] = useState<Partial<Record<keyof ItemForm, string>>>({});
+  const [cooldown, setCooldown] = useState(false);
+
+  const isFormValid = Boolean(form.categoryId && form.itemName.trim());
+  const isButtonDisabled = saving || cooldown || !isFormValid;
 
   function set<K extends keyof ItemForm>(key: K, value: string) {
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -63,17 +67,22 @@ export function ItemFormModal({
   }
 
   async function handleSave() {
-    if (!validate()) return;
-    await onSubmit({
-      categoryId: form.categoryId,
-      itemName: form.itemName.trim(),
-      brand: form.brand.trim(),
-      modelNo: form.modelNo.trim(),
-      color: form.color.trim(),
-      rackGroup: form.rackGroup.trim(),
-      subRow: form.subRow.trim(),
-      currentStock: Number(form.currentStock),
-    });
+    if (!validate() || isButtonDisabled) return;
+    setCooldown(true);
+    try {
+      await onSubmit({
+        categoryId: form.categoryId,
+        itemName: form.itemName.trim(),
+        brand: form.brand.trim(),
+        modelNo: form.modelNo.trim(),
+        color: form.color.trim(),
+        rackGroup: form.rackGroup.trim(),
+        subRow: form.subRow.trim(),
+        currentStock: Number(form.currentStock),
+      });
+    } finally {
+      setCooldown(false);
+    }
   }
 
   function handleBackdrop(event: React.MouseEvent<HTMLDivElement>) {
@@ -198,8 +207,12 @@ export function ItemFormModal({
           <button className={s.cancelButton} onClick={onClose}>
             Batal
           </button>
-          <button className={s.saveButton} onClick={handleSave} disabled={saving}>
-            {saving ? "Menyimpan..." : "Simpan"}
+          <button
+            className={`${s.saveButton} disabled:opacity-50 disabled:cursor-not-allowed transition-all`}
+            onClick={handleSave}
+            disabled={isButtonDisabled}
+          >
+            {saving || cooldown ? "Menyimpan..." : "Simpan"}
           </button>
         </div>
       </div>

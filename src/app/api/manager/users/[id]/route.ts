@@ -46,7 +46,7 @@ export async function PUT(request: Request, { params }: Context) {
     );
   }
   try {
-    const user = await updateUser(id, parsed.data, access.profile.role);
+    const user = await updateUser(id, parsed.data, access.profile.role, access.profile);
     return user
       ? Response.json({ success: true, data: user })
       : Response.json({ success: false, error: { code: "USER_NOT_FOUND", message: "Pengguna tidak ditemukan." } }, { status: 404 });
@@ -93,7 +93,7 @@ export async function DELETE(_request: Request, { params }: Context) {
     );
   }
   try {
-    const deleted = await deleteUser(id, access.profile.role);
+    const deleted = await deleteUser(id, access.profile.role, access.profile);
     return deleted
       ? Response.json({ success: true, data: null })
       : Response.json({ success: false, error: { code: "USER_NOT_FOUND", message: "Pengguna tidak ditemukan." } }, { status: 404 });

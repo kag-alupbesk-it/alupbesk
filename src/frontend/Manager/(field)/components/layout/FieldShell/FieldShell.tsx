@@ -22,7 +22,7 @@ export default function FieldShell({ children }: { children: React.ReactNode }) 
     <div
       className={clsx(
         "flex-1 flex flex-col min-w-0 transition-all duration-300",
-        desktopOpen ? "lg:ml-64" : "lg:ml-0"
+        desktopOpen ? "lg:ml-56" : "lg:ml-0"
       )}
     >
       <TopBar title={title} />

@@ -10,7 +10,6 @@ import { useLanguage } from "@/frontend/shared/i18n/LanguageProvider";
 import { catalogApi } from "@/services/api";
 import type { Product } from "@/services/catalog";
 import { usePollingResource } from "@/frontend/shared/hooks/usePollingResource";
-import { CaptchaChallenge } from "@/frontend/auth/CaptchaChallenge";
 
 const emptyForm = { name: "", email: "", category: "", message: "" };
 
@@ -24,8 +23,6 @@ export default function ContactSection() {
   const [pending, setPending] = useState(false);
   const [notice, setNotice] = useState("");
   const [error, setError] = useState("");
-  const [captchaToken, setCaptchaToken] = useState("");
-  const [captchaVersion, setCaptchaVersion] = useState(0);
 
   const submitMessage = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -34,15 +31,13 @@ export default function ContactSection() {
     setNotice("");
     setError("");
     try {
-      await contactApi.createMessage({ ...form, captchaToken });
+      await contactApi.createMessage(form);
       setForm(emptyForm);
       setNotice(t("messageSent"));
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : t("sendFailed"));
     } finally {
       setPending(false);
-      setCaptchaToken("");
-      setCaptchaVersion((version) => version + 1);
     }
   };
 
@@ -150,8 +145,7 @@ export default function ContactSection() {
                   value={form.message}
                   onChange={(event) => setForm((current) => ({ ...current, message: event.target.value }))}
                 />
-              </label>
-              <CaptchaChallenge key={captchaVersion} onVerify={setCaptchaToken} onReset={() => setCaptchaToken("")} />
+               </label>
               <button
                 className="flex w-full items-center justify-center gap-2 rounded-xl bg-secondary py-4 font-bold text-primary transition-all hover:bg-secondary-800"
                 type="submit"

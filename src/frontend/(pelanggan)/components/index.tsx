@@ -5,6 +5,7 @@ import Navbar from "./layout/Navbar/Navbar";
 import Footer from "./layout/Footer/Footer";
 import HeroSection from "./hero";
 import ProfileSection from "./profile";
+import PortfolioSection from "./portfolio";
 import KatalogSection from "./katalog";
 import PartnersSection from "./partners";
 import FaqSection from "./faq";
@@ -19,7 +20,7 @@ export default function PelangganComponents() {
       <main>
         <HeroSection />
         <Suspense fallback={<div className="py-section-gap-desktop bg-primary-container" />}>
-          <KatalogSection />
+          <PortfolioSection hideNavbar id="katalog" />
         </Suspense>
         <ProfileSection />
         <PartnersSection />
