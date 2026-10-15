@@ -42,10 +42,14 @@ export default function CustomSection() {
 
   const isValid = Boolean(
     form.nama &&
+      form.kode &&
+      form.perusahaan &&
       form.telp &&
+      form.projectAddress &&
       form.layanan &&
-      form.deskripsi &&
       form.deadline &&
+      form.deskripsi &&
+      imageFile &&
       captchaToken &&
       validItems.length > 0 &&
       !isReadingImage,

@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { FileSpreadsheet } from "lucide-react";
+import { FileSpreadsheet, Upload } from "lucide-react";
 import { useFinance } from "../FinanceStore/FinanceStore";
 import { FeedbackToast } from "../ui/FeedbackToast/FeedbackToast";
 import { FinancialStatCard } from "../ui/FinancialStatCard/FinancialStatCard";
@@ -19,6 +19,7 @@ import {
 import * as s from "../style/style";
 import { useReadOnly } from "@/frontend/shared/access/AccessModeProvider";
 import { exportCashflowToExcel } from "./exportCashflow";
+import { parseCashflowExcel } from "./importCashflow";
 
 const IKON_JENIS: Record<JenisTransaksi, string> = {
   kas_masuk: "south_west",
@@ -351,7 +352,7 @@ function ModalHapus({
 
 export function KasSection() {
   const readOnly = useReadOnly();
-  const { state, rekap, transaksiUrut, opsiKategori, clearToast } = useFinance();
+  const { state, rekap, transaksiUrut, opsiKategori, clearToast, tambahTransaksi } = useFinance();
   const [filterJenis, setFilterJenis] = useState<"all" | JenisTransaksi>("all");
   const [filterKategori, setFilterKategori] = useState<"all" | KategoriBiaya>("all");
   const [cari, setCari] = useState("");
@@ -359,6 +360,38 @@ export function KasSection() {
   const [hapus, setHapus] = useState<TransaksiKas | null>(null);
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
+
+  const handleImportExcel = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      const items = await parseCashflowExcel(file);
+      if (items.length === 0) {
+        alert("Tidak ada data transaksi yang ditemukan di file Excel.");
+        return;
+      }
+      for (const item of items) {
+        tambahTransaksi({
+          tanggal: item.tanggal || tanggalHariIni(),
+          jenis: item.jenis || "kas_keluar",
+          uraian: item.uraian || "Import Excel",
+          kategori: item.kategori || "Dll",
+          posProyek: (item.posProyek as any) || "Kantor",
+          person: item.person || "",
+          nominal: item.nominal || 0,
+          noNota: item.noNota || "",
+          bukti: "",
+          sumber: "manual",
+          refId: "",
+        });
+      }
+      alert(`Berhasil mengimpor ${items.length} transaksi dari Excel!`);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Gagal mengimpor file Excel.");
+    } finally {
+      e.target.value = "";
+    }
+  };
 
   const transaksi = useMemo(() => {
     const query = cari.trim().toLowerCase();
@@ -428,6 +461,11 @@ export function KasSection() {
             <span className={s.dataCounter}>
               {transaksi.length} dari {transaksiUrut.length} transaksi
             </span>
+            <label className="bg-blue-600/90 hover:bg-blue-600 text-white text-xs font-semibold px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-all shadow-sm whitespace-nowrap cursor-pointer">
+              <Upload className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+              <span>Import Excel</span>
+              <input type="file" accept=".xlsx,.xls,.csv" onChange={handleImportExcel} className="hidden" />
+            </label>
             <button
               type="button"
               onClick={() => exportCashflowToExcel(transaksi)}

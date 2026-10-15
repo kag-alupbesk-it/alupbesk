@@ -17,17 +17,17 @@ const customRequestItemSchema = z.object({
 const requestSchema = z
   .object({
     nama: z.string().trim().min(1, "Nama wajib diisi."),
-    kode: z.string().trim().min(1, "Kode produksi tidak boleh kosong.").max(60).optional(),
-    perusahaan: z.string().trim().max(120).optional(),
+    kode: z.string().trim().min(1, "Kode produksi wajib diisi.").max(60),
+    perusahaan: z.string().trim().min(1, "Nama perusahaan wajib diisi.").max(120),
     email: z.string().trim().email("Email tidak valid.").max(160).optional().or(z.literal("")),
     telp: z.string().trim().min(1, "Nomor WhatsApp wajib diisi.").max(24),
-    projectAddress: z.string().trim().max(200).optional(),
+    projectAddress: z.string().trim().min(1, "Alamat proyek wajib diisi.").max(200),
     layanan: z.string().trim().min(1, "Layanan wajib dipilih."),
     deskripsi: z.string().trim().min(1, "Deskripsi kebutuhan wajib diisi.").max(4000),
-    deadline: z.string().trim().optional(),
+    deadline: z.string().trim().min(1, "Target deadline wajib diisi."),
     items: z.array(customRequestItemSchema).min(1, "Tambahkan minimal satu item spesifikasi."),
-    rawImage: z.string().trim().optional(),
-    rawImageName: z.string().trim().max(255).optional(),
+    rawImage: z.string().trim().min(1, "Gambar referensi wajib diunggah."),
+    rawImageName: z.string().trim().min(1, "Nama file gambar wajib diisi.").max(255),
     captchaToken: z.string().trim().min(1).max(4096),
   })
   .refine((data) => isAllowedRawImage(data.rawImage), {
