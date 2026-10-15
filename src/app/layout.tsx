@@ -3,12 +3,14 @@ import Providers from "./Providers";
 import { InlineScript } from "./InlineScript";
 import { themeInitScript } from "./theme-script";
 import ServiceWorkerRegistration from "./ServiceWorkerRegistration";
+import type { Viewport } from "next";
 
-export const viewport = {
+export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   maximumScale: 5,
   userScalable: true,
+  viewportFit: "cover",
   themeColor: "#121a2e",
 };
 

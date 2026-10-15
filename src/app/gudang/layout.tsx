@@ -2,7 +2,6 @@
 
 import { useTheme } from "@/app/ThemeContext";
 import { SidebarProvider } from "@/frontend/Manager/(gudang)/components/layout/SidebarProvider/SidebarProvider";
-import Sidebar from "@/frontend/Manager/(gudang)/components/layout/Sidebar/Sidebar";
 import GudangShell from "@/frontend/Manager/(gudang)/components/layout/GudangShell/GudangShell";
 
 function GudangLayoutInner({ children }: { children: React.ReactNode }) {
@@ -21,7 +20,6 @@ function GudangLayoutInner({ children }: { children: React.ReactNode }) {
         } flex min-h-screen bg-primary-container`}
         suppressHydrationWarning
       >
-        <Sidebar />
         <GudangShell>{children}</GudangShell>
       </div>
     </SidebarProvider>

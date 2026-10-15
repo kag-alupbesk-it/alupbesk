@@ -2,7 +2,7 @@
 
 import { usePathname } from "next/navigation";
 import { getRolePagePath } from "@/frontend/shared/navigation/getRolePagePath";
-import { Menu, PanelLeftClose, PanelLeftOpen } from "lucide-react";
+import { PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import { useProduksiSidebar } from "../ProduksiSidebarProvider/ProduksiSidebarProvider";
 import ThemeToggle from "@/app/ThemeToggle";
 import NotificationBell from "@/frontend/(owner)/components/layout/TopBar/NotificationBell";
@@ -17,7 +17,7 @@ function getPageTitle(pathname: string) {
 
 export function ProduksiTopBar() {
   const pathname = getRolePagePath(usePathname());
-  const { desktopOpen, toggle, toggleDesktop } = useProduksiSidebar();
+  const { desktopOpen, toggleDesktop } = useProduksiSidebar();
   const title = getPageTitle(pathname);
 
   return (
@@ -28,17 +28,9 @@ export function ProduksiTopBar() {
     >
       <button
         type="button"
-        onClick={toggle}
-        aria-label="Buka navigasi"
-        className="mr-3 rounded-xl p-2 text-on-surface-variant hover:bg-surface-variant hover:text-on-surface lg:hidden"
-      >
-        <Menu size={20} />
-      </button>
-      <button
-        type="button"
         onClick={toggleDesktop}
         aria-label={desktopOpen ? "Sembunyikan sidebar" : "Tampilkan sidebar"}
-        className="mr-3 hidden rounded-xl p-2 text-on-surface-variant hover:bg-surface-variant hover:text-on-surface lg:hidden lg:block"
+        className="mr-3 hidden rounded-xl p-2 text-on-surface-variant hover:bg-surface-variant hover:text-on-surface lg:block"
       >
         {desktopOpen ? <PanelLeftClose size={19} /> : <PanelLeftOpen size={19} />}
       </button>
