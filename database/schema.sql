@@ -763,6 +763,12 @@ declare
     display_name text;
     department text;
 begin
+    -- Akun Owner dikelola lewat ensure_owner_profile(); jangan sampai form
+    -- pendaftaran menurunkan role/permission-nya menjadi PENDING.
+    if lower(new.email) = 'alupbesk96@gmail.com' then
+        return new;
+    end if;
+
     requested_role_text := coalesce(
         nullif(trim(new.raw_user_meta_data ->> 'requested_role'), ''),
         nullif(trim(new.raw_user_meta_data ->> 'role'), '')
@@ -885,6 +891,46 @@ drop trigger if exists on_auth_user_deleted on auth.users;
 create trigger on_auth_user_deleted
 after delete on auth.users
 for each row execute function public.delete_profile_for_auth_user();
+
+-- ---------------------------------------------------------------------
+-- Bootstrap profil Owner.
+-- Akun Owner (OWNER_BOOTSTRAP_EMAIL di src/backend/auth/getAuthenticatedProfile.ts)
+-- autentikasinya dibuat manual di Supabase Auth. Agar fitur yang membaca
+-- public.users — notifikasi push (getPushSubscriptionsByRoles) dan daftar
+-- pengguna — mengenali Owner, sediakan baris profilnya di sini.
+-- ---------------------------------------------------------------------
+create or replace function public.ensure_owner_profile()
+returns trigger
+language plpgsql
+security definer
+set search_path = public, auth
+as $$
+begin
+    if lower(new.email) = 'alupbesk96@gmail.com' then
+        insert into public.users (id, name, email, role, status, active, email_confirmed_at)
+        values (new.id, 'Owner', lower(new.email), 'owner', 'ACTIVE', true, new.email_confirmed_at)
+        on conflict (id) do update
+           set role = 'owner',
+               status = 'ACTIVE',
+               active = true,
+               email_confirmed_at = excluded.email_confirmed_at;
+    end if;
+    return new;
+end;
+$$;
+
+drop trigger if exists on_auth_owner_bootstrap on auth.users;
+create trigger on_auth_owner_bootstrap
+after insert on auth.users
+for each row execute function public.ensure_owner_profile();
+
+-- Lengkapi profil Owner yang sudah ada (idempotent untuk database yang sudah jalan).
+insert into public.users (id, name, email, role, status, active, email_confirmed_at)
+select u.id, 'Owner', lower(u.email), 'owner', 'ACTIVE', true, u.email_confirmed_at
+from auth.users u
+where lower(u.email) = 'alupbesk96@gmail.com'
+on conflict (id) do update
+   set role = 'owner', status = 'ACTIVE', active = true;
 
 create or replace function public.review_role_request(
     request_id_input uuid,
