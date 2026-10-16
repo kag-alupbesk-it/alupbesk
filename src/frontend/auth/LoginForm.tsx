@@ -34,8 +34,6 @@ function normalizeRole(rawRole: string | undefined): string {
   return lower;
 }
 
-// Simpan status OTP di sessionStorage agar pengguna tidak perlu mengulang alur
-// login (isi email + kata sandi) setelah berpindah tab, mis. membuka email.
 const OTP_STORAGE_KEY = "alupbesk-login-otp";
 
 function readStoredOtp(): { email: string; otpSent: boolean } {
@@ -48,7 +46,7 @@ function readStoredOtp(): { email: string; otpSent: boolean } {
       return { email: parsed.email, otpSent: true };
     }
   } catch {
-    // sessionStorage bisa tidak tersedia (mode privat); abaikan.
+    // sessionStorage bisa tidak tersedia
   }
   return { email: "", otpSent: false };
 }
@@ -87,16 +85,31 @@ export function LoginForm() {
   const emailUnverifiedBanner = useQueryFlag("error", "email_unverified");
   const attemptStatus = attemptLimit.getStatus(email);
 
+  const [view, setView] = useState<"login" | "forgot" | "reset">("login");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+
+  useEffect(() => {
+    const supabase = getSupabaseBrowserClient();
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event: string) => {
+      if (event === "PASSWORD_RECOVERY") {
+        setView("reset");
+      }
+    });
+    if (typeof window !== "undefined" && window.location.hash.includes("type=recovery")) {
+      setView("reset");
+    }
+    return () => subscription.unsubscribe();
+  }, []);
+
   useEffect(() => {
     if (resendCooldown <= 0) return;
     const timer = window.setTimeout(() => setResendCooldown((seconds) => Math.max(0, seconds - 1)), 1000);
     return () => window.clearTimeout(timer);
   }, [resendCooldown]);
 
-  // Auto-masuk: bila device ini sudah punya sesi login yang masih berlaku,
-  // langsung arahkan ke beranda sesuai role tanpa meminta isi form lagi.
   useEffect(() => {
-    if (initialOtp.otpSent) return;
+    if (initialOtp.otpSent || view !== "login") return;
     let active = true;
     void (async () => {
       try {
@@ -112,15 +125,14 @@ export function LoginForm() {
         const canUseNext = safeNext ? roleCanAccess(profile.role, safeNext) : false;
         window.location.replace(canUseNext ? safeNext : roleHome[roleName] || "/catalog");
       } catch {
-        // Tidak ada sesi aktif (atau akun belum disetujui); tampilkan form login.
+        // Tidak ada sesi aktif
       }
     })();
     return () => {
       active = false;
     };
-  }, [initialOtp.otpSent]);
+  }, [initialOtp.otpSent, view]);
 
-  // Simpan / bersihkan langkah OTP di sessionStorage.
   useEffect(() => {
     if (typeof window === "undefined") return;
     if (otpSent) {
@@ -159,7 +171,6 @@ export function LoginForm() {
           return;
         }
         
-        // 1. Verifikasi OTP 6 digit
         const { error: verifyError } = await supabase.auth.verifyOtp({
           email: email.trim().toLowerCase(),
           token: code,
@@ -175,9 +186,6 @@ export function LoginForm() {
         }
         attemptLimit.clear(email);
 
-        // Ambil profil melalui API (server-side). Ulangi sebentar untuk menunggu
-        // cookie sesi buatan verifyOtp tersedia di server, dan pastikan profil
-        // yang kembali memang milik email yang baru login (hindari sesi basi).
         const trimmedEmail = email.trim().toLowerCase();
         let profileRaw: AuthenticatedProfile | null = null;
         let lastProfileError: unknown = null;
@@ -211,7 +219,6 @@ export function LoginForm() {
         void activatePushSubscription();
         const requestedPath = new URLSearchParams(window.location.search).get("next");
         const safeNext = requestedPath?.startsWith("/") && !requestedPath.startsWith("//") ? requestedPath : "";
-        // Validasi `next` memakai role mentah (AppRole memakai "proyek", bukan "pm").
         const canUseNext = safeNext ? roleCanAccess(profileRaw.role, safeNext) : false;
         const destination = canUseNext ? safeNext : roleHome[roleName] || "/catalog";
 
@@ -220,7 +227,6 @@ export function LoginForm() {
         return;
       }
 
-      // Alur awal: Cek Password lalu Kirim OTP
       const { error: signInError } = await supabase.auth.signInWithPassword({
         email: email.trim().toLowerCase(),
         password,
@@ -247,7 +253,7 @@ export function LoginForm() {
         try {
           await getSupabaseBrowserClient().auth.signOut();
         } catch {
-          // Keep original error visible
+          // ignore
         }
         setError(getAuthOtpErrorMessage(reason, language, "sign-in"));
       }
@@ -258,6 +264,60 @@ export function LoginForm() {
       if (!otpSent) {
         setPendingAction(null);
       }
+    }
+  }
+
+  async function handleForgotPassword(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setError("");
+    setNotice("");
+    if (!email.trim()) {
+      setError(t("email"));
+      return;
+    }
+    setPendingAction("send");
+    try {
+      const supabase = getSupabaseBrowserClient();
+      const { error: resetError } = await supabase.auth.resetPasswordForEmail(email.trim().toLowerCase(), {
+        redirectTo: `${window.location.origin}/login`,
+      });
+      if (resetError) throw resetError;
+      setNotice(t("resetLinkSent"));
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : "Gagal mengirim tautan pemulihan.");
+    } finally {
+      setPendingAction(null);
+    }
+  }
+
+  async function handleUpdatePassword(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setError("");
+    setNotice("");
+    if (!newPassword || newPassword.length < 8) {
+      setError(t("passwordLength"));
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setError(t("passwordsDoNotMatch"));
+      return;
+    }
+    setPendingAction("verify");
+    try {
+      const supabase = getSupabaseBrowserClient();
+      const { error: updateError } = await supabase.auth.updateUser({ password: newPassword });
+      if (updateError) throw updateError;
+      setNotice(t("passwordUpdated"));
+      setTimeout(() => {
+        setView("login");
+        setPassword("");
+        setNewPassword("");
+        setConfirmPassword("");
+      }, 2500);
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : "Gagal memperbarui kata sandi.");
+    } finally {
+      setPendingAction(null);
     }
   }
 
@@ -298,89 +358,143 @@ export function LoginForm() {
         <ThemeToggle />
         <LanguageSwitcher />
       </div>
-      <form onSubmit={handleSubmit} className="w-full max-w-md space-y-5 rounded-2xl border border-outline/30 bg-surface-container-low p-6 shadow-2xl sm:p-8">
-        <div>
-          <p className="text-xs font-bold uppercase tracking-[0.2em] text-secondary">ALUPBESK</p>
-          <h1 className="mt-3 font-headline text-2xl font-extrabold">{t("loginTitle")}</h1>
-          <p className="mt-2 text-sm text-on-surface-variant">{t("loginDescription")}</p>
-        </div>
-        {verifiedBanner && <p role="status" className="rounded-lg border border-emerald-500/30 bg-emerald-500/10 p-3 text-xs text-emerald-600">Email berhasil diverifikasi. Silakan login untuk melanjutkan.</p>}
-        {emailUnverifiedBanner && <p role="alert" className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 text-xs text-amber-700 dark:text-amber-300">Verifikasi email dengan kode yang dikirim saat daftar sebelum login.</p>}
-        <label className="block text-xs font-semibold">
-          {t("email")}
-          <input className="mt-2 min-h-11 w-full rounded-xl border border-outline/40 bg-surface px-3 py-3 outline-none focus:border-secondary disabled:opacity-60" type="email" autoComplete="username" required disabled={otpSent || pending} value={email} onChange={(event) => setEmail(event.target.value)} />
-        </label>
-        <label className="block text-xs font-semibold">
-          {t("password")}
-          <PasswordInput className="mt-2" inputClassName="min-h-11 w-full rounded-xl border border-outline/40 bg-surface px-3 py-3 outline-none focus:border-secondary disabled:opacity-60" autoComplete="current-password" required disabled={otpSent || pending} value={password} onChange={(event) => setPassword(event.target.value)} />
-        </label>
-        <label className="block text-xs font-semibold">
-          {language === "en" ? "Email sign-in code" : "Kode masuk email"}
-          <input
-            className="mt-2 min-h-12 w-full rounded-xl border border-outline/40 bg-surface px-4 text-center font-mono text-xl font-bold tracking-[0.45em] text-on-surface outline-none focus:border-secondary disabled:cursor-not-allowed disabled:opacity-60"
-            type="text"
-            inputMode="numeric"
-            autoComplete="one-time-code"
-            pattern="[0-9]{4,6}"
-            minLength={4}
-            maxLength={6}
-            required={otpSent}
-            disabled={!otpSent || pending}
-            value={verificationCode}
-            onChange={(event) => setVerificationCode(event.target.value.replace(/\D/g, "").slice(0, 6))}
-          />
-          <span className="mt-1 block font-normal text-on-surface-variant">
-            {otpSent
-              ? (language === "en" ? `Enter the one-time sign-in code sent to ${email}.` : `Masukkan kode sekali pakai untuk masuk yang dikirim ke ${email}.`)
-              : (language === "en" ? "Enter your password and request a sign-in code." : "Masukkan kata sandi, lalu minta kode untuk masuk.")}
-          </span>
-        </label>
-        <p className="text-xs text-on-surface-variant">
-          {t("remainingLoginAttempts")} <span className="font-bold text-on-surface">{attemptStatus.remaining}/3</span>
-        </p>
-        {error && <p role="alert" className="rounded-lg border border-red-400/30 bg-red-400/10 p-3 text-xs text-red-500">{error}</p>}
-        {notice && <p role="status" className="rounded-lg border border-emerald-500/30 bg-emerald-500/10 p-3 text-xs text-emerald-700 dark:text-emerald-300">{notice}</p>}
-        
-        {/* Tombol Kirim / Resend Kode */}
-        <button
-          type={otpSent ? "button" : "submit"}
-          disabled={pending || (otpSent && resendCooldown > 0)}
-          onClick={otpSent ? resendVerificationCode : undefined}
-          className="min-h-11 w-full rounded-xl border border-secondary px-4 py-3 text-sm font-bold text-secondary disabled:cursor-not-allowed disabled:opacity-60"
-        >
-          {pendingAction === "send"
-            ? (language === "en" ? "Checking password and sending sign-in code..." : "Memeriksa kata sandi dan mengirim kode masuk...")
-            : pendingAction === "resend"
-              ? (language === "en" ? "Resending sign-in code..." : "Mengirim ulang kode masuk...")
-            : otpSent
-              ? (resendCooldown > 0
-                ? (language === "en" ? `Resend code in ${resendCooldown}s` : `Kirim ulang kode dalam ${resendCooldown} dtk`)
-                : (language === "en" ? "Resend sign-in code" : "Kirim ulang kode masuk"))
-              : (language === "en" ? "Send sign-in code by email" : "Kirim kode masuk lewat email")}
-        </button>
 
-        {/* Tombol Verifikasi & Masuk */}
-        <button type="submit" disabled={pending || !otpSent} className="min-h-11 w-full rounded-xl bg-secondary px-4 py-3 text-sm font-bold text-primary disabled:cursor-not-allowed disabled:opacity-50">
-          {pendingAction === "verify"
-            ? (language === "en" ? "Verifying code and signing in..." : "Memverifikasi kode dan masuk...")
-            : (language === "en" ? "Verify code and sign in" : "Verifikasi kode dan masuk")}
-        </button>
-
-        {otpSent && (
-          <button
-            type="button"
-            onClick={resetToForm}
-            disabled={pending}
-            className="w-full text-center text-xs font-semibold text-on-surface-variant underline disabled:opacity-50"
-          >
-            {language === "en" ? "Use a different email" : "Gunakan email lain"}
+      {view === "forgot" ? (
+        <form onSubmit={handleForgotPassword} className="w-full max-w-md space-y-5 rounded-2xl border border-outline/30 bg-surface-container-low p-6 shadow-2xl sm:p-8">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-[0.2em] text-secondary">ALUPBESK</p>
+            <h1 className="mt-3 font-headline text-2xl font-extrabold">{t("forgotPasswordTitle")}</h1>
+            <p className="mt-2 text-sm text-on-surface-variant">{t("forgotPasswordDescription")}</p>
+          </div>
+          <label className="block text-xs font-semibold">
+            {t("email")}
+            <input className="mt-2 min-h-11 w-full rounded-xl border border-outline/40 bg-surface px-3 py-3 outline-none focus:border-secondary disabled:opacity-60" type="email" autoComplete="username" required disabled={pending} value={email} onChange={(event) => setEmail(event.target.value)} />
+          </label>
+          {error && <p role="alert" className="rounded-lg border border-red-400/30 bg-red-400/10 p-3 text-xs text-red-500">{error}</p>}
+          {notice && <p role="status" className="rounded-lg border border-emerald-500/30 bg-emerald-500/10 p-3 text-xs text-emerald-700 dark:text-emerald-300">{notice}</p>}
+          <button type="submit" disabled={pending} className="min-h-11 w-full rounded-xl bg-secondary px-4 py-3 text-sm font-bold text-primary disabled:cursor-not-allowed disabled:opacity-50">
+            {pendingAction === "send" ? (language === "en" ? "Sending link..." : "Mengirim tautan...") : t("sendResetLink")}
           </button>
-        )}
+          <button type="button" onClick={() => { setView("login"); setError(""); setNotice(""); }} className="w-full text-center text-xs font-semibold text-on-surface-variant underline">
+            {t("backToLogin")}
+          </button>
+        </form>
+      ) : view === "reset" ? (
+        <form onSubmit={handleUpdatePassword} className="w-full max-w-md space-y-5 rounded-2xl border border-outline/30 bg-surface-container-low p-6 shadow-2xl sm:p-8">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-[0.2em] text-secondary">ALUPBESK</p>
+            <h1 className="mt-3 font-headline text-2xl font-extrabold">{t("updatePassword")}</h1>
+            <p className="mt-2 text-sm text-on-surface-variant">{language === "en" ? "Enter your new password below." : "Masukkan kata sandi baru Anda di bawah."}</p>
+          </div>
+          <label className="block text-xs font-semibold">
+            {t("newPassword")}
+            <PasswordInput className="mt-2" inputClassName="min-h-11 w-full rounded-xl border border-outline/40 bg-surface px-3 py-3 outline-none focus:border-secondary disabled:opacity-60" autoComplete="new-password" required disabled={pending} value={newPassword} onChange={(event) => setNewPassword(event.target.value)} />
+          </label>
+          <label className="block text-xs font-semibold">
+            {t("confirmNewPassword")}
+            <PasswordInput className="mt-2" inputClassName="min-h-11 w-full rounded-xl border border-outline/40 bg-surface px-3 py-3 outline-none focus:border-secondary disabled:opacity-60" autoComplete="new-password" required disabled={pending} value={confirmPassword} onChange={(event) => setConfirmPassword(event.target.value)} />
+          </label>
+          {error && <p role="alert" className="rounded-lg border border-red-400/30 bg-red-400/10 p-3 text-xs text-red-500">{error}</p>}
+          {notice && <p role="status" className="rounded-lg border border-emerald-500/30 bg-emerald-500/10 p-3 text-xs text-emerald-700 dark:text-emerald-300">{notice}</p>}
+          <button type="submit" disabled={pending} className="min-h-11 w-full rounded-xl bg-secondary px-4 py-3 text-sm font-bold text-primary disabled:cursor-not-allowed disabled:opacity-50">
+            {t("updatePassword")}
+          </button>
+          <button type="button" onClick={() => { setView("login"); setError(""); setNotice(""); }} className="w-full text-center text-xs font-semibold text-on-surface-variant underline">
+            {t("backToLogin")}
+          </button>
+        </form>
+      ) : (
+        <form onSubmit={handleSubmit} className="w-full max-w-md space-y-5 rounded-2xl border border-outline/30 bg-surface-container-low p-6 shadow-2xl sm:p-8">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-[0.2em] text-secondary">ALUPBESK</p>
+            <h1 className="mt-3 font-headline text-2xl font-extrabold">{t("loginTitle")}</h1>
+            <p className="mt-2 text-sm text-on-surface-variant">{t("loginDescription")}</p>
+          </div>
+          {verifiedBanner && <p role="status" className="rounded-lg border border-emerald-500/30 bg-emerald-500/10 p-3 text-xs text-emerald-600">Email berhasil diverifikasi. Silakan login untuk melanjutkan.</p>}
+          {emailUnverifiedBanner && <p role="alert" className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 text-xs text-amber-700 dark:text-amber-300">Verifikasi email dengan kode yang dikirim saat daftar sebelum login.</p>}
+          <label className="block text-xs font-semibold">
+            {t("email")}
+            <input className="mt-2 min-h-11 w-full rounded-xl border border-outline/40 bg-surface px-3 py-3 outline-none focus:border-secondary disabled:opacity-60" type="email" autoComplete="username" required disabled={otpSent || pending} value={email} onChange={(event) => setEmail(event.target.value)} />
+          </label>
+          <label className="block text-xs font-semibold">
+            <div className="flex justify-between items-center mb-1">
+              <span>{t("password")}</span>
+              <button
+                type="button"
+                onClick={() => { setView("forgot"); setError(""); setNotice(""); }}
+                className="text-xs font-semibold text-secondary hover:underline"
+              >
+                {t("forgotPassword")}
+              </button>
+            </div>
+            <PasswordInput className="" inputClassName="min-h-11 w-full rounded-xl border border-outline/40 bg-surface px-3 py-3 outline-none focus:border-secondary disabled:opacity-60" autoComplete="current-password" required disabled={otpSent || pending} value={password} onChange={(event) => setPassword(event.target.value)} />
+          </label>
+          <label className="block text-xs font-semibold">
+            {language === "en" ? "Email sign-in code" : "Kode masuk email"}
+            <input
+              className="mt-2 min-h-12 w-full rounded-xl border border-outline/40 bg-surface px-4 text-center font-mono text-xl font-bold tracking-[0.45em] text-on-surface outline-none focus:border-secondary disabled:cursor-not-allowed disabled:opacity-60"
+              type="text"
+              inputMode="numeric"
+              autoComplete="one-time-code"
+              pattern="[0-9]{4,6}"
+              minLength={4}
+              maxLength={6}
+              required={otpSent}
+              disabled={!otpSent || pending}
+              value={verificationCode}
+              onChange={(event) => setVerificationCode(event.target.value.replace(/\D/g, "").slice(0, 6))}
+            />
+            <span className="mt-1 block font-normal text-on-surface-variant">
+              {otpSent
+                ? (language === "en" ? `Enter the one-time sign-in code sent to ${email}.` : `Masukkan kode sekali pakai untuk masuk yang dikirim ke ${email}.`)
+                : (language === "en" ? "Enter your password and request a sign-in code." : "Masukkan kata sandi, lalu minta kode untuk masuk.")}
+            </span>
+          </label>
+          <p className="text-xs text-on-surface-variant">
+            {t("remainingLoginAttempts")} <span className="font-bold text-on-surface">{attemptStatus.remaining}/3</span>
+          </p>
+          {error && <p role="alert" className="rounded-lg border border-red-400/30 bg-red-400/10 p-3 text-xs text-red-500">{error}</p>}
+          {notice && <p role="status" className="rounded-lg border border-emerald-500/30 bg-emerald-500/10 p-3 text-xs text-emerald-700 dark:text-emerald-300">{notice}</p>}
+          
+          <button
+            type={otpSent ? "button" : "submit"}
+            disabled={pending || (otpSent && resendCooldown > 0)}
+            onClick={otpSent ? resendVerificationCode : undefined}
+            className="min-h-11 w-full rounded-xl border border-secondary px-4 py-3 text-sm font-bold text-secondary disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {pendingAction === "send"
+              ? (language === "en" ? "Checking password and sending sign-in code..." : "Memeriksa kata sandi dan mengirim kode masuk...")
+              : pendingAction === "resend"
+                ? (language === "en" ? "Resending sign-in code..." : "Mengirim ulang kode masuk...")
+              : otpSent
+                ? (resendCooldown > 0
+                  ? (language === "en" ? `Resend code in ${resendCooldown}s` : `Kirim ulang kode dalam ${resendCooldown} dtk`)
+                  : (language === "en" ? "Resend sign-in code" : "Kirim ulang kode masuk"))
+                : (language === "en" ? "Send sign-in code by email" : "Kirim kode masuk lewat email")}
+          </button>
 
-        <p className="text-center text-xs text-on-surface-variant">
-          {t("noAccount")} <Link className="font-bold text-secondary" href="/admin/register">{t("register")}</Link>
-        </p>
-      </form>
+          <button type="submit" disabled={pending || !otpSent} className="min-h-11 w-full rounded-xl bg-secondary px-4 py-3 text-sm font-bold text-primary disabled:cursor-not-allowed disabled:opacity-50">
+            {pendingAction === "verify"
+              ? (language === "en" ? "Verifying code and signing in..." : "Memverifikasi kode dan masuk...")
+              : (language === "en" ? "Verify code and sign in" : "Verifikasi kode dan masuk")}
+          </button>
+
+          {otpSent && (
+            <button
+              type="button"
+              onClick={resetToForm}
+              disabled={pending}
+              className="w-full text-center text-xs font-semibold text-on-surface-variant underline disabled:opacity-50"
+            >
+              {language === "en" ? "Use a different email" : "Gunakan email lain"}
+            </button>
+          )}
+
+          <p className="text-center text-xs text-on-surface-variant">
+            {t("noAccount")} <Link className="font-bold text-secondary" href="/admin/register">{t("register")}</Link>
+          </p>
+        </form>
+      )}
     </main>
   );
 }
