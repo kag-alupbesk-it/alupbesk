@@ -5,12 +5,14 @@ import Link from "next/link";
 import { portfolioApi } from "@/services/api/index";
 import { usePollingResource } from "@/frontend/shared/hooks/usePollingResource";
 import { Navbar } from "@/frontend/(pelanggan)/components/layout/index";
+import { useLanguage } from "@/frontend/shared/i18n/LanguageProvider";
 
 import { portfolioStyles as styles } from "../../style/style";
 import ProjectCard from "../ProjectCard/ProjectCard";
 import CaseStudyCard from "../CaseStudyCard/CaseStudyCard";
 
 export default function PortfolioSection({ hideNavbar = false, id }: { hideNavbar?: boolean; id?: string }) {
+  const { t } = useLanguage();
   const loadPortfolio = useCallback(() => portfolioApi.getAll(), []);
   const { data, loading, error } = usePollingResource(loadPortfolio, { items: [], caseStudies: [] });
   const items = data.items;
@@ -21,17 +23,16 @@ export default function PortfolioSection({ hideNavbar = false, id }: { hideNavba
       {!hideNavbar && <Navbar />}
       <main className={styles.content}>
         <header className={styles.header}>
-          <span className={styles.eyebrow}>PORTOFOLIO</span>
+          <span className={styles.eyebrow}>{t("portfolioEyebrow")}</span>
 
           <h1 className={styles.heroTitle}>
-            Proyek yang Sudah
+            {t("portfolioTitle1")}
             <br />
-            <span className="text-secondary">Kami Kerjakan</span>
+            <span className="text-secondary">{t("portfolioTitle2")}</span>
           </h1>
 
           <p className={styles.description}>
-            Dari rangka conveyor hingga mounting panel surya &mdash; setiap proyek
-            dikerjakan dengan presisi dan standar kualitas industrial.
+            {t("portfolioDescription")}
           </p>
         </header>
 
@@ -46,9 +47,9 @@ export default function PortfolioSection({ hideNavbar = false, id }: { hideNavba
         ) : items.length === 0 && caseStudies.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-24 text-center">
             <span className="material-symbols-outlined text-[64px] text-on-surface/20 mb-4">folder_open</span>
-            <p className="text-[16px] font-semibold text-on-surface/50 mb-2">Belum ada Proyek yang Kami Kerjakan</p>
+            <p className="text-[16px] font-semibold text-on-surface/50 mb-2">{t("noProjects")}</p>
             <p className="text-[13px] text-on-surface/30 max-w-md">
-              Portofolio akan tampil setelah ada konten yang ditambahkan oleh tim kami.
+              {t("noProjectsDesc")}
             </p>
           </div>
         ) : (
@@ -62,10 +63,10 @@ export default function PortfolioSection({ hideNavbar = false, id }: { hideNavba
             {caseStudies.length > 0 && (
               <section className={styles.section}>
                 <header className={styles.sectionHeader}>
-                  <span className={styles.eyebrow}>STUDI KASUS</span>
+                  <span className={styles.eyebrow}>{t("caseStudies")}</span>
 
                   <h2 className={styles.sectionTitle}>
-                    Dampak Nyata bagi Klien Kami
+                    {t("realImpact")}
                   </h2>
                 </header>
 
@@ -89,21 +90,21 @@ export default function PortfolioSection({ hideNavbar = false, id }: { hideNavba
             </span>
             <div>
               <p className="text-[12px] font-bold uppercase tracking-wide text-secondary">
-                BUTUH SOLUSI KHUSUS?
+                {t("customCtaEyebrow")}
               </p>
               <h3 className="mt-2 text-[20px] font-bold text-on-surface">
-                Konsultasikan kebutuhan custom Anda
+                {t("consultCustomNeeds")}
               </h3>
               <p className="mt-2 max-w-2xl text-[13px] leading-relaxed text-on-surface/60">
-                Kami siap membantu kebutuhan desain dan fabrikasi sesuai spesifikasi proyek Anda.
+                {t("consultCustomDesc")}
               </p>
             </div>
           </div>
           <Link
-            href="/jasa-custom"
+            href="/catalog/jasa-custom"
             className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-secondary px-5 py-3 text-[13px] font-bold text-primary transition-all hover:brightness-110"
           >
-            Lihat Jasa Custom
+            {t("viewCustomService")}
             <span aria-hidden="true" className="material-symbols-outlined text-[18px]">
               arrow_forward
             </span>

@@ -6,13 +6,13 @@ import { catalogApi } from "@/services/api";
 import type { Product } from "@/services/catalog";
 import { useCallback } from "react";
 import { usePollingResource } from "@/frontend/shared/hooks/usePollingResource";
-import { contactDefaults, profileDefaults } from "@/frontend/(pelanggan)/data/siteContentDefaults";
+import { contactDefaultsId, contactDefaultsEn, profileDefaultsId, profileDefaultsEn } from "@/frontend/(pelanggan)/data/siteContentDefaults";
 import { usePublicSiteContent } from "@/frontend/(pelanggan)/hooks/usePublicSiteContent";
 
 export default function Footer() {
   const { language, t } = useLanguage();
-  const { data: profile } = usePublicSiteContent("profile", profileDefaults);
-  const { data: contact } = usePublicSiteContent("contact", contactDefaults);
+  const { data: profile } = usePublicSiteContent("profile", profileDefaultsId, profileDefaultsEn);
+  const { data: contact } = usePublicSiteContent("contact", contactDefaultsId, contactDefaultsEn);
   const loadProducts = useCallback(() => catalogApi.getProducts(), []);
   const { data: products } = usePollingResource<Product[]>(loadProducts, []);
   const productCategories = [...new Set(products.map((product) => product.category.trim()).filter(Boolean))].sort((a, b) => a.localeCompare(b));

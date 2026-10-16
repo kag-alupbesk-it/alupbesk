@@ -13,7 +13,7 @@ const LanguageContext = createContext<LanguageContextValue | null>(null);
 const LANGUAGE_STORAGE_KEY = "alupbesk-language";
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
-  const [language, setCurrentLanguage] = useState<Language>("en");
+  const [language, setCurrentLanguage] = useState<Language>("id");
 
   useEffect(() => {
     const saved = window.localStorage.getItem(LANGUAGE_STORAGE_KEY);

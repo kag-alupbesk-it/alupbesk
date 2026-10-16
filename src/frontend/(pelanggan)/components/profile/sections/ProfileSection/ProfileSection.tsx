@@ -1,12 +1,12 @@
 "use client";
 
-import { profileDefaults } from "@/frontend/(pelanggan)/data/siteContentDefaults";
+import { profileDefaultsId, profileDefaultsEn } from "@/frontend/(pelanggan)/data/siteContentDefaults";
 import { usePublicSiteContent } from "@/frontend/(pelanggan)/hooks/usePublicSiteContent";
 import { useLanguage } from "@/frontend/shared/i18n/LanguageProvider";
 
 export default function ProfileSection() {
   const { t } = useLanguage();
-  const { data: profile } = usePublicSiteContent("profile", profileDefaults);
+  const { data: profile } = usePublicSiteContent("profile", profileDefaultsId, profileDefaultsEn);
 
   return (
     <section className="py-section-gap-desktop bg-primary-container" id="profile">
