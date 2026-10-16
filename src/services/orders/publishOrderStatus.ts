@@ -5,7 +5,14 @@ import type { LocalOrder, OrderStatus } from "./types";
 export function publishOrderStatus(
   id: string,
   status: OrderStatus,
-  extras: Pick<LocalOrder, "managerDecisionAt" | "managerRejectionReason"> = {}
+  extras: Pick<
+    LocalOrder,
+    | "managerDecisionAt"
+    | "managerRejectionReason"
+    | "marketingConfirmedAt"
+    | "submittedToManagerAt"
+    | "processedAt"
+  > = {}
 ): LocalOrder | undefined {
   const current = readOrder(id);
   if (!current) return undefined;

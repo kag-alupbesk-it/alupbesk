@@ -181,6 +181,9 @@ async function hydrateOrders(): Promise<void> {
       updatedAt: row.updated_at,
       managerDecisionAt: row.manager_decision_at ?? undefined,
       managerRejectionReason: row.manager_rejection_reason ?? undefined,
+      marketingConfirmedAt: row.marketing_confirmed_at ?? undefined,
+      submittedToManagerAt: row.submitted_to_manager_at ?? undefined,
+      processedAt: row.processed_at ?? undefined,
     };
     hydratedOrders.push(order);
   }

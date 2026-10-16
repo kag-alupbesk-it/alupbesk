@@ -16,6 +16,9 @@ function orderToRow(order: LocalOrder): Record<string, unknown> {
     total: order.total,
     manager_decision_at: order.managerDecisionAt ?? null,
     manager_rejection_reason: order.managerRejectionReason ?? null,
+    marketing_confirmed_at: order.marketingConfirmedAt ?? null,
+    submitted_to_manager_at: order.submittedToManagerAt ?? null,
+    processed_at: order.processedAt ?? null,
     created_at: order.createdAt,
     updated_at: order.updatedAt,
   };

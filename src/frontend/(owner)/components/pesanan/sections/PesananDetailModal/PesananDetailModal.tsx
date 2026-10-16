@@ -2,7 +2,7 @@
 
 import type { MarketingOrder } from "@/backend/modules/marketing";
 import * as s from "../../style/style";
-import { statusColor, statusBg, formatCurrency, formatDate } from "../helpers/helpers";
+import { statusColor, statusBg, formatCurrency, formatDate, buildOrderTimeline } from "../helpers/helpers";
 import { STATUS_LABELS } from "../data/data";
 
 interface PesananDetailModalProps {
@@ -19,6 +19,7 @@ export default function PesananDetailModal({ isOpen, order, onClose }: PesananDe
   }
 
   const isRejected = order.status === "rejected_by_manager";
+  const timeline = buildOrderTimeline(order);
 
   return (
     <div className={s.modalOverlay} onClick={handleBackdrop}>
@@ -82,9 +83,27 @@ export default function PesananDetailModal({ isOpen, order, onClose }: PesananDe
           <span className={s.totalValue}>{formatCurrency(order.total)}</span>
         </div>
 
-        <div className="flex items-center gap-3 text-xs text-on-surface-variant mb-4">
-          <span>Dibuat: {formatDate(order.createdAt)}</span>
-          {order.marketingConfirmedAt && <span>| Konfirmasi: {formatDate(order.marketingConfirmedAt)}</span>}
+        <div className={s.modalSection}>
+          <h5 className={s.modalSectionTitle}>Riwayat Pesanan</h5>
+          <ol className="relative border-l border-outline/30 ml-2 space-y-4">
+            {timeline.map((entry, index) => (
+              <li key={`${entry.label}-${index}`} className="ml-4">
+                <span
+                  className={`absolute -left-[5px] w-2.5 h-2.5 rounded-full ${
+                    entry.tone === "danger" ? "bg-red-400" : entry.tone === "active" ? "bg-secondary" : "bg-success"
+                  }`}
+                />
+                <div className="flex flex-wrap items-baseline justify-between gap-2">
+                  <p className="text-sm font-bold text-on-surface">{entry.label}</p>
+                  <span className="text-[11px] text-on-surface-variant">{formatDate(entry.at)}</span>
+                </div>
+                {entry.detail && <p className="text-xs text-on-surface-variant mt-0.5">{entry.detail}</p>}
+              </li>
+            ))}
+          </ol>
+          <p className="text-[11px] text-on-surface-variant mt-3">
+            Terakhir diperbarui {formatDate(order.updatedAt)}
+          </p>
         </div>
 
         {isRejected && order.managerRejectionReason && (
