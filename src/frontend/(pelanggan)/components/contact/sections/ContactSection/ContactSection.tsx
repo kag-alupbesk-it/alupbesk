@@ -3,7 +3,7 @@
 import { useCallback, useState, type FormEvent } from "react";
 import ContactDetail from "../../../shared/ContactDetail/ContactDetail";
 import FormField from "../../../shared/FormField/FormField";
-import { contactDefaults } from "@/frontend/(pelanggan)/data/siteContentDefaults";
+import { contactDefaultsId, contactDefaultsEn } from "@/frontend/(pelanggan)/data/siteContentDefaults";
 import { usePublicSiteContent } from "@/frontend/(pelanggan)/hooks/usePublicSiteContent";
 import { contactApi } from "@/services/api/index";
 import { useLanguage } from "@/frontend/shared/i18n/LanguageProvider";
@@ -15,7 +15,7 @@ const emptyForm = { name: "", email: "", category: "", message: "" };
 
 export default function ContactSection() {
   const { t } = useLanguage();
-  const { data: contact } = usePublicSiteContent("contact", contactDefaults);
+  const { data: contact } = usePublicSiteContent("contact", contactDefaultsId, contactDefaultsEn);
   const loadProducts = useCallback(() => catalogApi.getProducts(), []);
   const { data: products } = usePollingResource<Product[]>(loadProducts, []);
   const productCategories = [...new Set(products.map((product) => product.category.trim()).filter(Boolean))].sort((a, b) => a.localeCompare(b));

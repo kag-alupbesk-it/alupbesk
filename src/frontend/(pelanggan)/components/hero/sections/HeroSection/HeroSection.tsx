@@ -3,19 +3,19 @@
 import { useCallback, useEffect, useState } from "react";
 import { marketingApi } from "@/services/api/index";
 import type { MarketingBanner } from "@/backend/modules/marketing/index";
-import { heroDefaults } from "@/frontend/(pelanggan)/data/siteContentDefaults";
+import { heroDefaultsId, heroDefaultsEn } from "@/frontend/(pelanggan)/data/siteContentDefaults";
 import { usePollingResource } from "@/frontend/shared/hooks/usePollingResource";
 import { usePublicSiteContent } from "@/frontend/(pelanggan)/hooks/usePublicSiteContent";
 import { useLanguage } from "@/frontend/shared/i18n/LanguageProvider";
-import { contactDefaults } from "@/frontend/(pelanggan)/data/siteContentDefaults";
+import { contactDefaultsId, contactDefaultsEn } from "@/frontend/(pelanggan)/data/siteContentDefaults";
 import { getWhatsAppUrl } from "@/frontend/(pelanggan)/utils/getWhatsAppUrl";
 
 export default function HeroSection() {
   const { t } = useLanguage();
   const loadBanners = useCallback(() => marketingApi.getPublicBanners(), []);
   const { data: bannerData } = usePollingResource<MarketingBanner[]>(loadBanners, []);
-  const { data: hero } = usePublicSiteContent("hero", heroDefaults);
-  const { data: contact } = usePublicSiteContent("contact", contactDefaults);
+  const { data: hero } = usePublicSiteContent("hero", heroDefaultsId, heroDefaultsEn);
+  const { data: contact } = usePublicSiteContent("contact", contactDefaultsId, contactDefaultsEn);
   const whatsappUrl = getWhatsAppUrl(contact.whatsapp) ?? "#kontak";
   const banners = bannerData;
   const [activeIndex, setActiveIndex] = useState(0);

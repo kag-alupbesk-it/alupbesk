@@ -7,16 +7,24 @@ import { useLanguage } from "@/frontend/shared/i18n/LanguageProvider";
 
 export function usePublicSiteContent<T extends Record<string, unknown>>(
   key: string,
-  fallback: T,
+  fallbackId: T,
+  fallbackEn?: T,
 ) {
   const { language } = useLanguage();
+  const effectiveFallbackEn = fallbackEn ?? fallbackId;
+  const fallback = language === "en" ? effectiveFallbackEn : fallbackId;
+
   const loadContent = useCallback(async () => {
-    const content = await contentApi.getSiteContent(key);
-    const value = content.value as Record<string, unknown>;
-    const localized = value[language] && typeof value[language] === "object"
-      ? value[language] as Record<string, unknown>
-      : value;
-    return { ...fallback, ...localized } as T;
+    try {
+      const content = await contentApi.getSiteContent(key);
+      const value = content.value as Record<string, unknown>;
+      const localized = value[language] && typeof value[language] === "object"
+        ? value[language] as Record<string, unknown>
+        : language === "en" ? {} : value;
+      return { ...fallback, ...localized } as T;
+    } catch {
+      return fallback;
+    }
   }, [fallback, key, language]);
 
   return usePollingResource<T>(loadContent, fallback);
