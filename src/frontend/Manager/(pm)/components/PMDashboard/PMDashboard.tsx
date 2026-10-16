@@ -9,6 +9,7 @@ import {
   CircleAlert,
   ClipboardCheck,
   Clock3,
+  Download,
   FilePlus2,
   Filter,
   FolderKanban,
@@ -127,6 +128,14 @@ export function PMDashboard() {
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-3">
+          <button
+            type="button"
+            onClick={() => window.open("/api/pm/orders/export", "_blank", "noopener")}
+            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-outline/40 bg-surface-container px-4 py-2.5 text-xs font-bold text-on-surface transition-all hover:border-secondary/50 hover:text-secondary md:min-h-0"
+          >
+            <Download size={15} />
+            Ekspor Excel
+          </button>
           <Link
             href="/pm/approval"
             className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-outline/40 bg-surface-container px-4 py-2.5 text-xs font-bold text-on-surface transition-all hover:border-secondary/50 hover:text-secondary md:min-h-0"

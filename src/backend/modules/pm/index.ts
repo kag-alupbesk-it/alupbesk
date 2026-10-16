@@ -7,3 +7,4 @@ export * from "./drawings/uploadTechnicalDrawing";
 export * from "./drawings/deleteTechnicalDrawing";
 export * from "./drawings/submitPMProductionDrawing";
 export * from "./drawings/getTechnicalDrawingUrls";
+export * from "./export/generatePMOrdersExcel";
