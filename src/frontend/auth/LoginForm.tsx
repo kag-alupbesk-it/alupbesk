@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useSyncExternalStore, useState, type FormEvent } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { getSupabaseBrowserClient } from "@/services/supabaseBrowser";
 import type { AuthenticatedProfile } from "@/backend/auth/getAuthenticatedProfile";
@@ -35,6 +34,25 @@ function normalizeRole(rawRole: string | undefined): string {
   return lower;
 }
 
+// Simpan status OTP di sessionStorage agar pengguna tidak perlu mengulang alur
+// login (isi email + kata sandi) setelah berpindah tab, mis. membuka email.
+const OTP_STORAGE_KEY = "alupbesk-login-otp";
+
+function readStoredOtp(): { email: string; otpSent: boolean } {
+  if (typeof window === "undefined") return { email: "", otpSent: false };
+  try {
+    const raw = window.sessionStorage.getItem(OTP_STORAGE_KEY);
+    if (!raw) return { email: "", otpSent: false };
+    const parsed = JSON.parse(raw) as { email?: unknown; otpSent?: unknown };
+    if (typeof parsed.email === "string" && parsed.otpSent === true) {
+      return { email: parsed.email, otpSent: true };
+    }
+  } catch {
+    // sessionStorage bisa tidak tersedia (mode privat); abaikan.
+  }
+  return { email: "", otpSent: false };
+}
+
 function subscribeToLocation(onChange: () => void) {
   window.addEventListener("popstate", onChange);
   window.addEventListener("hashchange", onChange);
@@ -53,13 +71,13 @@ function useQueryFlag(key: string, expectedValue: string) {
 }
 
 export function LoginForm() {
-  const router = useRouter();
   const { language, t } = useLanguage();
   const attemptLimit = useLoginAttemptLimit();
-  const [email, setEmail] = useState("");
+  const [initialOtp] = useState(readStoredOtp);
+  const [email, setEmail] = useState(initialOtp.email);
   const [password, setPassword] = useState("");
   const [verificationCode, setVerificationCode] = useState("");
-  const [otpSent, setOtpSent] = useState(false);
+  const [otpSent, setOtpSent] = useState(initialOtp.otpSent);
   const [resendCooldown, setResendCooldown] = useState(0);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
@@ -74,6 +92,43 @@ export function LoginForm() {
     const timer = window.setTimeout(() => setResendCooldown((seconds) => Math.max(0, seconds - 1)), 1000);
     return () => window.clearTimeout(timer);
   }, [resendCooldown]);
+
+  // Auto-masuk: bila device ini sudah punya sesi login yang masih berlaku,
+  // langsung arahkan ke beranda sesuai role tanpa meminta isi form lagi.
+  useEffect(() => {
+    if (initialOtp.otpSent) return;
+    let active = true;
+    void (async () => {
+      try {
+        const profile = await request<AuthenticatedProfile>("/auth/profile");
+        if (!active) return;
+        const roleName =
+          profile.email.toLowerCase() === "alupbesk96@gmail.com"
+            ? "owner"
+            : normalizeRole(profile.role);
+        const requestedPath = new URLSearchParams(window.location.search).get("next");
+        const safeNext =
+          requestedPath?.startsWith("/") && !requestedPath.startsWith("//") ? requestedPath : "";
+        const canUseNext = safeNext ? roleCanAccess(profile.role, safeNext) : false;
+        window.location.replace(canUseNext ? safeNext : roleHome[roleName] || "/catalog");
+      } catch {
+        // Tidak ada sesi aktif (atau akun belum disetujui); tampilkan form login.
+      }
+    })();
+    return () => {
+      active = false;
+    };
+  }, [initialOtp.otpSent]);
+
+  // Simpan / bersihkan langkah OTP di sessionStorage.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (otpSent) {
+      window.sessionStorage.setItem(OTP_STORAGE_KEY, JSON.stringify({ email, otpSent: true }));
+    } else {
+      window.sessionStorage.removeItem(OTP_STORAGE_KEY);
+    }
+  }, [otpSent, email]);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -160,6 +215,7 @@ export function LoginForm() {
         const canUseNext = safeNext ? roleCanAccess(profileRaw.role, safeNext) : false;
         const destination = canUseNext ? safeNext : roleHome[roleName] || "/catalog";
 
+        window.sessionStorage.removeItem(OTP_STORAGE_KEY);
         window.location.href = destination;
         return;
       }
@@ -203,6 +259,16 @@ export function LoginForm() {
         setPendingAction(null);
       }
     }
+  }
+
+  function resetToForm() {
+    if (pending) return;
+    setOtpSent(false);
+    setVerificationCode("");
+    setPassword("");
+    setError("");
+    setNotice("");
+    setResendCooldown(0);
   }
 
   async function resendVerificationCode(e: React.MouseEvent<HTMLButtonElement>) {
@@ -299,6 +365,17 @@ export function LoginForm() {
             ? (language === "en" ? "Verifying code and signing in..." : "Memverifikasi kode dan masuk...")
             : (language === "en" ? "Verify code and sign in" : "Verifikasi kode dan masuk")}
         </button>
+
+        {otpSent && (
+          <button
+            type="button"
+            onClick={resetToForm}
+            disabled={pending}
+            className="w-full text-center text-xs font-semibold text-on-surface-variant underline disabled:opacity-50"
+          >
+            {language === "en" ? "Use a different email" : "Gunakan email lain"}
+          </button>
+        )}
 
         <p className="text-center text-xs text-on-surface-variant">
           {t("noAccount")} <Link className="font-bold text-secondary" href="/admin/register">{t("register")}</Link>
