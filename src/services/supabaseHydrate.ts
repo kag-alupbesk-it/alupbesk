@@ -31,6 +31,12 @@ import {
 } from "../backend/modules/gudangInventory/transactions/store";
 import { productionRequests } from "../backend/modules/gudangInventory/productionRequests/store";
 import type { ProductionRequestItem } from "../backend/modules/gudangInventory/productionRequests/types";
+import { gudangMaterialLots } from "../backend/modules/gudangInventory/lots/store";
+import { pmCutLists } from "../backend/modules/pm/cutting/store";
+import type {
+  PMCutAllocation,
+  PMCutListItem,
+} from "../backend/modules/pm/cutting/types";
 
 let hydrated: Promise<void> | null = null;
 let hydratedAt = 0;
@@ -265,6 +271,11 @@ async function hydrateGudangInventoryTables(): Promise<void> {
       rackGroup: row.rack_group ?? "",
       subRow: row.sub_row ?? "",
       currentStock: Number(row.current_stock),
+      unit: row.unit ?? "pcs",
+      materialKind: row.material_kind ?? "unit",
+      lengthPerUnit: row.length_per_unit === null ? null : Number(row.length_per_unit),
+      widthPerUnit: row.width_per_unit === null ? null : Number(row.width_per_unit),
+      weightPerUnit: row.weight_per_unit === null ? null : Number(row.weight_per_unit),
       createdAt: row.created_at ?? "",
       updatedAt: row.updated_at ?? "",
     });
@@ -342,6 +353,101 @@ async function hydrateGudangInventoryTables(): Promise<void> {
       createdAt: row.created_at ?? "",
       updatedAt: row.updated_at ?? "",
     });
+  }
+}
+
+// Toleran terhadap tabel yang belum ada: modul lain tidak boleh gagal hydrate
+// hanya karena migrasi lot/cutting belum dijalankan.
+async function hydrateGudangMaterialLots(): Promise<void> {
+  if (!db) return;
+  try {
+    const rows = await readRows(db.from("gudang_material_lots").select("*"));
+    gudangMaterialLots.clear();
+    for (const row of rows) {
+      gudangMaterialLots.set(row.id, {
+        id: row.id,
+        itemId: row.item_id,
+        lotCode: row.lot_code ?? "",
+        receivedDate: row.received_date,
+        inTransactionId: row.in_transaction_id ?? null,
+        length: row.length === null ? null : Number(row.length),
+        width: row.width === null ? null : Number(row.width),
+        quantity: Number(row.quantity),
+        rackGroup: row.rack_group ?? "",
+        subRow: row.sub_row ?? "",
+        status: row.status ?? "tersedia",
+        note: row.note ?? "",
+        createdAt: row.created_at ?? "",
+        updatedAt: row.updated_at ?? "",
+      });
+    }
+  } catch (error) {
+    console.error("[supabase] gagal hydrate lot bahan:", error);
+  }
+}
+
+async function hydratePMCutLists(): Promise<void> {
+  if (!db) return;
+  try {
+    const listRows = await readRows(db.from("pm_cut_lists").select("*"));
+    const itemRows = await readRows(db.from("pm_cut_list_items").select("*"));
+    const allocRows = await readRows(db.from("pm_cut_allocations").select("*"));
+
+    const allocsByItem = new Map<string, PMCutAllocation[]>();
+    for (const row of allocRows) {
+      const list = allocsByItem.get(row.cut_list_item_id) ?? [];
+      list.push({
+        id: row.id,
+        cutListItemId: row.cut_list_item_id,
+        lotId: row.lot_id ?? null,
+        quantity: Number(row.quantity),
+        lengthUsed: row.length_used === null ? null : Number(row.length_used),
+        leftoverLength:
+          row.leftover_length === null ? null : Number(row.leftover_length),
+        leftoverStatus: row.leftover_status === "scrap" ? "scrap" : "reusable",
+        createdAt: row.created_at ?? "",
+      });
+      allocsByItem.set(row.cut_list_item_id, list);
+    }
+
+    const itemsByList = new Map<string, PMCutListItem[]>();
+    for (const row of itemRows) {
+      const list = itemsByList.get(row.cut_list_id) ?? [];
+      list.push({
+        id: row.id,
+        cutListId: row.cut_list_id,
+        componentName: row.component_name,
+        quantity: Number(row.quantity),
+        length: row.length === null ? null : Number(row.length),
+        width: row.width === null ? null : Number(row.width),
+        materialItemId: row.material_item_id ?? null,
+        note: row.note ?? "",
+        sortOrder: Number(row.sort_order ?? 0),
+        allocations: (allocsByItem.get(row.id) ?? []).sort((a, b) =>
+          a.createdAt.localeCompare(b.createdAt),
+        ),
+      });
+      itemsByList.set(row.cut_list_id, list);
+    }
+
+    pmCutLists.clear();
+    for (const row of listRows) {
+      pmCutLists.set(row.id, {
+        id: row.id,
+        orderId: row.order_id,
+        title: row.title ?? "",
+        note: row.note ?? "",
+        status: row.status ?? "draft",
+        createdBy: row.created_by ?? "",
+        items: (itemsByList.get(row.id) ?? []).sort(
+          (a, b) => a.sortOrder - b.sortOrder,
+        ),
+        createdAt: row.created_at ?? "",
+        updatedAt: row.updated_at ?? "",
+      });
+    }
+  } catch (error) {
+    console.error("[supabase] gagal hydrate cutting list:", error);
   }
 }
 
@@ -557,6 +663,8 @@ export function ensureHydrated(): Promise<void> {
         await hydrateOrders();
         await hydrateGudang();
         await hydrateGudangInventory();
+        await hydrateGudangMaterialLots();
+        await hydratePMCutLists();
         await hydrateCustomRequests();
         await hydrateKas();
         await hydratePenagihan();

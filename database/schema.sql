@@ -284,6 +284,15 @@ create table if not exists gudang_inventory_items (
     updated_at    timestamptz not null default now()
 );
 
+-- Dimensi & satuan bahan baku (dipakai modul BOM/Cutting). Bahan baku boleh
+-- memiliki satuan panjang/berat desimal (mis. m, m2, kg) sehingga stok tidak
+-- lagi dibatasi bilangan bulat.
+alter table gudang_inventory_items add column if not exists unit text not null default 'pcs';
+alter table gudang_inventory_items add column if not exists material_kind text not null default 'unit';
+alter table gudang_inventory_items add column if not exists length_per_unit numeric(12,2);
+alter table gudang_inventory_items add column if not exists width_per_unit numeric(12,2);
+alter table gudang_inventory_items add column if not exists weight_per_unit numeric(12,3);
+
 create table if not exists gudang_in_transactions (
     id               uuid primary key default gen_random_uuid(),
     transaction_date date not null default current_date,
@@ -351,6 +360,42 @@ alter table gudang_production_request_items add column if not exists category_id
 alter table gudang_production_request_items add column if not exists category_name text not null default '';
 alter table gudang_production_request_items add column if not exists rack_group text not null default '';
 alter table gudang_production_request_items add column if not exists sub_row text not null default '';
+
+-- ---------------------------------------------------------------------
+-- 5d. BAHAN BAKU & LOT — pelacakan fisik bahan bersisa (modul BOM/Cutting)
+-- ---------------------------------------------------------------------
+-- Satu lot merepresentasikan sekumpulan potongan fisik: `quantity` banyak
+-- batang/lembar, masing-masing sepanjang `length` mm. Sisa potong disimpan
+-- sebagai lot baru berstatus 'sisa' (reusable) atau 'scrap' (tidak dipakai).
+create table if not exists gudang_material_lots (
+    id                text primary key,
+    item_id           text not null references gudang_inventory_items(id) on delete cascade,
+    lot_code          text not null default '',
+    received_date     date not null default current_date,
+    in_transaction_id uuid,
+    length            numeric(12,2),
+    width             numeric(12,2),
+    quantity          numeric(15,2) not null default 1 check (quantity >= 0),
+    rack_group        text not null default '',
+    sub_row           text not null default '',
+    status            text not null default 'tersedia'
+                      check (status in ('tersedia', 'sisa', 'scrap', 'habis')),
+    note              text not null default '',
+    created_at        timestamptz not null default now(),
+    updated_at        timestamptz not null default now()
+);
+
+create index if not exists gudang_material_lots_item_idx
+    on gudang_material_lots(item_id);
+
+-- Penjaga untuk database yang sudah memiliki tabel versi lama.
+alter table gudang_material_lots add column if not exists lot_code text not null default '';
+alter table gudang_material_lots add column if not exists in_transaction_id uuid;
+alter table gudang_material_lots add column if not exists length numeric(12,2);
+alter table gudang_material_lots add column if not exists width numeric(12,2);
+alter table gudang_material_lots add column if not exists rack_group text not null default '';
+alter table gudang_material_lots add column if not exists sub_row text not null default '';
+alter table gudang_material_lots add column if not exists note text not null default '';
 
 -- ---------------------------------------------------------------------
 -- 6. KEUANGAN — buku kas & penagihan
@@ -521,6 +566,47 @@ create table if not exists pm_order_items (
 
 alter table pm_orders enable row level security;
 alter table pm_order_items enable row level security;
+
+-- ---------------------------------------------------------------------
+-- 10b. BOM / CUTTING LIST — daftar potong material per SPK
+-- ---------------------------------------------------------------------
+create table if not exists pm_cut_lists (
+    id          text primary key,
+    order_id    text not null references pm_orders(id) on delete cascade,
+    title       text not null default '',
+    note        text not null default '',
+    status      text not null default 'draft'
+                check (status in ('draft', 'diproses', 'selesai')),
+    created_by  text not null default '',
+    created_at  timestamptz not null default now(),
+    updated_at  timestamptz not null default now()
+);
+
+create index if not exists pm_cut_lists_order_idx on pm_cut_lists(order_id);
+
+create table if not exists pm_cut_list_items (
+    id               text primary key,
+    cut_list_id      text not null references pm_cut_lists(id) on delete cascade,
+    component_name   text not null,
+    quantity         integer not null check (quantity > 0),
+    length           numeric(12,2),
+    width            numeric(12,2),
+    material_item_id text references gudang_inventory_items(id) on delete set null,
+    note             text not null default '',
+    sort_order       integer not null default 0
+);
+
+create table if not exists pm_cut_allocations (
+    id               text primary key,
+    cut_list_item_id text not null references pm_cut_list_items(id) on delete cascade,
+    lot_id           text references gudang_material_lots(id) on delete set null,
+    quantity         numeric(15,2) not null default 0 check (quantity >= 0),
+    length_used      numeric(12,2),
+    leftover_length  numeric(12,2),
+    leftover_status  text not null default 'reusable'
+                     check (leftover_status in ('reusable', 'scrap')),
+    created_at       timestamptz not null default now()
+);
 
 -- ---------------------------------------------------------------------
 -- 11. FIELD — pengiriman & bukti terima (POD)
@@ -730,13 +816,15 @@ begin
         'users', 'role_requests', 'products', 'product_variants', 'orders',
         'order_lines', 'order_status_events', 'custom_requests', 'custom_request_items', 'gudang_items',
         'gudang_movements', 'gudang_categories', 'gudang_inventory_items',
+        'gudang_material_lots',
         'gudang_in_transactions', 'gudang_out_transactions',
         'gudang_production_requests', 'gudang_production_request_items',
         'kas_entries', 'penagihan', 'marketing_banners', 'portfolio_items',
         'case_studies', 'partners', 'faq_items', 'custom_services',
         'site_content', 'pm_orders', 'pm_order_items', 'field_deliveries',
         'field_delivery_items', 'finance_dashboard', 'contact_messages',
-        'push_subscriptions'
+        'push_subscriptions',
+        'pm_cut_lists', 'pm_cut_list_items', 'pm_cut_allocations'
     ] loop
         if to_regclass(format('public.%I', table_name)) is not null then
             execute format(

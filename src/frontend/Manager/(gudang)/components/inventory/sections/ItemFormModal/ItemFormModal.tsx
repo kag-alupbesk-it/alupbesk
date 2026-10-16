@@ -5,6 +5,7 @@ import type {
   GudangCategory,
   GudangInventoryItem,
   GudangInventoryItemInput,
+  MaterialKind,
 } from "@/backend/modules/gudangInventory";
 import * as s from "../../style/style";
 
@@ -26,7 +27,19 @@ interface ItemForm {
   rackGroup: string;
   subRow: string;
   currentStock: string;
+  unit: string;
+  materialKind: MaterialKind;
+  lengthPerUnit: string;
+  widthPerUnit: string;
+  weightPerUnit: string;
 }
+
+const MATERIAL_KINDS: { value: MaterialKind; label: string }[] = [
+  { value: "unit", label: "Satuan (unit)" },
+  { value: "bar", label: "Batang (bar)" },
+  { value: "sheet", label: "Lembaran (sheet)" },
+  { value: "roll", label: "Gulungan (roll)" },
+];
 
 export function ItemFormModal({
   categories,
@@ -45,14 +58,20 @@ export function ItemFormModal({
     rackGroup: item?.rackGroup ?? "",
     subRow: item?.subRow ?? "",
     currentStock: String(item?.currentStock ?? 0),
+    unit: item?.unit ?? "pcs",
+    materialKind: item?.materialKind ?? "unit",
+    lengthPerUnit: item?.lengthPerUnit != null ? String(item.lengthPerUnit) : "",
+    widthPerUnit: item?.widthPerUnit != null ? String(item.widthPerUnit) : "",
+    weightPerUnit: item?.weightPerUnit != null ? String(item.weightPerUnit) : "",
   }));
   const [errors, setErrors] = useState<Partial<Record<keyof ItemForm, string>>>({});
   const [cooldown, setCooldown] = useState(false);
 
+  const isMaterial = form.materialKind !== "unit";
   const isFormValid = Boolean(form.categoryId && form.itemName.trim());
   const isButtonDisabled = saving || cooldown || !isFormValid;
 
-  function set<K extends keyof ItemForm>(key: K, value: string) {
+  function set<K extends keyof ItemForm>(key: K, value: ItemForm[K]) {
     setForm((prev) => ({ ...prev, [key]: value }));
   }
 
@@ -61,9 +80,17 @@ export function ItemFormModal({
     if (!form.categoryId) next.categoryId = "Kategori wajib dipilih";
     if (!form.itemName.trim()) next.itemName = "Nama barang wajib diisi";
     const stock = Number(form.currentStock);
-    if (!Number.isInteger(stock) || stock < 0) next.currentStock = "Stok minimal 0";
+    if (form.currentStock === "" || !Number.isFinite(stock) || stock < 0) {
+      next.currentStock = "Stok minimal 0";
+    }
     setErrors(next);
     return Object.keys(next).length === 0;
+  }
+
+  function toNumberOrNull(value: string): number | null {
+    if (value.trim() === "") return null;
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : null;
   }
 
   async function handleSave() {
@@ -79,6 +106,11 @@ export function ItemFormModal({
         rackGroup: form.rackGroup.trim(),
         subRow: form.subRow.trim(),
         currentStock: Number(form.currentStock),
+        unit: form.unit.trim() || "pcs",
+        materialKind: form.materialKind,
+        lengthPerUnit: toNumberOrNull(form.lengthPerUnit),
+        widthPerUnit: toNumberOrNull(form.widthPerUnit),
+        weightPerUnit: toNumberOrNull(form.weightPerUnit),
       });
     } finally {
       setCooldown(false);
@@ -194,6 +226,7 @@ export function ItemFormModal({
               <input
                 type="number"
                 min="0"
+                step="0.01"
                 className={s.formInput}
                 value={form.currentStock}
                 onChange={(event) => set("currentStock", event.target.value)}
@@ -201,6 +234,59 @@ export function ItemFormModal({
               {errors.currentStock && <p className={s.formError}>{errors.currentStock}</p>}
             </div>
           </div>
+
+          <div className={s.formGrid}>
+            <div>
+              <label className={s.formLabel}>Satuan</label>
+              <input
+                className={s.formInput}
+                placeholder="pcs / m / kg"
+                value={form.unit}
+                onChange={(event) => set("unit", event.target.value)}
+              />
+            </div>
+            <div>
+              <label className={s.formLabel}>Jenis Bahan</label>
+              <select
+                className={s.formInput}
+                value={form.materialKind}
+                onChange={(event) => set("materialKind", event.target.value as MaterialKind)}
+              >
+                {MATERIAL_KINDS.map((kind) => (
+                  <option key={kind.value} value={kind.value}>
+                    {kind.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          {isMaterial && (
+            <div className={s.formGrid}>
+              <div>
+                <label className={s.formLabel}>Panjang Acuan (mm)</label>
+                <input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  className={s.formInput}
+                  value={form.lengthPerUnit}
+                  onChange={(event) => set("lengthPerUnit", event.target.value)}
+                />
+              </div>
+              <div>
+                <label className={s.formLabel}>Lebar Acuan (mm)</label>
+                <input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  className={s.formInput}
+                  value={form.widthPerUnit}
+                  onChange={(event) => set("widthPerUnit", event.target.value)}
+                />
+              </div>
+            </div>
+          )}
         </div>
 
         <div className={s.modalFooter}>

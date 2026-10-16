@@ -33,6 +33,11 @@ export function createInventoryItem(
     rackGroup: (input.rackGroup ?? "").trim(),
     subRow: (input.subRow ?? "").trim(),
     currentStock: input.currentStock ?? 0,
+    unit: (input.unit ?? "pcs").trim() || "pcs",
+    materialKind: input.materialKind ?? "unit",
+    lengthPerUnit: input.lengthPerUnit ?? null,
+    widthPerUnit: input.widthPerUnit ?? null,
+    weightPerUnit: input.weightPerUnit ?? null,
     createdAt: now,
     updatedAt: now,
   };

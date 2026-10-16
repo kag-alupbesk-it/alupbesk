@@ -31,6 +31,8 @@ export interface PMItem {
 export interface PMOrder {
   id: string;
   contractorName: string;
+  // Kode produksi milik perusahaan (mis. "PRD-2601-0007"), bukan kode dari
+  // kontraktor. Dihasilkan otomatis saat order dibuat, boleh ditimpa manual.
   contractorCode: string;
   contractorPhone?: string;
   projectAddress?: string;
@@ -57,7 +59,8 @@ export interface PMOrder {
 
 export interface NewPMOrderInput {
   contractorName: string;
-  contractorCode: string;
+  // Opsional: kosongkan agar sistem membuat kode produksi "PRD-YYMM-####".
+  contractorCode?: string;
   contractorPhone?: string;
   projectAddress?: string;
   targetDate: string;

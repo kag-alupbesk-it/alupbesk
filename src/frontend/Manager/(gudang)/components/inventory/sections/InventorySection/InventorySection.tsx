@@ -8,6 +8,8 @@ import { useReadOnly } from "@/frontend/shared/access/AccessModeProvider";
 import type {
   GudangInventoryItem,
   GudangInventoryItemInput,
+  GudangMaterialLotInput,
+  GudangMaterialLotView,
 } from "@/backend/modules/gudangInventory";
 import type {
   InventoryInInput,
@@ -15,9 +17,11 @@ import type {
   InventoryExportType,
 } from "@/services/api/gudangInventory";
 import { MasterStokTab } from "../MasterStokTab/MasterStokTab";
+import { MaterialLotsTab } from "../MaterialLotsTab/MaterialLotsTab";
 import { TransactionsTab } from "../TransactionsTab/TransactionsTab";
 import { ProductionRequestsTab } from "../ProductionRequestsTab/ProductionRequestsTab";
 import { ItemFormModal } from "../ItemFormModal/ItemFormModal";
+import { LotFormModal } from "../LotFormModal/LotFormModal";
 import { TransactionModal, type TransactionFormResult } from "../TransactionModal/TransactionModal";
 import { CategoryModal } from "../CategoryModal/CategoryModal";
 import { ConfirmModal } from "../ConfirmModal/ConfirmModal";
@@ -33,9 +37,10 @@ const EMPTY_SNAPSHOT: InventorySnapshot = {
   inTransactions: [],
   outTransactions: [],
   productionRequests: [],
+  materialLots: [],
 };
 
-type TabKey = "master" | "masuk" | "keluar" | "permintaan";
+type TabKey = "master" | "bahan" | "masuk" | "keluar" | "permintaan";
 
 const NAV_ITEMS = getRoleNavigationItems("gudang");
 
@@ -59,13 +64,20 @@ export function InventorySection() {
 
   const [showItemForm, setShowItemForm] = useState(false);
   const [editItem, setEditItem] = useState<GudangInventoryItem | null>(null);
+  const [showLotForm, setShowLotForm] = useState(false);
+  const [editLot, setEditLot] = useState<GudangMaterialLotView | null>(null);
+  const [deleteLotTarget, setDeleteLotTarget] = useState<GudangMaterialLotView | null>(null);
   const [showCategory, setShowCategory] = useState(false);
   const [transactionMode, setTransactionMode] = useState<"in" | "out" | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<GudangInventoryItem | null>(null);
   const importInputRef = useRef<HTMLInputElement>(null);
 
   const isTabKey = (key: string): key is TabKey =>
-    key === "master" || key === "masuk" || key === "keluar" || key === "permintaan";
+    key === "master" ||
+    key === "bahan" ||
+    key === "masuk" ||
+    key === "keluar" ||
+    key === "permintaan";
   const handleNavigationSelect = (key: string) => {
     if (isTabKey(key)) setTab(key);
   };
@@ -152,6 +164,25 @@ export function InventorySection() {
     }, "Kategori gagal disimpan.");
   }
 
+  async function handleSaveLot(input: GudangMaterialLotInput) {
+    await runAction(async () => {
+      if (editLot) await gudangInventoryApi.updateMaterialLot(editLot.id, input);
+      else await gudangInventoryApi.createMaterialLot(input);
+      setShowLotForm(false);
+      setEditLot(null);
+      setNotice(editLot ? "Lot berhasil diperbarui." : "Lot berhasil ditambahkan.");
+    }, "Lot gagal disimpan.");
+  }
+
+  async function handleDeleteLot() {
+    if (!deleteLotTarget) return;
+    await runAction(async () => {
+      await gudangInventoryApi.deleteMaterialLot(deleteLotTarget.id);
+      setDeleteLotTarget(null);
+      setNotice("Lot berhasil dihapus.");
+    }, "Lot gagal dihapus.");
+  }
+
   async function handleDecide(id: string, action: "approve" | "reject", reason?: string) {
     await runAction(async () => {
       await productionRequestsApi.decide(id, action, reason);
@@ -179,7 +210,7 @@ export function InventorySection() {
   }
 
   const activeExportType: InventoryExportType =
-    tab === "master" ? "items" : tab === "masuk" ? "in" : "out";
+    tab === "masuk" ? "in" : tab === "keluar" ? "out" : "items";
 
   return (
     <>
@@ -291,6 +322,26 @@ export function InventorySection() {
           />
         )}
 
+        {tab === "bahan" && (
+          <MaterialLotsTab
+            lots={data.materialLots}
+            items={data.items}
+            search={search}
+            onSearchChange={setSearch}
+            readOnly={readOnly}
+            busy={busy}
+            onAdd={() => {
+              setEditLot(null);
+              setShowLotForm(true);
+            }}
+            onEdit={(lot) => {
+              setEditLot(lot);
+              setShowLotForm(true);
+            }}
+            onDelete={setDeleteLotTarget}
+          />
+        )}
+
         {tab === "masuk" && (
           <TransactionsTab
             kind="in"
@@ -342,6 +393,19 @@ export function InventorySection() {
         />
       )}
 
+      {showLotForm && (
+        <LotFormModal
+          items={data.items}
+          lot={editLot}
+          saving={busy}
+          onClose={() => {
+            setShowLotForm(false);
+            setEditLot(null);
+          }}
+          onSubmit={handleSaveLot}
+        />
+      )}
+
       {transactionMode && (
         <TransactionModal
           mode={transactionMode}
@@ -371,6 +435,17 @@ export function InventorySection() {
           saving={busy}
           onClose={() => setDeleteTarget(null)}
           onConfirm={handleDeleteItem}
+        />
+      )}
+
+      {deleteLotTarget && (
+        <ConfirmModal
+          title="Hapus Lot"
+          message={`Hapus lot "${deleteLotTarget.lotCode || deleteLotTarget.itemName}"? Tindakan ini tidak dapat dibatalkan.`}
+          confirmLabel="Hapus"
+          saving={busy}
+          onClose={() => setDeleteLotTarget(null)}
+          onConfirm={handleDeleteLot}
         />
       )}
     </div>

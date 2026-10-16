@@ -48,6 +48,7 @@ const navigationByRole = {
   ],
   gudang: [
     { key: "master", permissionPath: "/gudang", label: "Master Stok", icon: "inventory_2" },
+    { key: "bahan", permissionPath: "/gudang", label: "Bahan Baku & Lot", icon: "view_in_ar" },
     { key: "masuk", permissionPath: "/gudang", label: "Barang Masuk", icon: "move_to_inbox" },
     { key: "keluar", permissionPath: "/gudang", label: "Barang Keluar", icon: "outbox" },
     { key: "permintaan", permissionPath: "/gudang", label: "Permintaan Produksi", icon: "assignment" },
@@ -63,6 +64,7 @@ const navigationByRole = {
     { key: "queue", href: "/produksi", permissionPath: "/produksi", label: "Antrean Produksi", icon: "precision_manufacturing" },
     { key: "drawings", href: "/produksi/drawings", permissionPath: "/produksi/drawings", label: "Upload Gambar Teknik", icon: "upload_file" },
     { key: "material", href: "/produksi/permintaan", permissionPath: "/produksi/permintaan", label: "Permintaan Material", icon: "package_2" },
+    { key: "cutting", href: "/produksi/cutting-list", permissionPath: "/produksi/cutting-list", label: "Cutting List", icon: "content_cut" },
   ],
   field: [
     { key: "deliveries", href: "/field", permissionPath: "/field", label: "Daftar Pengiriman", icon: "local_shipping" },

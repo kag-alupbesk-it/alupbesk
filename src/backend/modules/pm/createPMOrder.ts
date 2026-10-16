@@ -1,5 +1,6 @@
 import { db } from "@/services/supabase";
 import type { NewPMOrderInput, PMOrder, PMOrderResult } from "./types";
+import { generateProductionCode } from "./generateProductionCode";
 
 export async function createPMOrder(
   input: NewPMOrderInput,
@@ -12,12 +13,29 @@ export async function createPMOrder(
     };
   }
 
+  const override = input.contractorCode?.trim();
+  let productionCode: string;
+  if (override) {
+    productionCode = override.toUpperCase();
+  } else {
+    try {
+      productionCode = await generateProductionCode();
+    } catch (error) {
+      console.error("[pm] gagal membuat kode produksi:", error);
+      return {
+        ok: false,
+        code: "DATABASE_ERROR",
+        message: "Kode produksi otomatis gagal dibuat.",
+      };
+    }
+  }
+
   const id = `PM-${new Date().toISOString().slice(2, 7).replace("-", "")}-${crypto.randomUUID().slice(0, 8).toUpperCase()}`;
   const now = new Date().toISOString();
   const row = {
     id,
     contractor_name: input.contractorName.trim(),
-    contractor_code: input.contractorCode.trim().toUpperCase(),
+    contractor_code: productionCode,
     contractor_phone: input.contractorPhone?.trim() || null,
     project_address: input.projectAddress?.trim() || null,
     entered_at: now.slice(0, 10),

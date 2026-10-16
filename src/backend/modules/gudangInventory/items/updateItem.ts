@@ -37,6 +37,14 @@ export function updateInventoryItem(
     rackGroup: input.rackGroup !== undefined ? input.rackGroup.trim() : existing.rackGroup,
     subRow: input.subRow !== undefined ? input.subRow.trim() : existing.subRow,
     currentStock: input.currentStock ?? existing.currentStock,
+    unit: input.unit !== undefined ? input.unit.trim() || "pcs" : existing.unit,
+    materialKind: input.materialKind ?? existing.materialKind,
+    lengthPerUnit:
+      input.lengthPerUnit !== undefined ? input.lengthPerUnit : existing.lengthPerUnit,
+    widthPerUnit:
+      input.widthPerUnit !== undefined ? input.widthPerUnit : existing.widthPerUnit,
+    weightPerUnit:
+      input.weightPerUnit !== undefined ? input.weightPerUnit : existing.weightPerUnit,
     updatedAt: new Date().toISOString(),
   };
   persistInventoryItem(updated);

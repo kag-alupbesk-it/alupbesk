@@ -17,8 +17,60 @@ export interface GudangInventoryItem {
   rackGroup: string;
   subRow: string;
   currentStock: number;
+  unit: string;
+  materialKind: MaterialKind;
+  lengthPerUnit: number | null;
+  widthPerUnit: number | null;
+  weightPerUnit: number | null;
   createdAt: string;
   updatedAt: string;
+}
+
+// Jenis bahan: 'unit' = barang satuan biasa; 'bar' = batang profil;
+// 'sheet' = lembaran; 'roll' = gulungan. Selain 'unit', bahan dilacak lewat
+// lot agar sisa potong dapat dipakai ulang.
+export type MaterialKind = "unit" | "bar" | "sheet" | "roll";
+
+export type MaterialLotStatus = "tersedia" | "sisa" | "scrap" | "habis";
+
+export interface GudangMaterialLot {
+  id: string;
+  itemId: string;
+  lotCode: string;
+  receivedDate: string;
+  inTransactionId: string | null;
+  length: number | null;
+  width: number | null;
+  quantity: number;
+  rackGroup: string;
+  subRow: string;
+  status: MaterialLotStatus;
+  note: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// Lot lengkap dengan info bahan induk untuk kebutuhan tampilan.
+export interface GudangMaterialLotView extends GudangMaterialLot {
+  itemName: string;
+  modelNo: string;
+  categoryId: string;
+  categoryName: string;
+  unit: string;
+  materialKind: MaterialKind;
+}
+
+export interface GudangMaterialLotInput {
+  itemId: string;
+  lotCode?: string;
+  receivedDate?: string;
+  length?: number | null;
+  width?: number | null;
+  quantity?: number;
+  rackGroup?: string;
+  subRow?: string;
+  status?: MaterialLotStatus;
+  note?: string;
 }
 
 export interface GudangInTransaction {
@@ -63,6 +115,11 @@ export interface GudangInventoryItemInput {
   rackGroup?: string;
   subRow?: string;
   currentStock?: number;
+  unit?: string;
+  materialKind?: MaterialKind;
+  lengthPerUnit?: number | null;
+  widthPerUnit?: number | null;
+  weightPerUnit?: number | null;
 }
 
 export interface GudangInTransactionInput {
@@ -86,7 +143,9 @@ export type GudangInventoryErrorCode =
   | "CATEGORY_NOT_FOUND"
   | "ITEM_NOT_FOUND"
   | "INSUFFICIENT_STOCK"
-  | "DUPLICATE_MODEL";
+  | "DUPLICATE_MODEL"
+  | "LOT_NOT_FOUND"
+  | "INSUFFICIENT_LOT";
 
 export type GudangInventoryResult<T> =
   | { ok: true; data: T }
