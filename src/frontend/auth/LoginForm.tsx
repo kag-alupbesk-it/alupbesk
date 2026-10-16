@@ -279,7 +279,7 @@ export function LoginForm() {
     try {
       const supabase = getSupabaseBrowserClient();
       const { error: resetError } = await supabase.auth.resetPasswordForEmail(email.trim().toLowerCase(), {
-        redirectTo: `${window.location.origin}/login`,
+        redirectTo: `${window.location.origin}${window.location.pathname}`,
       });
       if (resetError) throw resetError;
       setNotice(t("resetLinkSent"));
