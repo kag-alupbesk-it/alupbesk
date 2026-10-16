@@ -64,17 +64,13 @@ export default function RequestForm({
           <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-secondary/10 text-secondary"><Layers3 size={17} /></div>
           <div>
             <h3 className={sectionTitle}>Informasi Order</h3>
-            <p className={sectionSubtitle}>Identitas pemesan, referensi kode produksi, dan lampiran gambar referensi.</p>
+            <p className={sectionSubtitle}>Identitas pemesan dan lampiran gambar referensi.</p>
           </div>
         </div>
         <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
           <label className={gridField}>
             <span className={styles.label}>Nama Lengkap <span className="text-secondary">*</span></span>
             <input className={styles.field} placeholder="cth. Budi Santoso" value={form.nama} onChange={(event) => update("nama", event.target.value)} required />
-          </label>
-          <label className={gridField}>
-            <span className={styles.label}>Kode Produksi <span className="text-secondary">*</span></span>
-            <input className={`${styles.field} font-mono uppercase`} placeholder="cth. BS-7842-A" value={form.kode} onChange={(event) => update("kode", event.target.value)} required />
           </label>
           <label className={gridField}>
             <span className={styles.label}>Nama Perusahaan <span className="text-secondary">*</span></span>
