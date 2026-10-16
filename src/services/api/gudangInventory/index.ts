@@ -4,6 +4,9 @@ import type {
   GudangInTransactionView,
   GudangInventoryItem,
   GudangInventoryItemInput,
+  GudangMaterialLot,
+  GudangMaterialLotInput,
+  GudangMaterialLotView,
   GudangOutTransaction,
   GudangOutTransactionView,
 } from "@/backend/modules/gudangInventory";
@@ -17,6 +20,7 @@ export interface InventorySnapshot {
   inTransactions: GudangInTransactionView[];
   outTransactions: GudangOutTransactionView[];
   productionRequests: ProductionRequest[];
+  materialLots: GudangMaterialLotView[];
 }
 
 export interface InventoryItemRef {
@@ -60,6 +64,25 @@ export const gudangInventoryApi = {
     }),
   deleteItem: (id: string): Promise<{ id: string }> =>
     request(`/gudang/inventory/items/${id}`, { method: "DELETE" }),
+  listMaterialLots: (): Promise<GudangMaterialLotView[]> =>
+    request("/gudang/inventory/lots"),
+  createMaterialLot: (
+    input: GudangMaterialLotInput,
+  ): Promise<GudangMaterialLot> =>
+    request("/gudang/inventory/lots", {
+      method: "POST",
+      body: JSON.stringify(input),
+    }),
+  updateMaterialLot: (
+    id: string,
+    input: Partial<GudangMaterialLotInput>,
+  ): Promise<GudangMaterialLot> =>
+    request(`/gudang/inventory/lots/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(input),
+    }),
+  deleteMaterialLot: (id: string): Promise<{ id: string }> =>
+    request(`/gudang/inventory/lots/${id}`, { method: "DELETE" }),
   listCategories: (): Promise<GudangCategory[]> =>
     request("/gudang/inventory/categories"),
   createCategory: (name: string): Promise<GudangCategory> =>

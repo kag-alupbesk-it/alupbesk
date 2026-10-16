@@ -1,6 +1,7 @@
 export * from "./types";
 export * from "./listPMOrders";
 export * from "./createPMOrder";
+export * from "./generateProductionCode";
 export * from "./updatePMOrder";
 export * from "./drawings/ensureTechnicalDrawingsBucket";
 export * from "./drawings/uploadTechnicalDrawing";
@@ -8,3 +9,4 @@ export * from "./drawings/deleteTechnicalDrawing";
 export * from "./drawings/submitPMProductionDrawing";
 export * from "./drawings/getTechnicalDrawingUrls";
 export * from "./export/generatePMOrdersExcel";
+export * from "./cutting";

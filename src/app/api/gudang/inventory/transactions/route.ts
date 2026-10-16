@@ -38,14 +38,14 @@ const transactionSchema = z.discriminatedUnion("type", [
   z.object({
     type: z.literal("in"),
     transactionDate: z.string().min(1, "Tanggal wajib diisi."),
-    quantity: z.number().int().positive("Jumlah harus lebih dari 0."),
+    quantity: z.number().positive("Jumlah harus lebih dari 0."),
     ...itemDetailSchema,
     createdBy: z.string().optional(),
   }),
   z.object({
     type: z.literal("out"),
     transactionDate: z.string().min(1, "Tanggal wajib diisi."),
-    quantity: z.number().int().positive("Jumlah harus lebih dari 0."),
+    quantity: z.number().positive("Jumlah harus lebih dari 0."),
     ...itemDetailSchema,
     projectId: z.string().nullable().optional(),
     projectName: z.string().optional(),

@@ -73,10 +73,8 @@ export function CreateOrderForm() {
         const match = requests.find((request) => request.id === customId);
         if (!active || !match) return;
 
-        const generatedCode = `CST-${new Date().toISOString().slice(2, 4)}${new Date().toISOString().slice(5, 7)}-${customId.slice(-4).toUpperCase()}`;
         setFromCustomId(match.id);
         setContractorName(match.nama);
-        setContractorCode(match.kode?.trim() || generatedCode);
         setContractorPhone(match.telp);
         setProjectAddress(match.projectAddress ?? "");
         setTargetDate(match.deadline ?? "");
@@ -182,8 +180,8 @@ export function CreateOrderForm() {
       setError("Tunggu sampai preview gambar selesai dibaca.");
       return;
     }
-    if (!contractorName.trim() || !contractorCode.trim() || !targetDate) {
-      setError("Nama kontraktor, kode produksi, dan target selesai wajib diisi.");
+    if (!contractorName.trim() || !targetDate) {
+      setError("Nama kontraktor dan target selesai wajib diisi.");
       return;
     }
 
@@ -228,7 +226,7 @@ export function CreateOrderForm() {
 
       const saved = await addOrder({
         contractorName,
-        contractorCode,
+        contractorCode: contractorCode.trim() || undefined,
         contractorPhone,
         projectAddress,
         targetDate,
@@ -301,9 +299,9 @@ export function CreateOrderForm() {
                 <input id="contractor-name" name="contractorName" value={contractorName} onChange={(event) => setContractorName(event.target.value)} placeholder="cth. PT Karya Mandiri" className={inputClass} required />
               </div>
               <div>
-                <label htmlFor="contractor-code" className={labelClass}>Kode Produksi dari Kontraktor <span className="text-secondary">*</span></label>
-                <input id="contractor-code" name="contractorCode" value={contractorCode} onChange={(event) => setContractorCode(event.target.value)} placeholder="cth. KM-7842-A" className={`${inputClass} font-mono uppercase`} required />
-                <p className="mt-1.5 text-[9px] text-on-surface-variant/70">Kode ini menjadi acuan pencarian utama di dashboard.</p>
+                <label htmlFor="contractor-code" className={labelClass}>Kode Produksi</label>
+                <input id="contractor-code" name="contractorCode" value={contractorCode} onChange={(event) => setContractorCode(event.target.value)} placeholder="Kosongkan untuk otomatis (PRD-YYMM-####)" className={`${inputClass} font-mono uppercase`} />
+                <p className="mt-1.5 text-[9px] text-on-surface-variant/70">Dibuat otomatis oleh sistem. Isi hanya jika ingin menimpa kode produksi.</p>
               </div>
               <div className="md:col-span-2">
                 <label htmlFor="target-date" className={labelClass}>Target Selesai <span className="text-secondary">*</span></label>
@@ -439,7 +437,7 @@ export function CreateOrderForm() {
             <div className="mt-4 space-y-3">
               {[
                 [Boolean(contractorName), "Nama kontraktor terisi"],
-                [Boolean(contractorCode), "Kode produksi tidak ambigu"],
+                [Boolean(contractorCode), "Kode produksi diisi manual (opsional)"],
                 [Boolean(targetDate), "Target selesai ditentukan"],
                 [items.some((item) => item.name.trim()), "Minimal satu item spesifikasi"],
               ].map(([ready, label]) => (

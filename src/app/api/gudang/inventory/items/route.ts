@@ -15,7 +15,12 @@ export const inventoryItemSchema = z.object({
   color: z.string().optional(),
   rackGroup: z.string().optional(),
   subRow: z.string().optional(),
-  currentStock: z.number().int().min(0, "Stok tidak boleh negatif.").optional(),
+  currentStock: z.number().min(0, "Stok tidak boleh negatif.").optional(),
+  unit: z.string().optional(),
+  materialKind: z.enum(["unit", "bar", "sheet", "roll"]).optional(),
+  lengthPerUnit: z.number().positive().nullable().optional(),
+  widthPerUnit: z.number().positive().nullable().optional(),
+  weightPerUnit: z.number().positive().nullable().optional(),
 });
 
 export async function GET() {

@@ -98,7 +98,7 @@ export function ProduksiDashboard() {
       const cocokStatus = filter === "all" || alurSPK(item) === filter;
       if (!cocokStatus) return false;
       if (!kata) return true;
-      // Pencarian mencakup Nomor SPK, Kode Produksi Kontraktor, Kode Barang, dan
+      // Pencarian mencakup Nomor SPK, Kode Produksi, Kode Barang, dan
       // nama kontraktor sesuai kebutuhan filter di dashboard.
       const kodeBarang = item.item.map((barang) => barang.kode).join(" ");
       return (
@@ -408,7 +408,7 @@ export function ProduksiDashboard() {
             <thead className="bg-surface-variant/35 text-[9px] font-bold uppercase tracking-[0.14em] text-on-surface-variant/70">
               <tr>
                 <th className="px-5 py-4 font-bold sm:px-6">Nomor SPK</th>
-                <th className="hidden px-5 py-4 font-bold lg:table-cell">Kode Produksi Kontraktor</th>
+                <th className="hidden px-5 py-4 font-bold lg:table-cell">Kode Produksi</th>
                 <th className="px-5 py-4 font-bold">Nama Kontraktor</th>
                 <th className="hidden px-5 py-4 font-bold xl:table-cell">Target Deadline</th>
                 <th className="px-5 py-4 font-bold">Status Gambar Teknik</th>

@@ -6,7 +6,8 @@ export const dynamic = "force-dynamic";
 
 const orderSchema = z.object({
   contractorName: z.string().trim().min(1).max(160),
-  contractorCode: z.string().trim().min(1).max(80),
+  // Opsional: kosongkan agar backend membuat kode produksi "PRD-YYMM-####".
+  contractorCode: z.string().trim().max(80).optional(),
   contractorPhone: z.string().trim().max(40).optional(),
   projectAddress: z.string().trim().max(500).optional(),
   targetDate: z.string().date(),

@@ -189,7 +189,7 @@ export function PMDashboard() {
                 type="search"
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
-                placeholder="Cari Kode Produksi Kontraktor..."
+                placeholder="Cari Kode Produksi..."
                 className="min-w-0 flex-1 bg-transparent text-xs text-on-surface outline-none placeholder:text-on-surface-variant/50"
               />
               {search && (

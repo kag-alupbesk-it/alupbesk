@@ -5,6 +5,7 @@ import {
   getOutTransactions,
 } from "@/backend/modules/gudangInventory/transactions";
 import { getProductionRequests } from "@/backend/modules/gudangInventory/productionRequests";
+import { getMaterialLotViews } from "@/backend/modules/gudangInventory/lots";
 import { ensureHydrated } from "@/services/supabaseHydrate";
 
 export async function GET() {
@@ -17,6 +18,7 @@ export async function GET() {
       inTransactions: getInTransactions(),
       outTransactions: getOutTransactions(),
       productionRequests: getProductionRequests(),
+      materialLots: getMaterialLotViews(),
     },
   });
 }

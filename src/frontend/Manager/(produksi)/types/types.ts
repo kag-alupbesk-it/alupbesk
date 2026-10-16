@@ -40,9 +40,9 @@ export interface BerkasGambar {
 
 export interface SPK {
   nomor: string;
-  // Kode produksi dari kontraktor. Nullable karena beberapa order belum punya
-  // kode (kontraktor mengirim sketsa tanpa kode), sehingga kolom tabel harus
-  // aman menampilkan "—".
+  // Kode produksi milik perusahaan (dibuat otomatis, mis. "PRD-2601-0007").
+  // Nullable karena order lama/edge case bisa saja belum memilikinya, sehingga
+  // kolom tabel harus aman menampilkan "—".
   kodeProduksi: string | null;
   namaKontraktor: string;
   telepon?: string;

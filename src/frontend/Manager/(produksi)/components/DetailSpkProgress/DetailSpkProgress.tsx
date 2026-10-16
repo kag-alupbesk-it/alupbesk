@@ -111,7 +111,7 @@ export function DetailSpkProgress({ nomor }: { nomor: string }) {
           <div className="rounded-xl border border-outline/20 bg-surface-variant/25 p-4">
             <dt className="flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-[0.14em] text-on-surface-variant/70">
               <Ruler size={12} />
-              Kode Produksi Kontraktor
+              Kode Produksi
             </dt>
             <dd className="mt-1.5 font-mono text-sm font-bold text-on-surface">{spk.kodeProduksi ?? "—"}</dd>
           </div>

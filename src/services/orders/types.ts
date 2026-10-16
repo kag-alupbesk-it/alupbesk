@@ -36,6 +36,11 @@ export interface LocalOrder {
   updatedAt: string;
   managerDecisionAt?: string;
   managerRejectionReason?: string;
+  // Jejak waktu dipakai untuk timeline riwayat pesanan (kolom orders di skema).
+  // Disimpan saat status berubah, lalu di-hydrate saat aplikasi dibuka.
+  marketingConfirmedAt?: string;
+  submittedToManagerAt?: string;
+  processedAt?: string;
 }
 
 export interface OrderStatusEvent {
