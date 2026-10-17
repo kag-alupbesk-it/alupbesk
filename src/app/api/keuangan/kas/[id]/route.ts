@@ -3,6 +3,7 @@ import { deleteKasEntry, updateKasEntry } from "@/backend/modules/keuangan/index
 import { flushWrites } from "@/services/supabase";
 import { readJsonBody } from "@/backend/http/readJsonBody";
 import { ensureHydrated } from "@/services/supabaseHydrate";
+import { recordAuditForCurrentUser } from "@/backend/modules/audit/recordAudit";
 
 const kasSchema = z.object({
   tipe: z.enum(["masuk", "keluar"], { message: "Tipe transaksi tidak valid." }),
@@ -35,6 +36,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
     if (result.code === "KAS_ENTRY_NOT_FOUND") return notFound(id);
     return Response.json({ success: false, error: { code: result.code, message: "Data transaksi tidak valid." } }, { status: 400 });
   }
+  await recordAuditForCurrentUser("EDIT", "Kas Keuangan", `Mengubah transaksi kas "${parsed.data.deskripsi}" (${id})`);
   return Response.json({ success: true, data: result.entry });
 }
 
@@ -44,5 +46,6 @@ export async function DELETE(_request: Request, { params }: { params: Promise<{ 
   const result = deleteKasEntry(id);
   await flushWrites();
   if (!result.ok) return notFound(id);
+  await recordAuditForCurrentUser("DELETE", "Kas Keuangan", `Menghapus transaksi kas (${id})`);
   return Response.json({ success: true, data: result.entry });
 }

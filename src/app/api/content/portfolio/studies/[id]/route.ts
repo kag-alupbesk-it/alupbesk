@@ -3,6 +3,7 @@ import { updateCaseStudy, deleteCaseStudyById } from "@/services/portfolio/index
 import { flushWrites } from "@/services/supabase";
 import { readJsonBody } from "@/backend/http/readJsonBody";
 import { ensureHydrated } from "@/services/supabaseHydrate";
+import { recordAuditForCurrentUser } from "@/backend/modules/audit/recordAudit";
 
 export async function PUT(request: Request, { params }: { params: Promise<{ id: string }> }) {
   await ensureHydrated();
@@ -16,6 +17,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
   if (!study) {
     return Response.json({ success: false, error: { code: "CASE_STUDY_NOT_FOUND", message: "Studi kasus tidak ditemukan." } }, { status: 404 });
   }
+  await recordAuditForCurrentUser("EDIT", "Studi Kasus", `Mengubah studi kasus: ${study.title}`);
   return Response.json({ success: true, data: study });
 }
 
@@ -27,5 +29,6 @@ export async function DELETE(_request: Request, { params }: { params: Promise<{ 
     return Response.json({ success: false, error: { code: "CASE_STUDY_NOT_FOUND", message: "Studi kasus tidak ditemukan." } }, { status: 404 });
   }
   await flushWrites();
+  await recordAuditForCurrentUser("DELETE", "Studi Kasus", `Menghapus studi kasus (${id})`);
   return Response.json({ success: true, data: null });
 }

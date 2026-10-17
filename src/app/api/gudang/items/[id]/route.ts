@@ -3,6 +3,7 @@ import { deleteGudangItem, updateGudangStock } from "@/backend/modules/gudang/in
 import { readJsonBody } from "@/backend/http/readJsonBody";
 import { flushWrites } from "@/services/supabase";
 import { ensureHydrated } from "@/services/supabaseHydrate";
+import { recordAuditForCurrentUser } from "@/backend/modules/audit/recordAudit";
 
 export const gudangStockSchema = z.object({
   stok: z.number().int().min(0, "Stok tidak boleh negatif."),
@@ -40,6 +41,7 @@ export async function PUT(
       { status: 404 },
     );
   }
+  await recordAuditForCurrentUser("EDIT", "Stok Gudang", `Mengubah stok barang (${id}) menjadi ${parsed.data.stok}`);
   return Response.json({ success: true, data: item });
 }
 
@@ -77,5 +79,6 @@ export async function DELETE(
       { status: 409 },
     );
   }
+  await recordAuditForCurrentUser("DELETE", "Barang Gudang", `Menghapus barang gudang (${id})`);
   return Response.json({ success: true, data: { id } });
 }

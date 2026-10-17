@@ -4,14 +4,17 @@ import { ProductDetailProvider } from "@/frontend/(pelanggan)/hooks/useProductDe
 import { ThemeProvider } from "@/app/ThemeContext";
 import { LanguageProvider } from "@/frontend/shared/i18n/LanguageProvider";
 import SessionKeepAlive from "@/app/SessionKeepAlive";
+import GlobalBusyProvider from "@/frontend/shared/busy/GlobalBusyProvider";
 
 export default function Providers({ children }: { children: React.ReactNode }) {
   return (
     <LanguageProvider>
       <ThemeProvider>
         <ProductDetailProvider>
-          <SessionKeepAlive />
-          {children}
+          <GlobalBusyProvider>
+            <SessionKeepAlive />
+            {children}
+          </GlobalBusyProvider>
         </ProductDetailProvider>
       </ThemeProvider>
     </LanguageProvider>

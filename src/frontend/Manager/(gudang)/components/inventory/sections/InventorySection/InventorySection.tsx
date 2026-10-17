@@ -28,6 +28,7 @@ import { ConfirmModal } from "../ConfirmModal/ConfirmModal";
 import * as s from "../../style/style";
 import ResponsiveRoleNavigation from "@/frontend/shared/navigation/ResponsiveRoleNavigation";
 import { getRoleNavigationItems } from "@/frontend/shared/navigation/roleNavigation";
+import AuditLogSection from "@/frontend/shared/audit/AuditLogSection";
 import { useSidebar } from "@/frontend/Manager/(gudang)/components/layout/SidebarProvider/SidebarProvider";
 import { getRolePagePath } from "@/frontend/shared/navigation/getRolePagePath";
 
@@ -40,7 +41,7 @@ const EMPTY_SNAPSHOT: InventorySnapshot = {
   materialLots: [],
 };
 
-type TabKey = "master" | "bahan" | "masuk" | "keluar" | "permintaan";
+type TabKey = "master" | "bahan" | "masuk" | "keluar" | "permintaan" | "audit";
 
 const NAV_ITEMS = getRoleNavigationItems("gudang");
 
@@ -77,7 +78,8 @@ export function InventorySection() {
     key === "bahan" ||
     key === "masuk" ||
     key === "keluar" ||
-    key === "permintaan";
+    key === "permintaan" ||
+    key === "audit";
   const handleNavigationSelect = (key: string) => {
     if (isTabKey(key)) setTab(key);
   };
@@ -211,6 +213,30 @@ export function InventorySection() {
 
   const activeExportType: InventoryExportType =
     tab === "masuk" ? "in" : tab === "keluar" ? "out" : "items";
+
+  if (tab === "audit") {
+    return (
+      <>
+        {!isOwnerInventoryPage && (
+          <ResponsiveRoleNavigation
+            role="gudang"
+            items={NAV_ITEMS}
+            desktopOpen={desktopOpen}
+            selectedKey={tab}
+            onSelect={handleNavigationSelect}
+          />
+        )}
+        <div className={s.container}>
+          <div className={s.wrapper}>
+            <AuditLogSection
+              apiEndpoint="/api/gudang/audit"
+              description="Catatan aktivitas yang dilakukan oleh role Gudang."
+            />
+          </div>
+        </div>
+      </>
+    );
+  }
 
   return (
     <>

@@ -21,7 +21,7 @@ export function useApi<T>(
     fetcher,
     {
       refreshInterval: options?.interval,
-      revalidateOnFocus: false,
+      revalidateOnFocus: true,
     }
   );
   const refetch = useCallback(() => mutate(), [mutate]);

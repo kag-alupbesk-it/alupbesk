@@ -1,4 +1,5 @@
 import { db, supabaseEnabled } from "./supabase";
+import { consumeHydrationStale } from "./hydrationInvalidation";
 import { products, type Product, type ProductVariant } from "./catalog/products";
 import { replaceOrders } from "./orders/orderStore";
 import type { LocalOrder, OrderLine } from "./orders/types";
@@ -20,6 +21,7 @@ import { customServices } from "../backend/modules/content/services/store";
 import { siteContent } from "../backend/modules/content/sitecontent/store";
 import { portfolioItems, caseStudies } from "./portfolio/store";
 import type { PortfolioItem, CaseStudy } from "./portfolio/data";
+import { replaceAuditLogs, type AuditAction } from "../backend/modules/audit/auditStore";
 import {
   gudangCategories,
   seedDefaultCategories,
@@ -41,7 +43,7 @@ import type {
 let hydrated: Promise<void> | null = null;
 let hydratedAt = 0;
 let refreshing = false;
-const HYDRATION_TTL_MS = 15_000;
+const HYDRATION_TTL_MS = 3_000;
 
 type SelectResult<Row> = {
   data: Row[] | null;
@@ -653,30 +655,59 @@ async function hydratePortfolio(): Promise<void> {
   }
 }
 
+async function hydrateAuditLogs(): Promise<void> {
+  if (!db) return;
+  const rows = await readRows(
+    db
+      .from("audit_logs")
+      .select("id, timestamp, user_email, user_name, role, action, target, details")
+      .order("timestamp", { ascending: false })
+      .limit(1000),
+  );
+  replaceAuditLogs(
+    rows.map((row) => ({
+      id: row.id,
+      timestamp: row.timestamp,
+      userEmail: row.user_email ?? "",
+      userName: row.user_name ?? "",
+      role: row.role ?? "",
+      action: row.action as AuditAction,
+      target: row.target ?? "",
+      details: row.details ?? "",
+    })),
+  );
+}
+
 // ---------------------------------------------------------------------
 // Hydrasi utama: dipanggil sekali di awal setiap request API.
 // ---------------------------------------------------------------------
 export function ensureHydrated(): Promise<void> {
   if (!supabaseEnabled) return Promise.resolve();
-  if (!hydrated || (Date.now() - hydratedAt >= HYDRATION_TTL_MS && !refreshing)) {
+  const stale = consumeHydrationStale();
+  if (!hydrated || ((Date.now() - hydratedAt >= HYDRATION_TTL_MS || stale) && !refreshing)) {
     refreshing = true;
     hydrated = (async () => {
       try {
-        await hydrateProducts();
-        await hydrateOrders();
-        await hydrateGudang();
-        await hydrateGudangInventory();
-        await hydrateGudangMaterialLots();
-        await hydratePMCutLists();
-        await hydrateCustomRequests();
+        await Promise.all([
+          hydrateProducts(),
+          hydrateOrders(),
+          hydrateGudang(),
+          hydrateGudangInventory(),
+          hydrateGudangMaterialLots(),
+          hydratePMCutLists(),
+          hydrateCustomRequests(),
+          hydratePenagihan(),
+          hydrateBanners(),
+          hydratePartners(),
+          hydrateFaq(),
+          hydrateCustomServices(),
+          hydrateSiteContent(),
+          hydratePortfolio(),
+          hydrateAuditLogs(),
+        ]);
+        // hydrateKas bergantung pada data pesanan (syncKasDariPesanan), jadi
+        // dijalankan setelah batch paralel selesai.
         await hydrateKas();
-        await hydratePenagihan();
-        await hydrateBanners();
-        await hydratePartners();
-        await hydrateFaq();
-        await hydrateCustomServices();
-        await hydrateSiteContent();
-        await hydratePortfolio();
         hydratedAt = Date.now();
       } catch (error) {
         console.error("[supabase] gagal hydrate data:", error);

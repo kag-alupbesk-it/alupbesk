@@ -3,6 +3,7 @@ import { createCustomService, getCustomServices } from "@/backend/modules/conten
 import { flushWrites } from "@/services/supabase";
 import { readJsonBody } from "@/backend/http/readJsonBody";
 import { ensureHydrated } from "@/services/supabaseHydrate";
+import { recordAuditForCurrentUser } from "@/backend/modules/audit/recordAudit";
 
 export const serviceSchema = z.object({
   icon: z.string().trim().min(1, "Ikon wajib diisi."),
@@ -25,5 +26,6 @@ export async function POST(request: Request) {
   }
   const service = createCustomService(parsed.data);
   await flushWrites();
+  await recordAuditForCurrentUser("CREATE", "Layanan", `Menambahkan layanan: ${service.title}`);
   return Response.json({ success: true, data: service }, { status: 201 });
 }

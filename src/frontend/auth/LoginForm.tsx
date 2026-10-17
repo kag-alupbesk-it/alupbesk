@@ -34,6 +34,12 @@ function normalizeRole(rawRole: string | undefined): string {
   return lower;
 }
 
+function formatCountdown(totalSeconds: number): string {
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  return `${minutes}:${String(seconds).padStart(2, "0")}`;
+}
+
 const OTP_STORAGE_KEY = "alupbesk-login-otp";
 
 function readStoredOtp(): { email: string; otpSent: boolean } {
@@ -84,6 +90,8 @@ export function LoginForm() {
   const verifiedBanner = useQueryFlag("verified", "1");
   const emailUnverifiedBanner = useQueryFlag("error", "email_unverified");
   const attemptStatus = attemptLimit.getStatus(email);
+  const [lockRemaining, setLockRemaining] = useState(0);
+  const clearLoginAttempts = attemptLimit.clear;
 
   const [view, setView] = useState<"login" | "forgot" | "reset">("login");
   const [newPassword, setNewPassword] = useState("");
@@ -107,6 +115,21 @@ export function LoginForm() {
     const timer = window.setTimeout(() => setResendCooldown((seconds) => Math.max(0, seconds - 1)), 1000);
     return () => window.clearTimeout(timer);
   }, [resendCooldown]);
+
+  useEffect(() => {
+    const blockedUntil = attemptStatus.blockedUntil;
+    const update = () => {
+      const remaining = Math.max(0, Math.ceil((blockedUntil - Date.now()) / 1000));
+      setLockRemaining(remaining);
+      if (remaining <= 0 && blockedUntil > 0) clearLoginAttempts(email);
+    };
+    const initial = window.setTimeout(update, 0);
+    const timer = window.setInterval(update, 1000);
+    return () => {
+      window.clearTimeout(initial);
+      window.clearInterval(timer);
+    };
+  }, [attemptStatus.blockedUntil, email, clearLoginAttempts]);
 
   useEffect(() => {
     if (initialOtp.otpSent || view !== "login") return;
@@ -279,7 +302,7 @@ export function LoginForm() {
     try {
       const supabase = getSupabaseBrowserClient();
       const { error: resetError } = await supabase.auth.resetPasswordForEmail(email.trim().toLowerCase(), {
-        redirectTo: `${window.location.origin}/login`,
+        redirectTo: `${window.location.origin}${window.location.pathname}`,
       });
       if (resetError) throw resetError;
       setNotice(t("resetLinkSent"));
@@ -386,7 +409,7 @@ export function LoginForm() {
             <h1 className="mt-3 font-headline text-2xl font-extrabold">{t("updatePassword")}</h1>
             <p className="mt-2 text-sm text-on-surface-variant">{language === "en" ? "Enter your new password below." : "Masukkan kata sandi baru Anda di bawah."}</p>
           </div>
-          <label className="block text-xs font-semibold">
+          <label className={`block text-xs font-semibold ${newPassword.length > 0 && newPassword.length < 8 ? "text-red-500" : ""}`}>
             {t("newPassword")}
             <PasswordInput className="mt-2" inputClassName="min-h-11 w-full rounded-xl border border-outline/40 bg-surface px-3 py-3 outline-none focus:border-secondary disabled:opacity-60" autoComplete="new-password" required disabled={pending} value={newPassword} onChange={(event) => setNewPassword(event.target.value)} />
           </label>
@@ -396,7 +419,7 @@ export function LoginForm() {
           </label>
           {error && <p role="alert" className="rounded-lg border border-red-400/30 bg-red-400/10 p-3 text-xs text-red-500">{error}</p>}
           {notice && <p role="status" className="rounded-lg border border-emerald-500/30 bg-emerald-500/10 p-3 text-xs text-emerald-700 dark:text-emerald-300">{notice}</p>}
-          <button type="submit" disabled={pending} className="min-h-11 w-full rounded-xl bg-secondary px-4 py-3 text-sm font-bold text-primary disabled:cursor-not-allowed disabled:opacity-50">
+          <button type="submit" disabled={pending || newPassword.length < 8} className="min-h-11 w-full rounded-xl bg-secondary px-4 py-3 text-sm font-bold text-primary disabled:cursor-not-allowed disabled:opacity-50">
             {t("updatePassword")}
           </button>
           <button type="button" onClick={() => { setView("login"); setError(""); setNotice(""); }} className="w-full text-center text-xs font-semibold text-on-surface-variant underline">
@@ -453,12 +476,19 @@ export function LoginForm() {
           <p className="text-xs text-on-surface-variant">
             {t("remainingLoginAttempts")} <span className="font-bold text-on-surface">{attemptStatus.remaining}/3</span>
           </p>
+          {lockRemaining > 0 && (
+            <p role="alert" className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 text-xs text-amber-700 dark:text-amber-300">
+              {language === "en"
+                ? `Too many failed attempts. Try again in ${formatCountdown(lockRemaining)}.`
+                : `Terlalu banyak percobaan gagal. Coba lagi dalam ${formatCountdown(lockRemaining)}.`}
+            </p>
+          )}
           {error && <p role="alert" className="rounded-lg border border-red-400/30 bg-red-400/10 p-3 text-xs text-red-500">{error}</p>}
           {notice && <p role="status" className="rounded-lg border border-emerald-500/30 bg-emerald-500/10 p-3 text-xs text-emerald-700 dark:text-emerald-300">{notice}</p>}
           
           <button
             type={otpSent ? "button" : "submit"}
-            disabled={pending || (otpSent && resendCooldown > 0)}
+            disabled={pending || lockRemaining > 0 || (otpSent && resendCooldown > 0)}
             onClick={otpSent ? resendVerificationCode : undefined}
             className="min-h-11 w-full rounded-xl border border-secondary px-4 py-3 text-sm font-bold text-secondary disabled:cursor-not-allowed disabled:opacity-60"
           >
@@ -473,7 +503,7 @@ export function LoginForm() {
                 : (language === "en" ? "Send sign-in code by email" : "Kirim kode masuk lewat email")}
           </button>
 
-          <button type="submit" disabled={pending || !otpSent} className="min-h-11 w-full rounded-xl bg-secondary px-4 py-3 text-sm font-bold text-primary disabled:cursor-not-allowed disabled:opacity-50">
+          <button type="submit" disabled={pending || !otpSent || lockRemaining > 0} className="min-h-11 w-full rounded-xl bg-secondary px-4 py-3 text-sm font-bold text-primary disabled:cursor-not-allowed disabled:opacity-50">
             {pendingAction === "verify"
               ? (language === "en" ? "Verifying code and signing in..." : "Memverifikasi kode dan masuk...")
               : (language === "en" ? "Verify code and sign in" : "Verifikasi kode dan masuk")}

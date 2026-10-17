@@ -5,6 +5,7 @@ import {
   uploadTechnicalDrawing,
 } from "@/backend/modules/pm/index";
 import { authorizeCurrentUser } from "@/backend/auth/authorizeCurrentUser";
+import { recordAudit } from "@/backend/modules/audit/recordAudit";
 
 export async function POST(
   request: Request,
@@ -143,6 +144,7 @@ export async function POST(
     );
   }
 
+  recordAudit(access.profile, "UPLOAD", "Gambar Teknik", `Mengunggah gambar teknik untuk order ${id}`);
   return Response.json(
     { success: true, data: result.order },
     { headers: { "Cache-Control": "no-store" } },

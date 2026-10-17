@@ -1102,6 +1102,28 @@ grant execute on function public.review_role_request(uuid, text, uuid)
     to service_role;
 
 -- ---------------------------------------------------------------------
+-- 12. AUDIT LOGS — riwayat aktivitas (audit trail) seluruh role
+-- ---------------------------------------------------------------------
+-- Setiap mutasi data (CREATE/EDIT/DELETE/UPLOAD) dari semua role dicatat di
+-- sini. Owner & Manager melihat seluruh role; role lain hanya melihat
+-- aktivitas role-nya sendiri (difilter di route handler).
+create table if not exists audit_logs (
+    id          uuid primary key default gen_random_uuid(),
+    timestamp   timestamptz not null default now(),
+    user_email  text,
+    user_name   text,
+    role        text,
+    action      text not null,   -- CREATE | EDIT | DELETE | UPLOAD
+    target      text,
+    details     text
+);
+
+create index if not exists idx_audit_logs_timestamp on audit_logs(timestamp desc);
+create index if not exists idx_audit_logs_role on audit_logs(role);
+
+alter table audit_logs enable row level security;
+
+-- ---------------------------------------------------------------------
 -- POLICY & GRANT
 -- ---------------------------------------------------------------------
 drop policy if exists "owners read role requests" on role_requests;

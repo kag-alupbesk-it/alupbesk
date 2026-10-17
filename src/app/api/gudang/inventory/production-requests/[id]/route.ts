@@ -7,6 +7,7 @@ import { readJsonBody } from "@/backend/http/readJsonBody";
 import { flushWritesOrError } from "@/backend/http/flushWritesOrError";
 import { authorizeCurrentUser } from "@/backend/auth/authorizeCurrentUser";
 import { ensureHydrated } from "@/services/supabaseHydrate";
+import { recordAudit } from "@/backend/modules/audit/recordAudit";
 
 export const dynamic = "force-dynamic";
 
@@ -90,6 +91,15 @@ export async function PATCH(
 
   const flushError = await flushWritesOrError();
   if (flushError) return flushError;
+
+  recordAudit(
+    access.profile,
+    "EDIT",
+    "Permintaan Produksi",
+    parsed.data.action === "approve"
+      ? `Menyetujui permintaan produksi (${id})`
+      : `Menolak permintaan produksi (${id})${parsed.data.reason ? `: ${parsed.data.reason}` : ""}`,
+  );
 
   return Response.json({ success: true, data: result.data });
 }

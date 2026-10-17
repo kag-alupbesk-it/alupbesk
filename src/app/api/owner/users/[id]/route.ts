@@ -1,5 +1,6 @@
 import { deleteUser } from "@/backend/modules/manager/index";
 import { authorizeCurrentUser } from "@/backend/auth/authorizeCurrentUser";
+import { recordAudit } from "@/backend/modules/audit/recordAudit";
 
 type Context = { params: Promise<{ id: string }> };
 
@@ -20,9 +21,11 @@ export async function DELETE(_request: Request, { params }: Context) {
   }
   try {
     const deleted = await deleteUser(id, access.profile.role);
-    return deleted
-      ? Response.json({ success: true, data: null })
-      : Response.json({ success: false, error: { code: "USER_NOT_FOUND", message: "Pengguna tidak ditemukan." } }, { status: 404 });
+    if (!deleted) {
+      return Response.json({ success: false, error: { code: "USER_NOT_FOUND", message: "Pengguna tidak ditemukan." } }, { status: 404 });
+    }
+    recordAudit(access.profile, "DELETE", "Pengguna", `Menghapus pengguna ${id}`);
+    return Response.json({ success: true, data: null });
   } catch (error) {
     const forbidden = error instanceof Error && error.message === "ROLE_FORBIDDEN";
     const unavailable = error instanceof Error && error.message === "DATABASE_UNAVAILABLE";

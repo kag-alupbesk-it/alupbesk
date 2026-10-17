@@ -1,5 +1,6 @@
 import { db } from "@/services/supabase";
 import { ensureStorageBucket } from "@/backend/storage/ensureStorageBucket";
+import { recordAuditForCurrentUser } from "@/backend/modules/audit/recordAudit";
 
 const MAX_SIZE = 5 * 1024 * 1024;
 const BUCKET = "images";
@@ -121,6 +122,12 @@ export async function POST(request: Request) {
   }
 
   const { data: publicData } = db.storage.from(BUCKET).getPublicUrl(path);
+
+  await recordAuditForCurrentUser(
+    "UPLOAD",
+    "Gambar",
+    `Mengunggah gambar ${file.name || path} (${file.size} byte)`,
+  );
 
   return Response.json({ success: true, data: { url: publicData.publicUrl } });
 }

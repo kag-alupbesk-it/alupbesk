@@ -3,6 +3,7 @@ import { createKasEntry, getKasData } from "@/backend/modules/keuangan/index";
 import { flushWrites } from "@/services/supabase";
 import { readJsonBody } from "@/backend/http/readJsonBody";
 import { ensureHydrated } from "@/services/supabaseHydrate";
+import { recordAuditForCurrentUser } from "@/backend/modules/audit/recordAudit";
 
 const kasSchema = z.object({
   tipe: z.enum(["masuk", "keluar"], { message: "Tipe transaksi tidak valid." }),
@@ -30,7 +31,14 @@ export async function POST(request: Request) {
 
   const result = createKasEntry(parsed.data);
   await flushWrites();
-  if (result.ok) return Response.json({ success: true, data: result.entry }, { status: 201 });
+  if (result.ok) {
+    await recordAuditForCurrentUser(
+      "CREATE",
+      "Kas Keuangan",
+      `Mencatat kas ${parsed.data.tipe} "${parsed.data.deskripsi}" sebesar ${parsed.data.jumlah}`,
+    );
+    return Response.json({ success: true, data: result.entry }, { status: 201 });
+  }
 
   if (result.code === "INVALID_AMOUNT")
     return Response.json({ success: false, error: { code: result.code, message: "Jumlah transaksi tidak valid." } }, { status: 400 });

@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { createPMOrder, listPMOrders } from "@/backend/modules/pm/index";
 import { authorizeCurrentUser } from "@/backend/auth/authorizeCurrentUser";
+import { recordAudit } from "@/backend/modules/audit/recordAudit";
 
 export const dynamic = "force-dynamic";
 
@@ -122,6 +123,7 @@ export async function POST(request: Request) {
         { status: result.code === "DATABASE_UNAVAILABLE" ? 503 : 500 },
       );
     }
+    await recordAudit(access.profile, "CREATE", "Order Proyek", `Membuat order proyek untuk ${parsed.data.contractorName}`);
     return Response.json(
       { success: true, data: result.order },
       { status: 201, headers: { "Cache-Control": "no-store" } },

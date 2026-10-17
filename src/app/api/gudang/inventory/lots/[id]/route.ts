@@ -6,6 +6,7 @@ import { readJsonBody } from "@/backend/http/readJsonBody";
 import { flushWritesOrError } from "@/backend/http/flushWritesOrError";
 import { ensureHydrated } from "@/services/supabaseHydrate";
 import { materialLotSchema } from "../route";
+import { recordAuditForCurrentUser } from "@/backend/modules/audit/recordAudit";
 
 const updateSchema = materialLotSchema.partial();
 
@@ -47,6 +48,7 @@ export async function PUT(
   const flushError = await flushWritesOrError();
   if (flushError) return flushError;
 
+  await recordAuditForCurrentUser("EDIT", "Lot Bahan", `Mengubah lot bahan (${id})`);
   return Response.json({ success: true, data: result.data });
 }
 
@@ -70,5 +72,6 @@ export async function DELETE(
   const flushError = await flushWritesOrError();
   if (flushError) return flushError;
 
+  await recordAuditForCurrentUser("DELETE", "Lot Bahan", `Menghapus lot bahan (${id})`);
   return Response.json({ success: true, data: result.data });
 }

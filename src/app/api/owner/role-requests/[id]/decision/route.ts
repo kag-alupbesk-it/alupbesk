@@ -2,6 +2,7 @@ import { z } from "zod";
 import { authorizeCurrentUser } from "@/backend/auth/authorizeCurrentUser";
 import { reviewRoleRequest } from "@/backend/modules/roleRequests/index";
 import { readJsonBody } from "@/backend/http/readJsonBody";
+import { recordAudit } from "@/backend/modules/audit/recordAudit";
 
 const decisionSchema = z.object({
   decision: z.enum(["approve", "reject"]),
@@ -50,6 +51,7 @@ export async function POST(
       access.profile.role,
       access.profile.id,
     );
+    recordAudit(access.profile, "EDIT", "Permintaan Role", `${parsed.data.decision === "approve" ? "Menyetujui" : "Menolak"} permintaan role ${id}`);
     return Response.json({ success: true, data: { id } });
   } catch (error) {
     const code = error instanceof Error ? error.message : "";

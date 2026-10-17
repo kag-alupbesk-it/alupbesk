@@ -3,6 +3,7 @@ import { createGudangMasuk } from "@/backend/modules/gudang/index";
 import { flushWrites } from "@/services/supabase";
 import { readJsonBody } from "@/backend/http/readJsonBody";
 import { ensureHydrated } from "@/services/supabaseHydrate";
+import { recordAuditForCurrentUser } from "@/backend/modules/audit/recordAudit";
 export const gudangMasukSchema = z.object({ jumlah: z.number().int().positive("Jumlah barang masuk harus lebih dari nol."), tanggal: z.string().min(1, "Tanggal wajib diisi."), sumber: z.string().min(1, "Sumber barang (supplier/tengkulak) wajib diisi."), buktiNota: z.string().optional(), catatan: z.string().optional() });
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
   await ensureHydrated();
@@ -12,5 +13,6 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
   const result = createGudangMasuk(id, parsed.data);
   await flushWrites();
   if (!result.ok) return Response.json({ success: false, error: { code: result.code, message: result.code === "GUDANG_ITEM_NOT_FOUND" ? "Barang tidak ditemukan." : "Data barang masuk tidak valid." } }, { status: result.code === "GUDANG_ITEM_NOT_FOUND" ? 404 : 400 });
+  await recordAuditForCurrentUser("CREATE", "Barang Masuk", `Mencatat barang masuk (${id}) sebanyak ${parsed.data.jumlah} dari ${parsed.data.sumber}`);
   return Response.json({ success: true, data: result.movement });
 }

@@ -3,6 +3,7 @@ import { createFaqItem, getFaqItems } from "@/backend/modules/content/index";
 import { flushWrites } from "@/services/supabase";
 import { readJsonBody } from "@/backend/http/readJsonBody";
 import { ensureHydrated } from "@/services/supabaseHydrate";
+import { recordAuditForCurrentUser } from "@/backend/modules/audit/recordAudit";
 
 export const faqSchema = z.object({
   question: z.string().trim().min(1, "Pertanyaan wajib diisi."),
@@ -24,5 +25,6 @@ export async function POST(request: Request) {
   }
   const item = createFaqItem(parsed.data);
   await flushWrites();
+  await recordAuditForCurrentUser("CREATE", "FAQ", `Menambahkan FAQ: ${item.question}`);
   return Response.json({ success: true, data: item }, { status: 201 });
 }

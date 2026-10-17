@@ -3,14 +3,21 @@
 import { useEffect, useState, useCallback } from "react";
 import type { AuditLog } from "@/backend/modules/audit/auditStore";
 
-export default function AuditLogSection({ apiEndpoint }: { apiEndpoint: string }) {
+export default function AuditLogSection({
+  apiEndpoint,
+  title = "Riwayat Aktivitas (Audit Log)",
+  description = "Catatan aktivitas unggah, ubah, dan hapus data di sistem berdasarkan akun.",
+}: {
+  apiEndpoint: string;
+  title?: string;
+  description?: string;
+}) {
   const [logs, setLogs] = useState<AuditLog[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
   const fetchLogs = useCallback(async () => {
     try {
-      setLoading(true);
       const res = await fetch(apiEndpoint);
       const json = await res.json();
       if (json.success) {
@@ -26,6 +33,7 @@ export default function AuditLogSection({ apiEndpoint }: { apiEndpoint: string }
   }, [apiEndpoint]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchLogs();
   }, [fetchLogs]);
 
@@ -33,13 +41,14 @@ export default function AuditLogSection({ apiEndpoint }: { apiEndpoint: string }
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold text-on-surface">Riwayat Aktivitas (Audit Log)</h1>
-          <p className="text-sm text-on-surface/60 mt-1">
-            Catatan aktivitas unggah, ubah, dan hapus data di sistem berdasarkan akun.
-          </p>
+          <h1 className="text-2xl font-bold text-on-surface">{title}</h1>
+          <p className="text-sm text-on-surface/60 mt-1">{description}</p>
         </div>
         <button
-          onClick={fetchLogs}
+          onClick={() => {
+            setLoading(true);
+            void fetchLogs();
+          }}
           className="px-4 py-2 bg-secondary text-primary font-bold rounded-xl text-xs hover:brightness-110 transition-all flex items-center gap-2"
         >
           <span className="material-symbols-outlined text-[16px]">refresh</span>

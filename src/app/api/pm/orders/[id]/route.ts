@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { updatePMOrder } from "@/backend/modules/pm/index";
 import { authorizeCurrentUser } from "@/backend/auth/authorizeCurrentUser";
+import { recordAudit } from "@/backend/modules/audit/recordAudit";
 
 const mutationSchema = z.discriminatedUnion("action", [
   z.object({ action: z.literal("approve") }),
@@ -91,6 +92,15 @@ export async function PATCH(
         { status },
       );
     }
+    const actionDetails =
+      parsed.data.action === "approve"
+        ? `Menyetujui order ${id}`
+        : parsed.data.action === "revision"
+          ? `Meminta revisi order ${id}: ${parsed.data.note}`
+          : parsed.data.action === "advance"
+            ? `Memajukan tahap order ${id}`
+            : `Mengubah tahap produksi order ${id} menjadi ${parsed.data.stage}`;
+    recordAudit(access.profile, "EDIT", "Order Proyek", actionDetails);
     return Response.json(
       { success: true, data: result.order },
       { headers: { "Cache-Control": "no-store" } },

@@ -1,9 +1,9 @@
-import { getAuditLogs } from "@/backend/modules/audit/auditStore";
+import { fetchAuditLogsForRole } from "@/backend/modules/audit/auditStore";
 import { authorizeCurrentUser } from "@/backend/auth/authorizeCurrentUser";
 
 export const dynamic = "force-dynamic";
 
-export async function GET(request: Request) {
+export async function GET() {
   const access = await authorizeCurrentUser("/api/manager/audit", "GET");
   if (!access.profile) {
     return Response.json(
@@ -11,6 +11,6 @@ export async function GET(request: Request) {
       { status: access.status },
     );
   }
-  const logs = getAuditLogs();
+  const logs = await fetchAuditLogsForRole(access.profile.role);
   return Response.json({ success: true, data: logs });
 }

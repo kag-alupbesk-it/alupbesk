@@ -3,6 +3,7 @@ import { createCaseStudy } from "@/services/portfolio/index";
 import { flushWrites } from "@/services/supabase";
 import { readJsonBody } from "@/backend/http/readJsonBody";
 import { ensureHydrated } from "@/services/supabaseHydrate";
+import { recordAuditForCurrentUser } from "@/backend/modules/audit/recordAudit";
 
 export const caseStudySchema = z.object({
   client: z.string().trim().min(1, "Nama klien wajib diisi."),
@@ -23,5 +24,6 @@ export async function POST(request: Request) {
   }
   const study = createCaseStudy(parsed.data);
   await flushWrites();
+  await recordAuditForCurrentUser("CREATE", "Studi Kasus", `Menambahkan studi kasus: ${study.title}`);
   return Response.json({ success: true, data: study }, { status: 201 });
 }

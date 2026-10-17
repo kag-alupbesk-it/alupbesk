@@ -3,8 +3,9 @@ import { createMarketingBanner, getMarketingBanners } from "@/backend/modules/ma
 import { flushWrites } from "@/services/supabase";
 import { readJsonBody } from "@/backend/http/readJsonBody";
 import { ensureHydrated } from "@/services/supabaseHydrate";
+import { recordAuditForCurrentUser } from "@/backend/modules/audit/recordAudit";
 export const bannerSchema = z.object({ title: z.string().trim().min(1, "Judul banner wajib diisi."), subtitle: z.string().trim().optional(), imageUrl: z.string().trim().min(1, "URL gambar wajib diisi."), linkUrl: z.string().trim().optional(), active: z.boolean(), order: z.number().int().min(0), startDate: z.string().trim().optional(), endDate: z.string().trim().optional() });
 export async function GET() {
   await ensureHydrated(); return Response.json({ success: true, data: getMarketingBanners() }); }
 export async function POST(request: Request) {
-  await ensureHydrated(); const parsed = bannerSchema.safeParse(await readJsonBody(request)); if (!parsed.success) return Response.json({ success: false, error: { code: "INVALID_BANNER", message: parsed.error.issues[0]?.message ?? "Data banner tidak valid." } }, { status: 400 }); const banner = createMarketingBanner(parsed.data); await flushWrites(); return Response.json({ success: true, data: banner }, { status: 201 }); }
+  await ensureHydrated(); const parsed = bannerSchema.safeParse(await readJsonBody(request)); if (!parsed.success) return Response.json({ success: false, error: { code: "INVALID_BANNER", message: parsed.error.issues[0]?.message ?? "Data banner tidak valid." } }, { status: 400 }); const banner = createMarketingBanner(parsed.data); await flushWrites(); await recordAuditForCurrentUser("CREATE", "Banner Marketing", `Menambahkan banner "${parsed.data.title}"`); return Response.json({ success: true, data: banner }, { status: 201 }); }

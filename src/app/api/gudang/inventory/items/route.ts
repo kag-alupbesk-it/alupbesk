@@ -6,6 +6,7 @@ import {
 import { readJsonBody } from "@/backend/http/readJsonBody";
 import { flushWritesOrError } from "@/backend/http/flushWritesOrError";
 import { ensureHydrated } from "@/services/supabaseHydrate";
+import { recordAuditForCurrentUser } from "@/backend/modules/audit/recordAudit";
 
 export const inventoryItemSchema = z.object({
   categoryId: z.string().min(1, "Kategori wajib dipilih."),
@@ -64,5 +65,6 @@ export async function POST(request: Request) {
   const flushError = await flushWritesOrError();
   if (flushError) return flushError;
 
+  await recordAuditForCurrentUser("CREATE", "Barang Gudang", `Menambahkan barang gudang: ${parsed.data.itemName}`);
   return Response.json({ success: true, data: result.data }, { status: 201 });
 }

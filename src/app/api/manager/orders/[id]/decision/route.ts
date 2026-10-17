@@ -1,6 +1,7 @@
 import { decideOrder, MANAGER_DECISIONS } from "@/backend/modules/manager/index";
 import { flushWrites } from "@/services/supabase";
 import { ensureHydrated } from "@/services/supabaseHydrate";
+import { recordAuditForCurrentUser } from "@/backend/modules/audit/recordAudit";
 
 export async function POST(
   request: Request,
@@ -33,5 +34,10 @@ export async function POST(
       { status: 404 }
     );
   }
+  await recordAuditForCurrentUser(
+    "EDIT",
+    "Pesanan Manager",
+    decision === "confirmed" ? `Mengonfirmasi pesanan ${id}` : `Menolak pesanan ${id}${reason ? `: ${reason}` : ""}`,
+  );
   return Response.json({ success: true, data: order });
 }

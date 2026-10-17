@@ -2,6 +2,7 @@ import { z } from "zod";
 import { createUser, getUsersData } from "@/backend/modules/manager/index";
 import { readJsonBody } from "@/backend/http/readJsonBody";
 import { authorizeCurrentUser } from "@/backend/auth/authorizeCurrentUser";
+import { recordAudit } from "@/backend/modules/audit/recordAudit";
 
 export const dynamic = "force-dynamic";
 const roles = [
@@ -67,6 +68,12 @@ export async function POST(request: Request) {
   }
   try {
     const user = await createUser(parsed.data, access.profile.role, access.profile);
+    recordAudit(
+      access.profile,
+      "CREATE",
+      "Pengguna",
+      `Menambahkan pengguna ${parsed.data.email} dengan role ${parsed.data.role}`,
+    );
     return Response.json({ success: true, data: user }, { status: 201 });
   } catch (error) {
     const forbidden = error instanceof Error && error.message === "ROLE_FORBIDDEN";

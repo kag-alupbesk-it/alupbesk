@@ -3,6 +3,7 @@ import { deletePartner, updatePartner } from "@/backend/modules/content/index";
 import { flushWrites } from "@/services/supabase";
 import { readJsonBody } from "@/backend/http/readJsonBody";
 import { ensureHydrated } from "@/services/supabaseHydrate";
+import { recordAuditForCurrentUser } from "@/backend/modules/audit/recordAudit";
 
 export async function PUT(request: Request, { params }: { params: Promise<{ id: string }> }) {
   await ensureHydrated();
@@ -16,6 +17,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
   if (!partner) {
     return Response.json({ success: false, error: { code: "PARTNER_NOT_FOUND", message: "Mitra tidak ditemukan." } }, { status: 404 });
   }
+  await recordAuditForCurrentUser("EDIT", "Mitra", `Mengubah mitra: ${partner.name}`);
   return Response.json({ success: true, data: partner });
 }
 
@@ -27,5 +29,6 @@ export async function DELETE(_request: Request, { params }: { params: Promise<{ 
     return Response.json({ success: false, error: { code: "PARTNER_NOT_FOUND", message: "Mitra tidak ditemukan." } }, { status: 404 });
   }
   await flushWrites();
+  await recordAuditForCurrentUser("DELETE", "Mitra", `Menghapus mitra (${id})`);
   return Response.json({ success: true, data: null });
 }

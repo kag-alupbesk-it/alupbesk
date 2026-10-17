@@ -5,6 +5,7 @@ import { readJsonBody } from "@/backend/http/readJsonBody";
 import { isAllowedRawImage } from "@/backend/modules/custom/requests/validation";
 import { checkRateLimit } from "@/backend/http/rateLimit";
 import { ensureHydrated } from "@/services/supabaseHydrate";
+import { logAuditAction } from "@/backend/modules/audit/auditStore";
 
 const customRequestItemSchema = z.object({
   name: z.string().trim().min(1, "Nama item wajib diisi."),
@@ -48,5 +49,11 @@ export async function POST(request: Request) {
   }
   const created = createCustomRequest(parsed.data);
   await flushWrites();
+  logAuditAction({
+    profile: { name: parsed.data.nama, email: parsed.data.email || null, role: "pelanggan" },
+    action: "CREATE",
+    target: "Permintaan Custom",
+    details: `Permintaan custom masuk dari ${parsed.data.nama} (${parsed.data.perusahaan}) untuk layanan ${parsed.data.layanan}`,
+  });
   return Response.json({ success: true, data: created }, { status: 201 });
 }

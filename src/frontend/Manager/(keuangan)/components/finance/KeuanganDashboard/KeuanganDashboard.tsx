@@ -11,6 +11,7 @@ import Sidebar from "@/frontend/Manager/(keuangan)/components/layout/Sidebar/Sid
 import ThemeToggle from "@/app/ThemeToggle";
 import { LogoutButton } from "@/frontend/auth/LogoutButton";
 import { financeNavigationItems, type FinanceTabKey } from "@/frontend/shared/navigation/roleNavigation";
+import AuditLogSection from "@/frontend/shared/audit/AuditLogSection";
 
 export type TabKey = FinanceTabKey;
 
@@ -19,6 +20,7 @@ const TAB_SUMMARIES: Record<TabKey, string> = {
   grafik: "Arus kas dan rekap pengeluaran otomatis",
   termin: "Invoice, termin, dan status pembayaran",
   payroll: "Gaji karyawan dan slip gaji",
+  audit: "Riwayat aktivitas yang dilakukan oleh role Keuangan",
 };
 
 function IsiTab({ tab }: { tab: TabKey }) {
@@ -52,6 +54,7 @@ function IsiTab({ tab }: { tab: TabKey }) {
           {tab === "grafik" && <FinancialChartsSection />}
           {tab === "termin" && <TerminSection />}
           {tab === "payroll" && <PayrollSection />}
+          {tab === "audit" && <AuditLogSection apiEndpoint="/api/keuangan/audit" />}
         </div>
       </div>
     </div>

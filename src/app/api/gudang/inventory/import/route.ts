@@ -5,6 +5,7 @@ import {
 import { getAuthenticatedProfile } from "@/backend/auth/getAuthenticatedProfile";
 import { flushWritesOrError } from "@/backend/http/flushWritesOrError";
 import { ensureHydrated } from "@/services/supabaseHydrate";
+import { logAuditAction } from "@/backend/modules/audit/auditStore";
 
 export const dynamic = "force-dynamic";
 
@@ -60,6 +61,13 @@ export async function POST(request: Request) {
         { status: 400 },
       );
     }
+
+    logAuditAction({
+      profile,
+      action: "UPLOAD",
+      target: "Gudang (Import Excel)",
+      details: `Impor Excel: ${summary.itemsAdded} barang baru, ${summary.itemsUpdated} diperbarui, ${summary.inAdded} barang masuk, ${summary.outAdded} barang keluar`,
+    });
 
     return Response.json({ success: true, data: summary });
   } catch (error) {

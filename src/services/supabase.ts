@@ -1,4 +1,5 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import { markHydrationStale } from "./hydrationInvalidation";
 
 // Client Supabase sisi server (service role) untuk persistensi data.
 // Jika kredensial belum diisi, seluruh fungsi menjadi no-op sehingga
@@ -79,4 +80,7 @@ async function flushPendingWrites(): Promise<void> {
       throw error;
     }
   }
+  // Data di database berubah: pastikan GET berikutnya membaca ulang, bukan
+  // mengembalikan snapshot hydrasi in-memory yang sudah usang.
+  markHydrationStale();
 }
