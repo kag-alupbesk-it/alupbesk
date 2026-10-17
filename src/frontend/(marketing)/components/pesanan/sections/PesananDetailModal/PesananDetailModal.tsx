@@ -83,10 +83,7 @@ export default function PesananDetailModal({ isOpen, order, onClose, onConfirm }
           ))}
         </div>
 
-        <div className={s.totalRow}>
-          <span className={s.totalLabel}>Total Pesanan</span>
-          <span className={s.totalValue}>{formatCurrency(order.total)}</span>
-        </div>
+
 
         <div className="flex items-center gap-3 text-xs text-on-surface-variant mb-4">
           <span>Dibuat: {formatDate(order.createdAt)}</span>

@@ -78,10 +78,7 @@ export default function PesananDetailModal({ isOpen, order, onClose }: PesananDe
           ))}
         </div>
 
-        <div className={s.totalRow}>
-          <span className={s.totalLabel}>Total Pesanan</span>
-          <span className={s.totalValue}>{formatCurrency(order.total)}</span>
-        </div>
+
 
         <div className={s.modalSection}>
           <h5 className={s.modalSectionTitle}>Riwayat Pesanan</h5>
