@@ -222,7 +222,7 @@ export function RegisterForm() {
           <input className="mt-2 min-h-11 w-full rounded-xl border border-outline/40 bg-surface px-3 py-2.5 outline-none focus:border-secondary disabled:opacity-60" type="email" autoComplete="email" maxLength={255} required disabled={otpSent || pending} value={email} onChange={(event) => setEmail(event.target.value)} />
         </label>
 
-        <label className="block text-xs font-semibold">
+        <label className={`block text-xs font-semibold ${password.length > 0 && password.length < 8 ? "text-red-500" : ""}`}>
           {t("passwordLength")}
           <PasswordInput className="mt-2" inputClassName="min-h-11 w-full rounded-xl border border-outline/40 bg-surface px-3 py-2.5 outline-none focus:border-secondary disabled:opacity-60" autoComplete="new-password" minLength={8} required disabled={otpSent || pending} value={password} onChange={(event) => setPassword(event.target.value)} />
         </label>

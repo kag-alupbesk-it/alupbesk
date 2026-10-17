@@ -221,7 +221,7 @@ export default function ProfileMenu() {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider text-on-surface/70 mb-1">
+                <label className={`block text-xs font-semibold uppercase tracking-wider mb-1 ${passwordInput.length > 0 && passwordInput.length < 8 ? "text-red-500" : "text-on-surface/70"}`}>
                   Kata Sandi Baru (Opsional)
                 </label>
                 <input
@@ -243,7 +243,7 @@ export default function ProfileMenu() {
                 </button>
                 <button
                   type="submit"
-                  disabled={savingSettings}
+                  disabled={savingSettings || (passwordInput.length > 0 && passwordInput.length < 8)}
                   className="px-5 py-2 rounded-xl bg-secondary text-primary text-xs font-bold hover:brightness-110 disabled:opacity-50"
                 >
                   {savingSettings ? "Menyimpan..." : "Simpan Perubahan"}

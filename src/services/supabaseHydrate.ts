@@ -1,4 +1,5 @@
 import { db, supabaseEnabled } from "./supabase";
+import { consumeHydrationStale } from "./hydrationInvalidation";
 import { products, type Product, type ProductVariant } from "./catalog/products";
 import { replaceOrders } from "./orders/orderStore";
 import type { LocalOrder, OrderLine } from "./orders/types";
@@ -42,7 +43,7 @@ import type {
 let hydrated: Promise<void> | null = null;
 let hydratedAt = 0;
 let refreshing = false;
-const HYDRATION_TTL_MS = 15_000;
+const HYDRATION_TTL_MS = 3_000;
 
 type SelectResult<Row> = {
   data: Row[] | null;
@@ -682,26 +683,31 @@ async function hydrateAuditLogs(): Promise<void> {
 // ---------------------------------------------------------------------
 export function ensureHydrated(): Promise<void> {
   if (!supabaseEnabled) return Promise.resolve();
-  if (!hydrated || (Date.now() - hydratedAt >= HYDRATION_TTL_MS && !refreshing)) {
+  const stale = consumeHydrationStale();
+  if (!hydrated || ((Date.now() - hydratedAt >= HYDRATION_TTL_MS || stale) && !refreshing)) {
     refreshing = true;
     hydrated = (async () => {
       try {
-        await hydrateProducts();
-        await hydrateOrders();
-        await hydrateGudang();
-        await hydrateGudangInventory();
-        await hydrateGudangMaterialLots();
-        await hydratePMCutLists();
-        await hydrateCustomRequests();
+        await Promise.all([
+          hydrateProducts(),
+          hydrateOrders(),
+          hydrateGudang(),
+          hydrateGudangInventory(),
+          hydrateGudangMaterialLots(),
+          hydratePMCutLists(),
+          hydrateCustomRequests(),
+          hydratePenagihan(),
+          hydrateBanners(),
+          hydratePartners(),
+          hydrateFaq(),
+          hydrateCustomServices(),
+          hydrateSiteContent(),
+          hydratePortfolio(),
+          hydrateAuditLogs(),
+        ]);
+        // hydrateKas bergantung pada data pesanan (syncKasDariPesanan), jadi
+        // dijalankan setelah batch paralel selesai.
         await hydrateKas();
-        await hydratePenagihan();
-        await hydrateBanners();
-        await hydratePartners();
-        await hydrateFaq();
-        await hydrateCustomServices();
-        await hydrateSiteContent();
-        await hydratePortfolio();
-        await hydrateAuditLogs();
         hydratedAt = Date.now();
       } catch (error) {
         console.error("[supabase] gagal hydrate data:", error);

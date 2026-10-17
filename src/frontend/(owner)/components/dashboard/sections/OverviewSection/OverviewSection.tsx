@@ -46,7 +46,7 @@ export default function OverviewSection() {
   const router = useRouter();
   const [period, setPeriod] = useState<Period>("monthly");
   const { data, loading, error, refetch } = useApi(() => fetchOwnerOverview(period), {
-    interval: 30000,
+    interval: 15000,
     key: period,
   });
 
