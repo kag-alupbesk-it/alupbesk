@@ -172,6 +172,7 @@ export default function CustomSection() {
           deskripsi: form.deskripsi,
           deadline: form.deadline,
           items,
+          rawImage: imageUrl,
         },
         "Halo ALUPBESK, saya ingin request Custom Quote:",
       );

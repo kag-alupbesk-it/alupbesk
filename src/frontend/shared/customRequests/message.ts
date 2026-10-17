@@ -15,6 +15,8 @@ export interface CustomRequestMessageData {
   deskripsi?: string;
   deadline?: string;
   items: CustomRequestMessageItem[];
+  rawImage?: string;
+  imageUrl?: string;
 }
 
 function appendIf(lines: string[], label: string, value: string | undefined): void {
@@ -53,6 +55,11 @@ export function buildCustomRequestMessage(
   const itemsText = buildCustomRequestItemsText(data.items);
   if (itemsText) {
     lines.push(`Spesifikasi Item:\n${itemsText}`);
+  }
+
+  const image = data.rawImage ?? data.imageUrl;
+  if (image) {
+    lines.push(`Gambar Referensi: ${image}`);
   }
 
   return lines.join("\n");
