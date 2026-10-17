@@ -1,5 +1,5 @@
 export function getWhatsAppUrl(number: string, message = ""): string | null {
-  const digits = number.replace(/\D/g, "");
+  const digits = (number ?? "").replace(/\D/g, "");
   const internationalNumber = digits.startsWith("0")
     ? `62${digits.slice(1)}`
     : digits;

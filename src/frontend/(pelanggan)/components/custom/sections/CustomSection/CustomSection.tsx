@@ -114,6 +114,10 @@ export default function CustomSection() {
     if (!isValid || isSubmitting) return;
     setIsSubmitting(true);
     setSubmitError("");
+    // Buka tab kosong sekarang, selagi masih dalam gesture klik. Jika ditunda
+    // sampai setelah proses upload/create (async), browser memblokirnya sebagai
+    // pop-up sehingga WhatsApp tidak pernah terbuka.
+    const waTab = typeof window !== "undefined" ? window.open("", "_blank") : null;
     try {
       let imageUrl: string | undefined;
       let uploadedImageName: string | undefined;
@@ -174,12 +178,19 @@ export default function CustomSection() {
       );
       const waUrl = getWhatsAppUrl(contact.whatsapp, message);
       if (waUrl) {
-        window.open(waUrl, "_blank");
+        if (waTab) {
+          waTab.location.replace(waUrl);
+        } else {
+          window.open(waUrl, "_blank");
+        }
+      } else if (waTab) {
+        waTab.close();
       }
       setWhatsappHref(waUrl);
       setRequestId(created.id);
       setSubmitted(true);
     } catch (error) {
+      if (waTab) waTab.close();
       setSubmitError(error instanceof Error ? error.message : "Request gagal dikirim.");
     } finally {
       setIsSubmitting(false);
