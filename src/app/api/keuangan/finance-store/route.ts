@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { getFinanceDashboard, saveFinanceDashboard } from "@/backend/modules/keuangan/dashboard/index";
+import { recordAuditForCurrentUser } from "@/backend/modules/audit/recordAudit";
 
 export const dynamic = "force-dynamic";
 
@@ -34,6 +35,7 @@ export async function PUT(request: Request) {
   }
   try {
     const data = await saveFinanceDashboard(parsed.data);
+    await recordAuditForCurrentUser("EDIT", "Data Keuangan", "Menyimpan perubahan data keuangan");
     return Response.json({ success: true, data }, { headers: { "Cache-Control": "no-store" } });
   } catch (error) {
     const unavailable = error instanceof Error && error.message === "DATABASE_UNAVAILABLE";

@@ -3,6 +3,7 @@ import { deleteCustomService, updateCustomService } from "@/backend/modules/cont
 import { flushWrites } from "@/services/supabase";
 import { readJsonBody } from "@/backend/http/readJsonBody";
 import { ensureHydrated } from "@/services/supabaseHydrate";
+import { recordAuditForCurrentUser } from "@/backend/modules/audit/recordAudit";
 
 export async function PUT(request: Request, { params }: { params: Promise<{ id: string }> }) {
   await ensureHydrated();
@@ -16,6 +17,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
   if (!service) {
     return Response.json({ success: false, error: { code: "SERVICE_NOT_FOUND", message: "Layanan tidak ditemukan." } }, { status: 404 });
   }
+  await recordAuditForCurrentUser("EDIT", "Layanan", `Mengubah layanan: ${service.title}`);
   return Response.json({ success: true, data: service });
 }
 
@@ -27,5 +29,6 @@ export async function DELETE(_request: Request, { params }: { params: Promise<{ 
     return Response.json({ success: false, error: { code: "SERVICE_NOT_FOUND", message: "Layanan tidak ditemukan." } }, { status: 404 });
   }
   await flushWrites();
+  await recordAuditForCurrentUser("DELETE", "Layanan", `Menghapus layanan (${id})`);
   return Response.json({ success: true, data: null });
 }

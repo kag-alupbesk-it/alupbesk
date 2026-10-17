@@ -4,6 +4,7 @@ import { authorizeCurrentUser } from "@/backend/auth/authorizeCurrentUser";
 import { readJsonBody } from "@/backend/http/readJsonBody";
 import { flushWritesOrError } from "@/backend/http/flushWritesOrError";
 import { ensureHydrated } from "@/services/supabaseHydrate";
+import { recordAudit } from "@/backend/modules/audit/recordAudit";
 
 export const dynamic = "force-dynamic";
 
@@ -75,6 +76,8 @@ export async function POST(
 
   const flushError = await flushWritesOrError();
   if (flushError) return flushError;
+
+  recordAudit(access.profile, "EDIT", "Daftar Potong", `Mengeksekusi daftar potong ${id}`);
 
   return Response.json({ success: true, data: result.data });
 }

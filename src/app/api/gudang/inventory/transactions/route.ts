@@ -11,6 +11,7 @@ import { readJsonBody } from "@/backend/http/readJsonBody";
 import { flushWritesOrError } from "@/backend/http/flushWritesOrError";
 import { ensureHydrated } from "@/services/supabaseHydrate";
 import { getAuthenticatedProfile } from "@/backend/auth/getAuthenticatedProfile";
+import { logAuditAction } from "@/backend/modules/audit/auditStore";
 
 const itemDetailSchema = {
   itemId: z.string().optional(),
@@ -168,6 +169,16 @@ export async function POST(request: Request) {
 
   const flushError = await flushWritesOrError();
   if (flushError) return flushError;
+
+  logAuditAction({
+    profile,
+    action: "CREATE",
+    target: parsed.data.type === "in" ? "Transaksi Masuk Gudang" : "Transaksi Keluar Gudang",
+    details:
+      parsed.data.type === "in"
+        ? `Mencatat barang masuk sebanyak ${parsed.data.quantity}`
+        : `Mencatat barang keluar sebanyak ${parsed.data.quantity}${parsed.data.projectName ? ` untuk ${parsed.data.projectName}` : ""}`,
+  });
 
   return Response.json({ success: true, data: result.data }, { status: 201 });
 }

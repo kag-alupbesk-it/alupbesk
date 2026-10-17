@@ -3,6 +3,7 @@ import { deleteFaqItem, updateFaqItem } from "@/backend/modules/content/index";
 import { flushWrites } from "@/services/supabase";
 import { readJsonBody } from "@/backend/http/readJsonBody";
 import { ensureHydrated } from "@/services/supabaseHydrate";
+import { recordAuditForCurrentUser } from "@/backend/modules/audit/recordAudit";
 
 export async function PUT(request: Request, { params }: { params: Promise<{ id: string }> }) {
   await ensureHydrated();
@@ -16,6 +17,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
   if (!item) {
     return Response.json({ success: false, error: { code: "FAQ_NOT_FOUND", message: "FAQ tidak ditemukan." } }, { status: 404 });
   }
+  await recordAuditForCurrentUser("EDIT", "FAQ", `Mengubah FAQ: ${item.question}`);
   return Response.json({ success: true, data: item });
 }
 
@@ -27,5 +29,6 @@ export async function DELETE(_request: Request, { params }: { params: Promise<{ 
     return Response.json({ success: false, error: { code: "FAQ_NOT_FOUND", message: "FAQ tidak ditemukan." } }, { status: 404 });
   }
   await flushWrites();
+  await recordAuditForCurrentUser("DELETE", "FAQ", `Menghapus FAQ (${id})`);
   return Response.json({ success: true, data: null });
 }

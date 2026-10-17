@@ -3,6 +3,7 @@ import { updatePortfolioItem, deletePortfolioItemById } from "@/services/portfol
 import { flushWrites } from "@/services/supabase";
 import { readJsonBody } from "@/backend/http/readJsonBody";
 import { ensureHydrated } from "@/services/supabaseHydrate";
+import { recordAuditForCurrentUser } from "@/backend/modules/audit/recordAudit";
 
 export async function PUT(request: Request, { params }: { params: Promise<{ id: string }> }) {
   await ensureHydrated();
@@ -16,6 +17,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
   if (!item) {
     return Response.json({ success: false, error: { code: "PORTFOLIO_NOT_FOUND", message: "Portofolio tidak ditemukan." } }, { status: 404 });
   }
+  await recordAuditForCurrentUser("EDIT", "Portofolio", `Mengubah portofolio: ${item.title}`);
   return Response.json({ success: true, data: item });
 }
 
@@ -27,5 +29,6 @@ export async function DELETE(_request: Request, { params }: { params: Promise<{ 
     return Response.json({ success: false, error: { code: "PORTFOLIO_NOT_FOUND", message: "Portofolio tidak ditemukan." } }, { status: 404 });
   }
   await flushWrites();
+  await recordAuditForCurrentUser("DELETE", "Portofolio", `Menghapus portofolio (${id})`);
   return Response.json({ success: true, data: null });
 }

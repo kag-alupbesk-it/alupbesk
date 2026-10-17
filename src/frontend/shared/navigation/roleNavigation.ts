@@ -15,6 +15,7 @@ export const financeNavigationItems = [
   { key: "grafik", permissionPath: "/keuangan", label: "Grafik", icon: "show_chart" },
   { key: "termin", permissionPath: "/keuangan", label: "Termin", icon: "receipt_long" },
   { key: "payroll", permissionPath: "/keuangan", label: "Payroll", icon: "badge" },
+  { key: "audit", permissionPath: "/keuangan", label: "Riwayat Aktivitas", icon: "history" },
 ] as const satisfies readonly RoleNavigationItem[];
 
 export type FinanceTabKey = (typeof financeNavigationItems)[number]["key"];
@@ -44,6 +45,7 @@ const navigationByRole = {
     { key: "orders", href: "/marketing/pesanan", permissionPath: "/marketing/pesanan", label: "Pesanan", icon: "receipt_long" },
     { key: "content", href: "/marketing/konten", permissionPath: "/marketing/konten", label: "Konten Website", icon: "edit_note" },
     { key: "reports", href: "/marketing/laporan", permissionPath: "/marketing/laporan", label: "Laporan", icon: "bar_chart" },
+    { key: "audit", href: "/marketing/audit", permissionPath: "/marketing/audit", label: "Riwayat Aktivitas", icon: "history" },
     { key: "catalog", href: "/catalog", permissionPath: "/catalog", label: "Kembali ke Website", icon: "storefront" },
   ],
   gudang: [
@@ -52,6 +54,7 @@ const navigationByRole = {
     { key: "masuk", permissionPath: "/gudang", label: "Barang Masuk", icon: "move_to_inbox" },
     { key: "keluar", permissionPath: "/gudang", label: "Barang Keluar", icon: "outbox" },
     { key: "permintaan", permissionPath: "/gudang", label: "Permintaan Produksi", icon: "assignment" },
+    { key: "audit", permissionPath: "/gudang", label: "Riwayat Aktivitas", icon: "history" },
   ],
   keuangan: [...financeNavigationItems],
   proyek: [
@@ -59,17 +62,20 @@ const navigationByRole = {
     { key: "orders", href: "/pm/pesanan", permissionPath: "/pm/pesanan", label: "Pesanan Masuk", icon: "inbox" },
     { key: "approval", href: "/pm/approval", permissionPath: "/pm/approval", label: "Approval Gambar", icon: "fact_check" },
     { key: "create-order", href: "/pm/orders/create", permissionPath: "/pm/orders/create", label: "Tambah Order Baru", icon: "add_circle" },
+    { key: "audit", href: "/pm/audit", permissionPath: "/pm/audit", label: "Riwayat Aktivitas", icon: "history" },
   ],
   produksi: [
     { key: "queue", href: "/produksi", permissionPath: "/produksi", label: "Antrean Produksi", icon: "precision_manufacturing" },
     { key: "drawings", href: "/produksi/drawings", permissionPath: "/produksi/drawings", label: "Upload Gambar Teknik", icon: "upload_file" },
     { key: "material", href: "/produksi/permintaan", permissionPath: "/produksi/permintaan", label: "Permintaan Material", icon: "package_2" },
     { key: "cutting", href: "/produksi/cutting-list", permissionPath: "/produksi/cutting-list", label: "Cutting List", icon: "content_cut" },
+    { key: "audit", href: "/produksi/audit", permissionPath: "/produksi/audit", label: "Riwayat Aktivitas", icon: "history" },
   ],
   field: [
     { key: "deliveries", href: "/field", permissionPath: "/field", label: "Daftar Pengiriman", icon: "local_shipping" },
     { key: "waybills", href: "/field/surat-jalan", permissionPath: "/field/surat-jalan", label: "Surat Jalan", icon: "description" },
     { key: "proof-of-delivery", href: "/field/pod", permissionPath: "/field/pod", label: "Bukti Terima", icon: "document_scanner" },
+    { key: "audit", href: "/field/audit", permissionPath: "/field/audit", label: "Riwayat Aktivitas", icon: "history" },
   ],
 } satisfies Record<NavigationRole, RoleNavigationItem[]>;
 

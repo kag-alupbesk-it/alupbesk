@@ -6,6 +6,7 @@ import {
 import { readJsonBody } from "@/backend/http/readJsonBody";
 import { flushWritesOrError } from "@/backend/http/flushWritesOrError";
 import { ensureHydrated } from "@/services/supabaseHydrate";
+import { recordAuditForCurrentUser } from "@/backend/modules/audit/recordAudit";
 
 const categorySchema = z.object({
   name: z.string().min(1, "Nama kategori wajib diisi."),
@@ -37,5 +38,6 @@ export async function POST(request: Request) {
   const flushError = await flushWritesOrError();
   if (flushError) return flushError;
 
+  await recordAuditForCurrentUser("CREATE", "Kategori Gudang", `Menambahkan kategori gudang: ${category.name}`);
   return Response.json({ success: true, data: category }, { status: 201 });
 }

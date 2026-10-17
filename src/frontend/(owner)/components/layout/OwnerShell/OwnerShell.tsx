@@ -16,6 +16,7 @@ const pageTitles: Record<string, string> = {
   "/owner/field": "Pengiriman",
   "/owner/users": "User Management",
   "/owner/reports": "Reports",
+  "/owner/audit": "Riwayat Aktivitas",
 };
 
 export default function OwnerShell({ children }: { children: React.ReactNode }) {

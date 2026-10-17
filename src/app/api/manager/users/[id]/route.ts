@@ -2,6 +2,7 @@ import { z } from "zod";
 import { deleteUser, updateUser } from "@/backend/modules/manager/index";
 import { readJsonBody } from "@/backend/http/readJsonBody";
 import { authorizeCurrentUser } from "@/backend/auth/authorizeCurrentUser";
+import { recordAudit } from "@/backend/modules/audit/recordAudit";
 
 type Context = { params: Promise<{ id: string }> };
 const roles = [
@@ -47,9 +48,16 @@ export async function PUT(request: Request, { params }: Context) {
   }
   try {
     const user = await updateUser(id, parsed.data, access.profile.role, access.profile);
-    return user
-      ? Response.json({ success: true, data: user })
-      : Response.json({ success: false, error: { code: "USER_NOT_FOUND", message: "Pengguna tidak ditemukan." } }, { status: 404 });
+    if (!user) {
+      return Response.json({ success: false, error: { code: "USER_NOT_FOUND", message: "Pengguna tidak ditemukan." } }, { status: 404 });
+    }
+    recordAudit(
+      access.profile,
+      "EDIT",
+      "Pengguna",
+      `Mengubah data pengguna ${parsed.data.email} (role ${parsed.data.role}, status ${parsed.data.status})`,
+    );
+    return Response.json({ success: true, data: user });
   } catch (error) {
     const forbidden = error instanceof Error && error.message === "ROLE_FORBIDDEN";
     const unavailable = error instanceof Error && error.message === "DATABASE_UNAVAILABLE";
@@ -94,9 +102,11 @@ export async function DELETE(_request: Request, { params }: Context) {
   }
   try {
     const deleted = await deleteUser(id, access.profile.role, access.profile);
-    return deleted
-      ? Response.json({ success: true, data: null })
-      : Response.json({ success: false, error: { code: "USER_NOT_FOUND", message: "Pengguna tidak ditemukan." } }, { status: 404 });
+    if (!deleted) {
+      return Response.json({ success: false, error: { code: "USER_NOT_FOUND", message: "Pengguna tidak ditemukan." } }, { status: 404 });
+    }
+    recordAudit(access.profile, "DELETE", "Pengguna", `Menghapus pengguna ${id}`);
+    return Response.json({ success: true, data: null });
   } catch (error) {
     const forbidden = error instanceof Error && error.message === "ROLE_FORBIDDEN";
     const unavailable = error instanceof Error && error.message === "DATABASE_UNAVAILABLE";

@@ -6,6 +6,7 @@ import {
 import { readJsonBody } from "@/backend/http/readJsonBody";
 import { flushWritesOrError } from "@/backend/http/flushWritesOrError";
 import { ensureHydrated } from "@/services/supabaseHydrate";
+import { recordAuditForCurrentUser } from "@/backend/modules/audit/recordAudit";
 
 export const materialLotSchema = z.object({
   itemId: z.string().min(1, "Barang wajib dipilih."),
@@ -55,5 +56,6 @@ export async function POST(request: Request) {
   const flushError = await flushWritesOrError();
   if (flushError) return flushError;
 
+  await recordAuditForCurrentUser("CREATE", "Lot Bahan", `Menambahkan lot bahan: ${parsed.data.lotCode ?? "-"}`);
   return Response.json({ success: true, data: result.data }, { status: 201 });
 }

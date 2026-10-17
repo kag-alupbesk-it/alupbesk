@@ -20,6 +20,7 @@ import { customServices } from "../backend/modules/content/services/store";
 import { siteContent } from "../backend/modules/content/sitecontent/store";
 import { portfolioItems, caseStudies } from "./portfolio/store";
 import type { PortfolioItem, CaseStudy } from "./portfolio/data";
+import { replaceAuditLogs, type AuditAction } from "../backend/modules/audit/auditStore";
 import {
   gudangCategories,
   seedDefaultCategories,
@@ -653,6 +654,29 @@ async function hydratePortfolio(): Promise<void> {
   }
 }
 
+async function hydrateAuditLogs(): Promise<void> {
+  if (!db) return;
+  const rows = await readRows(
+    db
+      .from("audit_logs")
+      .select("id, timestamp, user_email, user_name, role, action, target, details")
+      .order("timestamp", { ascending: false })
+      .limit(1000),
+  );
+  replaceAuditLogs(
+    rows.map((row) => ({
+      id: row.id,
+      timestamp: row.timestamp,
+      userEmail: row.user_email ?? "",
+      userName: row.user_name ?? "",
+      role: row.role ?? "",
+      action: row.action as AuditAction,
+      target: row.target ?? "",
+      details: row.details ?? "",
+    })),
+  );
+}
+
 // ---------------------------------------------------------------------
 // Hydrasi utama: dipanggil sekali di awal setiap request API.
 // ---------------------------------------------------------------------
@@ -677,6 +701,7 @@ export function ensureHydrated(): Promise<void> {
         await hydrateCustomServices();
         await hydrateSiteContent();
         await hydratePortfolio();
+        await hydrateAuditLogs();
         hydratedAt = Date.now();
       } catch (error) {
         console.error("[supabase] gagal hydrate data:", error);

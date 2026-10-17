@@ -1,6 +1,7 @@
 import { submitFieldShipment } from "@/backend/modules/field/index";
 import { readJsonBody } from "@/backend/http/readJsonBody";
 import { z } from "zod";
+import { recordAuditForCurrentUser } from "@/backend/modules/audit/recordAudit";
 
 type Context = { params: Promise<{ id: string }> };
 const schema = z.object({
@@ -27,6 +28,7 @@ export async function POST(request: Request, { params }: Context) {
   const { id } = await params;
   try {
     const delivery = await submitFieldShipment(id, parsed.data);
+    await recordAuditForCurrentUser("EDIT", "Surat Jalan", `Mengirim pengiriman (${id}) dengan armada ${parsed.data.armada.platNomor}`);
     return Response.json({ success: true, data: delivery });
   } catch (error) {
     const code = error instanceof Error ? error.message : "DATABASE_ERROR";

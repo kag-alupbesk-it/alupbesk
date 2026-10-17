@@ -12,6 +12,7 @@ const pageTitles: Record<string, string> = {
   "/manager/users": "User Management",
   "/manager/inventory": "Inventory",
   "/manager/reports": "Reports",
+  "/manager/audit": "Riwayat Aktivitas",
 };
 
 export default function ManagerShell({ children }: { children: React.ReactNode }) {

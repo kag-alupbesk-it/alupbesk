@@ -3,6 +3,7 @@ import { setCustomRequestStatus } from "@/backend/modules/custom/index";
 import { flushWrites } from "@/services/supabase";
 import { readJsonBody } from "@/backend/http/readJsonBody";
 import { ensureHydrated } from "@/services/supabaseHydrate";
+import { recordAuditForCurrentUser } from "@/backend/modules/audit/recordAudit";
 
 const statusSchema = z.object({
   status: z.enum(["submitted", "reviewed", "quoted", "accepted", "rejected"]),
@@ -20,5 +21,6 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   if (!updated) {
     return Response.json({ success: false, error: { code: "CUSTOM_REQUEST_NOT_FOUND", message: "Request tidak ditemukan." } }, { status: 404 });
   }
+  await recordAuditForCurrentUser("EDIT", "Permintaan Custom", `Mengubah status permintaan custom (${id}) menjadi ${parsed.data.status}`);
   return Response.json({ success: true, data: updated });
 }

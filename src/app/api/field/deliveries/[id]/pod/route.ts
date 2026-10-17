@@ -1,6 +1,7 @@
 import { submitFieldPod } from "@/backend/modules/field/index";
 import { readJsonBody } from "@/backend/http/readJsonBody";
 import { z } from "zod";
+import { recordAuditForCurrentUser } from "@/backend/modules/audit/recordAudit";
 
 type Context = { params: Promise<{ id: string }> };
 const schema = z.object({
@@ -20,6 +21,7 @@ export async function POST(request: Request, { params }: Context) {
   const { id } = await params;
   try {
     const delivery = await submitFieldPod(id, parsed.data);
+    await recordAuditForCurrentUser("UPLOAD", "Bukti Terima", `Mengunggah bukti terima pengiriman (${id})`);
     return Response.json({ success: true, data: delivery });
   } catch (error) {
     const unavailable = error instanceof Error && error.message === "DATABASE_UNAVAILABLE";

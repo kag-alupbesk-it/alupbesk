@@ -3,6 +3,7 @@ import { getSiteContentByKey, upsertSiteContent } from "@/backend/modules/conten
 import { flushWrites } from "@/services/supabase";
 import { readJsonBody } from "@/backend/http/readJsonBody";
 import { ensureHydrated } from "@/services/supabaseHydrate";
+import { recordAuditForCurrentUser } from "@/backend/modules/audit/recordAudit";
 
 const siteContentSchema = z.object({
   key: z.string().trim().min(1, "Key konten wajib diisi."),
@@ -35,5 +36,6 @@ export async function PUT(request: Request, { params }: { params: Promise<{ key:
   }
   const content = upsertSiteContent(parsed.data);
   await flushWrites();
+  await recordAuditForCurrentUser("EDIT", "Konten Website", `Memperbarui konten website: ${key}`);
   return Response.json({ success: true, data: content });
 }

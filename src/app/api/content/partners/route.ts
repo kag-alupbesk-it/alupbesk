@@ -3,6 +3,7 @@ import { createPartner, getPartners } from "@/backend/modules/content/index";
 import { flushWrites } from "@/services/supabase";
 import { readJsonBody } from "@/backend/http/readJsonBody";
 import { ensureHydrated } from "@/services/supabaseHydrate";
+import { recordAuditForCurrentUser } from "@/backend/modules/audit/recordAudit";
 
 export const partnerSchema = z.object({
   name: z.string().trim().min(1, "Nama mitra wajib diisi."),
@@ -25,5 +26,6 @@ export async function POST(request: Request) {
   }
   const partner = createPartner(parsed.data);
   await flushWrites();
+  await recordAuditForCurrentUser("CREATE", "Mitra", `Menambahkan mitra: ${partner.name}`);
   return Response.json({ success: true, data: partner }, { status: 201 });
 }

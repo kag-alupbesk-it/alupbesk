@@ -3,6 +3,7 @@ import { createPortfolioItem } from "@/services/portfolio/index";
 import { flushWrites } from "@/services/supabase";
 import { readJsonBody } from "@/backend/http/readJsonBody";
 import { ensureHydrated } from "@/services/supabaseHydrate";
+import { recordAuditForCurrentUser } from "@/backend/modules/audit/recordAudit";
 
 export const portfolioItemSchema = z.object({
   client: z.string().trim().min(1, "Nama klien wajib diisi."),
@@ -24,5 +25,6 @@ export async function POST(request: Request) {
   }
   const item = createPortfolioItem(parsed.data);
   await flushWrites();
+  await recordAuditForCurrentUser("CREATE", "Portofolio", `Menambahkan portofolio: ${item.title}`);
   return Response.json({ success: true, data: item }, { status: 201 });
 }
