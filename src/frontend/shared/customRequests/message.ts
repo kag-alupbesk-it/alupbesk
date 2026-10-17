@@ -57,10 +57,7 @@ export function buildCustomRequestMessage(
     lines.push(`Spesifikasi Item:\n${itemsText}`);
   }
 
-  const image = data.rawImage ?? data.imageUrl;
-  if (image) {
-    lines.push(`Gambar Referensi: ${image}`);
-  }
+
 
   return lines.join("\n");
 }

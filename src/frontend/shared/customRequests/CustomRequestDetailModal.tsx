@@ -6,13 +6,11 @@ import type {
   CustomRequest,
   CustomRequestStatus,
 } from "@/backend/modules/custom";
-import { getWhatsAppUrl } from "@/frontend/(pelanggan)/utils/getWhatsAppUrl";
 import {
   CUSTOM_REQUEST_STATUS_LABELS,
   CUSTOM_REQUEST_STATUS_OPTIONS,
   customStatusBadgeClass,
 } from "./labels";
-import { buildCustomRequestMessage } from "./message";
 
 function formatDate(value: string | undefined): string {
   if (!value) return "-";
@@ -33,7 +31,6 @@ function infoRow(label: string, value?: string) {
 interface CustomRequestDetailModalProps {
   isOpen: boolean;
   request: CustomRequest | null;
-  whatsappNumber: string;
   canEditStatus: boolean;
   statusBusy?: boolean;
   onClose: () => void;
@@ -44,7 +41,6 @@ interface CustomRequestDetailModalProps {
 export function CustomRequestDetailModal({
   isOpen,
   request,
-  whatsappNumber,
   canEditStatus,
   statusBusy = false,
   onClose,
@@ -52,14 +48,6 @@ export function CustomRequestDetailModal({
   extraActions,
 }: CustomRequestDetailModalProps) {
   if (!isOpen || !request) return null;
-
-  const waHref = getWhatsAppUrl(
-    whatsappNumber,
-    buildCustomRequestMessage(
-      { ...request, items: request.items },
-      `Halo ${request.nama}, ini update Custom Quote Anda dari ALUPBESK:`,
-    ),
-  );
 
   return (
     <div className="fixed inset-0 z-50 flex items-end bg-black/60 p-3 backdrop-blur-sm sm:items-center sm:justify-center" onClick={(event) => { if (event.target === event.currentTarget) onClose(); }}>
@@ -167,17 +155,6 @@ export function CustomRequestDetailModal({
             </p>
           )}
           {extraActions}
-          {waHref && (
-            <a
-              href={waHref}
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-xl bg-secondary px-4 py-3 text-sm font-bold text-primary transition-all hover:brightness-110"
-            >
-              <span className="material-symbols-outlined !text-lg">chat</span>
-              Follow Up via WhatsApp
-            </a>
-          )}
           <button onClick={onClose} className="inline-flex min-h-11 flex-1 items-center justify-center rounded-xl border border-outline/30 px-4 py-3 text-sm font-bold text-on-surface-variant transition-colors hover:bg-surface-variant">
             Tutup
           </button>
