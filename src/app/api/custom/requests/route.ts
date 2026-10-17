@@ -17,7 +17,7 @@ const customRequestItemSchema = z.object({
 const requestSchema = z
   .object({
     nama: z.string().trim().min(1, "Nama wajib diisi."),
-    kode: z.string().trim().min(1, "Kode produksi wajib diisi.").max(60),
+    kode: z.string().trim().max(60).optional().or(z.literal("")),
     perusahaan: z.string().trim().min(1, "Nama perusahaan wajib diisi.").max(120),
     email: z.string().trim().email("Email tidak valid.").max(160).optional().or(z.literal("")),
     telp: z.string().trim().min(1, "Nomor WhatsApp wajib diisi.").max(24),

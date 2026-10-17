@@ -40,7 +40,6 @@ export default function CustomSection() {
 
   const isValid = Boolean(
     form.nama &&
-      form.kode &&
       form.perusahaan &&
       form.telp &&
       form.projectAddress &&
