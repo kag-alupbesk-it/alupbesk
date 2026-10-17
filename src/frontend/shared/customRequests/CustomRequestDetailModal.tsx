@@ -111,12 +111,22 @@ export function CustomRequestDetailModal({
 
         {request.rawImage && (
           <div className="mb-6">
-            <h5 className="mb-3 text-xs font-bold uppercase tracking-widest text-on-surface-variant">Gambar Referensi</h5>
+            <h5 className="mb-3 text-xs font-bold uppercase tracking-widest text-on-surface-variant">Gambar/Dokumen Referensi</h5>
             <div className="overflow-hidden rounded-xl border border-outline/25 bg-slate-100">
-              <div className="relative h-52 w-full sm:h-64">
-                <Image src={request.rawImage} alt="Gambar referensi request custom" fill unoptimized className="object-contain" />
-              </div>
-              {request.rawImageName && (
+              {request.rawImageName?.toLowerCase().endsWith(".pdf") ? (
+                <div className="flex flex-col items-center justify-center p-6 bg-surface-variant/30">
+                  <span className="material-symbols-outlined !text-5xl text-on-surface-variant/60">picture_as_pdf</span>
+                  <p className="mt-3 text-xs font-bold text-on-surface truncate max-w-full">{request.rawImageName}</p>
+                  <a href={request.rawImage} target="_blank" rel="noreferrer" className="mt-4 rounded-lg bg-secondary px-4 py-2 text-xs font-bold text-primary hover:brightness-110">
+                    Buka PDF
+                  </a>
+                </div>
+              ) : (
+                <div className="relative h-52 w-full sm:h-64">
+                  <Image src={request.rawImage} alt="Gambar referensi request custom" fill unoptimized className="object-contain" />
+                </div>
+              )}
+              {request.rawImageName && !request.rawImageName.toLowerCase().endsWith(".pdf") && (
                 <p className="truncate border-t border-outline/15 bg-surface-variant/40 px-3.5 py-2 text-[10px] text-on-surface-variant">{request.rawImageName}</p>
               )}
             </div>

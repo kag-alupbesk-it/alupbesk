@@ -30,7 +30,7 @@ interface FormItem {
 const inputClass = "mt-2 w-full rounded-xl border border-outline/35 bg-surface px-3.5 py-3 text-xs text-on-surface outline-none transition-colors placeholder:text-on-surface-variant/45 focus:border-secondary/70 focus:ring-2 focus:ring-secondary/10";
 const labelClass = "text-[10px] font-bold uppercase tracking-[0.12em] text-on-surface-variant";
 const maxFileSize = 5 * 1024 * 1024;
-const acceptedImageTypes = new Set(["image/png", "image/jpeg", "image/webp"]);
+const acceptedFileTypes = new Set(["image/png", "image/jpeg", "image/webp", "application/pdf"]);
 
 function createItem(id: string): FormItem {
   return { id, name: "", quantity: "1", unit: "pcs", technicalNote: "" };
@@ -125,18 +125,27 @@ export function CreateOrderForm() {
 
   const readFile = (file: File | undefined) => {
     if (!file) return;
-    if (!acceptedImageTypes.has(file.type)) {
-      setError("File gambar harus berformat PNG, JPG, atau WEBP.");
+    if (!acceptedFileTypes.has(file.type)) {
+      setError("File harus berformat PNG, JPG, WEBP, atau PDF.");
       return;
     }
     if (file.size > maxFileSize) {
-      setError("Ukuran gambar maksimal 5 MB.");
+      setError("Ukuran file maksimal 5 MB.");
       return;
     }
 
     setIsReadingImage(true);
     setError("");
     setImageFile(file);
+
+    // Jika PDF, jangan baca preview
+    if (file.type === "application/pdf") {
+      setImagePreview(undefined);
+      setImageName(file.name);
+      setIsReadingImage(false);
+      return;
+    }
+
     const reader = new FileReader();
     reader.onload = () => {
       if (typeof reader.result === "string") {
@@ -151,7 +160,7 @@ export function CreateOrderForm() {
       setImageName("");
       setImageFile(null);
       setIsReadingImage(false);
-      setError("Gambar tidak dapat dibaca. Coba pilih file lain.");
+      setError("Berkas tidak dapat dibaca. Coba pilih file lain.");
     };
     reader.readAsDataURL(file);
   };
@@ -377,17 +386,23 @@ export function CreateOrderForm() {
                   <p className="mt-4 text-sm font-bold text-on-surface">Membaca preview gambar...</p>
                   <p className="mt-1.5 text-[10px] text-on-surface-variant">Gambar diunggah saat order disimpan.</p>
                 </div>
-              ) : imagePreview ? (
+              ) : imagePreview || imageName ? (
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
-                  <div className="relative h-36 w-full shrink-0 overflow-hidden rounded-xl border border-outline/30 bg-slate-100 sm:w-52">
-                    <Image src={imagePreview} alt="Preview gambar mentah kontraktor" fill unoptimized sizes="208px" className="object-contain" />
-                  </div>
+                  {imagePreview ? (
+                    <div className="relative h-36 w-full shrink-0 overflow-hidden rounded-xl border border-outline/30 bg-slate-100 sm:w-52">
+                      <Image src={imagePreview} alt="Preview gambar mentah" fill unoptimized sizes="208px" className="object-contain" />
+                    </div>
+                  ) : (
+                    <div className="flex h-36 w-full items-center justify-center rounded-xl border border-outline/30 bg-surface-variant/50 sm:w-52">
+                      <span className="material-symbols-outlined text-5xl text-on-surface-variant">picture_as_pdf</span>
+                    </div>
+                  )}
                   <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2 text-emerald-300"><Check size={15} /><span className="text-xs font-bold">Gambar siap dilampirkan</span></div>
+                    <div className="flex items-center gap-2 text-emerald-300"><Check size={15} /><span className="text-xs font-bold">Berkas siap dilampirkan</span></div>
                     <p className="mt-2 truncate text-sm font-semibold text-on-surface">{imageName}</p>
                     <p className="mt-1 text-[10px] text-on-surface-variant">Preview lokal. File tidak diunggah ke server.</p>
                     <div className="mt-4 flex flex-wrap gap-2">
-                      <label htmlFor="raw-image" className="cursor-pointer rounded-lg border border-outline/30 px-3 py-2 text-[10px] font-bold text-on-surface-variant hover:border-secondary/50 hover:text-secondary">Ganti gambar</label>
+                      <label htmlFor="raw-image" className="cursor-pointer rounded-lg border border-outline/30 px-3 py-2 text-[10px] font-bold text-on-surface-variant hover:border-secondary/50 hover:text-secondary">Ganti berkas</label>
                       <button type="button" onClick={clearImage} className="rounded-lg px-3 py-2 text-[10px] font-bold text-red-300 hover:bg-error/10">Hapus preview</button>
                     </div>
                   </div>
@@ -395,11 +410,11 @@ export function CreateOrderForm() {
               ) : (
                 <label htmlFor="raw-image" className="flex cursor-pointer flex-col items-center justify-center py-5 text-center">
                   <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-secondary/10 text-secondary"><UploadCloud size={22} /></div>
-                  <p className="mt-4 text-sm font-bold text-on-surface">Drop gambar di sini atau <span className="text-secondary">browse file</span></p>
-                  <p className="mt-1.5 text-[10px] text-on-surface-variant">PNG, JPG, atau WEBP · maksimal 5 MB</p>
+                  <p className="mt-4 text-sm font-bold text-on-surface">Drop berkas di sini atau <span className="text-secondary">browse file</span></p>
+                  <p className="mt-1.5 text-[10px] text-on-surface-variant">PNG, JPG, WEBP, atau PDF · maksimal 5 MB</p>
                 </label>
               )}
-              <input ref={imageInputRef} id="raw-image" name="rawImage" type="file" accept="image/png,image/jpeg,image/webp" onChange={handleFileChange} disabled={isReadingImage} className="sr-only" />
+              <input ref={imageInputRef} id="raw-image" name="rawImage" type="file" accept="image/png,image/jpeg,image/webp,application/pdf" onChange={handleFileChange} disabled={isReadingImage} className="sr-only" />
             </div>
           </section>
 

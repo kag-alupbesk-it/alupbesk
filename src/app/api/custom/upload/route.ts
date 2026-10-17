@@ -1,26 +1,20 @@
 import { db } from "@/services/supabase";
 import { ensureStorageBucket } from "@/backend/storage/ensureStorageBucket";
+import { IMAGES_BUCKET, IMAGES_BUCKET_CONFIG } from "@/backend/storage/imagesBucket";
 import { checkRateLimit } from "@/backend/http/rateLimit";
 import { recordAuditForCurrentUser } from "@/backend/modules/audit/recordAudit";
 
 const MAX_SIZE = 5 * 1024 * 1024;
-const BUCKET = "images";
 const IMAGE_EXTENSIONS: Record<string, string> = {
   "image/jpeg": "jpg",
   "image/png": "png",
   "image/webp": "webp",
+  "application/pdf": "pdf",
 };
 const MAX_REQUEST_SIZE = MAX_SIZE + 512 * 1024;
-const IMAGE_BUCKET_CONFIG = {
-  public: true,
-  fileSizeLimit: MAX_SIZE,
-  allowedMimeTypes: Object.keys(IMAGE_EXTENSIONS),
-};
 
-// Cek magic-bytes: nama ekstensi/MIME dari klien dapat dipalsukan, jadi
-// pastikan isi file benar-benar gambar. Mencegah file selain gambar (HTML/JS)
-// disembunyikan di bucket publik.
-function hasValidImageSignature(bytes: Uint8Array, mime: string): boolean {
+// Cek magic-bytes: pastikan isi file benar-benar gambar atau PDF.
+function hasValidFileSignature(bytes: Uint8Array, mime: string): boolean {
   if (mime === "image/png") {
     return bytes[0] === 0x89 && bytes[1] === 0x50 && bytes[2] === 0x4e && bytes[3] === 0x47;
   }
@@ -31,11 +25,13 @@ function hasValidImageSignature(bytes: Uint8Array, mime: string): boolean {
     const header = new TextDecoder().decode(bytes.slice(0, 12));
     return header.startsWith("RIFF") && header.slice(8, 12) === "WEBP";
   }
+  if (mime === "application/pdf") {
+    return bytes[0] === 0x25 && bytes[1] === 0x50 && bytes[2] === 0x44 && bytes[3] === 0x46; // %PDF-
+  }
   return false;
 }
 
-// Upload gambar mentah form publik Jasa Custom. Tidak butuh login: request
-// masuk lewat URL pengguna yang belum terautentikasi.
+// Upload gambar mentah/PDF form publik Jasa Custom.
 export async function POST(request: Request) {
   if (checkRateLimit(request, 20, 60_000).limited) {
     return Response.json({ success: false, error: { code: "RATE_LIMITED", message: "Terlalu banyak upload. Coba lagi sebentar lagi." } }, { status: 429 });
@@ -52,9 +48,10 @@ export async function POST(request: Request) {
     return Response.json({ success: false, error: { code: "FILE_TOO_LARGE", message: "Ukuran file maksimal 5 MB." } }, { status: 413 });
   }
 
-  if (!(await ensureStorageBucket(BUCKET, IMAGE_BUCKET_CONFIG))) {
+  if (!(await ensureStorageBucket(IMAGES_BUCKET, IMAGES_BUCKET_CONFIG))) {
     return Response.json({ success: false, error: { code: "BUCKET_FAILED", message: "Gagal menyiapkan bucket penyimpanan gambar." } }, { status: 500 });
   }
+
 
   let formData: FormData;
   try {
@@ -65,12 +62,12 @@ export async function POST(request: Request) {
 
   const file = formData.get("file");
   if (!(file instanceof File)) {
-    return Response.json({ success: false, error: { code: "FILE_REQUIRED", message: "File gambar wajib diunggah." } }, { status: 400 });
+    return Response.json({ success: false, error: { code: "FILE_REQUIRED", message: "File gambar/PDF wajib diunggah." } }, { status: 400 });
   }
 
   const extension = IMAGE_EXTENSIONS[file.type];
   if (!extension) {
-    return Response.json({ success: false, error: { code: "INVALID_TYPE", message: "Format yang didukung: JPEG, PNG, dan WebP." } }, { status: 400 });
+    return Response.json({ success: false, error: { code: "INVALID_TYPE", message: "Format yang didukung: JPEG, PNG, WebP, dan PDF." } }, { status: 400 });
   }
 
   if (file.size > MAX_SIZE) {
@@ -79,11 +76,11 @@ export async function POST(request: Request) {
 
   const path = `custom/${crypto.randomUUID()}.${extension}`;
   const arrayBuffer = await file.arrayBuffer();
-  if (!hasValidImageSignature(new Uint8Array(arrayBuffer), file.type)) {
-    return Response.json({ success: false, error: { code: "INVALID_IMAGE", message: "File bukan gambar yang valid." } }, { status: 400 });
+  if (!hasValidFileSignature(new Uint8Array(arrayBuffer), file.type)) {
+    return Response.json({ success: false, error: { code: "INVALID_FILE", message: "File bukan gambar/PDF yang valid." } }, { status: 400 });
   }
 
-  const { error } = await db.storage.from(BUCKET).upload(path, arrayBuffer, {
+  const { error } = await db.storage.from(IMAGES_BUCKET).upload(path, arrayBuffer, {
     contentType: file.type,
     cacheControl: "3600",
     upsert: false,
@@ -93,12 +90,12 @@ export async function POST(request: Request) {
     return Response.json({ success: false, error: { code: "UPLOAD_FAILED", message: error.message } }, { status: 500 });
   }
 
-  const { data: publicData } = db.storage.from(BUCKET).getPublicUrl(path);
+  const { data: publicData } = db.storage.from(IMAGES_BUCKET).getPublicUrl(path);
 
   await recordAuditForCurrentUser(
     "UPLOAD",
-    "Gambar Jasa Custom",
-    `Mengunggah gambar ${file.name || path} melalui form publik Jasa Custom`,
+    "Gambar/Dokumen Jasa Custom",
+    `Mengunggah gambar/PDF ${file.name || path} melalui form publik Jasa Custom`,
   );
 
   return Response.json({ success: true, data: { url: publicData.publicUrl } });

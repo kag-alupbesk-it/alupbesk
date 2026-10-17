@@ -17,7 +17,7 @@ import { getWhatsAppUrl } from "@/frontend/(pelanggan)/utils/getWhatsAppUrl";
 import { buildCustomRequestMessage } from "@/frontend/shared/customRequests/message";
 
 const maxFileSize = 5 * 1024 * 1024;
-const acceptedImageTypes = new Set(["image/png", "image/jpeg", "image/webp"]);
+const acceptedFileTypes = new Set(["image/png", "image/jpeg", "image/webp", "application/pdf"]);
 
 export default function CustomSection() {
   const [form, setForm] = useState(emptyCustomRequestForm);
@@ -53,18 +53,27 @@ export default function CustomSection() {
 
   const readFile = (file: File | undefined) => {
     if (!file) return;
-    if (!acceptedImageTypes.has(file.type)) {
-      setSubmitError("File gambar harus berformat PNG, JPG, atau WEBP.");
+    if (!acceptedFileTypes.has(file.type)) {
+      setSubmitError("File harus berformat PNG, JPG, WEBP, atau PDF.");
       return;
     }
     if (file.size > maxFileSize) {
-      setSubmitError("Ukuran gambar maksimal 5 MB.");
+      setSubmitError("Ukuran file maksimal 5 MB.");
       return;
     }
 
     setIsReadingImage(true);
     setSubmitError("");
     setImageFile(file);
+
+    // Jika PDF, jangan baca preview
+    if (file.type === "application/pdf") {
+      setImagePreview(undefined);
+      setImageName(file.name);
+      setIsReadingImage(false);
+      return;
+    }
+
     const reader = new FileReader();
     reader.onload = () => {
       if (typeof reader.result === "string") {
@@ -79,7 +88,7 @@ export default function CustomSection() {
       setImageName("");
       setImageFile(null);
       setIsReadingImage(false);
-      setSubmitError("Gambar tidak dapat dibaca. Coba pilih file lain.");
+      setSubmitError("Berkas tidak dapat dibaca. Coba pilih file lain.");
     };
     reader.readAsDataURL(file);
   };
