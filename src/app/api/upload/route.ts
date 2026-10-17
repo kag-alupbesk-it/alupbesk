@@ -1,21 +1,17 @@
 import { db } from "@/services/supabase";
 import { ensureStorageBucket } from "@/backend/storage/ensureStorageBucket";
+import { IMAGES_BUCKET, IMAGES_BUCKET_CONFIG } from "@/backend/storage/imagesBucket";
 import { recordAuditForCurrentUser } from "@/backend/modules/audit/recordAudit";
 
 const MAX_SIZE = 5 * 1024 * 1024;
-const BUCKET = "images";
 const IMAGE_EXTENSIONS: Record<string, string> = {
   "image/jpeg": "jpg",
   "image/png": "png",
   "image/webp": "webp",
   "image/gif": "gif",
+  "application/pdf": "pdf",
 };
 const MAX_REQUEST_SIZE = MAX_SIZE + 512 * 1024;
-const IMAGE_BUCKET_CONFIG = {
-  public: true,
-  fileSizeLimit: MAX_SIZE,
-  allowedMimeTypes: Object.keys(IMAGE_EXTENSIONS),
-};
 
 export async function POST(request: Request) {
   if (!db) {
@@ -42,7 +38,7 @@ export async function POST(request: Request) {
     );
   }
 
-  if (!(await ensureStorageBucket(BUCKET, IMAGE_BUCKET_CONFIG))) {
+  if (!(await ensureStorageBucket(IMAGES_BUCKET, IMAGES_BUCKET_CONFIG))) {
     return Response.json(
       {
         success: false,
@@ -104,7 +100,7 @@ export async function POST(request: Request) {
   const arrayBuffer = await file.arrayBuffer();
 
   const { error } = await db.storage
-    .from(BUCKET)
+    .from(IMAGES_BUCKET)
     .upload(path, arrayBuffer, {
       contentType: file.type,
       cacheControl: "3600",
@@ -121,12 +117,12 @@ export async function POST(request: Request) {
     );
   }
 
-  const { data: publicData } = db.storage.from(BUCKET).getPublicUrl(path);
+  const { data: publicData } = db.storage.from(IMAGES_BUCKET).getPublicUrl(path);
 
   await recordAuditForCurrentUser(
     "UPLOAD",
-    "Gambar",
-    `Mengunggah gambar ${file.name || path} (${file.size} byte)`,
+    "Gambar/Dokumen",
+    `Mengunggah berkas ${file.name || path} (${file.size} byte)`,
   );
 
   return Response.json({ success: true, data: { url: publicData.publicUrl } });

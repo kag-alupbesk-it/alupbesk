@@ -108,15 +108,21 @@ export default function RequestForm({
             {upload.isReadingImage ? (
               <div className="flex flex-col items-center justify-center py-3">
                 <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-secondary/10 text-secondary"><UploadCloud size={18} className="animate-pulse" /></div>
-                <p className="mt-2 text-xs font-bold text-on-surface">Membaca preview gambar...</p>
+                <p className="mt-2 text-xs font-bold text-on-surface">Membaca preview...</p>
               </div>
-            ) : upload.imagePreview ? (
+            ) : upload.imagePreview || upload.imageName ? (
               <div className="flex flex-col gap-3 text-left sm:flex-row sm:items-center">
-                <div className="relative h-28 w-full shrink-0 overflow-hidden rounded-lg border border-outline/30 bg-slate-100 sm:w-40">
-                  <Image src={upload.imagePreview} alt="Preview gambar mentah" fill unoptimized sizes="160px" className="object-contain" />
-                </div>
+                {upload.imagePreview ? (
+                  <div className="relative h-28 w-full shrink-0 overflow-hidden rounded-lg border border-outline/30 bg-slate-100 sm:w-40">
+                    <Image src={upload.imagePreview} alt="Preview gambar" fill unoptimized sizes="160px" className="object-contain" />
+                  </div>
+                ) : (
+                  <div className="flex h-28 w-full items-center justify-center rounded-lg border border-outline/30 bg-surface-variant/50 sm:w-40">
+                    <span className="material-symbols-outlined text-4xl text-on-surface-variant">picture_as_pdf</span>
+                  </div>
+                )}
                 <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-1.5 text-emerald-400"><Check size={14} /><span className="text-xs font-bold">Gambar siap dilampirkan</span></div>
+                  <div className="flex items-center gap-1.5 text-emerald-400"><Check size={14} /><span className="text-xs font-bold">Berkas siap dilampirkan</span></div>
                   <p className="mt-1 truncate text-xs font-semibold text-on-surface">{upload.imageName}</p>
                   <p className="mt-0.5 text-[10px] text-on-surface-variant">Preview lokal. File diunggah saat request dikirim.</p>
                   <button type="button" onClick={upload.clearImage} className="mt-2 rounded-md px-2.5 py-1.5 text-[10px] font-bold text-red-400 hover:bg-error/10">Hapus preview</button>
@@ -126,10 +132,10 @@ export default function RequestForm({
               <label htmlFor="custom-raw-image" className="flex cursor-pointer flex-col items-center justify-center py-3 text-center">
                 <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-secondary/10 text-secondary"><UploadCloud size={18} /></div>
                 <p className="mt-2 text-xs font-bold text-on-surface">Drop gambar di sini atau <span className="text-secondary">browse file</span></p>
-                <p className="mt-1 text-[10px] text-on-surface-variant">PNG, JPG, atau WEBP · maksimal 5 MB</p>
+                <p className="mt-1 text-[10px] text-on-surface-variant">PNG, JPG, WEBP, atau PDF · maksimal 5 MB</p>
               </label>
             )}
-            <input id="custom-raw-image" name="rawImage" type="file" accept="image/png,image/jpeg,image/webp" onChange={upload.handleFileChange} disabled={upload.isReadingImage} className="sr-only" />
+            <input id="custom-raw-image" name="rawImage" type="file" accept="image/png,image/jpeg,image/webp,application/pdf" onChange={upload.handleFileChange} disabled={upload.isReadingImage} className="sr-only" />
           </div>
         </div>
       </section>
