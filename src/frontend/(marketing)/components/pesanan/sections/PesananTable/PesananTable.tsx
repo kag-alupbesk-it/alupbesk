@@ -2,7 +2,7 @@
 
 import type { MarketingOrder } from "@/backend/modules/marketing";
 import * as s from "../../style/style";
-import { statusColor, statusBg, formatCurrency, formatDate, isNewOrder } from "../helpers/helpers";
+import { statusColor, statusBg, formatDate, isNewOrder } from "../helpers/helpers";
 import { STATUS_LABELS } from "../data/data";
 
 interface PesananTableProps {
@@ -45,10 +45,7 @@ export default function PesananTable({ orders, onSelect }: PesananTableProps) {
               <div className="truncate">{order.customer.phone}</div>
               <div>{formatDate(order.createdAt)}</div>
             </div>
-            <div className={s.cardMeta}>
-              <span className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">Total</span>
-              <span className="font-bold text-secondary text-sm">{formatCurrency(order.total)}</span>
-            </div>
+
             <div className={s.cardActions}>
               <button onClick={() => onSelect(order)} className={`${s.secondaryButton} w-full`}>
                 Lihat Detail
@@ -66,8 +63,7 @@ export default function PesananTable({ orders, onSelect }: PesananTableProps) {
               <th className={s.tableHeaderCell}>Pelanggan</th>
               <th className={s.tableHeaderCell}>Tanggal</th>
               <th className={s.tableHeaderCell}>Status</th>
-              <th className={s.tableHeaderCellRight}>Total</th>
-            </tr>
+                          </tr>
           </thead>
           <tbody className={s.tableBody}>
             {orders.map((order) => (
@@ -90,9 +86,6 @@ export default function PesananTable({ orders, onSelect }: PesananTableProps) {
                     <span className={`${s.statusDot} ${statusColor(order.status)}`} />
                     {STATUS_LABELS[order.status] ?? order.status}
                   </span>
-                </td>
-                <td className={s.tableCellRight}>
-                  <span className="font-bold text-secondary text-sm">{formatCurrency(order.total)}</span>
                 </td>
               </tr>
             ))}
