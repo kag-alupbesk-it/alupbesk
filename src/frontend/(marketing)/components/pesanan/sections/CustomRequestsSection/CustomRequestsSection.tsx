@@ -4,8 +4,6 @@ import { useState } from "react";
 import * as s from "../../style/style";
 import { customApi } from "@/services/api/index";
 import type { CustomRequest, CustomRequestStatus } from "@/backend/modules/custom";
-import { contactDefaults } from "@/frontend/(pelanggan)/data/siteContentDefaults";
-import { usePublicSiteContent } from "@/frontend/(pelanggan)/hooks/usePublicSiteContent";
 import { CustomRequestDetailModal } from "@/frontend/shared/customRequests/CustomRequestDetailModal";
 import {
   CUSTOM_REQUEST_STATUS_LABELS,
@@ -33,7 +31,6 @@ export default function CustomRequestsSection({
   refresh: () => void;
 }) {
   const readOnly = useReadOnly();
-  const { data: contact } = usePublicSiteContent("contact", contactDefaults);
 
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("ALL");
@@ -217,7 +214,6 @@ export default function CustomRequestsSection({
       <CustomRequestDetailModal
         isOpen={showDetail}
         request={selected}
-        whatsappNumber={contact.whatsapp}
         canEditStatus={!readOnly}
         statusBusy={statusBusy}
         onClose={() => { setShowDetail(false); setSelected(null); setStatusError(""); }}

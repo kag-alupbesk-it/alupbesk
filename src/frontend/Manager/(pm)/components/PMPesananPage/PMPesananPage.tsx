@@ -6,8 +6,6 @@ import { useMemo, useState } from "react";
 import { ArrowLeft, CheckCircle2, CircleAlert, FilePlus2, Inbox, Search } from "lucide-react";
 import { customApi } from "@/services/api/index";
 import type { CustomRequest, CustomRequestStatus } from "@/backend/modules/custom";
-import { contactDefaults } from "@/frontend/(pelanggan)/data/siteContentDefaults";
-import { usePublicSiteContent } from "@/frontend/(pelanggan)/hooks/usePublicSiteContent";
 import { useCustomRequests } from "@/frontend/shared/customRequests/useCustomRequests";
 import { CustomRequestDetailModal } from "@/frontend/shared/customRequests/CustomRequestDetailModal";
 import {
@@ -36,7 +34,6 @@ function formatDate(value: string | undefined): string {
 export function PMPesananPage() {
   const router = useRouter();
   const { data: requests, loading, error: loadError, refresh } = useCustomRequests();
-  const { data: contact } = usePublicSiteContent("contact", contactDefaults);
 
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("ALL");
@@ -204,7 +201,6 @@ export function PMPesananPage() {
       <CustomRequestDetailModal
         isOpen={showDetail}
         request={selectedRequest}
-        whatsappNumber={selectedRequest?.telp || contact.whatsapp}
         canEditStatus
         statusBusy={statusBusy}
         onClose={() => { setShowDetail(false); setSelectedRequest(null); setStatusError(""); }}
