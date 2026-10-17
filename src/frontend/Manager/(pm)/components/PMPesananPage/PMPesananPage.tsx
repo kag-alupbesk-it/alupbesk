@@ -204,7 +204,7 @@ export function PMPesananPage() {
       <CustomRequestDetailModal
         isOpen={showDetail}
         request={selectedRequest}
-        whatsappNumber={contact.whatsapp}
+        whatsappNumber={selectedRequest?.telp || contact.whatsapp}
         canEditStatus
         statusBusy={statusBusy}
         onClose={() => { setShowDetail(false); setSelectedRequest(null); setStatusError(""); }}
