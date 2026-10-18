@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import * as s from "../../style/style";
 import PesananTable from "../PesananTable/PesananTable";
 import PesananDetailModal from "../PesananDetailModal/PesananDetailModal";
@@ -17,7 +18,15 @@ import { useCustomRequests } from "@/frontend/shared/customRequests/useCustomReq
 type PesananTab = "produk" | "kustom";
 
 export default function PesananSection() {
-  const [tab, setTab] = useState<PesananTab>("produk");
+  const searchParams = useSearchParams();
+  const [tab, setTab] = useState<PesananTab>(searchParams.has("requestId") ? "kustom" : "produk");
+
+  useEffect(() => {
+    if (searchParams.has("requestId")) {
+      setTab("kustom");
+    }
+  }, [searchParams]);
+
   const loadOrders = useCallback(() => marketingApi.getOrders(), []);
   const { data: orders, loading, error: loadError, refresh } = usePollingResource<MarketingOrder[]>(loadOrders, []);
   const {
