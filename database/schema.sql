@@ -202,8 +202,12 @@ create table if not exists custom_request_items (
     unit            text not null default 'pcs',
     technical_note  text not null default '',
     sort_order      integer not null default 0,
+    inventory_item_id text references gudang_inventory_items(id) on delete set null,
     created_at      timestamptz not null default now()
 );
+
+-- Penjaga untuk database yang sudah memiliki tabel versi lama.
+alter table custom_request_items add column if not exists inventory_item_id text references gudang_inventory_items(id) on delete set null;
 
 create index if not exists idx_custom_request_items_request
     on custom_request_items(request_id, sort_order);

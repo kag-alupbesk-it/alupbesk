@@ -1,8 +1,8 @@
 "use client";
 
 import Image from "next/image";
-import { useId, type ChangeEvent, type DragEvent } from "react";
-import { Check, FileImage, Layers3, Plus, Trash2, UploadCloud } from "lucide-react";
+import { useId, useState, useEffect, type ChangeEvent, type DragEvent } from "react";
+import { Check, FileImage, Layers3, Plus, Trash2, UploadCloud, Search, X } from "lucide-react";
 import { customStyles as styles } from "../../style/style";
 import type { CustomRequestForm, CustomRequestFormItem } from "@/frontend/(pelanggan)/types/types";
 
@@ -30,12 +30,41 @@ export default function RequestForm({
   upload: CustomImageUploadState;
 }) {
   const formId = useId();
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [activeSearchItemId, setActiveSearchItemId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (searchQuery.length < 2) {
+      setSearchResults([]);
+      return;
+    }
+    const timer = setTimeout(async () => {
+      const response = await fetch(`/api/gudang/inventory/search?query=${searchQuery}`);
+      const data = await response.json();
+      setSearchResults(data.data);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  const selectItem = (itemId: string, item: any) => {
+    setForm({
+      ...form,
+      items: form.items.map((i) =>
+        i.id === itemId
+          ? { ...i, name: `${item.itemName} (${item.brand} - ${item.modelNo})`, inventoryItemId: item.id, technicalNote: `Warna: ${item.color}, Rack: ${item.rackGroup}` }
+          : i
+      ),
+    });
+    setActiveSearchItemId(null);
+    setSearchQuery("");
+  };
 
   const update = (key: keyof CustomRequestForm, value: string) => {
     setForm({ ...form, [key]: value });
   };
 
-  const updateItem = (id: string, field: keyof Omit<CustomRequestFormItem, "id">, value: string) => {
+  const updateItem = (id: string, field: keyof Omit<CustomRequestFormItem, "id">, value: any) => {
     setForm({
       ...form,
       items: form.items.map((item) => (item.id === id ? { ...item, [field]: value } : item)),
@@ -52,7 +81,7 @@ export default function RequestForm({
       ...form,
       items: [
         ...form.items,
-        { id: `${formId}-item-added-${form.items.length + 1}`, name: "", quantity: "1", unit: "pcs", technicalNote: "" },
+        { id: `${formId}-item-added-${form.items.length + 1}`, name: "", quantity: "1", unit: "pcs", technicalNote: "", inventoryItemId: undefined },
       ],
     });
   };
@@ -160,6 +189,27 @@ export default function RequestForm({
                   <Trash2 size={14} />
                 </button>
               </div>
+
+              {activeSearchItemId === item.id ? (
+                <div className="mb-4 rounded-xl border border-secondary/30 bg-surface-variant p-3 space-y-2">
+                  <div className="flex items-center gap-2">
+                    <Search size={16} className="text-secondary" />
+                    <input className={`${styles.field} flex-1`} placeholder="Ketik nama barang..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
+                    <button onClick={() => { setActiveSearchItemId(null); setSearchQuery(""); }}><X size={18} className="text-on-surface-variant" /></button>
+                  </div>
+                  {searchResults.map(result => (
+                    <button key={result.id} onClick={() => selectItem(item.id, result)} className="w-full text-left rounded-lg bg-surface p-2 text-xs hover:bg-secondary/10">
+                      {result.itemName} ({result.brand})
+                    </button>
+                  ))}
+                  {searchResults.length === 0 && <p className="text-xs text-center text-on-surface-variant py-2">Barang tidak ditemukan.</p>}
+                </div>
+              ) : (
+                <button type="button" onClick={() => setActiveSearchItemId(item.id)} className="mb-3 w-full inline-flex items-center justify-center gap-1.5 rounded-lg border border-secondary/30 bg-secondary/10 px-3 py-2 text-[10px] font-bold text-secondary transition-colors hover:bg-secondary/20">
+                  <Search size={13} /> {item.inventoryItemId ? "Ganti Barang dari Gudang" : "Cari Barang dari Gudang"}
+                </button>
+              )}
+
               <div className="grid grid-cols-1 gap-3 md:grid-cols-[minmax(0,1.5fr)_110px_120px]">
                 <label className="space-y-1.5 block">
                   <span className={styles.label}>Nama Item <span className="text-secondary">*</span></span>
