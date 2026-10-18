@@ -95,6 +95,7 @@ function requiresRole(pathname: string, method: string): boolean {
   if (pathname.startsWith("/api/content/")) return method !== "GET" && method !== "HEAD";
   if (pathname.startsWith("/api/custom/")) return method !== "POST";
   if (pathname.startsWith("/api/contact/")) return method !== "POST";
+  if (pathname === "/api/gudang/inventory/search") return false;
   if (pathname.startsWith("/api/push/")) return true;
 
   if (
