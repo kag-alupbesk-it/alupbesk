@@ -7,6 +7,12 @@ import { markHydrationStale } from "./hydrationInvalidation";
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
+console.log("[supabase] init check:", { 
+  hasUrl: !!supabaseUrl, 
+  hasKey: !!supabaseKey, 
+  keyLength: supabaseKey?.length 
+});
+
 export const db: SupabaseClient | null =
   supabaseUrl && supabaseKey ? createClient(supabaseUrl, supabaseKey) : null;
 
