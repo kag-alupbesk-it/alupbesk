@@ -41,7 +41,7 @@ export async function getNotificationTasks(role: AppRole): Promise<NotificationT
   if (hasAnyRole(role, "marketing", "proyek")) {
     const { data, error } = await db.from("custom_requests").select("id, nama, layanan, created_at").eq("status", "submitted").order("created_at", { ascending: false }).limit(25);
     if (error) throw error;
-    for (const row of data ?? []) tasks.push({ id: `custom:${row.id}`, title: "Permintaan jasa custom baru", detail: `${row.nama} · ${row.layanan}`, href: role === "owner" ? "/admin/owner" : "/admin/marketing", createdAt: row.created_at });
+    for (const row of data ?? []) tasks.push({ id: `custom:${row.id}`, title: "Permintaan jasa custom baru", detail: `${row.nama} · ${row.layanan}`, href: `${role === "owner" ? "/admin/owner" : "/admin/marketing"}?requestId=${row.id}`, createdAt: row.created_at });
   }
 
   if (hasAnyRole(role, "gudang")) {

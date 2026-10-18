@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import * as s from "../../style/style";
 import { customApi } from "@/services/api/index";
 import type { CustomRequest, CustomRequestStatus } from "@/backend/modules/custom";
@@ -31,8 +32,11 @@ export default function CustomRequestsSection({
   refresh: () => void;
 }) {
   const readOnly = useReadOnly();
+  const searchParams = useSearchParams();
+  const requestId = searchParams.get("requestId");
 
   const [search, setSearch] = useState("");
+
   const [statusFilter, setStatusFilter] = useState("ALL");
   const [showStatusDropdown, setShowStatusDropdown] = useState(false);
   const [page, setPage] = useState(1);
@@ -40,6 +44,15 @@ export default function CustomRequestsSection({
   const [showDetail, setShowDetail] = useState(false);
   const [statusBusy, setStatusBusy] = useState(false);
   const [statusError, setStatusError] = useState("");
+
+  useEffect(() => {
+    if (requestId && requests.length > 0) {
+      const request = requests.find((r) => r.id === requestId);
+      if (request) {
+        openDetail(request);
+      }
+    }
+  }, [requestId, requests]);
 
   const filtered = requests.filter((request) => {
     const matchSearch =
