@@ -12,7 +12,7 @@ import { fetchNotificationTasks, type NotificationTask } from "@/frontend/shared
 import { getSupabaseBrowserClient } from "@/services/supabaseBrowser";
 
 const panelClass =
-  "absolute right-0 sm:left-auto top-full mt-2 w-[calc(100vw-2rem)] sm:w-72 rounded-xl border border-outline/40 bg-surface-container shadow-2xl z-[60] p-4 text-left";
+  "fixed top-14 left-4 right-4 sm:absolute sm:left-auto sm:right-0 sm:top-full sm:mt-2 sm:w-72 rounded-xl border border-outline/40 bg-surface-container shadow-2xl z-[60] p-4 text-left";
 
 export default function NotificationBell() {
   const { open, toggle, setOpen, ref } = usePopover();
