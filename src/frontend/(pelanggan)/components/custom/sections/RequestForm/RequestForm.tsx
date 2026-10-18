@@ -40,9 +40,19 @@ export default function RequestForm({
       return;
     }
     const timer = setTimeout(async () => {
-      const response = await fetch(`/api/gudang/inventory/search?query=${searchQuery}`);
-      const data = await response.json();
-      setSearchResults(data.data);
+      try {
+        const response = await fetch(`/api/gudang/inventory/search?query=${searchQuery}`);
+        const data = await response.json();
+        if (response.ok) {
+          setSearchResults(data.data || []);
+        } else {
+          console.error("API Error:", data);
+          setSearchResults([]);
+        }
+      } catch (err) {
+        console.error("Fetch Error:", err);
+        setSearchResults([]);
+      }
     }, 500);
     return () => clearTimeout(timer);
   }, [searchQuery]);
