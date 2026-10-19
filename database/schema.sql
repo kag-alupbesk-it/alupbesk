@@ -411,10 +411,6 @@ do $$ begin
     create type kas_kategori as enum ('eceran', 'proyek', 'operasional');
 exception when duplicate_object then null; end $$;
 
-do $$ begin
-    create type payment_status as enum ('belum_bayar', 'lunas');
-exception when duplicate_object then null; end $$;
-
 create table if not exists kas_entries (
     id          text primary key,               -- "kas-<uuid>" atau "masuk-<orderId>" (otomatis)
     tipe        kas_tipe not null,
@@ -427,12 +423,7 @@ create table if not exists kas_entries (
 );
 
 -- Status pembayaran per pesanan (penagihan). Key = id pesanan (ord-*/prj-*).
-create table if not exists penagihan (
-    order_id    text primary key,
-    order_type  text not null check (order_type in ('pesanan', 'proyek')),
-    status      payment_status not null default 'belum_bayar',
-    updated_at  timestamptz not null default now()
-);
+-- (Penagihan sudah dihapus pada update 5.2)
 
 -- ---------------------------------------------------------------------
 -- 7. MARKETING — banner promo
@@ -828,7 +819,7 @@ begin
         'gudang_material_lots',
         'gudang_in_transactions', 'gudang_out_transactions',
         'gudang_production_requests', 'gudang_production_request_items',
-        'kas_entries', 'penagihan', 'marketing_banners', 'portfolio_items',
+        'kas_entries', 'marketing_banners', 'portfolio_items',
         'case_studies', 'partners', 'faq_items', 'custom_services',
         'site_content', 'pm_orders', 'pm_order_items', 'field_deliveries',
         'field_delivery_items', 'finance_dashboard', 'contact_messages',

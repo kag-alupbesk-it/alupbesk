@@ -154,7 +154,13 @@ export function DetailSpkProgress({ nomor }: { nomor: string }) {
             {spk.alamatProyek && (
               <span className="inline-flex items-center gap-1.5">
                 <MapPin size={12} />
-                {spk.alamatProyek}
+                {`${spk.alamatProyek}${spk.kabupaten ? `, ${spk.kabupaten}` : ""}${spk.provinsi ? `, ${spk.provinsi}` : ""}`}
+              </span>
+            )}
+            {spk.namaPerusahaan && (
+              <span className="inline-flex items-center gap-1.5">
+                <Building2 size={12} />
+                {spk.namaPerusahaan}
               </span>
             )}
             <span className="inline-flex items-center gap-1.5 text-secondary">

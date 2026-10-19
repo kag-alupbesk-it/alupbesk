@@ -130,9 +130,11 @@ export function PMOrderDetail({ orderId }: { orderId: string }) {
 
       <section className="grid grid-cols-2 gap-3 xl:grid-cols-4">
         <div className="rounded-xl border border-outline/30 bg-surface-container-low p-4"><DetailLabel icon={UserRound} label="Kontraktor" value={order.contractorName} /></div>
+        <div className="rounded-xl border border-outline/30 bg-surface-container-low p-4"><DetailLabel icon={Building2} label="Perusahaan/Proyek" value={order.companyName || "-"} /></div>
+        <div className="rounded-xl border border-outline/30 bg-surface-container-low p-4"><DetailLabel icon={MapPin} label="Alamat" value={`${order.projectAddress || ""}${order.projectKabupaten ? `, ${order.projectKabupaten}` : ""}${order.projectProvince ? `, ${order.projectProvince}` : ""}`} /></div>
+        <div className="rounded-xl border border-outline/30 bg-surface-container-low p-4"><DetailLabel icon={PackageCheck} label="Total Item" value={`${order.items.length} spesifikasi`} /></div>
         <div className="rounded-xl border border-outline/30 bg-surface-container-low p-4"><DetailLabel icon={CalendarDays} label="Tanggal Masuk" value={formatPMDate(order.enteredAt)} /></div>
         <div className="rounded-xl border border-outline/30 bg-surface-container-low p-4"><DetailLabel icon={Clock3} label="Target Selesai" value={formatPMDate(order.targetDate)} /></div>
-        <div className="rounded-xl border border-outline/30 bg-surface-container-low p-4"><DetailLabel icon={PackageCheck} label="Total Item" value={`${order.items.length} spesifikasi`} /></div>
       </section>
 
       <section className="rounded-2xl border border-outline/30 bg-surface-container-low p-5 sm:p-6">

@@ -20,6 +20,8 @@ const customRequestSchema = z
     email: z.string().trim().email().max(160).optional().or(z.literal("")),
     telp: z.string().trim().min(1).max(24),
     projectAddress: z.string().trim().min(1).max(200),
+    provinsi: z.string().trim().max(100).optional().or(z.literal("")),
+    kabupaten: z.string().trim().max(100).optional().or(z.literal("")),
     layanan: z.string().trim().min(1),
     deskripsi: z.string().trim().min(1).max(4000),
     deadline: z.string().trim().min(1),

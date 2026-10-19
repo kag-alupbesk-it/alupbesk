@@ -302,6 +302,15 @@ export function CreateOrderForm() {
                 <h3 className="font-headline text-base font-bold text-on-surface">Informasi Order</h3>
                 <p className="mt-1 text-[10px] text-on-surface-variant">Identitas order dan komunikasi internal dengan kontraktor.</p>
               </div>
+            <div className="mt-5 grid grid-cols-1 gap-5 md:grid-cols-2">
+              <div>
+                <label htmlFor="contractor-name" className={labelClass}>Nama Kontraktor <span className="text-secondary">*</span></label>
+                <input id="contractor-name" name="contractorName" value={contractorName} onChange={(event) => setContractorName(event.target.value)} placeholder="cth. PT Karya Mandiri" className={inputClass} required />
+              </div>
+              <div>
+                <label htmlFor="company-name" className={labelClass}>Nama Perusahaan</label>
+                <input id="company-name" name="companyName" value={companyName} onChange={(event) => setCompanyName(event.target.value)} placeholder="Nama perusahaan" className={inputClass} />
+              </div>
               <div>
                 <label htmlFor="contractor-phone" className={labelClass}>Telepon Kontraktor</label>
                 <input id="contractor-phone" name="contractorPhone" type="tel" value={contractorPhone} onChange={(event) => setContractorPhone(event.target.value)} placeholder="Nomor yang dapat dihubungi" className={inputClass} />
@@ -319,21 +328,11 @@ export function CreateOrderForm() {
                 <input id="project-kabupaten" name="projectKabupaten" value={projectKabupaten} onChange={(event) => setProjectKabupaten(event.target.value)} placeholder="Kabupaten" className={inputClass} />
               </div>
               <div>
-                <label htmlFor="company-name" className={labelClass}>Nama Perusahaan</label>
-                <input id="company-name" name="companyName" value={companyName} onChange={(event) => setCompanyName(event.target.value)} placeholder="Nama perusahaan" className={inputClass} />
-              </div>
-            </div>
-            <div className="mt-5 grid grid-cols-1 gap-5 md:grid-cols-2">
-              <div>
-                <label htmlFor="contractor-name" className={labelClass}>Nama Kontraktor <span className="text-secondary">*</span></label>
-                <input id="contractor-name" name="contractorName" value={contractorName} onChange={(event) => setContractorName(event.target.value)} placeholder="cth. PT Karya Mandiri" className={inputClass} required />
-              </div>
-              <div>
                 <label htmlFor="contractor-code" className={labelClass}>Kode Produksi</label>
-                <input id="contractor-code" name="contractorCode" value={contractorCode} onChange={(event) => setContractorCode(event.target.value)} placeholder="Kosongkan untuk otomatis (PRD-YYMM-####)" className={`${inputClass} font-mono uppercase`} />
+                <input id="contractor-code" name="contractorCode" value={contractorCode} onChange={(event) => setContractorCode(event.target.value)} placeholder="Kosongkan untuk otomatis (PJK1Aceh / PRD-YYMM-####)" className={`${inputClass} font-mono uppercase`} />
                 <p className="mt-1.5 text-[9px] text-on-surface-variant/70">Dibuat otomatis oleh sistem. Isi hanya jika ingin menimpa kode produksi.</p>
               </div>
-              <div className="md:col-span-2">
+              <div>
                 <label htmlFor="target-date" className={labelClass}>Target Selesai <span className="text-secondary">*</span></label>
                 <input id="target-date" name="targetDate" type="date" value={targetDate} onChange={(event) => setTargetDate(event.target.value)} className={`${inputClass} max-w-xs`} required />
               </div>

@@ -1,6 +1,5 @@
 import { db } from "@/services/supabase";
 
-// Kode produksi milik perusahaan (bukan kontraktor), format "[INISIAL][NOMOR][KABUPATEN]" atau "PRD-YYMM-####".
 export async function generateProductionCode(input?: { companyName?: string, kabupaten?: string }): Promise<string> {
   const now = new Date();
   
@@ -32,8 +31,10 @@ export async function generateProductionCode(input?: { companyName?: string, kab
 
   // Pola baru: [INISIAL][NOMOR][KABUPATEN]
   const kab = input.kabupaten.replace(/[^a-zA-Z0-9]/g, "");
-  const company = input.companyName?.trim() || "PRD";
-  const initials = company.split(" ").filter(Boolean).map(w => w[0].toUpperCase()).slice(0, 3).join("");
+  const company = input.companyName?.trim();
+  const initials = company
+    ? company.split(/\s+/).filter(Boolean).map((w) => w[0]!.toUpperCase()).slice(0, 3).join("")
+    : "PRD";
   const prefix = `${initials}`;
   
   if (!db) {
@@ -57,4 +58,5 @@ export async function generateProductionCode(input?: { companyName?: string, kab
   }
   return `${prefix}${max + 1}${kab}`;
 }
+
 

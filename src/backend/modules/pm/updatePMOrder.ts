@@ -186,14 +186,17 @@ export async function updatePMOrder(
 
   return {
     ok: true,
-    order: {
-      id: updated.id,
-      contractorName: updated.contractor_name,
-      contractorCode: updated.contractor_code,
-      contractorPhone: updated.contractor_phone ?? undefined,
-      projectAddress: updated.project_address ?? undefined,
-      enteredAt: updated.entered_at,
-      targetDate: updated.target_date,
+      order: {
+        id: updated.id,
+        contractorName: updated.contractor_name,
+        contractorCode: updated.contractor_code,
+        contractorPhone: updated.contractor_phone ?? undefined,
+        projectAddress: updated.project_address ?? undefined,
+        projectProvince: updated.project_province ?? undefined,
+        projectKabupaten: updated.project_kabupaten ?? undefined,
+        companyName: updated.company_name ?? undefined,
+        enteredAt: updated.entered_at,
+        targetDate: updated.target_date,
       projectStatus: updated.project_status,
       drawingStatus: updated.drawing_status,
       stage: updated.stage,
