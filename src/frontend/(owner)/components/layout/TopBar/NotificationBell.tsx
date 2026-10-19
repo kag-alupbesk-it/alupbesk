@@ -14,20 +14,53 @@ import { getSupabaseBrowserClient } from "@/services/supabaseBrowser";
 const panelClass =
   "fixed top-16 left-4 right-4 z-[100] max-h-[70vh] overflow-y-auto rounded-xl border border-outline/40 bg-surface-container shadow-2xl p-4 text-left sm:absolute sm:left-auto sm:right-0 sm:top-full sm:mt-2 sm:w-72 sm:max-h-96";
 
+const READ_KEY = "alupbesk_read_notifications";
+
+function getReadIds(): Set<string> {
+  try {
+    return new Set(JSON.parse(localStorage.getItem(READ_KEY) || "[]"));
+  } catch {
+    return new Set();
+  }
+}
+
+function saveReadIds(ids: Set<string>) {
+  try {
+    localStorage.setItem(READ_KEY, JSON.stringify([...ids]));
+  } catch {
+    // localStorage full or unavailable
+  }
+}
+
 export default function NotificationBell() {
   const { open, toggle, setOpen, ref } = usePopover();
   const [status, setStatus] = useState<PushStatus | null>(null);
   const [pending, setPending] = useState(false);
   const [message, setMessage] = useState("");
   const [tasks, setTasks] = useState<NotificationTask[]>([]);
+  const [readIds, setReadIds] = useState<Set<string>>(() => getReadIds());
   const [newTask, setNewTask] = useState<NotificationTask | null>(null);
   const tasksRef = useRef<NotificationTask[]>([]);
+
+  const markAsRead = useCallback((id: string) => {
+    const next = new Set(getReadIds());
+    next.add(id);
+    saveReadIds(next);
+    setReadIds(next);
+  }, []);
+
+  const markAllRead = useCallback(() => {
+    const next = new Set(tasksRef.current.map((t) => t.id));
+    saveReadIds(next);
+    setReadIds(next);
+  }, []);
 
   const refreshTasks = useCallback(async (notify = false) => {
     try {
       const next = await fetchNotificationTasks();
       const knownIds = new Set(tasksRef.current.map((item) => item.id));
-      if (notify) setNewTask(next.find((item) => !knownIds.has(item.id)) ?? null);
+      const currentRead = getReadIds();
+      if (notify) setNewTask(next.find((item) => !knownIds.has(item.id) && !currentRead.has(item.id)) ?? null);
       tasksRef.current = next;
       setTasks(next);
     } catch {
@@ -99,6 +132,7 @@ export default function NotificationBell() {
   }
 
   const subscribed = status?.subscribed ?? false;
+  const unreadTasks = tasks.filter((t) => !readIds.has(t.id));
 
   return (
     <div className="relative" ref={ref}>
@@ -116,9 +150,9 @@ export default function NotificationBell() {
         {subscribed && (
           <span className="absolute top-0 right-0 w-1.5 h-1.5 bg-secondary rounded-full animate-pulse" />
         )}
-        {tasks.length > 0 && (
+        {unreadTasks.length > 0 && (
           <span className="absolute -right-2 -top-2 min-w-4 rounded-full bg-red-600 px-1 text-center text-[9px] font-bold leading-4 text-white">
-            {tasks.length > 99 ? "99+" : tasks.length}
+            {unreadTasks.length > 99 ? "99+" : unreadTasks.length}
           </span>
         )}
       </button>
@@ -130,9 +164,9 @@ export default function NotificationBell() {
             <div className="min-w-0 flex-1">
               <p className="text-sm font-bold text-on-surface">{newTask.title}</p>
               <p className="mt-1 truncate text-xs text-on-surface-variant">{newTask.detail}</p>
-              <button type="button" onClick={() => { window.location.assign(newTask.href); setNewTask(null); }} className="mt-3 text-xs font-bold text-secondary">Buka tugas</button>
+              <button type="button" onClick={() => { markAsRead(newTask.id); window.location.assign(newTask.href); setNewTask(null); }} className="mt-3 text-xs font-bold text-secondary">Buka tugas</button>
             </div>
-            <button type="button" aria-label="Tutup notifikasi" onClick={() => setNewTask(null)} className="text-on-surface-variant">×</button>
+            <button type="button" aria-label="Tutup notifikasi" onClick={() => { markAsRead(newTask.id); setNewTask(null); }} className="text-on-surface-variant">×</button>
           </div>
         </div>
       )}
@@ -141,14 +175,25 @@ export default function NotificationBell() {
         <div className={panelClass}>
           <div className="flex items-center justify-between gap-2">
             <p className="text-sm font-bold text-on-surface">Notifikasi</p>
-            <button
-              type="button"
-              onClick={() => setOpen(false)}
-              aria-label="Tutup"
-              className="text-on-surface-variant hover:text-on-surface"
-            >
-              <span className="material-symbols-outlined text-[18px]">close</span>
-            </button>
+            <div className="flex items-center gap-2">
+              {unreadTasks.length > 0 && (
+                <button
+                  type="button"
+                  onClick={markAllRead}
+                  className="text-[10px] font-semibold text-secondary hover:underline"
+                >
+                  Tandai semua dibaca
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={() => setOpen(false)}
+                aria-label="Tutup"
+                className="text-on-surface-variant hover:text-on-surface"
+              >
+                <span className="material-symbols-outlined text-[18px]">close</span>
+              </button>
+            </div>
           </div>
 
           {tasks.length === 0 ? (
@@ -157,9 +202,12 @@ export default function NotificationBell() {
             <ul className="mt-3 max-h-64 space-y-2 overflow-y-auto">
               {tasks.slice(0, 8).map((task) => (
                 <li key={task.id}>
-                  <button type="button" onClick={() => { window.location.assign(task.href); setOpen(false); }} className="w-full rounded-lg bg-surface px-3 py-2 text-left hover:bg-surface-variant">
-                    <span className="block text-xs font-bold text-on-surface">{task.title}</span>
-                    <span className="mt-1 block truncate text-[11px] text-on-surface-variant">{task.detail}</span>
+                  <button type="button" onClick={() => { markAsRead(task.id); window.location.assign(task.href); setOpen(false); }} className="w-full rounded-lg bg-surface px-3 py-2 text-left hover:bg-surface-variant flex items-start gap-2">
+                    {!readIds.has(task.id) && <span className="mt-1.5 size-2 shrink-0 rounded-full bg-secondary" />}
+                    <span className="min-w-0 flex-1">
+                      <span className="block text-xs font-bold text-on-surface">{task.title}</span>
+                      <span className="mt-1 block truncate text-[11px] text-on-surface-variant">{task.detail}</span>
+                    </span>
                   </button>
                 </li>
               ))}

@@ -6,7 +6,6 @@ import { useLanguage } from "@/frontend/shared/i18n/LanguageProvider";
 
 interface CustomSidebarContent {
   steps: string[];
-  capacities: { label: string; value: string }[];
 }
 
 export default function RequestSidebar({
@@ -32,37 +31,20 @@ export default function RequestSidebar({
 }) {
   const { language } = useLanguage();
   const loadContent = useCallback(async (): Promise<CustomSidebarContent> => {
-    const [stepsContent, capacityContent] = await Promise.all([
-      contentApi.getSiteContent("custom_steps"),
-      contentApi.getSiteContent("custom_capacities"),
-    ]);
+    const stepsContent = await contentApi.getSiteContent("custom_steps");
 
     const stepsValue = stepsContent.value.id && typeof stepsContent.value.id === "object"
       ? (stepsContent.value[language] as typeof stepsContent.value | undefined) ?? stepsContent.value.id as typeof stepsContent.value
       : stepsContent.value;
-    const capacitiesValue = capacityContent.value.id && typeof capacityContent.value.id === "object"
-      ? (capacityContent.value[language] as typeof capacityContent.value | undefined) ?? capacityContent.value.id as typeof capacityContent.value
-      : capacityContent.value;
     const steps = stepsValue.steps;
-    const capacities = capacitiesValue.capacities;
 
     return {
       steps: Array.isArray(steps) ? steps.filter((step): step is string => typeof step === "string") : [],
-      capacities: Array.isArray(capacities)
-        ? capacities.filter((item): item is { label: string; value: string } =>
-            typeof item === "object" &&
-            item !== null &&
-            "label" in item &&
-            "value" in item &&
-            typeof item.label === "string" &&
-            typeof item.value === "string",
-          )
-        : [],
     };
   }, [language]);
   const { data: content, loading, error } = usePollingResource<CustomSidebarContent>(
     loadContent,
-    { steps: [], capacities: [] },
+    { steps: [] },
   );
 
   const checklist: [boolean, string][] = [
@@ -126,19 +108,6 @@ export default function RequestSidebar({
 
           {checking ? "Mengirim..." : "Kirim Request via WA"}
         </button>
-      </section>
-
-      <section className={styles.panel}>
-        <p className="text-[11px] font-bold text-on-surface/40 uppercase tracking-widest mb-3">
-          Kapasitas Produksi
-        </p>
-
-        {content.capacities.map(({ label, value }) => (
-          <div key={label} className="flex justify-between text-[12px] mb-2">
-            <span className="text-on-surface/40">{label}</span>
-            <span className="text-on-surface/80">{value}</span>
-          </div>
-        ))}
       </section>
     </aside>
   );
