@@ -56,7 +56,7 @@ export function ItemFormModal({
     color: item?.color ?? "",
     rackGroup: item?.rackGroup ?? "",
     subRow: item?.subRow ?? "",
-    unit: item?.unit ?? "pcs",
+    unit: item?.unit ?? "",
     materialKind: item?.materialKind ?? "unit",
     lengthPerUnit: item?.lengthPerUnit != null ? String(item.lengthPerUnit) : "",
     widthPerUnit: item?.widthPerUnit != null ? String(item.widthPerUnit) : "",
@@ -67,7 +67,7 @@ export function ItemFormModal({
 
   const isMaterial = form.materialKind !== "unit";
   const isEditing = item !== null;
-  const isFormValid = Boolean(form.categoryId && form.itemName.trim());
+  const isFormValid = Boolean(form.categoryId && form.itemName.trim() && form.unit.trim());
   const isButtonDisabled = saving || cooldown || !isFormValid;
 
   function set<K extends keyof ItemForm>(key: K, value: ItemForm[K]) {
@@ -78,6 +78,7 @@ export function ItemFormModal({
     const next: Partial<Record<keyof ItemForm, string>> = {};
     if (!form.categoryId) next.categoryId = "Kategori wajib dipilih";
     if (!form.itemName.trim()) next.itemName = "Nama barang wajib diisi";
+    if (!form.unit.trim()) next.unit = "Satuan wajib diisi";
     setErrors(next);
     return Object.keys(next).length === 0;
   }
@@ -100,7 +101,7 @@ export function ItemFormModal({
         color: form.color.trim(),
         rackGroup: form.rackGroup.trim(),
         subRow: form.subRow.trim(),
-        unit: form.unit.trim() || "pcs",
+        unit: form.unit.trim(),
         materialKind: form.materialKind,
         lengthPerUnit: toNumberOrNull(form.lengthPerUnit),
         widthPerUnit: toNumberOrNull(form.widthPerUnit),
@@ -218,13 +219,16 @@ export function ItemFormModal({
               />
             </div>
             <div>
-              <label className={s.formLabel}>Satuan</label>
+              <label className={s.formLabel}>
+                Satuan <span className={s.required}>*</span>
+              </label>
               <input
                 className={s.formInput}
                 placeholder="pcs / m / kg"
                 value={form.unit}
                 onChange={(event) => set("unit", event.target.value)}
               />
+              {errors.unit && <p className={s.formError}>{errors.unit}</p>}
             </div>
           </div>
 
