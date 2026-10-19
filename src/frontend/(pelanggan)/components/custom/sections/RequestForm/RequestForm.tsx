@@ -33,10 +33,13 @@ export default function RequestForm({
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [activeSearchItemId, setActiveSearchItemId] = useState<string | null>(null);
+  const [confirmedItems, setConfirmedItems] = useState<Set<string>>(new Set());
+  const [searchSearched, setSearchSearched] = useState(false);
 
   useEffect(() => {
     if (searchQuery.length < 2) {
       setSearchResults([]);
+      setSearchSearched(false);
       return;
     }
     const timer = setTimeout(async () => {
@@ -45,13 +48,16 @@ export default function RequestForm({
         const data = await response.json();
         if (response.ok) {
           setSearchResults(data.data || []);
+          setSearchSearched(true);
         } else {
           console.error("API Error:", data);
           setSearchResults([]);
+          setSearchSearched(true);
         }
       } catch (err) {
         console.error("Fetch Error:", err);
         setSearchResults([]);
+        setSearchSearched(true);
       }
     }, 500);
     return () => clearTimeout(timer);
@@ -66,8 +72,25 @@ export default function RequestForm({
           : i
       ),
     });
+    setConfirmedItems(new Set([...confirmedItems, itemId]));
     setActiveSearchItemId(null);
     setSearchQuery("");
+    setSearchResults([]);
+    setSearchSearched(false);
+  };
+
+  const addCustomRequestItem = (itemId: string) => {
+    setForm({
+      ...form,
+      items: form.items.map((i) =>
+        i.id === itemId ? { ...i, inventoryItemId: undefined } : i
+      ),
+    });
+    setConfirmedItems(new Set([...confirmedItems, itemId]));
+    setActiveSearchItemId(null);
+    setSearchQuery("");
+    setSearchResults([]);
+    setSearchSearched(false);
   };
 
   const update = (key: keyof CustomRequestForm, value: string) => {
@@ -84,16 +107,35 @@ export default function RequestForm({
   const removeItem = (id: string) => {
     if (form.items.length === 1) return;
     setForm({ ...form, items: form.items.filter((item) => item.id !== id) });
+    const next = new Set(confirmedItems);
+    next.delete(id);
+    setConfirmedItems(next);
+  };
+
+  const startSearch = (itemId: string) => {
+    setActiveSearchItemId(itemId);
+    setSearchQuery("");
+    setSearchResults([]);
+    setSearchSearched(false);
+  };
+
+  const cancelSearch = () => {
+    setActiveSearchItemId(null);
+    setSearchQuery("");
+    setSearchResults([]);
+    setSearchSearched(false);
   };
 
   const addItem = () => {
+    const newId = `${formId}-item-added-${form.items.length + 1}`;
     setForm({
       ...form,
       items: [
         ...form.items,
-        { id: `${formId}-item-added-${form.items.length + 1}`, name: "", quantity: "1", unit: "pcs", technicalNote: "", inventoryItemId: undefined },
+        { id: newId, name: "", quantity: "1", unit: "pcs", technicalNote: "", inventoryItemId: undefined },
       ],
     });
+    setConfirmedItems(new Set([...confirmedItems, newId]));
   };
 
   return (
@@ -200,44 +242,61 @@ export default function RequestForm({
                 </button>
               </div>
 
-              {activeSearchItemId === item.id ? (
-                <div className="mb-4 rounded-xl border border-secondary/30 bg-surface-variant p-3 space-y-2">
-                  <div className="flex items-center gap-2">
-                    <Search size={16} className="text-secondary" />
-                    <input className={`${styles.field} flex-1`} placeholder="Ketik nama barang..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
-                    <button onClick={() => { setActiveSearchItemId(null); setSearchQuery(""); }}><X size={18} className="text-on-surface-variant" /></button>
-                  </div>
-                  {searchResults.map(result => (
-                    <button key={result.id} onClick={() => selectItem(item.id, result)} className="w-full text-left rounded-lg bg-surface p-2 text-xs hover:bg-secondary/10">
-                      {result.itemName} ({result.brand})
-                    </button>
-                  ))}
-                  {searchResults.length === 0 && <p className="text-xs text-center text-on-surface-variant py-2">Barang tidak ditemukan.</p>}
-                </div>
-              ) : (
-                <button type="button" onClick={() => setActiveSearchItemId(item.id)} className="mb-3 w-full inline-flex items-center justify-center gap-1.5 rounded-lg border border-secondary/30 bg-secondary/10 px-3 py-2 text-[10px] font-bold text-secondary transition-colors hover:bg-secondary/20">
-                  <Search size={13} /> {item.inventoryItemId ? "Ganti Barang dari Gudang" : "Cari Barang dari Gudang"}
-                </button>
-              )}
+               {activeSearchItemId === item.id ? (
+                 <div className="mb-4 rounded-xl border border-secondary/30 bg-surface-variant p-3 space-y-2">
+                   <div className="flex items-center gap-2">
+                     <Search size={16} className="text-secondary" />
+                     <input className={`${styles.field} flex-1`} placeholder="Ketik nama barang..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
+                     <button onClick={cancelSearch}><X size={18} className="text-on-surface-variant" /></button>
+                   </div>
+                   {searchResults.map(result => (
+                     <button key={result.id} onClick={() => selectItem(item.id, result)} className="w-full text-left rounded-lg bg-surface p-2 text-xs hover:bg-secondary/10">
+                       {result.itemName} ({result.brand})
+                     </button>
+                   ))}
+                   {searchQuery.length >= 2 && searchSearched && searchResults.length === 0 && (
+                     <div className="mt-2 text-center">
+                       <p className="text-xs text-on-surface-variant py-1">Barang tidak ditemukan.</p>
+                       <button type="button" onClick={() => addCustomRequestItem(item.id)} className="mt-1 inline-flex items-center justify-center gap-1.5 rounded-lg border border-secondary/30 bg-secondary/10 px-3 py-2 text-[10px] font-bold text-secondary hover:bg-secondary/20">
+                         <Plus size={13} /> Tambah Request Barang
+                       </button>
+                     </div>
+                   )}
+                 </div>
+               ) : !confirmedItems.has(item.id) && !item.inventoryItemId && !item.name ? (
+                 <button type="button" onClick={() => startSearch(item.id)} className="mb-3 w-full inline-flex items-center justify-center gap-1.5 rounded-lg border border-secondary/30 bg-secondary/10 px-3 py-2 text-[10px] font-bold text-secondary transition-colors hover:bg-secondary/20">
+                   <Search size={13} /> Cari Barang dari Gudang
+                 </button>
+               ) : (
+                 <button type="button" onClick={() => startSearch(item.id)} className="mb-3 w-full inline-flex items-center justify-center gap-1.5 rounded-lg border border-secondary/30 bg-secondary/10 px-3 py-2 text-[10px] font-bold text-secondary transition-colors hover:bg-secondary/20">
+                   <Search size={13} /> {item.inventoryItemId ? "Ganti Barang dari Gudang" : "Ganti Barang"}
+                 </button>
+               )}
 
-              <div className="grid grid-cols-1 gap-3 md:grid-cols-[minmax(0,1.5fr)_110px_120px]">
-                <label className="space-y-1.5 block">
-                  <span className={styles.label}>Nama Item <span className="text-secondary">*</span></span>
-                  <input className={styles.field} placeholder="cth. Curtain Wall Aluminium" value={item.name} onChange={(event) => updateItem(item.id, "name", event.target.value)} />
-                </label>
-                <label className="space-y-1.5 block">
-                  <span className={styles.label}>Kuantitas <span className="text-secondary">*</span></span>
-                  <input type="number" min="1" className={styles.field} value={item.quantity} onChange={(event) => updateItem(item.id, "quantity", event.target.value)} />
-                </label>
-                <label className="space-y-1.5 block">
-                  <span className={styles.label}>Satuan</span>
-                  <input className={styles.field} placeholder="pcs / m²" value={item.unit} onChange={(event) => updateItem(item.id, "unit", event.target.value)} />
-                </label>
-              </div>
-              <label className="mt-3 space-y-1.5 block">
-                <span className={styles.label}>Catatan Teknis</span>
-                <textarea rows={2} className={`${styles.field} resize-none`} placeholder="Tambahkan finish, material, atau spesifikasi khusus..." value={item.technicalNote} onChange={(event) => updateItem(item.id, "technicalNote", event.target.value)} />
-              </label>
+              {confirmedItems.has(item.id) || item.inventoryItemId || item.name ? (
+                <>
+                  <div className="grid grid-cols-1 gap-3 md:grid-cols-[minmax(0,1.5fr)_110px_120px]">
+                    <label className="space-y-1.5 block">
+                      <span className={styles.label}>Nama Item <span className="text-secondary">*</span></span>
+                      <input className={styles.field} placeholder="cth. Curtain Wall Aluminium" value={item.name} onChange={(event) => updateItem(item.id, "name", event.target.value)} />
+                    </label>
+                    <label className="space-y-1.5 block">
+                      <span className={styles.label}>Kuantitas <span className="text-secondary">*</span></span>
+                      <input type="number" min="1" className={styles.field} value={item.quantity} onChange={(event) => updateItem(item.id, "quantity", event.target.value)} />
+                    </label>
+                    <label className="space-y-1.5 block">
+                      <span className={styles.label}>Satuan</span>
+                      <input className={styles.field} placeholder="pcs / m²" value={item.unit} onChange={(event) => updateItem(item.id, "unit", event.target.value)} />
+                    </label>
+                  </div>
+                  <label className="mt-3 space-y-1.5 block">
+                    <span className={styles.label}>Catatan Teknis</span>
+                    <textarea rows={2} className={`${styles.field} resize-none`} placeholder="Tambahkan finish, material, atau spesifikasi khusus..." value={item.technicalNote} onChange={(event) => updateItem(item.id, "technicalNote", event.target.value)} />
+                  </label>
+                </>
+              ) : (
+                <p className="text-[11px] text-on-surface-variant">Cari barang dari gudang atau tambahkan sebagai request barang baru.</p>
+              )}
             </div>
           ))}
         </div>

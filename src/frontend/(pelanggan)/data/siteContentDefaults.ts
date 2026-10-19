@@ -89,10 +89,3 @@ export const customStepsDefaults = [
   "Penawaran Harga",
   "Produksi",
 ];
-
-export const customCapacitiesDefaults = [
-  { label: "Min. Order", value: "1 unit" },
-  { label: "Lead Time", value: "3–14 hari kerja" },
-  { label: "Toleransi", value: "±0.1 mm" },
-  { label: "Finishing", value: "Anodizing / Powder Coat" },
-];
