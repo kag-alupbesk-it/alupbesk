@@ -302,6 +302,7 @@ export function CreateOrderForm() {
                 <h3 className="font-headline text-base font-bold text-on-surface">Informasi Order</h3>
                 <p className="mt-1 text-[10px] text-on-surface-variant">Identitas order dan komunikasi internal dengan kontraktor.</p>
               </div>
+            </div>
             <div className="mt-5 grid grid-cols-1 gap-5 md:grid-cols-2">
               <div>
                 <label htmlFor="contractor-name" className={labelClass}>Nama Kontraktor <span className="text-secondary">*</span></label>

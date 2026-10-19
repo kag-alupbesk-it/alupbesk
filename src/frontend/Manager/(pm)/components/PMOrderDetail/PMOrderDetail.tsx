@@ -3,6 +3,7 @@
 import Link from "next/link";
 import {
   ArrowLeft,
+  Building2,
   CalendarDays,
   Check,
   CheckCircle2,
@@ -10,6 +11,7 @@ import {
   Factory,
   FileImage,
   FileText,
+  MapPin,
   MessageSquareText,
   PackageCheck,
   Play,
