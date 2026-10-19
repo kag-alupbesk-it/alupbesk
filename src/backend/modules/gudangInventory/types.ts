@@ -146,7 +146,8 @@ export type GudangInventoryErrorCode =
   | "INSUFFICIENT_STOCK"
   | "DUPLICATE_MODEL"
   | "LOT_NOT_FOUND"
-  | "INSUFFICIENT_LOT";
+  | "INSUFFICIENT_LOT"
+  | "MATERIAL_KIND_LOCKED";
 
 export type GudangInventoryResult<T> =
   | { ok: true; data: T }

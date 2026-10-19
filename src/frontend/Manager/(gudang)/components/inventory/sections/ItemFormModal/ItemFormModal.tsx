@@ -66,6 +66,7 @@ export function ItemFormModal({
   const [cooldown, setCooldown] = useState(false);
 
   const isMaterial = form.materialKind !== "unit";
+  const isEditing = item !== null;
   const isFormValid = Boolean(form.categoryId && form.itemName.trim());
   const isButtonDisabled = saving || cooldown || !isFormValid;
 
@@ -232,6 +233,7 @@ export function ItemFormModal({
             <select
               className={s.formInput}
               value={form.materialKind}
+              disabled={isEditing}
               onChange={(event) => set("materialKind", event.target.value as MaterialKind)}
             >
               {MATERIAL_KINDS.map((kind) => (
@@ -240,6 +242,11 @@ export function ItemFormModal({
                 </option>
               ))}
             </select>
+            {isEditing && (
+              <p className={s.formHint}>
+                Jenis bahan tidak dapat diubah setelah barang dibuat.
+              </p>
+            )}
           </div>
 
           {isMaterial && (

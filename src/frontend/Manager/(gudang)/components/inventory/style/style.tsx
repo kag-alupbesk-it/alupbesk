@@ -98,6 +98,7 @@ export const required = "text-error";
 export const formInput =
   "w-full rounded-lg border border-outline/30 bg-surface-variant px-3 py-2.5 text-sm text-on-surface placeholder:text-on-surface-variant/40 focus:border-secondary focus:ring-1 focus:ring-secondary outline-none transition-all";
 export const formError = "text-error text-[10px] mt-1";
+export const formHint = "text-on-surface-variant text-[10px] mt-1";
 export const formGrid = "grid grid-cols-1 sm:grid-cols-2 gap-3";
 export const itemDetailBox = "rounded-lg border border-outline/30 bg-surface-variant/40 p-3";
 export const itemDetailGrid = "grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1.5";
