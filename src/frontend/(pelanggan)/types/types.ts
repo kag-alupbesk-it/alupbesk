@@ -7,6 +7,9 @@ export interface CustomRequestFormItem {
   name: string;
   quantity: string;
   unit: string;
+  panjang: string;
+  lebar: string;
+  unitDimensi: string;
   technicalNote: string;
   inventoryItemId?: string;
 }
@@ -34,5 +37,17 @@ export const emptyCustomRequestForm: CustomRequestForm = {
   layanan: "",
   deskripsi: "",
   deadline: "",
-  items: [{ id: "item-1", name: "", quantity: "1", unit: "pcs", technicalNote: "", inventoryItemId: undefined }],
+  items: [
+    {
+      id: "item-1",
+      name: "",
+      quantity: "1",
+      unit: "pcs",
+      panjang: "",
+      lebar: "",
+      unitDimensi: "cm",
+      technicalNote: "",
+      inventoryItemId: undefined,
+    },
+  ],
 };

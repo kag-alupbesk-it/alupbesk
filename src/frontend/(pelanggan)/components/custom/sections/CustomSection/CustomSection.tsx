@@ -4,7 +4,7 @@ import { useState, type ChangeEvent, type DragEvent } from "react";
 import Link from "next/link";
 
 import { customStyles as styles } from "../../style/style";
-import { emptyCustomRequestForm } from "@/frontend/(pelanggan)/types/types";
+import { emptyCustomRequestForm, type CustomRequestFormItem } from "@/frontend/(pelanggan)/types/types";
 
 import ServiceSelector from "../ServiceSelector/ServiceSelector";
 import RequestForm, { type CustomImageUploadState } from "../RequestForm/RequestForm";
@@ -18,6 +18,18 @@ import { buildCustomRequestMessage } from "@/frontend/shared/customRequests/mess
 
 const maxFileSize = 5 * 1024 * 1024;
 const acceptedFileTypes = new Set(["image/png", "image/jpeg", "image/webp", "application/pdf"]);
+
+// Ukuran (panjang x lebar) digabung ke catatan item agar ikut tersimpan & terkirim ke WhatsApp.
+function gabungCatatanItem(item: CustomRequestFormItem): string {
+  const panjang = item.panjang.trim();
+  const lebar = item.lebar.trim();
+  const bagian: string[] = [];
+  if (panjang || lebar) {
+    bagian.push(`Ukuran: ${panjang || "-"} x ${lebar || "-"} ${item.unitDimensi || "cm"}`);
+  }
+  if (item.technicalNote.trim()) bagian.push(item.technicalNote.trim());
+  return bagian.join(" | ");
+}
 
 export default function CustomSection() {
   const [form, setForm] = useState(emptyCustomRequestForm);
@@ -152,7 +164,7 @@ export default function CustomSection() {
         name: item.name.trim(),
         quantity: Math.max(1, Math.floor(Number(item.quantity))),
         unit: item.unit.trim() || "pcs",
-        technicalNote: item.technicalNote.trim(),
+        technicalNote: gabungCatatanItem(item),
       }));
 
       const created = await customApi.createRequest({
