@@ -70,6 +70,13 @@ function todayIso(): string {
   return new Date().toISOString().slice(0, 10);
 }
 
+const KIND_TO_UNIT: Record<MaterialKind, string> = {
+  unit: "pcs",
+  bar: "batang",
+  sheet: "lembar",
+  roll: "roll",
+};
+
 export function TransactionModal({
   mode,
   newItem = false,
@@ -108,7 +115,7 @@ export function TransactionModal({
   }
 
   function setMaterialKind(value: MaterialKind) {
-    setForm((prev) => ({ ...prev, materialKind: value }));
+    setForm((prev) => ({ ...prev, materialKind: value, unit: KIND_TO_UNIT[value] }));
   }
 
   function addLot() {
