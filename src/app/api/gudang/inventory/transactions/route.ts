@@ -22,6 +22,8 @@ const itemDetailSchema = {
   color: z.string().optional(),
   rackGroup: z.string().optional(),
   subRow: z.string().optional(),
+  unit: z.string().optional(),
+  materialKind: z.enum(["unit", "bar", "sheet", "roll"]).optional(),
 };
 
 interface ItemReference {
@@ -70,6 +72,8 @@ function resolveItemId(input: ItemReference & {
   color?: string;
   rackGroup?: string;
   subRow?: string;
+  unit?: string;
+  materialKind?: "unit" | "bar" | "sheet" | "roll";
 }): ResolvedItem {
   if (input.itemId) {
     return getInventoryItemById(input.itemId)
@@ -84,6 +88,8 @@ function resolveItemId(input: ItemReference & {
     color: input.color,
     rackGroup: input.rackGroup,
     subRow: input.subRow,
+    unit: input.unit,
+    materialKind: input.materialKind,
   });
   return resolved.ok ? { ok: true, id: resolved.data.id } : { ok: false, code: resolved.code };
 }

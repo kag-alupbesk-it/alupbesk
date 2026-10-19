@@ -16,13 +16,12 @@ import type {
   InventoryOutInput,
   InventoryExportType,
 } from "@/services/api/gudangInventory";
-import { MasterStokTab } from "../MasterStokTab/MasterStokTab";
+import { MasterStokTab, LOW_STOCK_THRESHOLD } from "../MasterStokTab/MasterStokTab";
 import { MaterialLotsTab } from "../MaterialLotsTab/MaterialLotsTab";
 import { TransactionsTab } from "../TransactionsTab/TransactionsTab";
 import { ProductionRequestsTab } from "../ProductionRequestsTab/ProductionRequestsTab";
 import { ItemFormModal } from "../ItemFormModal/ItemFormModal";
 import { LotFormModal } from "../LotFormModal/LotFormModal";
-import { QuickReceiveModal } from "../QuickReceiveModal/QuickReceiveModal";
 import { TransactionModal, type TransactionFormResult } from "../TransactionModal/TransactionModal";
 import { CategoryModal } from "../CategoryModal/CategoryModal";
 import { ConfirmModal } from "../ConfirmModal/ConfirmModal";
@@ -65,13 +64,13 @@ export function InventorySection() {
   const [busy, setBusy] = useState(false);
 
   const [showItemForm, setShowItemForm] = useState(false);
-  const [showQuickReceive, setShowQuickReceive] = useState(false);
   const [editItem, setEditItem] = useState<GudangInventoryItem | null>(null);
   const [showLotForm, setShowLotForm] = useState(false);
   const [editLot, setEditLot] = useState<GudangMaterialLotView | null>(null);
   const [deleteLotTarget, setDeleteLotTarget] = useState<GudangMaterialLotView | null>(null);
   const [showCategory, setShowCategory] = useState(false);
   const [transactionMode, setTransactionMode] = useState<"in" | "out" | null>(null);
+  const [transactionNewItem, setTransactionNewItem] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<GudangInventoryItem | null>(null);
   const importInputRef = useRef<HTMLInputElement>(null);
 
@@ -95,6 +94,16 @@ export function InventorySection() {
     () => data.items.reduce((sum, item) => sum + item.currentStock, 0),
     [data.items],
   );
+
+  const lowStockItems = useMemo(
+    () => data.items.filter((item) => item.currentStock <= LOW_STOCK_THRESHOLD),
+    [data.items],
+  );
+
+  function openTransaction(mode: "in" | "out", newItem = false) {
+    setTransactionNewItem(newItem);
+    setTransactionMode(mode);
+  }
 
   function reportError(reason: unknown, fallback: string) {
     setNotice("");
@@ -148,6 +157,7 @@ export function InventorySection() {
         setNotice("Barang keluar berhasil dicatat.");
       }
       setTransactionMode(null);
+      setTransactionNewItem(false);
     }, "Transaksi gagal disimpan.");
   }
 
@@ -263,10 +273,6 @@ export function InventorySection() {
           <div className={s.headerActions}>
              {!readOnly && (
               <>
-                <button className={s.ghostButton} onClick={() => setShowQuickReceive(true)} disabled={busy}>
-                  <span className={s.buttonIcon}>add_box</span>
-                  Penerimaan Cepat
-                </button>
                 <button className={s.ghostButton} onClick={() => setShowCategory(true)} disabled={busy}>
                   <span className={s.buttonIcon}>category</span>
                   Kategori
@@ -310,6 +316,22 @@ export function InventorySection() {
           />
         </div>
 
+        {lowStockItems.length > 0 && (
+          <button
+            type="button"
+            onClick={() => setTab("master")}
+            className="mb-4 flex w-full items-center gap-2 rounded-xl border border-orange-500/40 bg-orange-500/10 px-4 py-3 text-left transition-colors hover:bg-orange-500/20"
+          >
+            <span className="material-symbols-outlined text-orange-500">warning</span>
+            <span className="text-xs font-bold text-orange-600">
+              {lowStockItems.length} barang stok menipis (&le; {LOW_STOCK_THRESHOLD})
+            </span>
+            <span className="ml-auto text-[11px] font-semibold text-orange-500">
+              Lihat di Master Stok &rarr;
+            </span>
+          </button>
+        )}
+
         {isOwnerInventoryPage && (
           <div className={s.tabs}>
             {NAV_ITEMS.map((item) => (
@@ -340,18 +362,12 @@ export function InventorySection() {
             onCategoryFilterChange={setCategoryFilter}
             readOnly={readOnly}
             busy={busy}
-            onAdd={() => {
-              setEditItem(null);
-              setShowItemForm(true);
-            }}
             onCreateCategory={() => setShowCategory(true)}
             onEdit={(item) => {
               setEditItem(item);
               setShowItemForm(true);
             }}
             onDelete={setDeleteTarget}
-            onRecordIn={() => setTransactionMode("in")}
-            onRecordOut={() => setTransactionMode("out")}
           />
         )}
 
@@ -383,7 +399,8 @@ export function InventorySection() {
             search={search}
             onSearchChange={setSearch}
             readOnly={readOnly}
-            onAdd={() => setTransactionMode("in")}
+            onAdd={() => openTransaction("in")}
+            onAddNew={() => openTransaction("in", true)}
           />
         )}
 
@@ -395,7 +412,7 @@ export function InventorySection() {
             search={search}
             onSearchChange={setSearch}
             readOnly={readOnly}
-            onAdd={() => setTransactionMode("out")}
+            onAdd={() => openTransaction("out")}
           />
         )}
 
@@ -426,17 +443,6 @@ export function InventorySection() {
         />
       )}
 
-      {showQuickReceive && (
-        <QuickReceiveModal
-          categories={data.categories}
-          onClose={() => setShowQuickReceive(false)}
-          onComplete={() => {
-            setShowQuickReceive(false);
-            refresh();
-          }}
-        />
-      )}
-
       {showLotForm && (
         <LotFormModal
           items={data.items}
@@ -453,11 +459,15 @@ export function InventorySection() {
       {transactionMode && (
         <TransactionModal
           mode={transactionMode}
+          newItem={transactionNewItem}
           items={data.items}
           categories={data.categories}
           categoryNames={categoryNames}
           saving={busy}
-          onClose={() => setTransactionMode(null)}
+          onClose={() => {
+            setTransactionMode(null);
+            setTransactionNewItem(false);
+          }}
           onSubmit={handleSaveTransaction}
         />
       )}

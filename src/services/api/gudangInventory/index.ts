@@ -31,6 +31,8 @@ export interface InventoryItemRef {
   color?: string;
   rackGroup?: string;
   subRow?: string;
+  unit?: string;
+  materialKind?: GudangInventoryItem["materialKind"];
 }
 
 export interface InventoryInInput extends InventoryItemRef {
