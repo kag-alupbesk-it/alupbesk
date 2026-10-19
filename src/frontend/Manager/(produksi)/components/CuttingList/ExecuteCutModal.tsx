@@ -8,6 +8,8 @@ import type {
   LeftoverStatus,
   PMCutList,
 } from "@/backend/modules/pm/cutting";
+import type { DimensionUnit } from "@/frontend/shared/units/dimensions";
+import { toCm } from "@/frontend/shared/units/dimensions";
 
 interface ExecuteCutModalProps {
   cutList: PMCutList;
@@ -23,6 +25,7 @@ interface DraftAllocation {
   lotId: string;
   quantity: string;
   lengthUsed: string;
+  unit: DimensionUnit;
   leftoverStatus: LeftoverStatus;
 }
 
@@ -36,6 +39,12 @@ const inputClass =
   "w-full rounded-lg border border-outline/30 bg-surface-variant px-3 py-2.5 text-sm text-on-surface outline-none transition-all focus:border-secondary focus:ring-1 focus:ring-secondary";
 const primaryButtonClass =
   "flex items-center justify-center gap-2 rounded-lg bg-secondary px-4 py-2.5 text-xs font-bold text-primary transition-all hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50";
+
+function dimensionToCm(value: string, unit: DimensionUnit): number | null {
+  if (value.trim() === "") return null;
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? toCm(parsed, unit) : null;
+}
 
 function remainingFor(cutList: PMCutList, itemId: string): number {
   const item = cutList.items.find((entry) => entry.id === itemId);
@@ -67,6 +76,7 @@ export function ExecuteCutModal({
           "",
         quantity: String(remainingFor(cutList, item.id)),
         lengthUsed: item.length != null ? String(item.length) : "",
+        unit: "cm",
         leftoverStatus: "reusable" as LeftoverStatus,
       })),
   );
@@ -87,6 +97,7 @@ export function ExecuteCutModal({
         lotId: "",
         quantity: "1",
         lengthUsed: "",
+        unit: "cm",
         leftoverStatus: "reusable",
       },
     ]);
@@ -114,7 +125,7 @@ export function ExecuteCutModal({
         cutListItemId: row.cutListItemId,
         lotId: row.lotId,
         quantity: Number(row.quantity),
-        lengthUsed: row.lengthUsed.trim() === "" ? null : Number(row.lengthUsed),
+        lengthUsed: dimensionToCm(row.lengthUsed, row.unit),
         leftoverStatus: row.leftoverStatus,
       });
     }
@@ -150,7 +161,7 @@ export function ExecuteCutModal({
             <div key={item.id} className="flex items-center justify-between gap-2 text-[11px]">
               <span className="text-on-surface">
                 {item.componentName}
-                {item.length != null ? ` · ${item.length} mm` : ""}
+                {item.length != null ? ` · ${item.length} cm` : ""}
               </span>
               <span className="font-bold text-on-surface-variant">
                 sisa {remainingFor(cutList, item.id)} / {item.quantity}
@@ -181,7 +192,9 @@ export function ExecuteCutModal({
             const item = itemById.get(row.cutListItemId);
             const lot = row.lotId ? lotById.get(row.lotId) : undefined;
             const lengthUsed =
-              row.lengthUsed.trim() === "" ? item?.length ?? null : Number(row.lengthUsed);
+              row.lengthUsed.trim() === ""
+                ? item?.length ?? null
+                : dimensionToCm(row.lengthUsed, row.unit);
             const leftover =
               lot?.length != null && lengthUsed != null && lot.length > lengthUsed
                 ? Math.round((lot.length - lengthUsed) * 100) / 100
@@ -204,7 +217,7 @@ export function ExecuteCutModal({
                     ))}
                   </select>
                   <select
-                    className={`${inputClass} sm:col-span-4`}
+                    className={`${inputClass} sm:col-span-3`}
                     value={row.lotId}
                     onChange={(event) => updateRow(row.key, { lotId: event.target.value })}
                   >
@@ -215,7 +228,7 @@ export function ExecuteCutModal({
                         <option key={option.id} value={option.id}>
                           {option.itemName}
                           {option.lotCode ? ` · ${option.lotCode}` : ""}
-                          {option.length != null ? ` · ${option.length}mm` : ""}
+                          {option.length != null ? ` · ${option.length} cm` : ""}
                           {` · sisa ${option.quantity}`}
                         </option>
                       ))}
@@ -234,10 +247,20 @@ export function ExecuteCutModal({
                     min={0}
                     step="0.01"
                     className={`${inputClass} sm:col-span-2`}
-                    placeholder="Pakai mm"
+                    placeholder="Pakai cm"
                     value={row.lengthUsed}
                     onChange={(event) => updateRow(row.key, { lengthUsed: event.target.value })}
                   />
+                  <select
+                    className={`${inputClass} sm:col-span-1`}
+                    value={row.unit}
+                    onChange={(event) =>
+                      updateRow(row.key, { unit: event.target.value as DimensionUnit })
+                    }
+                  >
+                    <option value="cm">cm</option>
+                    <option value="m">m</option>
+                  </select>
                   <button
                     type="button"
                     aria-label="Hapus alokasi"
@@ -253,7 +276,7 @@ export function ExecuteCutModal({
                     {lot
                       ? `Sisa lot ${lot.quantity} ${lot.unit}${lot.rackGroup ? ` · Rak ${lot.rackGroup}` : ""}`
                       : "Pilih lot bahan"}
-                    {leftover != null ? ` · sisa potong ${leftover} mm` : ""}
+                    {leftover != null ? ` · sisa potong ${leftover} cm` : ""}
                   </span>
                   <div className="flex items-center gap-3 text-[10px] font-semibold">
                     <label className="flex items-center gap-1 text-on-surface-variant">

@@ -9,6 +9,8 @@ import type {
   PMCutListItemInput,
   UpdateCutListInput,
 } from "@/backend/modules/pm/cutting";
+import type { DimensionUnit } from "@/frontend/shared/units/dimensions";
+import { toCm } from "@/frontend/shared/units/dimensions";
 
 interface SpkOption {
   id: string;
@@ -31,6 +33,7 @@ interface DraftItem {
   quantity: string;
   length: string;
   width: string;
+  unit: DimensionUnit;
   materialItemId: string;
   note: string;
 }
@@ -46,10 +49,10 @@ const inputClass =
 const primaryButtonClass =
   "flex items-center justify-center gap-2 rounded-lg bg-secondary px-4 py-2.5 text-xs font-bold text-primary transition-all hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50";
 
-function toNumberOrNull(value: string): number | null {
+function dimensionToCm(value: string, unit: DimensionUnit): number | null {
   if (value.trim() === "") return null;
   const parsed = Number(value);
-  return Number.isFinite(parsed) ? parsed : null;
+  return Number.isFinite(parsed) ? toCm(parsed, unit) : null;
 }
 
 export function CutListFormModal({
@@ -72,6 +75,7 @@ export function CutListFormModal({
           quantity: String(item.quantity),
           length: item.length != null ? String(item.length) : "",
           width: item.width != null ? String(item.width) : "",
+          unit: "cm",
           materialItemId: item.materialItemId ?? "",
           note: item.note,
         }))
@@ -82,6 +86,7 @@ export function CutListFormModal({
             quantity: "1",
             length: "",
             width: "",
+            unit: "cm",
             materialItemId: "",
             note: "",
           },
@@ -102,6 +107,7 @@ export function CutListFormModal({
         quantity: "1",
         length: "",
         width: "",
+        unit: "cm",
         materialItemId: "",
         note: "",
       },
@@ -126,8 +132,8 @@ export function CutListFormModal({
       .map((row) => ({
         componentName: row.componentName.trim(),
         quantity: Math.max(1, Math.floor(Number(row.quantity) || 1)),
-        length: toNumberOrNull(row.length),
-        width: toNumberOrNull(row.width),
+        length: dimensionToCm(row.length, row.unit),
+        width: dimensionToCm(row.width, row.unit),
         materialItemId: row.materialItemId || null,
         note: row.note.trim(),
       }));
@@ -236,7 +242,7 @@ export function CutListFormModal({
               >
                 <div className="grid grid-cols-1 gap-2 sm:grid-cols-12">
                   <input
-                    className={`${inputClass} sm:col-span-4`}
+                    className={`${inputClass} sm:col-span-3`}
                     placeholder="Nama komponen"
                     value={row.componentName}
                     onChange={(event) => updateRow(row.key, { componentName: event.target.value })}
@@ -254,7 +260,7 @@ export function CutListFormModal({
                     min={0}
                     step="0.01"
                     className={`${inputClass} sm:col-span-2`}
-                    placeholder="Panjang mm"
+                    placeholder="Panjang"
                     value={row.length}
                     onChange={(event) => updateRow(row.key, { length: event.target.value })}
                   />
@@ -263,16 +269,26 @@ export function CutListFormModal({
                     min={0}
                     step="0.01"
                     className={`${inputClass} sm:col-span-2`}
-                    placeholder="Lebar mm"
+                    placeholder="Lebar"
                     value={row.width}
                     onChange={(event) => updateRow(row.key, { width: event.target.value })}
                   />
+                  <select
+                    className={`${inputClass} sm:col-span-2`}
+                    value={row.unit}
+                    onChange={(event) =>
+                      updateRow(row.key, { unit: event.target.value as DimensionUnit })
+                    }
+                  >
+                    <option value="cm">cm</option>
+                    <option value="m">m</option>
+                  </select>
                   <button
                     type="button"
                     aria-label="Hapus item"
                     onClick={() => removeRow(row.key)}
                     disabled={items.length === 1}
-                    className="flex h-10 items-center justify-center rounded-lg text-on-surface-variant transition-colors hover:bg-red-400/10 hover:text-red-300 disabled:opacity-30 sm:col-span-2"
+                    className="flex h-10 items-center justify-center rounded-lg text-on-surface-variant transition-colors hover:bg-red-400/10 hover:text-red-300 disabled:opacity-30 sm:col-span-1"
                   >
                     <Trash2 size={15} />
                   </button>

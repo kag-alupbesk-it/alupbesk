@@ -7,6 +7,8 @@ import type {
   GudangInventoryItemInput,
   MaterialKind,
 } from "@/backend/modules/gudangInventory";
+import type { DimensionUnit } from "@/frontend/shared/units/dimensions";
+import { toCm } from "@/frontend/shared/units/dimensions";
 import * as s from "../../style/style";
 
 interface ItemFormModalProps {
@@ -30,6 +32,8 @@ interface ItemForm {
   materialKind: MaterialKind;
   lengthPerUnit: string;
   widthPerUnit: string;
+  panjangUnit: DimensionUnit;
+  lebarUnit: DimensionUnit;
   weightPerUnit: string;
 }
 
@@ -63,10 +67,12 @@ export function ItemFormModal({
     color: item?.color ?? "",
     rackGroup: item?.rackGroup ?? "",
     subRow: item?.subRow ?? "",
-    unit: item?.unit ?? "",
+    unit: item?.unit ?? KIND_TO_UNIT[item?.materialKind ?? "unit"],
     materialKind: item?.materialKind ?? "unit",
     lengthPerUnit: item?.lengthPerUnit != null ? String(item.lengthPerUnit) : "",
     widthPerUnit: item?.widthPerUnit != null ? String(item.widthPerUnit) : "",
+    panjangUnit: "cm",
+    lebarUnit: "cm",
     weightPerUnit: item?.weightPerUnit != null ? String(item.weightPerUnit) : "",
   }));
   const [errors, setErrors] = useState<Partial<Record<keyof ItemForm, string>>>({});
@@ -74,7 +80,7 @@ export function ItemFormModal({
 
   const isMaterial = form.materialKind !== "unit";
   const isEditing = item !== null;
-  const isFormValid = Boolean(form.categoryId && form.itemName.trim() && form.unit.trim());
+  const isFormValid = Boolean(form.categoryId && form.itemName.trim());
   const isButtonDisabled = saving || cooldown || !isFormValid;
 
   function set<K extends keyof ItemForm>(key: K, value: ItemForm[K]) {
@@ -91,7 +97,6 @@ export function ItemFormModal({
     const next: Partial<Record<keyof ItemForm, string>> = {};
     if (!form.categoryId) next.categoryId = "Kategori wajib dipilih";
     if (!form.itemName.trim()) next.itemName = "Nama barang wajib diisi";
-    if (!form.unit.trim()) next.unit = "Satuan wajib diisi";
     setErrors(next);
     return Object.keys(next).length === 0;
   }
@@ -100,6 +105,12 @@ export function ItemFormModal({
     if (value.trim() === "") return null;
     const parsed = Number(value);
     return Number.isFinite(parsed) ? parsed : null;
+  }
+
+  function dimensionToCm(value: string, unit: DimensionUnit): number | null {
+    if (value.trim() === "") return null;
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? toCm(parsed, unit) : null;
   }
 
   async function handleSave() {
@@ -116,8 +127,8 @@ export function ItemFormModal({
         subRow: form.subRow.trim(),
         unit: form.unit.trim(),
         materialKind: form.materialKind,
-        lengthPerUnit: toNumberOrNull(form.lengthPerUnit),
-        widthPerUnit: toNumberOrNull(form.widthPerUnit),
+        lengthPerUnit: dimensionToCm(form.lengthPerUnit, form.panjangUnit),
+        widthPerUnit: dimensionToCm(form.widthPerUnit, form.lebarUnit),
         weightPerUnit: toNumberOrNull(form.weightPerUnit),
       });
     } finally {
@@ -232,63 +243,70 @@ export function ItemFormModal({
               />
             </div>
             <div>
-              <label className={s.formLabel}>
-                Satuan <span className={s.required}>*</span>
-              </label>
-              <input
+              <label className={s.formLabel}>Jenis Bahan</label>
+              <select
                 className={s.formInput}
-                placeholder="pcs / m / kg"
-                value={form.unit}
-                onChange={(event) => set("unit", event.target.value)}
-              />
-              {errors.unit && <p className={s.formError}>{errors.unit}</p>}
+                value={form.materialKind}
+                disabled={isEditing}
+                onChange={(event) => set("materialKind", event.target.value as MaterialKind)}
+              >
+                {MATERIAL_KINDS.map((kind) => (
+                  <option key={kind.value} value={kind.value}>
+                    {kind.label}
+                  </option>
+                ))}
+              </select>
+              {isEditing && (
+                <p className={s.formHint}>
+                  Jenis bahan tidak dapat diubah setelah barang dibuat.
+                </p>
+              )}
             </div>
-          </div>
-
-          <div>
-            <label className={s.formLabel}>Jenis Bahan</label>
-            <select
-              className={s.formInput}
-              value={form.materialKind}
-              disabled={isEditing}
-              onChange={(event) => set("materialKind", event.target.value as MaterialKind)}
-            >
-              {MATERIAL_KINDS.map((kind) => (
-                <option key={kind.value} value={kind.value}>
-                  {kind.label}
-                </option>
-              ))}
-            </select>
-            {isEditing && (
-              <p className={s.formHint}>
-                Jenis bahan tidak dapat diubah setelah barang dibuat.
-              </p>
-            )}
           </div>
 
           {isMaterial && (
             <div className={s.formGrid}>
               <div>
-                <label className={s.formLabel}>Panjang Acuan (mm)</label>
-                <input
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  className={s.formInput}
-                  value={form.lengthPerUnit}
-                  onChange={(event) => set("lengthPerUnit", event.target.value)}
-                />
+                <label className={s.formLabel}>Panjang Acuan</label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    className={s.formInput}
+                    value={form.lengthPerUnit}
+                    onChange={(event) => set("lengthPerUnit", event.target.value)}
+                  />
+                  <select
+                    className={s.formInput}
+                    value={form.panjangUnit}
+                    onChange={(event) => set("panjangUnit", event.target.value as DimensionUnit)}
+                  >
+                    <option value="cm">cm</option>
+                    <option value="m">m</option>
+                  </select>
+                </div>
               </div>
               <div>
-                <label className={s.formLabel}>Lebar Acuan (mm)</label>
-                <input
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  className={s.formInput}
-                  value={form.widthPerUnit}
-                  onChange={(event) => set("widthPerUnit", event.target.value)}
-                />
+                <label className={s.formLabel}>Lebar Acuan</label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    className={s.formInput}
+                    value={form.widthPerUnit}
+                    onChange={(event) => set("widthPerUnit", event.target.value)}
+                  />
+                  <select
+                    className={s.formInput}
+                    value={form.lebarUnit}
+                    onChange={(event) => set("lebarUnit", event.target.value as DimensionUnit)}
+                  >
+                    <option value="cm">cm</option>
+                    <option value="m">m</option>
+                  </select>
+                </div>
               </div>
             </div>
           )}

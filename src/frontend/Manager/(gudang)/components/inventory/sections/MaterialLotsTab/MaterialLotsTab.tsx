@@ -90,7 +90,7 @@ export function MaterialLotsTab({
               <th className={s.th}>Barang</th>
               <th className={s.th}>Kode Lot</th>
               <th className={s.th}>Tgl Terima</th>
-              <th className={s.thRight}>Panjang (mm)</th>
+              <th className={s.thRight}>Panjang (cm)</th>
               <th className={s.thRight}>Jumlah</th>
               <th className={s.th}>Lokasi</th>
               <th className={s.th}>Status</th>
