@@ -4,8 +4,6 @@ import { persistInventoryItem } from "@/backend/modules/gudangInventory/items/st
 import { persistMaterialLot } from "@/backend/modules/gudangInventory/lots/store";
 import { flushWritesOrError } from "@/backend/http/flushWritesOrError";
 import { recordAuditForCurrentUser } from "@/backend/modules/audit/recordAudit";
-import { gudangInventoryItems } from "@/backend/modules/gudangInventory/items/store";
-import { gudangMaterialLots } from "@/backend/modules/gudangInventory/lots/store";
 
 export const quickReceiveSchema = z.object({
   itemId: z.string().optional(),
@@ -24,7 +22,7 @@ export const quickReceiveSchema = z.object({
     rackGroup: z.string().default(""),
     subRow: z.string().default(""),
     lotCode: z.string().optional(),
-  })),
+  })).default([]),
 });
 
 export async function POST(request: Request) {
