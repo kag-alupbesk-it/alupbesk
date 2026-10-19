@@ -26,7 +26,6 @@ interface ItemForm {
   color: string;
   rackGroup: string;
   subRow: string;
-  currentStock: string;
   unit: string;
   materialKind: MaterialKind;
   lengthPerUnit: string;
@@ -57,7 +56,6 @@ export function ItemFormModal({
     color: item?.color ?? "",
     rackGroup: item?.rackGroup ?? "",
     subRow: item?.subRow ?? "",
-    currentStock: String(item?.currentStock ?? 0),
     unit: item?.unit ?? "pcs",
     materialKind: item?.materialKind ?? "unit",
     lengthPerUnit: item?.lengthPerUnit != null ? String(item.lengthPerUnit) : "",
@@ -79,10 +77,6 @@ export function ItemFormModal({
     const next: Partial<Record<keyof ItemForm, string>> = {};
     if (!form.categoryId) next.categoryId = "Kategori wajib dipilih";
     if (!form.itemName.trim()) next.itemName = "Nama barang wajib diisi";
-    const stock = Number(form.currentStock);
-    if (form.currentStock === "" || !Number.isFinite(stock) || stock < 0) {
-      next.currentStock = "Stok minimal 0";
-    }
     setErrors(next);
     return Object.keys(next).length === 0;
   }
@@ -105,7 +99,6 @@ export function ItemFormModal({
         color: form.color.trim(),
         rackGroup: form.rackGroup.trim(),
         subRow: form.subRow.trim(),
-        currentStock: Number(form.currentStock),
         unit: form.unit.trim() || "pcs",
         materialKind: form.materialKind,
         lengthPerUnit: toNumberOrNull(form.lengthPerUnit),
@@ -127,7 +120,9 @@ export function ItemFormModal({
         <div className={s.modalHeader}>
           <div>
             <h2 className={s.modalTitle}>{item ? "Edit Barang" : "Tambah Barang"}</h2>
-            <p className={s.modalSubtitle}>Master stok gudang inventaris</p>
+            <p className={s.modalSubtitle}>
+              Detail barang. Stok diubah lewat Barang Masuk / Barang Keluar.
+            </p>
           </div>
           <button className={s.modalCloseButton} onClick={onClose}>
             <span className={s.closeIcon}>close</span>
@@ -222,21 +217,6 @@ export function ItemFormModal({
               />
             </div>
             <div>
-              <label className={s.formLabel}>Jumlah Stok</label>
-              <input
-                type="number"
-                min="0"
-                step="0.01"
-                className={s.formInput}
-                value={form.currentStock}
-                onChange={(event) => set("currentStock", event.target.value)}
-              />
-              {errors.currentStock && <p className={s.formError}>{errors.currentStock}</p>}
-            </div>
-          </div>
-
-          <div className={s.formGrid}>
-            <div>
               <label className={s.formLabel}>Satuan</label>
               <input
                 className={s.formInput}
@@ -245,20 +225,21 @@ export function ItemFormModal({
                 onChange={(event) => set("unit", event.target.value)}
               />
             </div>
-            <div>
-              <label className={s.formLabel}>Jenis Bahan</label>
-              <select
-                className={s.formInput}
-                value={form.materialKind}
-                onChange={(event) => set("materialKind", event.target.value as MaterialKind)}
-              >
-                {MATERIAL_KINDS.map((kind) => (
-                  <option key={kind.value} value={kind.value}>
-                    {kind.label}
-                  </option>
-                ))}
-              </select>
-            </div>
+          </div>
+
+          <div>
+            <label className={s.formLabel}>Jenis Bahan</label>
+            <select
+              className={s.formInput}
+              value={form.materialKind}
+              onChange={(event) => set("materialKind", event.target.value as MaterialKind)}
+            >
+              {MATERIAL_KINDS.map((kind) => (
+                <option key={kind.value} value={kind.value}>
+                  {kind.label}
+                </option>
+              ))}
+            </select>
           </div>
 
           {isMaterial && (

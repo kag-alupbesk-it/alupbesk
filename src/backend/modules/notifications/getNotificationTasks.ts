@@ -66,5 +66,11 @@ export async function getNotificationTasks(role: AppRole): Promise<NotificationT
     for (const row of data ?? []) tasks.push({ id: `delivery:${row.id}`, title: "Tugas pengiriman aktif", detail: `${row.contractor_name} · ${row.status}`, href: role === "owner" ? "/admin/owner/field" : role === "manager" ? "/admin/manager" : "/admin/field", createdAt: row.created_at });
   }
 
+  if (hasAnyRole(role, "gudang", "manager")) {
+    const { data, error } = await db.from("gudang_inventory_items").select("id, item_name, current_stock, updated_at").lte("current_stock", 15).gt("current_stock", 0).order("current_stock", { ascending: true }).limit(25);
+    if (error) throw error;
+    for (const row of data ?? []) tasks.push({ id: `low-stock:${row.id}`, title: "Stok barang menipis", detail: `${row.item_name} · sisa ${row.current_stock}`, href: "/admin/gudang", createdAt: row.updated_at });
+  }
+
   return tasks.sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt)).slice(0, 50);
 }

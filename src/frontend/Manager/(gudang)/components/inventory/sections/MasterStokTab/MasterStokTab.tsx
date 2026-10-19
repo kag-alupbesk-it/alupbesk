@@ -1,11 +1,15 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import type {
   GudangCategory,
   GudangInventoryItem,
 } from "@/backend/modules/gudangInventory";
 import * as s from "../../style/style";
+
+export const LOW_STOCK_THRESHOLD = 15;
+
+type StockFilter = "ALL" | "LOW" | "OUT";
 
 interface MasterStokTabProps {
   items: GudangInventoryItem[];
@@ -17,12 +21,9 @@ interface MasterStokTabProps {
   onCategoryFilterChange: (value: string) => void;
   readOnly: boolean;
   busy: boolean;
-  onAdd: () => void;
   onCreateCategory: () => void;
   onEdit: (item: GudangInventoryItem) => void;
   onDelete: (item: GudangInventoryItem) => void;
-  onRecordIn: () => void;
-  onRecordOut: () => void;
 }
 
 export function MasterStokTab({
@@ -35,26 +36,27 @@ export function MasterStokTab({
   onCategoryFilterChange,
   readOnly,
   busy,
-  onAdd,
   onCreateCategory,
   onEdit,
   onDelete,
-  onRecordIn,
-  onRecordOut,
 }: MasterStokTabProps) {
+  const [stockFilter, setStockFilter] = useState<StockFilter>("ALL");
+
   const filtered = useMemo(() => {
     const query = search.trim().toLowerCase();
     return items.filter((item) => {
       if (categoryFilter !== "ALL" && item.categoryId !== categoryFilter) {
         return false;
       }
+      if (stockFilter === "OUT" && item.currentStock > 0) return false;
+      if (stockFilter === "LOW" && item.currentStock > LOW_STOCK_THRESHOLD) return false;
       if (!query) return true;
       return [item.itemName, item.brand, item.modelNo, item.color, item.rackGroup, item.subRow]
         .join(" ")
         .toLowerCase()
         .includes(query);
     });
-  }, [items, search, categoryFilter]);
+  }, [items, search, categoryFilter, stockFilter]);
 
   return (
     <div className={s.tableCard}>
@@ -82,25 +84,21 @@ export function MasterStokTab({
               </option>
             ))}
           </select>
+          <span className={s.filterLabel}>Stok</span>
+          <select
+            className={s.filterSelect}
+            value={stockFilter}
+            onChange={(event) => setStockFilter(event.target.value as StockFilter)}
+          >
+            <option value="ALL">Semua</option>
+            <option value="LOW">Menipis (&le; {LOW_STOCK_THRESHOLD})</option>
+            <option value="OUT">Habis (0)</option>
+          </select>
           {!readOnly && (
-            <>
-              <button className={s.ghostButton} onClick={onCreateCategory} disabled={busy}>
-                <span className={s.buttonIcon}>category</span>
-                Kategori
-              </button>
-              <button className={s.ghostButton} onClick={onRecordIn} disabled={busy}>
-                <span className={s.buttonIcon}>move_to_inbox</span>
-                Masuk
-              </button>
-              <button className={s.ghostButton} onClick={onRecordOut} disabled={busy}>
-                <span className={s.buttonIcon}>outbox</span>
-                Keluar
-              </button>
-              <button className={s.primaryButton} onClick={onAdd} disabled={busy}>
-                <span className={s.buttonIcon}>add</span>
-                Tambah Barang
-              </button>
-            </>
+            <button className={s.ghostButton} onClick={onCreateCategory} disabled={busy}>
+              <span className={s.buttonIcon}>category</span>
+              Kategori
+            </button>
           )}
         </div>
       </div>
@@ -154,9 +152,28 @@ export function MasterStokTab({
                     <span className={s.subText}>{item.subRow || "-"}</span>
                   </td>
                   <td className={s.tdRight}>
-                    <span className={item.currentStock <= 0 ? s.stockLow : s.stockText}>
-                      {item.currentStock}
-                    </span>
+                    <div className="flex items-center justify-end gap-1.5">
+                      <span
+                        className={
+                          item.currentStock <= 0
+                            ? s.stockLow
+                            : item.currentStock <= LOW_STOCK_THRESHOLD
+                              ? "text-base font-bold text-orange-500"
+                              : s.stockText
+                        }
+                      >
+                        {item.currentStock}
+                      </span>
+                      {item.currentStock <= 0 ? (
+                        <span className="rounded bg-error/15 px-1.5 py-0.5 text-[9px] font-bold uppercase text-error">
+                          Habis
+                        </span>
+                      ) : item.currentStock <= LOW_STOCK_THRESHOLD ? (
+                        <span className="rounded bg-orange-500/15 px-1.5 py-0.5 text-[9px] font-bold uppercase text-orange-500">
+                          Menipis
+                        </span>
+                      ) : null}
+                    </div>
                   </td>
                   {!readOnly && (
                     <td className={s.tdRight}>

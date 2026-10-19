@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import type { GudangCategory, GudangInventoryItem } from "@/backend/modules/gudangInventory";
+import type { GudangCategory, GudangInventoryItem, MaterialKind } from "@/backend/modules/gudangInventory";
 import * as s from "../../style/style";
 
 export interface TransactionItemForm {
@@ -12,6 +12,8 @@ export interface TransactionItemForm {
   color: string;
   rackGroup: string;
   subRow: string;
+  unit?: string;
+  materialKind?: MaterialKind;
 }
 
 export interface TransactionFormResult {
@@ -25,6 +27,7 @@ export interface TransactionFormResult {
 
 interface TransactionModalProps {
   mode: "in" | "out";
+  newItem?: boolean;
   items: GudangInventoryItem[];
   categories: GudangCategory[];
   categoryNames: Map<string, string>;
@@ -46,6 +49,7 @@ function todayIso(): string {
 
 export function TransactionModal({
   mode,
+  newItem = false,
   items,
   categories,
   categoryNames,
@@ -62,6 +66,8 @@ export function TransactionModal({
     color: "",
     rackGroup: "",
     subRow: "",
+    unit: "pcs",
+    materialKind: "unit",
     quantity: "1",
     transactionDate: todayIso(),
     personInCharge: "",
@@ -71,7 +77,11 @@ export function TransactionModal({
   const [errors, setErrors] = useState<Partial<Record<keyof TransactionForm, string>>>({});
 
   function set<K extends keyof TransactionForm>(key: K, value: string) {
-    setForm((prev) => ({ ...prev, [key]: value }));
+    setForm((prev) => ({ ...prev, [key]: value }) as TransactionForm);
+  }
+
+  function setMaterialKind(value: MaterialKind) {
+    setForm((prev) => ({ ...prev, materialKind: value }));
   }
 
   function pickExisting(id: string) {
@@ -87,6 +97,8 @@ export function TransactionModal({
       color: item.color,
       rackGroup: item.rackGroup,
       subRow: item.subRow,
+      unit: item.unit,
+      materialKind: item.materialKind,
     }));
   }
 
@@ -139,6 +151,8 @@ export function TransactionModal({
         color: form.color.trim(),
         rackGroup: form.rackGroup.trim(),
         subRow: form.subRow.trim(),
+        unit: newItem ? form.unit?.trim() || "pcs" : undefined,
+        materialKind: newItem ? form.materialKind : undefined,
       },
       personInCharge: form.personInCharge.trim() || undefined,
       projectName: isOut ? form.projectName.trim() || undefined : undefined,
@@ -155,10 +169,14 @@ export function TransactionModal({
         <div className={s.modalHeader}>
           <div>
             <h2 className={s.modalTitle}>
-              {isOut ? "Catat Barang Keluar" : "Catat Barang Masuk"}
+              {newItem ? "Barang Baru" : isOut ? "Catat Barang Keluar" : "Catat Barang Masuk"}
             </h2>
             <p className={s.modalSubtitle}>
-              {isOut ? "Stok berkurang otomatis setelah disimpan" : "Stok bertambah otomatis setelah disimpan"}
+              {newItem
+                ? "Barang dibuat di Master Stok dan tercatat sebagai barang masuk"
+                : isOut
+                  ? "Stok berkurang otomatis setelah disimpan"
+                  : "Stok bertambah otomatis setelah disimpan"}
             </p>
           </div>
           <button className={s.modalCloseButton} onClick={onClose}>
@@ -167,7 +185,7 @@ export function TransactionModal({
         </div>
 
         <div className={s.formGroup}>
-          {items.length > 0 && (
+          {!newItem && items.length > 0 && (
             <div>
               <label className={s.formLabel}>Pilih Barang Terdaftar (opsional)</label>
               <select
@@ -282,6 +300,33 @@ export function TransactionModal({
               {errors.quantity && <p className={s.formError}>{errors.quantity}</p>}
             </div>
           </div>
+
+          {!matchedItem && (
+            <div className={s.formGrid}>
+              <div>
+                <label className={s.formLabel}>Satuan</label>
+                <input
+                  className={s.formInput}
+                  placeholder="Contoh: pcs, batang, lembar"
+                  value={form.unit}
+                  onChange={(event) => set("unit", event.target.value)}
+                />
+              </div>
+              <div>
+                <label className={s.formLabel}>Jenis Bahan</label>
+                <select
+                  className={s.formInput}
+                  value={form.materialKind}
+                  onChange={(event) => setMaterialKind(event.target.value as MaterialKind)}
+                >
+                  <option value="unit">Unit (pcs)</option>
+                  <option value="bar">Batang</option>
+                  <option value="sheet">Lembar</option>
+                  <option value="roll">Roll</option>
+                </select>
+              </div>
+            </div>
+          )}
 
 <div className={s.formGrid}>
             <div>

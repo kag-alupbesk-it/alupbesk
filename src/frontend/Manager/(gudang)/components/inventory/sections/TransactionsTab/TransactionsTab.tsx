@@ -15,6 +15,7 @@ interface TransactionsTabProps {
   onSearchChange: (value: string) => void;
   readOnly: boolean;
   onAdd: () => void;
+  onAddNew?: () => void;
 }
 
 function formatDate(value: string): string {
@@ -31,6 +32,7 @@ export function TransactionsTab({
   onSearchChange,
   readOnly,
   onAdd,
+  onAddNew,
 }: TransactionsTabProps) {
   const isOut = kind === "out";
 
@@ -71,10 +73,18 @@ export function TransactionsTab({
           />
         </div>
         {!readOnly && (
-          <button className={s.primaryButton} onClick={onAdd}>
-            <span className={s.buttonIcon}>{isOut ? "outbox" : "move_to_inbox"}</span>
-            {isOut ? "Catat Barang Keluar" : "Catat Barang Masuk"}
-          </button>
+          <div className="flex flex-wrap items-center gap-2">
+            {!isOut && onAddNew && (
+              <button className={s.ghostButton} onClick={onAddNew}>
+                <span className={s.buttonIcon}>add_box</span>
+                Barang Baru
+              </button>
+            )}
+            <button className={s.primaryButton} onClick={onAdd}>
+              <span className={s.buttonIcon}>{isOut ? "outbox" : "move_to_inbox"}</span>
+              {isOut ? "Catat Barang Keluar" : "Catat Barang Masuk"}
+            </button>
+          </div>
         )}
       </div>
 
