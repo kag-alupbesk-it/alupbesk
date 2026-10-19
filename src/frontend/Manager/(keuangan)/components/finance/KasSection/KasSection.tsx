@@ -12,6 +12,7 @@ import {
   JENIS_TRANSAKSI,
   KATEGORI_BIAYA,
   LABEL_JENIS_TRANSAKSI,
+  BANGUN_LEDGER,
   type JenisTransaksi,
   type KategoriBiaya,
   type TransaksiKas,
@@ -26,8 +27,6 @@ const IKON_JENIS: Record<JenisTransaksi, string> = {
   kas_keluar: "north_east",
   kas_beredar: "handshake",
 };
-const MAX_FILTER_DATE = new Date().toISOString().slice(0, 10);
-const MIN_FILTER_DATE = new Date(Date.now() - 5 * 365 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
 
 
 function badgeJenis(jenis: JenisTransaksi) {
@@ -37,13 +36,14 @@ function badgeJenis(jenis: JenisTransaksi) {
 }
 
 function FormKas() {
-  const { tambahTransaksi, opsiKategori, opsiPerson, tambahOpsi } = useFinance();
+  const { tambahTransaksi, opsiKategori, opsiPerson, opsiPos, tambahOpsi } = useFinance();
   const [jenis, setJenis] = useState<JenisTransaksi>("kas_keluar");
   const [tanggal, setTanggal] = useState(tanggalHariIni());
   const [uraian, setUraian] = useState("");
   const [nominal, setNominal] = useState(0);
   const [kategori, setKategori] = useState<string>(KATEGORI_BIAYA[0]);
   const [person, setPerson] = useState("");
+  const [pos, setPos] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const JENIS_BE = JENIS_TRANSAKSI.filter((item) => item !== "kas_beredar");
@@ -69,7 +69,7 @@ function FormKas() {
       jenis,
       uraian: uraian.trim(),
       kategori,
-      posProyek: "",
+      posProyek: pos,
       person: person.trim(),
       nominal,
       noNota: "",
@@ -80,6 +80,7 @@ function FormKas() {
     setUraian("");
     setNominal(0);
     setPerson("");
+    setPos("");
     setErrors({});
   };
 
@@ -199,6 +200,15 @@ function FormKas() {
             setErrors((current) => ({ ...current, person: "" }));
           }}
           onTambah={(value) => tambahOpsi("person", value)}
+        />
+
+        <SelectTambahBaru
+          label="Pos / Proyek"
+          value={pos}
+          options={opsiPos}
+          placeholder="cth: Kantor, Karang Ploso"
+          onChange={(value) => setPos(value)}
+          onTambah={(value) => tambahOpsi("pos", value)}
         />
       </div>
 
@@ -352,14 +362,16 @@ function ModalHapus({
 
 export function KasSection() {
   const readOnly = useReadOnly();
-  const { state, rekap, transaksiUrut, opsiKategori, clearToast, tambahTransaksi } = useFinance();
+  const { state, opsiKategori, clearToast, tambahTransaksi } = useFinance();
   const [filterJenis, setFilterJenis] = useState<"all" | JenisTransaksi>("all");
   const [filterKategori, setFilterKategori] = useState<"all" | KategoriBiaya>("all");
   const [cari, setCari] = useState("");
   const [preview, setPreview] = useState<TransaksiKas | null>(null);
   const [hapus, setHapus] = useState<TransaksiKas | null>(null);
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
+  const [bulan, setBulan] = useState(new Date().toISOString().slice(0, 7));
+  const [dikembalikan, setDikembalikan] = useState(0);
+
+  const ledger = useMemo(() => BANGUN_LEDGER(state.transaksi, bulan), [state.transaksi, bulan]);
 
   const handleImportExcel = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -376,7 +388,7 @@ export function KasSection() {
           jenis: item.jenis || "kas_keluar",
           uraian: item.uraian || "Import Excel",
           kategori: item.kategori || "Dll",
-          posProyek: (item.posProyek as any) || "Kantor",
+          posProyek: item.posProyek || "Kantor",
           person: item.person || "",
           nominal: item.nominal || 0,
           noNota: item.noNota || "",
@@ -393,54 +405,50 @@ export function KasSection() {
     }
   };
 
-  const transaksi = useMemo(() => {
+  const barisTampil = useMemo(() => {
     const query = cari.trim().toLowerCase();
-    let start: Date | null = null;
-    let end: Date | null = null;
-    if (startDate) start = new Date(startDate + "T00:00:00");
-    if (endDate) end = new Date(endDate + "T23:59:59");
-    return transaksiUrut.filter((item) => {
-      const d = new Date(item.tanggal + "T00:00:00");
-      const cocokPeriode = (!start || d >= start) && (!end || d <= end);
+    return ledger.baris.filter((item) => {
       const cocokJenis = filterJenis === "all" || item.jenis === filterJenis;
       const cocokKategori = filterKategori === "all" || item.kategori === filterKategori;
       const cocokCari =
         !query ||
         `${item.uraian} ${item.person}`.toLowerCase().includes(query) ||
         (item.noNota || "").toLowerCase().includes(query);
-      return cocokPeriode && cocokJenis && cocokKategori && cocokCari;
+      return cocokJenis && cocokKategori && cocokCari;
     });
-  }, [transaksiUrut, filterJenis, filterKategori, cari, startDate, endDate]);
+  }, [ledger.baris, filterJenis, filterKategori, cari]);
+
+  const saldoSebenarnya = ledger.saldoAkhir - dikembalikan;
 
   return (
     <div className="space-y-5">
       <div className={s.statGrid}>
         <FinancialStatCard
-          label="Saldo Kas Utama"
-          value={formatRp(rekap.saldo)}
-          icon="account_balance_wallet"
-          trend="Kas masuk dikurangi kas keluar"
+          label="Saldo Bulan Lalu"
+          value={formatRp(ledger.saldoAwal)}
+          icon="history"
+          trend="Saldo awal periode terpilih"
           tone="gold"
         />
         <FinancialStatCard
-          label="Total Pemasukan"
-          value={formatRp(rekap.totalMasuk)}
+          label="Pemasukan Bulan Ini"
+          value={formatRp(ledger.totalMasuk)}
           icon="south_west"
-          trend={`${transaksiUrut.filter((item) => item.jenis === "kas_masuk").length} transaksi masuk`}
+          trend={`${ledger.baris.filter((item) => item.jenis === "kas_masuk").length} transaksi masuk`}
           tone="success"
         />
         <FinancialStatCard
-          label="Total Pengeluaran"
-          value={formatRp(rekap.totalKeluar)}
+          label="Pengeluaran Bulan Ini"
+          value={formatRp(ledger.totalKeluar)}
           icon="north_east"
-          trend={`${transaksiUrut.filter((item) => item.jenis === "kas_keluar").length} transaksi keluar`}
+          trend={`${ledger.baris.filter((item) => item.jenis === "kas_keluar").length} transaksi keluar`}
           tone="error"
         />
         <FinancialStatCard
-          label="Kas Beredar"
-          value={formatRp(rekap.totalBeredar)}
-          icon="handshake"
-          trend={`Bon ke ${new Set(transaksiUrut.filter((item) => item.jenis === "kas_beredar").map((item) => item.person)).size} person`}
+          label="Saldo Akhir"
+          value={formatRp(ledger.saldoAkhir)}
+          icon="account_balance_wallet"
+          trend={`Kas beredar ${formatRp(ledger.totalBeredar)}`}
           tone="neutral"
         />
       </div>
@@ -450,17 +458,26 @@ export function KasSection() {
       <section className={s.card}>
         <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
           <div className="flex-1">
-            <h2 className={s.sectionTitle}>Riwayat Transaksi Kas</h2>
+            <h2 className={s.sectionTitle}>Ledger Kas Bulanan</h2>
             <p className={s.sectionSubtitle}>
               {readOnly
-                ? "Preview bukti nota setiap transaksi kas."
-                : "Preview bukti nota dan hapus transaksi yang tidak sesuai pencatatan."}
+                ? "Saldo bulan lalu, arus kas, dan saldo berjalan per periode."
+                : "Saldo bulan lalu, arus kas, dan saldo berjalan per periode. Preview bukti nota serta hapus transaksi yang tidak sesuai pencatatan."}
             </p>
           </div>
               <div className="flex flex-wrap items-center justify-end gap-2 lg:self-end" suppressHydrationWarning>
             <span className={s.dataCounter}>
-              {transaksi.length} dari {transaksiUrut.length} transaksi
+              {barisTampil.length} dari {ledger.baris.length} transaksi
             </span>
+            <label className={s.fieldLabel}>
+              <span className="sr-only">Pilih periode bulan</span>
+              <input
+                type="month"
+                value={bulan}
+                onChange={(event) => setBulan(event.target.value || new Date().toISOString().slice(0, 7))}
+                className={`${s.input} text-xs py-1.5 px-2.5`}
+              />
+            </label>
             <label className="bg-blue-600/90 hover:bg-blue-600 text-white text-xs font-semibold px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-all shadow-sm whitespace-nowrap cursor-pointer">
               <Upload className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
               <span>Import Excel</span>
@@ -468,7 +485,7 @@ export function KasSection() {
             </label>
             <button
               type="button"
-              onClick={() => exportCashflowToExcel(transaksi)}
+              onClick={() => exportCashflowToExcel(state.transaksi, bulan)}
               className="bg-emerald-600/90 hover:bg-emerald-600 text-white text-xs font-semibold px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-all shadow-sm whitespace-nowrap"
             >
               <FileSpreadsheet className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
@@ -521,36 +538,14 @@ export function KasSection() {
               </option>
             ))}
           </select>
-          <div className="flex items-center gap-1.5">
-            <input
-              type="date"
-              value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
-              className={`${s.input} text-xs py-1 px-1.5`}
-              max={endDate || MAX_FILTER_DATE}
-              min={MIN_FILTER_DATE}
-            />
-            <span className="text-on-surface-variant text-xs">-</span>
-            <input
-              type="date"
-              value={endDate}
-              onChange={(e) => setEndDate(e.target.value)}
-              className={`${s.input} text-xs py-1 px-1.5`}
-              min={startDate || undefined}
-              max={MAX_FILTER_DATE}
-            />
-          </div>
         </div>
 
         <div className={`mt-4 ${s.tableWrap}`}>
-          <table className={`${s.table} min-w-[820px] xl:min-w-0`}>
+          <table className={`${s.table} min-w-[900px] xl:min-w-0`}>
             <thead className={s.tableHead}>
               <tr>
                 <th scope="col" className={s.th}>
                   Tanggal
-                </th>
-                <th scope="col" className={s.th}>
-                  Jenis
                 </th>
                 <th scope="col" className={s.th}>
                   Uraian
@@ -559,13 +554,19 @@ export function KasSection() {
                   Kategori
                 </th>
                 <th scope="col" className={s.th}>
-                  Penerima
-                </th>
-                <th scope="col" className={`${s.th} text-right`}>
-                  Nominal
+                  Person
                 </th>
                 <th scope="col" className={s.th}>
-                  Status
+                  Pos
+                </th>
+                <th scope="col" className={`${s.th} text-right`}>
+                  Masuk
+                </th>
+                <th scope="col" className={`${s.th} text-right`}>
+                  Keluar
+                </th>
+                <th scope="col" className={`${s.th} text-right`}>
+                  Saldo
                 </th>
                 <th scope="col" className={`${s.th} text-right`}>
                   Aksi
@@ -573,17 +574,17 @@ export function KasSection() {
               </tr>
             </thead>
             <tbody>
-              {transaksi.map((item) => (
+              <tr className={s.tr}>
+                <td colSpan={5} className={`${s.td} font-semibold text-on-surface`}>
+                  Saldo Bulan Lalu
+                </td>
+                <td colSpan={2} className={s.tdMuted} />
+                <td className={`${s.td} text-right font-bold text-on-surface`}>{formatRp(ledger.saldoAwal)}</td>
+                <td className={s.td} />
+              </tr>
+              {barisTampil.map((item) => (
                 <tr key={item.id} className={s.tr}>
                   <td className={s.tdMuted}>{formatTanggal(item.tanggal)}</td>
-                  <td className={s.td}>
-                    <span className={`${s.badgeBase} ${badgeJenis(item.jenis)}`}>
-                      <span aria-hidden="true" className={s.iconXs}>
-                        {IKON_JENIS[item.jenis]}
-                      </span>
-                      {LABEL_JENIS_TRANSAKSI[item.jenis]}
-                    </span>
-                  </td>
                   <td className={s.tdStrong}>
                     <p className="font-semibold text-on-surface">{item.uraian}</p>
                     <p className={`${s.metaText} mt-0.5`}>
@@ -593,23 +594,19 @@ export function KasSection() {
                   </td>
                   <td className={s.tdMuted}>{item.kategori}</td>
                   <td className={s.tdMuted}>{item.person || "-"}</td>
-                  <td
-                    className={`${s.td} text-right font-bold ${
-                      item.jenis === "kas_masuk" ? "text-success" : "text-error"
-                    }`}
-                  >
-                    {item.jenis === "kas_masuk" ? "+" : "-"}
-                    {formatRp(item.nominal)}
+                  <td className={s.tdMuted}>{item.posProyek || "-"}</td>
+                  <td className={`${s.td} text-right font-semibold text-success`}>
+                    {item.jenis === "kas_masuk" ? formatRp(item.nominal) : "-"}
                   </td>
-                  <td className={s.td}>
-                    {item.jenis === "kas_beredar" ? (
-                      <StatusBadge tone="pending" label="Kas Beredar" icon="handshake" />
-                    ) : (
-                      <StatusBadge tone="approved" label="Lunas" icon="check" />
-                    )}
+                  <td className={`${s.td} text-right font-semibold text-error`}>
+                    {item.jenis === "kas_keluar" ? formatRp(item.nominal) : "-"}
                   </td>
+                  <td className={`${s.td} text-right font-bold text-on-surface`}>{formatRp(item.saldo)}</td>
                   <td className={`${s.td} text-right`}>
                     <div className={s.actionGroup}>
+                      {item.jenis === "kas_beredar" && (
+                        <StatusBadge tone="pending" label="Beredar" icon="handshake" />
+                      )}
                       <button
                         type="button"
                         onClick={() => setPreview(item)}
@@ -638,21 +635,62 @@ export function KasSection() {
                   </td>
                 </tr>
               ))}
-              {transaksi.length === 0 && (
+              {barisTampil.length === 0 && (
                 <tr>
-                  <td colSpan={8} className={s.emptyRow}>
+                  <td colSpan={9} className={s.emptyRow}>
                     Tidak ada transaksi yang cocok dengan filter.
                   </td>
                 </tr>
               )}
             </tbody>
+            <tfoot>
+              <tr className={s.tr}>
+                <td colSpan={5} className={`${s.td} font-bold text-on-surface`}>
+                  Total Bulan Ini
+                </td>
+                <td className={`${s.td} text-right font-bold text-success`}>{formatRp(ledger.totalMasuk)}</td>
+                <td className={`${s.td} text-right font-bold text-error`}>{formatRp(ledger.totalKeluar)}</td>
+                <td className={`${s.td} text-right font-bold text-on-surface`}>{formatRp(ledger.saldoAkhir)}</td>
+                <td className={s.td} />
+              </tr>
+            </tfoot>
           </table>
+        </div>
 
+        <div className={`mt-4 ${s.card} bg-surface-container/40`}>
+          <h3 className={s.sectionTitle}>Rekonsiliasi Saldo Kas</h3>
+          <p className={`${s.sectionSubtitle} mb-3`}>
+            Masukkan saldo yang dikembalikan/ digunakan untuk melihat selisih kas sebenarnya. Angka ini hanya untuk
+            laporan dan tidak mengubah transaksi sistem.
+          </p>
+          <div className="grid gap-3 sm:grid-cols-3">
+            <label className="flex flex-col gap-1.5">
+              <span className={s.fieldLabel}>Saldo Dikembalikan</span>
+              <input
+                type="number"
+                inputMode="numeric"
+                value={dikembalikan || ""}
+                onChange={(event) => setDikembalikan(Number(event.target.value) || 0)}
+                placeholder="0"
+                className={s.input}
+              />
+            </label>
+            <div>
+              <p className={s.fieldLabel}>Saldo Akhir Ledger</p>
+              <p className="mt-2 text-base font-bold text-on-surface">{formatRp(ledger.saldoAkhir)}</p>
+            </div>
+            <div>
+              <p className={s.fieldLabel}>Saldo Kas Sebenarnya</p>
+              <p className={`mt-2 text-base font-bold ${saldoSebenarnya < 0 ? "text-error" : "text-success"}`}>
+                {formatRp(saldoSebenarnya)}
+              </p>
+            </div>
+          </div>
         </div>
 
         <div className={`mt-4 ${s.cardListWrap}`}>
-          {transaksi.length === 0 && <p className={s.emptyRow}>Tidak ada transaksi yang cocok dengan filter.</p>}
-          {transaksi.map((item) => (
+          {barisTampil.length === 0 && <p className={s.emptyRow}>Tidak ada transaksi yang cocok dengan filter.</p>}
+          {barisTampil.map((item) => (
             <article key={item.id} className={s.cardListItem}>
               <div className={s.cardListHead}>
                 <div className="min-w-0">
@@ -676,25 +714,39 @@ export function KasSection() {
                   <p className={s.cardListValue}>{item.kategori}</p>
                 </div>
                 <div>
-                  <p className={s.cardListLabel}>Penerima</p>
+                  <p className={s.cardListLabel}>Person</p>
                   <p className={s.cardListValue}>{item.person || "-"}</p>
                 </div>
                 <div>
-                  <p className={s.cardListLabel}>Status</p>
-                  <p className={`${s.cardListValue} mt-1`}>
-                    {item.jenis === "kas_beredar" ? (
-                      <StatusBadge tone="pending" label="Kas Beredar" icon="handshake" />
-                    ) : (
-                      <StatusBadge tone="approved" label="Lunas" icon="check" />
-                    )}
-                  </p>
+                  <p className={s.cardListLabel}>Pos / Proyek</p>
+                  <p className={s.cardListValue}>{item.posProyek || "-"}</p>
                 </div>
               </div>
 
-              <p className={`mt-3 text-right text-base font-bold ${item.jenis === "kas_masuk" ? "text-success" : "text-error"}`}>
-                {item.jenis === "kas_masuk" ? "+" : "-"}
-                {formatRp(item.nominal)}
-              </p>
+              <div className="mt-3 flex items-center justify-between gap-3">
+                <div>
+                  <p className={s.cardListLabel}>
+                    {item.jenis === "kas_masuk" ? "Masuk" : item.jenis === "kas_keluar" ? "Keluar" : "Beredar"}
+                  </p>
+                  <p
+                    className={`text-base font-bold ${
+                      item.jenis === "kas_masuk"
+                        ? "text-success"
+                        : item.jenis === "kas_keluar"
+                          ? "text-error"
+                          : "text-on-surface-variant"
+                    }`}
+                  >
+                    {item.jenis === "kas_beredar"
+                      ? formatRp(item.nominal)
+                      : `${item.jenis === "kas_masuk" ? "+" : "-"}${formatRp(item.nominal)}`}
+                  </p>
+                </div>
+                <div className="text-right">
+                  <p className={s.cardListLabel}>Saldo</p>
+                  <p className="text-base font-bold text-on-surface">{formatRp(item.saldo)}</p>
+                </div>
+              </div>
 
               <div className={s.cardListActions}>
                 <button

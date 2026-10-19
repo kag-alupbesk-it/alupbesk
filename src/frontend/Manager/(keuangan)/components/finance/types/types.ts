@@ -150,6 +150,64 @@ export const REKAP_TRANSAKSI = (transaksi: TransaksiKas[]) => {
   };
 };
 
+export type BarisLedger = TransaksiKas & { saldo: number };
+
+export type LedgerKas = {
+  bulan: string;
+  saldoAwal: number;
+  totalMasuk: number;
+  totalKeluar: number;
+  totalBeredar: number;
+  saldoAkhir: number;
+  baris: BarisLedger[];
+};
+
+const deltaKas = (item: TransaksiKas) =>
+  item.jenis === "kas_masuk" ? item.nominal : item.jenis === "kas_keluar" ? -item.nominal : 0;
+
+// Membangun buku kas bulanan: saldo awal (saldo bulan lalu) dihitung dari semua
+// transaksi sebelum awal bulan, lalu saldo berjalan dihitung urut kronologis.
+export const BANGUN_LEDGER = (transaksi: TransaksiKas[], bulan: string): LedgerKas => {
+  if (!bulan) {
+    return { bulan, saldoAwal: 0, totalMasuk: 0, totalKeluar: 0, totalBeredar: 0, saldoAkhir: 0, baris: [] };
+  }
+
+  const awalBulan = `${bulan}-01`;
+  const saldoAwal = transaksi
+    .filter((item) => item.tanggal < awalBulan)
+    .reduce((sum, item) => sum + deltaKas(item), 0);
+
+  const bulanIni = transaksi
+    .filter((item) => item.tanggal.slice(0, 7) === bulan)
+    .sort((left, right) => left.tanggal.localeCompare(right.tanggal) || left.id.localeCompare(right.id));
+
+  let saldo = saldoAwal;
+  const baris: BarisLedger[] = bulanIni.map((item) => {
+    saldo += deltaKas(item);
+    return { ...item, saldo };
+  });
+
+  const totalMasuk = bulanIni
+    .filter((item) => item.jenis === "kas_masuk")
+    .reduce((sum, item) => sum + item.nominal, 0);
+  const totalKeluar = bulanIni
+    .filter((item) => item.jenis === "kas_keluar")
+    .reduce((sum, item) => sum + item.nominal, 0);
+  const totalBeredar = bulanIni
+    .filter((item) => item.jenis === "kas_beredar")
+    .reduce((sum, item) => sum + item.nominal, 0);
+
+  return {
+    bulan,
+    saldoAwal,
+    totalMasuk,
+    totalKeluar,
+    totalBeredar,
+    saldoAkhir: saldoAwal + totalMasuk - totalKeluar,
+    baris,
+  };
+};
+
 export const hitungInvoice = (invoice: Invoice) => {
   const totalTagihan = invoice.termin.reduce((sum, item) => sum + item.nominal, 0);
   const terbayar = invoice.termin
