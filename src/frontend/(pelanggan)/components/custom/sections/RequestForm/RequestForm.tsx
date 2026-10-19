@@ -132,7 +132,17 @@ export default function RequestForm({
       ...form,
       items: [
         ...form.items,
-        { id: newId, name: "", quantity: "1", unit: "pcs", technicalNote: "", inventoryItemId: undefined },
+        {
+          id: newId,
+          name: "",
+          quantity: "1",
+          unit: "pcs",
+          panjang: "",
+          lebar: "",
+          unitDimensi: "cm",
+          technicalNote: "",
+          inventoryItemId: undefined,
+        },
       ],
     });
     setConfirmedItems(new Set([...confirmedItems, newId]));
@@ -287,6 +297,23 @@ export default function RequestForm({
                     <label className="space-y-1.5 block">
                       <span className={styles.label}>Satuan</span>
                       <input className={styles.field} placeholder="pcs / m²" value={item.unit} onChange={(event) => updateItem(item.id, "unit", event.target.value)} />
+                    </label>
+                  </div>
+                  <div className="mt-3 grid grid-cols-1 gap-3 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_120px]">
+                    <label className="space-y-1.5 block">
+                      <span className={styles.label}>Panjang</span>
+                      <input type="number" min="0" step="0.01" inputMode="decimal" className={styles.field} placeholder="cth. 100" value={item.panjang} onChange={(event) => updateItem(item.id, "panjang", event.target.value)} />
+                    </label>
+                    <label className="space-y-1.5 block">
+                      <span className={styles.label}>Lebar</span>
+                      <input type="number" min="0" step="0.01" inputMode="decimal" className={styles.field} placeholder="cth. 200" value={item.lebar} onChange={(event) => updateItem(item.id, "lebar", event.target.value)} />
+                    </label>
+                    <label className="space-y-1.5 block">
+                      <span className={styles.label}>Satuan Ukuran</span>
+                      <select className={styles.field} value={item.unitDimensi} onChange={(event) => updateItem(item.id, "unitDimensi", event.target.value)}>
+                        <option value="cm">cm</option>
+                        <option value="m">m</option>
+                      </select>
                     </label>
                   </div>
                   <label className="mt-3 space-y-1.5 block">
