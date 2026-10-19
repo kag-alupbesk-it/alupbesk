@@ -7,6 +7,8 @@ import type {
 } from "../types";
 
 // Mencatat barang masuk: stok master bertambah otomatis setelah disimpan.
+// Barang bahan (material_kind != 'unit') tidak menambah stok di sini karena
+// stoknya dihitung dari total lot oleh `recomputeMaterialStock`.
 export function createInTransaction(
   input: GudangInTransactionInput,
 ): GudangInventoryResult<GudangInTransaction> {
@@ -14,11 +16,13 @@ export function createInTransaction(
   if (!item) return { ok: false, code: "ITEM_NOT_FOUND" };
 
   const now = new Date().toISOString();
-  persistInventoryItem({
-    ...item,
-    currentStock: item.currentStock + input.quantity,
-    updatedAt: now,
-  });
+  if (item.materialKind === "unit") {
+    persistInventoryItem({
+      ...item,
+      currentStock: item.currentStock + input.quantity,
+      updatedAt: now,
+    });
+  }
 
   const transaction: GudangInTransaction = {
     id: crypto.randomUUID(),

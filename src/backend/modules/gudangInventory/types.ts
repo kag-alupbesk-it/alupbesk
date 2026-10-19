@@ -64,6 +64,7 @@ export interface GudangMaterialLotInput {
   itemId: string;
   lotCode?: string;
   receivedDate?: string;
+  inTransactionId?: string | null;
   length?: number | null;
   width?: number | null;
   quantity?: number;
@@ -145,7 +146,8 @@ export type GudangInventoryErrorCode =
   | "INSUFFICIENT_STOCK"
   | "DUPLICATE_MODEL"
   | "LOT_NOT_FOUND"
-  | "INSUFFICIENT_LOT";
+  | "INSUFFICIENT_LOT"
+  | "MATERIAL_KIND_LOCKED";
 
 export type GudangInventoryResult<T> =
   | { ok: true; data: T }

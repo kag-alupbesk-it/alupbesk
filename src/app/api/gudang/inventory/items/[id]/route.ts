@@ -31,7 +31,8 @@ export async function PUT(
   if (!result.ok) {
     const notFound = result.code === "ITEM_NOT_FOUND";
     const duplicate = result.code === "DUPLICATE_MODEL";
-    const status = notFound ? 404 : duplicate ? 409 : 400;
+    const kindLocked = result.code === "MATERIAL_KIND_LOCKED";
+    const status = notFound ? 404 : duplicate || kindLocked ? 409 : 400;
     return Response.json(
       {
         success: false,
@@ -41,7 +42,9 @@ export async function PUT(
             ? "Barang tidak ditemukan."
             : duplicate
               ? "Nomor model sudah terdaftar di gudang."
-              : "Kategori tidak ditemukan.",
+              : kindLocked
+                ? "Jenis bahan tidak dapat diubah karena barang sudah memiliki stok atau lot."
+                : "Kategori tidak ditemukan.",
         },
       },
       { status },

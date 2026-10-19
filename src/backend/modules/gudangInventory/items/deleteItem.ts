@@ -1,6 +1,7 @@
 import { enqueueDelete } from "@/services/supabase";
 import { gudangInventoryItems } from "./store";
 import { gudangInTransactions, gudangOutTransactions } from "../transactions/store";
+import { gudangMaterialLots, removeMaterialLot } from "../lots/store";
 import type { GudangInventoryResult } from "../types";
 
 // Menghapus barang beserta riwayat masuk/keluar di memori. Di Supabase,
@@ -23,6 +24,9 @@ export function deleteInventoryItem(
       gudangOutTransactions.delete(trxId);
       enqueueDelete("gudang_out_transactions", "id", trxId);
     }
+  }
+  for (const [lotId, lot] of gudangMaterialLots) {
+    if (lot.itemId === id) removeMaterialLot(lotId);
   }
 
   enqueueDelete("gudang_inventory_items", "id", id);

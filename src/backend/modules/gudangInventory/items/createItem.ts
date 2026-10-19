@@ -32,7 +32,11 @@ export function createInventoryItem(
     color: (input.color ?? "").trim(),
     rackGroup: (input.rackGroup ?? "").trim(),
     subRow: (input.subRow ?? "").trim(),
-    currentStock: input.currentStock ?? 0,
+    // Stok barang bahan selalu diturunkan dari lot, jadi stok awal diabaikan.
+    currentStock:
+      input.materialKind && input.materialKind !== "unit"
+        ? 0
+        : input.currentStock ?? 0,
     unit: (input.unit ?? "pcs").trim() || "pcs",
     materialKind: input.materialKind ?? "unit",
     lengthPerUnit: input.lengthPerUnit ?? null,
