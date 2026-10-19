@@ -25,6 +25,7 @@ import { replaceAuditLogs, type AuditAction } from "../backend/modules/audit/aud
 import {
   gudangCategories,
   seedDefaultCategories,
+  DEFAULT_CATEGORIES,
 } from "../backend/modules/gudangInventory/categories/store";
 import { gudangInventoryItems } from "../backend/modules/gudangInventory/items/store";
 import {
@@ -261,7 +262,18 @@ async function hydrateGudangInventoryTables(): Promise<void> {
       createdAt: row.created_at ?? "",
     });
   }
-  if (categoryRows.length === 0) seedDefaultCategories();
+  if (categoryRows.length === 0) {
+    if (db) {
+      await db.from("gudang_categories").upsert(
+        DEFAULT_CATEGORIES.map((c) => ({ id: c.id, name: c.name })),
+        { onConflict: "id" },
+      );
+    }
+    const now = new Date().toISOString();
+    for (const c of DEFAULT_CATEGORIES) {
+      gudangCategories.set(c.id, { ...c, createdAt: now });
+    }
+  }
 
   const itemRows = await readRows(db.from("gudang_inventory_items").select("*"));
   gudangInventoryItems.clear();

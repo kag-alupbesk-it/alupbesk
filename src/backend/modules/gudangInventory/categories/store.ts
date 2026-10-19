@@ -5,7 +5,7 @@ import type { GudangCategory } from "../types";
 // menggantinya dengan data dari database bila tabel tersedia.
 export const gudangCategories = new Map<string, GudangCategory>();
 
-const DEFAULT_CATEGORIES: GudangCategory[] = [
+export const DEFAULT_CATEGORIES: GudangCategory[] = [
   { id: "cat-aksesoris", name: "Aksesoris", createdAt: "" },
   { id: "cat-handle-lock", name: "Handle & Lock", createdAt: "" },
   { id: "cat-alumunium", name: "Alumunium", createdAt: "" },

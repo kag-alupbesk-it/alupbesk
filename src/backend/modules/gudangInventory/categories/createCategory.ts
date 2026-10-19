@@ -12,7 +12,10 @@ export function createCategory(input: CreateCategoryInput): GudangCategory {
   const existing = [...gudangCategories.values()].find(
     (category) => category.name.toLowerCase() === name.toLowerCase(),
   );
-  if (existing) return existing;
+  if (existing) {
+    persistCategory(existing);
+    return existing;
+  }
 
   const category: GudangCategory = {
     id: `cat-${crypto.randomUUID()}`,
