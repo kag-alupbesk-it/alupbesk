@@ -64,6 +64,7 @@ export interface GudangMaterialLotInput {
   itemId: string;
   lotCode?: string;
   receivedDate?: string;
+  inTransactionId?: string | null;
   length?: number | null;
   width?: number | null;
   quantity?: number;

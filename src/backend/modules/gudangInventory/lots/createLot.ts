@@ -20,7 +20,7 @@ export function createMaterialLot(
     itemId: item.id,
     lotCode: (input.lotCode ?? "").trim(),
     receivedDate: input.receivedDate ?? now.slice(0, 10),
-    inTransactionId: null,
+    inTransactionId: input.inTransactionId ?? null,
     length: input.length ?? null,
     width: input.width ?? null,
     quantity: input.quantity ?? 1,

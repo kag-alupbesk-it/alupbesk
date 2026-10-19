@@ -12,6 +12,7 @@ import { flushWritesOrError } from "@/backend/http/flushWritesOrError";
 import { ensureHydrated } from "@/services/supabaseHydrate";
 import { getAuthenticatedProfile } from "@/backend/auth/getAuthenticatedProfile";
 import { logAuditAction } from "@/backend/modules/audit/auditStore";
+import { createMaterialLot, recomputeMaterialStock } from "@/backend/modules/gudangInventory/lots";
 
 const itemDetailSchema = {
   itemId: z.string().optional(),
@@ -24,7 +25,19 @@ const itemDetailSchema = {
   subRow: z.string().optional(),
   unit: z.string().optional(),
   materialKind: z.enum(["unit", "bar", "sheet", "roll"]).optional(),
+  lengthPerUnit: z.number().nullable().optional(),
+  widthPerUnit: z.number().nullable().optional(),
+  weightPerUnit: z.number().nullable().optional(),
 };
+
+const lotSchema = z.object({
+  length: z.number().positive().nullable().optional(),
+  width: z.number().positive().nullable().optional(),
+  quantity: z.number().positive("Jumlah lot harus lebih dari 0."),
+  rackGroup: z.string().optional(),
+  subRow: z.string().optional(),
+  lotCode: z.string().optional(),
+});
 
 interface ItemReference {
   itemId?: string;
@@ -43,6 +56,7 @@ const transactionSchema = z.discriminatedUnion("type", [
     transactionDate: z.string().min(1, "Tanggal wajib diisi."),
     quantity: z.number().positive("Jumlah harus lebih dari 0."),
     ...itemDetailSchema,
+    lots: z.array(lotSchema).optional(),
     createdBy: z.string().optional(),
   }),
   z.object({
@@ -74,6 +88,9 @@ function resolveItemId(input: ItemReference & {
   subRow?: string;
   unit?: string;
   materialKind?: "unit" | "bar" | "sheet" | "roll";
+  lengthPerUnit?: number | null;
+  widthPerUnit?: number | null;
+  weightPerUnit?: number | null;
 }): ResolvedItem {
   if (input.itemId) {
     return getInventoryItemById(input.itemId)
@@ -90,6 +107,9 @@ function resolveItemId(input: ItemReference & {
     subRow: input.subRow,
     unit: input.unit,
     materialKind: input.materialKind,
+    lengthPerUnit: input.lengthPerUnit,
+    widthPerUnit: input.widthPerUnit,
+    weightPerUnit: input.weightPerUnit,
   });
   return resolved.ok ? { ok: true, id: resolved.data.id } : { ok: false, code: resolved.code };
 }
@@ -145,12 +165,33 @@ export async function POST(request: Request) {
   const profile = await getAuthenticatedProfile();
   const createdBy = parsed.data.createdBy?.trim() || profile?.name || "Admin Gudang";
 
+  const item = getInventoryItemById(resolved.id);
+  const isMaterialIn = parsed.data.type === "in" && item?.materialKind !== "unit";
+  const lots = parsed.data.type === "in" ? parsed.data.lots ?? [] : [];
+
+  if (isMaterialIn && lots.length === 0) {
+    return Response.json(
+      {
+        success: false,
+        error: {
+          code: "INVALID_TRANSACTION",
+          message: "Barang bahan wajib diisi minimal satu lot.",
+        },
+      },
+      { status: 400 },
+    );
+  }
+
+  const effectiveQuantity = isMaterialIn
+    ? lots.reduce((sum, lot) => sum + lot.quantity, 0)
+    : parsed.data.quantity;
+
   const result =
     parsed.data.type === "in"
       ? createInTransaction({
           transactionDate: parsed.data.transactionDate,
           itemId: resolved.id,
-          quantity: parsed.data.quantity,
+          quantity: effectiveQuantity,
           createdBy,
         })
       : createOutTransaction({
@@ -173,6 +214,23 @@ export async function POST(request: Request) {
     );
   }
 
+  if (isMaterialIn) {
+    for (const lot of lots) {
+      createMaterialLot({
+        itemId: resolved.id,
+        inTransactionId: result.data.id,
+        receivedDate: parsed.data.transactionDate,
+        lotCode: lot.lotCode,
+        length: lot.length ?? null,
+        width: lot.width ?? null,
+        quantity: lot.quantity,
+        rackGroup: lot.rackGroup,
+        subRow: lot.subRow,
+      });
+    }
+    recomputeMaterialStock(resolved.id);
+  }
+
   const flushError = await flushWritesOrError();
   if (flushError) return flushError;
 
@@ -182,7 +240,7 @@ export async function POST(request: Request) {
     target: parsed.data.type === "in" ? "Transaksi Masuk Gudang" : "Transaksi Keluar Gudang",
     details:
       parsed.data.type === "in"
-        ? `Mencatat barang masuk sebanyak ${parsed.data.quantity}`
+        ? `Mencatat barang masuk sebanyak ${effectiveQuantity}${isMaterialIn ? ` (${lots.length} lot)` : ""}`
         : `Mencatat barang keluar sebanyak ${parsed.data.quantity}${parsed.data.projectName ? ` untuk ${parsed.data.projectName}` : ""}`,
   });
 

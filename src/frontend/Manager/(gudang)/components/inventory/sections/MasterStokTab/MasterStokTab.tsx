@@ -9,6 +9,16 @@ import * as s from "../../style/style";
 
 export const LOW_STOCK_THRESHOLD = 15;
 
+// Stok "habis" bernilai 0 (atau negatif); "menipis" hanya untuk stok yang masih
+// ada tetapi berada di bawah ambang batas.
+export function isOutOfStock(item: GudangInventoryItem): boolean {
+  return item.currentStock <= 0;
+}
+
+export function isLowStock(item: GudangInventoryItem): boolean {
+  return item.currentStock > 0 && item.currentStock <= LOW_STOCK_THRESHOLD;
+}
+
 type StockFilter = "ALL" | "LOW" | "OUT";
 
 interface MasterStokTabProps {
@@ -48,8 +58,8 @@ export function MasterStokTab({
       if (categoryFilter !== "ALL" && item.categoryId !== categoryFilter) {
         return false;
       }
-      if (stockFilter === "OUT" && item.currentStock > 0) return false;
-      if (stockFilter === "LOW" && item.currentStock > LOW_STOCK_THRESHOLD) return false;
+      if (stockFilter === "OUT" && !isOutOfStock(item)) return false;
+      if (stockFilter === "LOW" && !isLowStock(item)) return false;
       if (!query) return true;
       return [item.itemName, item.brand, item.modelNo, item.color, item.rackGroup, item.subRow]
         .join(" ")
@@ -155,20 +165,20 @@ export function MasterStokTab({
                     <div className="flex items-center justify-end gap-1.5">
                       <span
                         className={
-                          item.currentStock <= 0
+                          isOutOfStock(item)
                             ? s.stockLow
-                            : item.currentStock <= LOW_STOCK_THRESHOLD
+                            : isLowStock(item)
                               ? "text-base font-bold text-orange-500"
                               : s.stockText
                         }
                       >
                         {item.currentStock}
                       </span>
-                      {item.currentStock <= 0 ? (
+                      {isOutOfStock(item) ? (
                         <span className="rounded bg-error/15 px-1.5 py-0.5 text-[9px] font-bold uppercase text-error">
                           Habis
                         </span>
-                      ) : item.currentStock <= LOW_STOCK_THRESHOLD ? (
+                      ) : isLowStock(item) ? (
                         <span className="rounded bg-orange-500/15 px-1.5 py-0.5 text-[9px] font-bold uppercase text-orange-500">
                           Menipis
                         </span>

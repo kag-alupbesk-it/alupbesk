@@ -4,6 +4,15 @@ import { useMemo, useState } from "react";
 import type { GudangCategory, GudangInventoryItem, MaterialKind } from "@/backend/modules/gudangInventory";
 import * as s from "../../style/style";
 
+export interface TransactionLotInput {
+  length: number | null;
+  width: number | null;
+  quantity: number;
+  rackGroup?: string;
+  subRow?: string;
+  lotCode?: string;
+}
+
 export interface TransactionItemForm {
   categoryId: string;
   itemName: string;
@@ -14,6 +23,9 @@ export interface TransactionItemForm {
   subRow: string;
   unit?: string;
   materialKind?: MaterialKind;
+  lengthPerUnit?: number | null;
+  widthPerUnit?: number | null;
+  weightPerUnit?: number | null;
 }
 
 export interface TransactionFormResult {
@@ -21,6 +33,7 @@ export interface TransactionFormResult {
   transactionDate: string;
   quantity: number;
   item: TransactionItemForm;
+  lots?: TransactionLotInput[];
   personInCharge?: string;
   projectName?: string;
 }
@@ -36,11 +49,21 @@ interface TransactionModalProps {
   onSubmit: (result: TransactionFormResult) => Promise<void>;
 }
 
-interface TransactionForm extends TransactionItemForm {
+interface TransactionForm
+  extends Omit<TransactionItemForm, "lengthPerUnit" | "widthPerUnit" | "weightPerUnit"> {
   quantity: string;
   transactionDate: string;
   personInCharge: string;
   projectName: string;
+  lengthPerUnit: string;
+  widthPerUnit: string;
+  weightPerUnit: string;
+}
+
+interface LotRow {
+  quantity: string;
+  length: string;
+  width: string;
 }
 
 function todayIso(): string {
@@ -68,12 +91,16 @@ export function TransactionModal({
     subRow: "",
     unit: "pcs",
     materialKind: "unit",
+    lengthPerUnit: "",
+    widthPerUnit: "",
+    weightPerUnit: "",
     quantity: "1",
     transactionDate: todayIso(),
     personInCharge: "",
     projectName: "",
   }));
   const [pickedId, setPickedId] = useState("");
+  const [lots, setLots] = useState<LotRow[]>([{ quantity: "1", length: "", width: "" }]);
   const [errors, setErrors] = useState<Partial<Record<keyof TransactionForm, string>>>({});
 
   function set<K extends keyof TransactionForm>(key: K, value: string) {
@@ -82,6 +109,18 @@ export function TransactionModal({
 
   function setMaterialKind(value: MaterialKind) {
     setForm((prev) => ({ ...prev, materialKind: value }));
+  }
+
+  function addLot() {
+    setLots((prev) => [...prev, { quantity: "1", length: "", width: "" }]);
+  }
+
+  function removeLot(index: number) {
+    setLots((prev) => (prev.length <= 1 ? prev : prev.filter((_, i) => i !== index)));
+  }
+
+  function setLot(index: number, key: keyof LotRow, value: string) {
+    setLots((prev) => prev.map((row, i) => (i === index ? { ...row, [key]: value } : row)));
   }
 
   function pickExisting(id: string) {
@@ -116,11 +155,21 @@ export function TransactionModal({
     );
   }, [items, form.modelNo, form.itemName, form.categoryId]);
 
-  const quantityNumber = Number(form.quantity);
+  const effectiveMaterialKind = matchedItem?.materialKind ?? form.materialKind;
+  const isMaterialInput = !isOut && effectiveMaterialKind !== "unit";
+
+  const lotQuantityTotal = lots.reduce((sum, lot) => {
+    const value = Number(lot.quantity);
+    return sum + (Number.isFinite(value) ? value : 0);
+  }, 0);
+
+  const quantityNumber = isMaterialInput ? lotQuantityTotal : Number(form.quantity);
   const projectedStock = matchedItem
     ? isOut
       ? matchedItem.currentStock - (Number.isFinite(quantityNumber) ? quantityNumber : 0)
-      : matchedItem.currentStock + (Number.isFinite(quantityNumber) ? quantityNumber : 0)
+      : matchedItem.materialKind === "unit"
+        ? matchedItem.currentStock + (Number.isFinite(quantityNumber) ? quantityNumber : 0)
+        : null
     : null;
 
   function validate(): boolean {
@@ -128,7 +177,13 @@ export function TransactionModal({
     if (!form.categoryId) next.categoryId = "Kategori wajib dipilih";
     if (!form.itemName.trim()) next.itemName = "Nama barang wajib diisi";
     if (!form.transactionDate) next.transactionDate = "Tanggal wajib diisi";
-    if (!Number.isInteger(quantityNumber) || quantityNumber <= 0) {
+    if (isMaterialInput) {
+      const hasValidLot = lots.some((lot) => {
+        const value = Number(lot.quantity);
+        return Number.isInteger(value) && value > 0;
+      });
+      if (!hasValidLot) next.quantity = "Isi minimal satu lot dengan jumlah lebih dari 0";
+    } else if (!Number.isInteger(quantityNumber) || quantityNumber <= 0) {
       next.quantity = "Jumlah harus bilangan bulat lebih dari 0";
     } else if (isOut && matchedItem && quantityNumber > matchedItem.currentStock) {
       next.quantity = "Jumlah melebihi stok tersedia";
@@ -137,8 +192,17 @@ export function TransactionModal({
     return Object.keys(next).length === 0;
   }
 
-  async function handleSave() {
+  async function submit() {
     if (!validate()) return;
+    const lotPayload = isMaterialInput
+      ? lots
+          .map((lot) => ({
+            quantity: Number(lot.quantity),
+            length: lot.length.trim() === "" ? null : Number(lot.length),
+            width: lot.width.trim() === "" ? null : Number(lot.width),
+          }))
+          .filter((lot) => Number.isInteger(lot.quantity) && lot.quantity > 0)
+      : undefined;
     await onSubmit({
       type: mode,
       transactionDate: form.transactionDate,
@@ -153,7 +217,11 @@ export function TransactionModal({
         subRow: form.subRow.trim(),
         unit: newItem ? form.unit?.trim() || "pcs" : undefined,
         materialKind: newItem ? form.materialKind : undefined,
+        lengthPerUnit: newItem && form.lengthPerUnit.trim() !== "" ? Number(form.lengthPerUnit) : null,
+        widthPerUnit: newItem && form.widthPerUnit.trim() !== "" ? Number(form.widthPerUnit) : null,
+        weightPerUnit: newItem && form.weightPerUnit.trim() !== "" ? Number(form.weightPerUnit) : null,
       },
+      lots: lotPayload,
       personInCharge: form.personInCharge.trim() || undefined,
       projectName: isOut ? form.projectName.trim() || undefined : undefined,
     });
@@ -286,19 +354,21 @@ export function TransactionModal({
                 onChange={(event) => set("subRow", event.target.value)}
               />
             </div>
-            <div>
-              <label className={s.formLabel}>
-                Jumlah {isOut ? "Keluar" : "Masuk"} <span className={s.required}>*</span>
-              </label>
-              <input
-                type="number"
-                min="1"
-                className={s.formInput}
-                value={form.quantity}
-                onChange={(event) => set("quantity", event.target.value)}
-              />
-              {errors.quantity && <p className={s.formError}>{errors.quantity}</p>}
-            </div>
+            {!isMaterialInput && (
+              <div>
+                <label className={s.formLabel}>
+                  Jumlah {isOut ? "Keluar" : "Masuk"} <span className={s.required}>*</span>
+                </label>
+                <input
+                  type="number"
+                  min="1"
+                  className={s.formInput}
+                  value={form.quantity}
+                  onChange={(event) => set("quantity", event.target.value)}
+                />
+                {errors.quantity && <p className={s.formError}>{errors.quantity}</p>}
+              </div>
+            )}
           </div>
 
           {!matchedItem && (
@@ -325,6 +395,94 @@ export function TransactionModal({
                   <option value="roll">Roll</option>
                 </select>
               </div>
+            </div>
+          )}
+
+          {!matchedItem && form.materialKind !== "unit" && (
+            <div className={s.formGrid}>
+              <div>
+                <label className={s.formLabel}>Panjang Acuan (mm)</label>
+                <input
+                  type="number"
+                  min="0"
+                  className={s.formInput}
+                  value={form.lengthPerUnit}
+                  onChange={(event) => set("lengthPerUnit", event.target.value)}
+                />
+              </div>
+              <div>
+                <label className={s.formLabel}>Lebar Acuan (mm)</label>
+                <input
+                  type="number"
+                  min="0"
+                  className={s.formInput}
+                  value={form.widthPerUnit}
+                  onChange={(event) => set("widthPerUnit", event.target.value)}
+                />
+              </div>
+            </div>
+          )}
+
+          {isMaterialInput && (
+            <div>
+              <div className="flex items-center justify-between">
+                <label className={s.formLabel}>
+                  Lot Bahan <span className={s.required}>*</span>
+                </label>
+                <button type="button" className={s.ghostButton} onClick={addLot}>
+                  <span className={s.buttonIcon}>add</span>
+                  Tambah Lot
+                </button>
+              </div>
+              <div className="flex flex-col gap-2">
+                {lots.map((lot, index) => (
+                  <div key={index} className="flex items-end gap-2">
+                    <div className="flex-1">
+                      <label className={s.formLabel}>Jumlah</label>
+                      <input
+                        type="number"
+                        min="1"
+                        className={s.formInput}
+                        value={lot.quantity}
+                        onChange={(event) => setLot(index, "quantity", event.target.value)}
+                      />
+                    </div>
+                    <div className="flex-1">
+                      <label className={s.formLabel}>Panjang (mm)</label>
+                      <input
+                        type="number"
+                        min="0"
+                        className={s.formInput}
+                        value={lot.length}
+                        onChange={(event) => setLot(index, "length", event.target.value)}
+                      />
+                    </div>
+                    <div className="flex-1">
+                      <label className={s.formLabel}>Lebar (mm)</label>
+                      <input
+                        type="number"
+                        min="0"
+                        className={s.formInput}
+                        value={lot.width}
+                        onChange={(event) => setLot(index, "width", event.target.value)}
+                      />
+                    </div>
+                    {lots.length > 1 && (
+                      <button
+                        type="button"
+                        className={s.modalCloseButton}
+                        onClick={() => removeLot(index)}
+                      >
+                        <span className={s.closeIcon}>delete</span>
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
+              <p className="mt-1 text-[11px] text-secondary">
+                Total lot: <span className="font-bold">{lotQuantityTotal}</span>
+              </p>
+              {errors.quantity && <p className={s.formError}>{errors.quantity}</p>}
             </div>
           )}
 
@@ -424,7 +582,7 @@ export function TransactionModal({
           <button className={s.cancelButton} onClick={onClose}>
             Batal
           </button>
-          <button className={s.saveButton} onClick={handleSave} disabled={saving}>
+          <button className={s.saveButton} onClick={submit} disabled={saving}>
             {saving ? "Menyimpan..." : "Simpan"}
           </button>
         </div>

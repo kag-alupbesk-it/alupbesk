@@ -16,7 +16,7 @@ import type {
   InventoryOutInput,
   InventoryExportType,
 } from "@/services/api/gudangInventory";
-import { MasterStokTab, LOW_STOCK_THRESHOLD } from "../MasterStokTab/MasterStokTab";
+import { MasterStokTab, LOW_STOCK_THRESHOLD, isLowStock } from "../MasterStokTab/MasterStokTab";
 import { MaterialLotsTab } from "../MaterialLotsTab/MaterialLotsTab";
 import { TransactionsTab } from "../TransactionsTab/TransactionsTab";
 import { ProductionRequestsTab } from "../ProductionRequestsTab/ProductionRequestsTab";
@@ -96,7 +96,7 @@ export function InventorySection() {
   );
 
   const lowStockItems = useMemo(
-    () => data.items.filter((item) => item.currentStock <= LOW_STOCK_THRESHOLD),
+    () => data.items.filter(isLowStock),
     [data.items],
   );
 
@@ -141,6 +141,7 @@ export function InventorySection() {
           ...item,
           transactionDate: result.transactionDate,
           quantity: result.quantity,
+          lots: result.lots,
           createdBy: result.personInCharge,
         };
         await gudangInventoryApi.createIn(input);

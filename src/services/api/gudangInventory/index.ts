@@ -33,11 +33,24 @@ export interface InventoryItemRef {
   subRow?: string;
   unit?: string;
   materialKind?: GudangInventoryItem["materialKind"];
+  lengthPerUnit?: number | null;
+  widthPerUnit?: number | null;
+  weightPerUnit?: number | null;
+}
+
+export interface InventoryLotInput {
+  length?: number | null;
+  width?: number | null;
+  quantity: number;
+  rackGroup?: string;
+  subRow?: string;
+  lotCode?: string;
 }
 
 export interface InventoryInInput extends InventoryItemRef {
   transactionDate: string;
   quantity: number;
+  lots?: InventoryLotInput[];
   createdBy?: string;
 }
 
