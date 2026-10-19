@@ -1042,7 +1042,7 @@ begin
       from public.users
      where id = reviewer_id_input
        and active = true;
-    if reviewer_role is distinct from 'owner'::public.user_role then
+    if reviewer_role not in ('owner', 'manager') then
         raise exception 'ROLE_FORBIDDEN';
     end if;
 
