@@ -22,6 +22,7 @@ import { TransactionsTab } from "../TransactionsTab/TransactionsTab";
 import { ProductionRequestsTab } from "../ProductionRequestsTab/ProductionRequestsTab";
 import { ItemFormModal } from "../ItemFormModal/ItemFormModal";
 import { LotFormModal } from "../LotFormModal/LotFormModal";
+import { QuickReceiveModal } from "../QuickReceiveModal/QuickReceiveModal";
 import { TransactionModal, type TransactionFormResult } from "../TransactionModal/TransactionModal";
 import { CategoryModal } from "../CategoryModal/CategoryModal";
 import { ConfirmModal } from "../ConfirmModal/ConfirmModal";
@@ -64,6 +65,7 @@ export function InventorySection() {
   const [busy, setBusy] = useState(false);
 
   const [showItemForm, setShowItemForm] = useState(false);
+  const [showQuickReceive, setShowQuickReceive] = useState(false);
   const [editItem, setEditItem] = useState<GudangInventoryItem | null>(null);
   const [showLotForm, setShowLotForm] = useState(false);
   const [editLot, setEditLot] = useState<GudangMaterialLotView | null>(null);
@@ -259,12 +261,17 @@ export function InventorySection() {
             </p>
           </div>
           <div className={s.headerActions}>
-            {!readOnly && (
+             {!readOnly && (
               <>
+                <button className={s.ghostButton} onClick={() => setShowQuickReceive(true)} disabled={busy}>
+                  <span className={s.buttonIcon}>add_box</span>
+                  Penerimaan Cepat
+                </button>
                 <button className={s.ghostButton} onClick={() => setShowCategory(true)} disabled={busy}>
                   <span className={s.buttonIcon}>category</span>
                   Kategori
                 </button>
+
                 <button
                   className={s.ghostButton}
                   onClick={() => importInputRef.current?.click()}
@@ -416,6 +423,17 @@ export function InventorySection() {
           }}
           onSubmit={handleSaveItem}
           onCreateCategory={() => setShowCategory(true)}
+        />
+      )}
+
+      {showQuickReceive && (
+        <QuickReceiveModal
+          categories={data.categories}
+          onClose={() => setShowQuickReceive(false)}
+          onComplete={() => {
+            setShowQuickReceive(false);
+            refresh();
+          }}
         />
       )}
 
