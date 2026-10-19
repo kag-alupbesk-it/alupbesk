@@ -1,35 +1,26 @@
 import ExcelJS from "exceljs";
 import { TransaksiKas } from "../types/types";
 
-function getMonthYearLabel(tanggal?: string): string {
-  const date = tanggal ? new Date(tanggal) : new Date();
-  const month = date.toLocaleDateString("id-ID", { month: "long" });
-  const year = date.getFullYear();
-  return `${month.toUpperCase()} ${year}`;
-}
-
-export async function exportCashflowToExcel(transaksi?: TransaksiKas[]) {
-  const data = transaksi || [];
+export async function exportCashflowToExcel(transaksi: TransaksiKas[] = [], bulan?: string) {
+  const periode = bulan || new Date().toISOString().slice(0, 7);
+  const data = transaksi.filter((item) => item.tanggal.slice(0, 7) === periode);
   const sorted = [...data].sort((a, b) => a.tanggal.localeCompare(b.tanggal));
+  const saldoAwal = transaksi
+    .filter((item) => item.tanggal.slice(0, 7) < periode)
+    .reduce(
+      (sum, item) =>
+        sum + (item.jenis === "kas_masuk" ? item.nominal : item.jenis === "kas_keluar" ? -item.nominal : 0),
+      0,
+    );
+  const labelBulan = `${new Date(`${periode}-01T00:00:00`).toLocaleDateString("id-ID", {
+    month: "long",
+  }).toUpperCase()} ${periode.slice(0, 4)}`;
   
   const workbook = new ExcelJS.Workbook();
   const worksheet = workbook.addWorksheet("CF");
-  let monthYearLabel = getMonthYearLabel(sorted[0]?.tanggal);
-  if (sorted.length > 0) {
-    const minDate = sorted[0].tanggal;
-    const maxDate = sorted[sorted.length - 1].tanggal;
-    if (minDate === maxDate) {
-      const d = new Date(minDate);
-      monthYearLabel = d.toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" }).toUpperCase();
-    } else {
-      const d1 = new Date(minDate);
-      const d2 = new Date(maxDate);
-      monthYearLabel = d1.toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" }).toUpperCase() + " - " + d2.toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" }).toUpperCase();
-    }
-  }
 
   worksheet.mergeCells("B2:K2");
-  worksheet.getCell("B2").value = `CASH FLOW [${monthYearLabel}]`;
+  worksheet.getCell("B2").value = `CASH FLOW [${labelBulan}]`;
   worksheet.getCell("B2").font = { bold: true };
   worksheet.getCell("B2").alignment = { horizontal: "center" };
 
@@ -82,7 +73,8 @@ export async function exportCashflowToExcel(transaksi?: TransaksiKas[]) {
   worksheet.getCell(`B${currentRow}`).value = new Date(sorted[0]?.tanggal || new Date());
   worksheet.getCell(`B${currentRow}`).numFmt = "DD/MM/YYYY";
   worksheet.getCell(`F${currentRow}`).value = "Saldo Bulan lalu";
-  worksheet.getCell(`K${currentRow}`).value = 0;
+  worksheet.getCell(`K${currentRow}`).value = saldoAwal;
+  worksheet.getCell(`K${currentRow}`).numFmt = "#,##0";
   currentRow++;
 
   sorted.forEach((trx, idx) => {
@@ -131,7 +123,7 @@ export async function exportCashflowToExcel(transaksi?: TransaksiKas[]) {
   const totalRow = lastDataRow + 2;
   const summaryStart = totalRow + 2;
   worksheet.mergeCells(`B${totalRow}:H${totalRow}`);
-  worksheet.getCell(`B${totalRow}`).value = `Total Per ${monthYearLabel}`;
+  worksheet.getCell(`B${totalRow}`).value = `Total Per ${labelBulan}`;
   worksheet.getCell(`B${totalRow}`).font = { bold: true };
   worksheet.getCell(`I${totalRow}`).value = { formula: `SUM(I${currentRow}:I${lastDataRow})` };
   worksheet.getCell(`J${totalRow}`).value = { formula: `SUM(J${currentRow}:J${lastDataRow})` };
@@ -172,22 +164,7 @@ export async function exportCashflowToExcel(transaksi?: TransaksiKas[]) {
   worksheet.getColumn("L").width = 15;
 
   const buffer = await workbook.xlsx.writeBuffer();
-  let filename = "CASHFLOW.xlsx";
-  if (sorted.length > 0) {
-    const minDate = sorted[0].tanggal;
-    const maxDate = sorted[sorted.length - 1].tanggal;
-    const fmt = (dstr: string) => {
-      const d = new Date(dstr);
-      const y = d.getFullYear();
-      const m = String(d.getMonth()+1).padStart(2,"0");
-      const day = String(d.getDate()).padStart(2,"0");
-      return `${y}-${m}-${day}`;
-    };
-    if (minDate === maxDate) filename = `CASHFLOW_${fmt(minDate)}.xlsx`;
-    else filename = `CASHFLOW_${fmt(minDate)}_${fmt(maxDate)}.xlsx`;
-  } else {
-    filename = `CASHFLOW_${monthYearLabel.replace(/\s+/g, "_")}.xlsx`;
-  }
+  const filename = `CASHFLOW_${periode}.xlsx`;
   const blob = new Blob([buffer as BlobPart], {
     type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
   });
