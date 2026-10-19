@@ -40,6 +40,13 @@ const MATERIAL_KINDS: { value: MaterialKind; label: string }[] = [
   { value: "roll", label: "Gulungan (roll)" },
 ];
 
+const KIND_TO_UNIT: Record<MaterialKind, string> = {
+  unit: "pcs",
+  bar: "batang",
+  sheet: "lembar",
+  roll: "roll",
+};
+
 export function ItemFormModal({
   categories,
   item,
@@ -71,7 +78,13 @@ export function ItemFormModal({
   const isButtonDisabled = saving || cooldown || !isFormValid;
 
   function set<K extends keyof ItemForm>(key: K, value: ItemForm[K]) {
-    setForm((prev) => ({ ...prev, [key]: value }));
+    setForm((prev) => {
+      const next = { ...prev, [key]: value };
+      if (key === "materialKind") {
+        next.unit = KIND_TO_UNIT[value as MaterialKind];
+      }
+      return next;
+    });
   }
 
   function validate(): boolean {
