@@ -67,9 +67,12 @@ export async function getNotificationTasks(role: AppRole): Promise<NotificationT
   }
 
   if (hasAnyRole(role, "gudang", "manager")) {
-    const { data, error } = await db.from("gudang_inventory_items").select("id, item_name, current_stock, updated_at").lte("current_stock", 15).gt("current_stock", 0).order("current_stock", { ascending: true }).limit(25);
+    const { data, error } = await db.from("gudang_inventory_items").select("id, item_name, current_stock, updated_at").lte("current_stock", 15).order("current_stock", { ascending: true }).limit(25);
     if (error) throw error;
-    for (const row of data ?? []) tasks.push({ id: `low-stock:${row.id}`, title: "Stok barang menipis", detail: `${row.item_name} · sisa ${row.current_stock}`, href: "/admin/gudang", createdAt: row.updated_at });
+    for (const row of data ?? []) {
+      const stock = row.current_stock ?? 0;
+      tasks.push({ id: `low-stock:${row.id}`, title: stock <= 0 ? "Stok barang habis" : "Stok barang menipis", detail: `${row.item_name} · sisa ${Math.max(0, stock)}`, href: "/admin/gudang", createdAt: row.updated_at });
+    }
   }
 
   return tasks.sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt)).slice(0, 50);
