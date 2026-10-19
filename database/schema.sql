@@ -267,12 +267,7 @@ create table if not exists gudang_categories (
     created_at  timestamptz not null default now()
 );
 
-insert into gudang_categories (id, name) values
-    ('cat-aksesoris', 'Aksesoris'),
-    ('cat-handle-lock', 'Handle & Lock'),
-    ('cat-alumunium', 'Alumunium'),
-    ('cat-fastener', 'Fastener/Baut')
-on conflict (id) do nothing;
+-- Tanpa seed: kategori diisi sendiri oleh tim gudang lewat UI master stok.
 
 create table if not exists gudang_inventory_items (
     id            text primary key,
