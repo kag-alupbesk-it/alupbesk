@@ -51,7 +51,6 @@ const tables: { table: string; key: string }[] = [
   { table: "role_requests", key: "id" },
   { table: "order_status_events", key: "id" },
   { table: "order_lines", key: "id" },
-  { table: "penagihan", key: "order_id" },
   { table: "orders", key: "id" },
   { table: "custom_request_items", key: "id" },
   { table: "custom_requests", key: "id" },

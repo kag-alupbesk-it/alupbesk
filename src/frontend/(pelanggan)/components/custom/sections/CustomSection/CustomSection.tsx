@@ -55,6 +55,8 @@ export default function CustomSection() {
       form.perusahaan &&
       form.telp &&
       form.projectAddress &&
+      form.provinsi &&
+      form.kabupaten &&
       form.layanan &&
       form.deadline &&
       form.deskripsi &&
@@ -174,6 +176,8 @@ export default function CustomSection() {
         email: form.email.trim() || undefined,
         telp: form.telp.trim(),
         projectAddress: form.projectAddress.trim() || undefined,
+        provinsi: form.provinsi.trim() || undefined,
+        kabupaten: form.kabupaten.trim() || undefined,
         layanan: form.layanan,
         deskripsi: form.deskripsi.trim(),
         deadline: form.deadline || undefined,

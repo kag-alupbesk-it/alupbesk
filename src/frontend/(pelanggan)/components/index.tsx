@@ -6,11 +6,9 @@ import Footer from "./layout/Footer/Footer";
 import HeroSection from "./hero";
 import ProfileSection from "./profile";
 import PortfolioSection from "./portfolio";
-import KatalogSection from "./katalog";
 import PartnersSection from "./partners";
 import FaqSection from "./faq";
 import ContactSection from "./contact";
-import { ProductDetailModal } from "./product";
 
 export default function PelangganComponents() {
   return (
@@ -28,7 +26,6 @@ export default function PelangganComponents() {
         <ContactSection />
       </main>
       <Footer />
-      <ProductDetailModal />
     </>
   );
 }

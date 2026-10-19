@@ -36,6 +36,9 @@ export interface PMOrder {
   contractorCode: string;
   contractorPhone?: string;
   projectAddress?: string;
+  projectProvince?: string;
+  projectKabupaten?: string;
+  companyName?: string;
   enteredAt: string;
   targetDate: string;
   projectStatus: PMProjectStatus;
@@ -63,6 +66,9 @@ export interface NewPMOrderInput {
   contractorCode?: string;
   contractorPhone?: string;
   projectAddress?: string;
+  projectProvince?: string;
+  projectKabupaten?: string;
+  companyName?: string;
   targetDate: string;
   items: Omit<PMItem, "id">[];
   rawImage?: string;

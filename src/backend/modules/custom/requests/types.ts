@@ -28,6 +28,8 @@ export interface CreateCustomRequestInput {
   email?: string;
   telp: string;
   projectAddress?: string;
+  provinsi?: string;
+  kabupaten?: string;
   layanan: string;
   deskripsi: string;
   deadline?: string;

@@ -176,8 +176,16 @@ export default function RequestForm({
             <input type="tel" className={styles.field} placeholder="+62 812 3456 7890" value={form.telp} onChange={(event) => update("telp", event.target.value)} required />
           </label>
           <label className={gridField}>
-            <span className={styles.label}>Alamat Proyek <span className="text-secondary">*</span></span>
+            <span className={styles.label}>Alamat Lengkap <span className="text-secondary">*</span></span>
             <input className={styles.field} placeholder="Alamat tujuan pengiriman" value={form.projectAddress} onChange={(event) => update("projectAddress", event.target.value)} required />
+          </label>
+          <label className={gridField}>
+            <span className={styles.label}>Provinsi <span className="text-secondary">*</span></span>
+            <input className={styles.field} placeholder="cth. Jawa Barat" value={form.provinsi} onChange={(event) => update("provinsi", event.target.value)} required />
+          </label>
+          <label className={gridField}>
+            <span className={styles.label}>Kabupaten/Kota <span className="text-secondary">*</span></span>
+            <input className={styles.field} placeholder="cth. Bandung" value={form.kabupaten} onChange={(event) => update("kabupaten", event.target.value)} required />
           </label>
           <label className={gridField}>
             <span className={styles.label}>Target Deadline <span className="text-secondary">*</span></span>

@@ -47,6 +47,9 @@ export interface SPK {
   namaKontraktor: string;
   telepon?: string;
   alamatProyek?: string;
+  provinsi?: string;
+  kabupaten?: string;
+  namaPerusahaan?: string;
   targetDeadline: string;
   tanggalMasuk: string;
   statusGambar: StatusGambarTeknik;

@@ -179,6 +179,8 @@ create table if not exists custom_requests (
     dimensi     text,
     kuantitas   text,
     deadline    text,
+    provinsi    text,
+    kabupaten   text,
     status      custom_request_status not null default 'submitted',
     created_at  timestamptz not null default now(),
     updated_at  timestamptz not null default now()
@@ -191,6 +193,8 @@ alter table custom_requests add column if not exists kode text;
 alter table custom_requests add column if not exists project_address text;
 alter table custom_requests add column if not exists raw_image text;
 alter table custom_requests add column if not exists raw_image_name text;
+alter table custom_requests add column if not exists provinsi text;
+alter table custom_requests add column if not exists kabupaten text;
 
 -- Spesifikasi item (format sama dengan pm_order_items agar mudah dikonversi
 -- menjadi order PM oleh Project Manager).
@@ -407,10 +411,6 @@ do $$ begin
     create type kas_kategori as enum ('eceran', 'proyek', 'operasional');
 exception when duplicate_object then null; end $$;
 
-do $$ begin
-    create type payment_status as enum ('belum_bayar', 'lunas');
-exception when duplicate_object then null; end $$;
-
 create table if not exists kas_entries (
     id          text primary key,               -- "kas-<uuid>" atau "masuk-<orderId>" (otomatis)
     tipe        kas_tipe not null,
@@ -423,12 +423,7 @@ create table if not exists kas_entries (
 );
 
 -- Status pembayaran per pesanan (penagihan). Key = id pesanan (ord-*/prj-*).
-create table if not exists penagihan (
-    order_id    text primary key,
-    order_type  text not null check (order_type in ('pesanan', 'proyek')),
-    status      payment_status not null default 'belum_bayar',
-    updated_at  timestamptz not null default now()
-);
+-- (Penagihan sudah dihapus pada update 5.2)
 
 -- ---------------------------------------------------------------------
 -- 7. MARKETING — banner promo
@@ -527,6 +522,9 @@ create table if not exists pm_orders (
     contractor_code         text not null,
     contractor_phone        text,
     project_address         text,
+    project_province        text,
+    project_kabupaten       text,
+    company_name            text,
     entered_at              date not null default current_date,
     target_date             date not null,
     project_status          text not null check (project_status in ('menunggu_acc', 'siap_produksi', 'produksi', 'siap_kirim', 'selesai')),
@@ -552,6 +550,9 @@ create table if not exists pm_orders (
 -- Penjaga untuk database yang sudah memiliki tabel pm_orders versi lama.
 alter table pm_orders add column if not exists contractor_phone text;
 alter table pm_orders add column if not exists project_address text;
+alter table pm_orders add column if not exists project_province text;
+alter table pm_orders add column if not exists project_kabupaten text;
+alter table pm_orders add column if not exists company_name text;
 
 create table if not exists pm_order_items (
     id              text primary key,
@@ -818,7 +819,7 @@ begin
         'gudang_material_lots',
         'gudang_in_transactions', 'gudang_out_transactions',
         'gudang_production_requests', 'gudang_production_request_items',
-        'kas_entries', 'penagihan', 'marketing_banners', 'portfolio_items',
+        'kas_entries', 'marketing_banners', 'portfolio_items',
         'case_studies', 'partners', 'faq_items', 'custom_services',
         'site_content', 'pm_orders', 'pm_order_items', 'field_deliveries',
         'field_delivery_items', 'finance_dashboard', 'contact_messages',
@@ -1041,7 +1042,7 @@ begin
       from public.users
      where id = reviewer_id_input
        and active = true;
-    if reviewer_role is distinct from 'owner'::public.user_role then
+    if reviewer_role not in ('owner', 'manager') then
         raise exception 'ROLE_FORBIDDEN';
     end if;
 

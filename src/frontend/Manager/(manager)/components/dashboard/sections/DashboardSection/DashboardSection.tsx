@@ -48,7 +48,7 @@ export default function DashboardSection() {
 
   const pendingOrders = (orders ?? []).filter((order) => order.status === "submitted_to_manager");
   const displayRegistrations = data?.registrations ?? [];
-  const canApproveRoleRequests = profile?.role === "owner";
+  const canApproveRoleRequests = profile?.role === "owner" || profile?.role === "manager";
 
   const handleRoleDecision = async (
     registration: Registration,

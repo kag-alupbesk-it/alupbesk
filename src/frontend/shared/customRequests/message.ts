@@ -11,6 +11,8 @@ export interface CustomRequestMessageData {
   perusahaan?: string;
   telp?: string;
   projectAddress?: string;
+  provinsi?: string;
+  kabupaten?: string;
   layanan?: string;
   deskripsi?: string;
   deadline?: string;
@@ -47,7 +49,9 @@ export function buildCustomRequestMessage(
   appendIf(lines, "Kode Produksi", data.kode);
   appendIf(lines, "Perusahaan", data.perusahaan);
   appendIf(lines, "No. WhatsApp", data.telp);
-  appendIf(lines, "Alamat Proyek", data.projectAddress);
+  appendIf(lines, "Alamat Lengkap", data.projectAddress);
+  appendIf(lines, "Provinsi", data.provinsi);
+  appendIf(lines, "Kabupaten/Kota", data.kabupaten);
   appendIf(lines, "Layanan", data.layanan);
   appendIf(lines, "Deskripsi", data.deskripsi);
   appendIf(lines, "Target Deadline", data.deadline);

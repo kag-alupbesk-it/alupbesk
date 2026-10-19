@@ -37,12 +37,10 @@ type CatalogPageRoute = {
 function getCatalogPageRoute(pathname: string): CatalogPageRoute | null {
   const catalogPages: Record<string, string> = {
     "/catalog": "/",
-    "/catalog/produk": "/katalog",
     "/catalog/portofolio": "/portofolio",
     "/catalog/jasa-custom": "/jasa-custom",
   };
   const legacyPages: Record<string, string> = {
-    "/katalog": "/catalog/produk",
     "/portofolio": "/catalog/portofolio",
     "/jasa-custom": "/catalog/jasa-custom",
   };

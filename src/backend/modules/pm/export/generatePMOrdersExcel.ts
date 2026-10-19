@@ -132,9 +132,12 @@ function writeOrderSheet(sheet: ExcelJS.Worksheet, order: PMOrder): void {
 
   let rowIndex = 3;
   rowIndex = addInfoRow(sheet, rowIndex, "Kontraktor", order.contractorName);
+  rowIndex = addInfoRow(sheet, rowIndex, "Perusahaan/Proyek", order.companyName || "-");
   rowIndex = addInfoRow(sheet, rowIndex, "Kode Produksi", order.contractorCode);
   rowIndex = addInfoRow(sheet, rowIndex, "No. Telepon", order.contractorPhone || "-");
-  rowIndex = addInfoRow(sheet, rowIndex, "Alamat Proyek", order.projectAddress || "-");
+  rowIndex = addInfoRow(sheet, rowIndex, "Alamat Lengkap", order.projectAddress || "-");
+  rowIndex = addInfoRow(sheet, rowIndex, "Provinsi", order.projectProvince || "-");
+  rowIndex = addInfoRow(sheet, rowIndex, "Kabupaten/Kota", order.projectKabupaten || "-");
   rowIndex = addInfoRow(sheet, rowIndex, "Tanggal Pemesanan", formatDate(order.enteredAt));
   rowIndex = addInfoRow(sheet, rowIndex, "Target Selesai", formatDate(order.targetDate));
   rowIndex = addInfoRow(

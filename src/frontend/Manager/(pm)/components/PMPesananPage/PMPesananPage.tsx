@@ -3,9 +3,8 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
-import { ArrowLeft, CheckCircle2, CircleAlert, FilePlus2, Inbox, Search } from "lucide-react";
-import { customApi } from "@/services/api/index";
-import type { CustomRequest, CustomRequestStatus } from "@/backend/modules/custom";
+import { ArrowLeft, CheckCircle2, FilePlus2, Inbox, Search } from "lucide-react";
+import type { CustomRequest } from "@/backend/modules/custom";
 import { useCustomRequests } from "@/frontend/shared/customRequests/useCustomRequests";
 import { CustomRequestDetailModal } from "@/frontend/shared/customRequests/CustomRequestDetailModal";
 import {
@@ -33,14 +32,12 @@ function formatDate(value: string | undefined): string {
 
 export function PMPesananPage() {
   const router = useRouter();
-  const { data: requests, loading, error: loadError, refresh } = useCustomRequests();
+  const { data: requests, loading, error: loadError } = useCustomRequests();
 
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("ALL");
   const [selectedRequest, setSelectedRequest] = useState<CustomRequest | null>(null);
   const [showDetail, setShowDetail] = useState(false);
-  const [statusError, setStatusError] = useState("");
-  const [statusBusy, setStatusBusy] = useState(false);
 
   const filtered = useMemo(
     () =>
@@ -68,22 +65,7 @@ export function PMPesananPage() {
 
   const openDetail = (request: CustomRequest) => {
     setSelectedRequest(request);
-    setStatusError("");
     setShowDetail(true);
-  };
-
-  const handleStatusChange = async (status: CustomRequestStatus) => {
-    if (!selectedRequest) return;
-    setStatusBusy(true);
-    setStatusError("");
-    try {
-      await customApi.updateStatus(selectedRequest.id, status);
-      refresh();
-    } catch (reason) {
-      setStatusError(reason instanceof Error ? reason.message : "Status gagal diubah.");
-    } finally {
-      setStatusBusy(false);
-    }
   };
 
   const startConversion = () => {
@@ -105,12 +87,6 @@ export function PMPesananPage() {
           Request kustom dari website. Formatnya disamakan dengan Tambah Order — klik baris lalu &quot;Jadikan Order PM&quot; agar data langsung terisi tanpa mengetik ulang.
         </p>
       </section>
-
-      {statusError && (
-        <div role="alert" className="flex items-center gap-2 rounded-xl border border-red-400/25 bg-red-400/10 px-4 py-3 text-xs text-red-300">
-          <CircleAlert size={15} className="shrink-0" /> {statusError}
-        </div>
-      )}
 
       <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {[
@@ -201,10 +177,8 @@ export function PMPesananPage() {
       <CustomRequestDetailModal
         isOpen={showDetail}
         request={selectedRequest}
-        canEditStatus
-        statusBusy={statusBusy}
-        onClose={() => { setShowDetail(false); setSelectedRequest(null); setStatusError(""); }}
-        onStatusChange={handleStatusChange}
+        canEditStatus={false}
+        onClose={() => { setShowDetail(false); setSelectedRequest(null); }}
         extraActions={
           selectedRequest && selectedRequest.status !== "accepted" ? (
             <button
