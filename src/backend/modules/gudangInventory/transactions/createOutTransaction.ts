@@ -1,4 +1,5 @@
 import { gudangInventoryItems, persistInventoryItem } from "../items/store";
+import { consumeMaterialLotsFifo } from "../lots/consumeLots";
 import { persistOutTransaction } from "./store";
 import type {
   GudangInventoryResult,
@@ -6,8 +7,9 @@ import type {
   GudangOutTransactionInput,
 } from "../types";
 
-// Mencatat barang keluar: stok dikurangi. Transaksi ditolak bila stok kurang
-// agar stok master tidak pernah negatif.
+// Mencatat barang keluar. Barang satuan mengurangi `currentStock` langsung.
+// Barang bahan mengambil dari lot secara FIFO lalu stok dihitung ulang dari
+// sisa lot agar selalu sinkron dengan pelacakan lot.
 export function createOutTransaction(
   input: GudangOutTransactionInput,
 ): GudangInventoryResult<GudangOutTransaction> {
@@ -18,11 +20,16 @@ export function createOutTransaction(
   }
 
   const now = new Date().toISOString();
-  persistInventoryItem({
-    ...item,
-    currentStock: item.currentStock - input.quantity,
-    updatedAt: now,
-  });
+  if (item.materialKind === "unit") {
+    persistInventoryItem({
+      ...item,
+      currentStock: item.currentStock - input.quantity,
+      updatedAt: now,
+    });
+  } else {
+    const consumed = consumeMaterialLotsFifo(item.id, input.quantity);
+    if (!consumed.ok) return consumed;
+  }
 
   const transaction: GudangOutTransaction = {
     id: crypto.randomUUID(),
