@@ -1,6 +1,5 @@
-import type { Product, ProductVariant } from "@/services/catalog/products";
 import type { PortfolioItem, CaseStudy } from "@/services/portfolio/index";
-export type { Product, ProductVariant, PortfolioItem, CaseStudy };
+export type { PortfolioItem, CaseStudy };
 
 export interface CustomRequestFormItem {
   id: string;
@@ -21,6 +20,8 @@ export interface CustomRequestForm {
   email: string;
   telp: string;
   projectAddress: string;
+  provinsi: string;
+  kabupaten: string;
   layanan: string;
   deskripsi: string;
   deadline: string;
@@ -34,6 +35,8 @@ export const emptyCustomRequestForm: CustomRequestForm = {
   email: "",
   telp: "",
   projectAddress: "",
+  provinsi: "",
+  kabupaten: "",
   layanan: "",
   deskripsi: "",
   deadline: "",

@@ -179,6 +179,8 @@ create table if not exists custom_requests (
     dimensi     text,
     kuantitas   text,
     deadline    text,
+    provinsi    text,
+    kabupaten   text,
     status      custom_request_status not null default 'submitted',
     created_at  timestamptz not null default now(),
     updated_at  timestamptz not null default now()
@@ -191,6 +193,8 @@ alter table custom_requests add column if not exists kode text;
 alter table custom_requests add column if not exists project_address text;
 alter table custom_requests add column if not exists raw_image text;
 alter table custom_requests add column if not exists raw_image_name text;
+alter table custom_requests add column if not exists provinsi text;
+alter table custom_requests add column if not exists kabupaten text;
 
 -- Spesifikasi item (format sama dengan pm_order_items agar mudah dikonversi
 -- menjadi order PM oleh Project Manager).
@@ -527,6 +531,9 @@ create table if not exists pm_orders (
     contractor_code         text not null,
     contractor_phone        text,
     project_address         text,
+    project_province        text,
+    project_kabupaten       text,
+    company_name            text,
     entered_at              date not null default current_date,
     target_date             date not null,
     project_status          text not null check (project_status in ('menunggu_acc', 'siap_produksi', 'produksi', 'siap_kirim', 'selesai')),
@@ -552,6 +559,9 @@ create table if not exists pm_orders (
 -- Penjaga untuk database yang sudah memiliki tabel pm_orders versi lama.
 alter table pm_orders add column if not exists contractor_phone text;
 alter table pm_orders add column if not exists project_address text;
+alter table pm_orders add column if not exists project_province text;
+alter table pm_orders add column if not exists project_kabupaten text;
+alter table pm_orders add column if not exists company_name text;
 
 create table if not exists pm_order_items (
     id              text primary key,

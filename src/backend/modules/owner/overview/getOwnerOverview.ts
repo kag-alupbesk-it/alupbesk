@@ -2,7 +2,7 @@ import { getLocalOrders } from "@/services/orders/index";
 import { getCustomRequests } from "@/backend/modules/custom/index";
 import { getRoleRequests } from "@/backend/modules/roleRequests/index";
 import { getGudangItems } from "@/backend/modules/gudang/index";
-import { getKasData, getPenagihan } from "@/backend/modules/keuangan/index";
+import { getKasData } from "@/backend/modules/keuangan/index";
 import { listPMOrders } from "@/backend/modules/pm/index";
 import { getFieldDeliveries } from "@/backend/modules/field/index";
 import { getDashboardData } from "@/backend/modules/manager/dashboard/getDashboardData";
@@ -106,9 +106,6 @@ export async function getOwnerOverview(period = "monthly"): Promise<OwnerOvervie
   );
 
   const kas = getKasData();
-  const penagihan = await safe(() => Promise.resolve(getPenagihan()), []);
-  const unpaidInvoices = penagihan.filter((item) => item.status === "belum_bayar");
-  const unpaidValue = unpaidInvoices.reduce((sum, item) => sum + item.nilai, 0);
 
   const gudangItems = getGudangItems();
   const criticalStock = gudangItems.filter((item) => item.stok < item.minStok);
@@ -158,10 +155,8 @@ export async function getOwnerOverview(period = "monthly"): Promise<OwnerOvervie
       metrics: [
         metric("Pemasukan", formatRp(totals.totalMasuk)),
         metric("Pengeluaran", formatRp(totals.totalKeluar)),
-        metric("Tagihan Belum Bayar", unpaidInvoices.length),
-        metric("Nilai Tertunggak", formatRp(unpaidValue)),
       ],
-      attention: unpaidInvoices.length,
+      attention: 0,
     },
     {
       division: "gudang",
@@ -226,17 +221,6 @@ export async function getOwnerOverview(period = "monthly"): Promise<OwnerOvervie
       title: `Pesanan ${order.id}`,
       detail: `${order.customer.name} menunggu verifikasi manager`,
       href: `/owner/pesanan?focus=order-${order.id}`,
-      level: "high",
-    });
-  });
-
-  unpaidInvoices.slice(0, 3).forEach((item) => {
-    attention.push({
-      id: `tagihan-${item.id}`,
-      division: "keuangan",
-      title: `Tagihan ${item.id}`,
-      detail: `${item.pelanggan} - ${formatRp(item.nilai)} belum dibayar`,
-      href: `/owner/keuangan?focus=tagihan`,
       level: "high",
     });
   });

@@ -19,7 +19,10 @@ export async function createPMOrder(
     productionCode = override.toUpperCase();
   } else {
     try {
-      productionCode = await generateProductionCode();
+      productionCode = await generateProductionCode({ 
+        companyName: input.companyName, 
+        kabupaten: input.projectKabupaten 
+      });
     } catch (error) {
       console.error("[pm] gagal membuat kode produksi:", error);
       return {
@@ -38,6 +41,9 @@ export async function createPMOrder(
     contractor_code: productionCode,
     contractor_phone: input.contractorPhone?.trim() || null,
     project_address: input.projectAddress?.trim() || null,
+    project_province: input.projectProvince?.trim() || null,
+    project_kabupaten: input.projectKabupaten?.trim() || null,
+    company_name: input.companyName?.trim() || null,
     entered_at: now.slice(0, 10),
     target_date: input.targetDate,
     project_status: "menunggu_acc",
@@ -91,6 +97,9 @@ export async function createPMOrder(
     contractorCode: row.contractor_code,
     contractorPhone: input.contractorPhone,
     projectAddress: input.projectAddress,
+    projectProvince: input.projectProvince,
+    projectKabupaten: input.projectKabupaten,
+    companyName: input.companyName,
     enteredAt: row.entered_at,
     targetDate: row.target_date,
     projectStatus: "menunggu_acc",

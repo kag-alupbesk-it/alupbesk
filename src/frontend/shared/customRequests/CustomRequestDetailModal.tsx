@@ -79,7 +79,9 @@ export function CustomRequestDetailModal({
           {infoRow("Perusahaan", request.perusahaan)}
           {infoRow("Email", request.email)}
           {infoRow("No. WA", request.telp)}
-          {infoRow("Alamat Proyek", request.projectAddress)}
+          {infoRow("Alamat Lengkap", request.projectAddress)}
+          {infoRow("Provinsi", request.provinsi)}
+          {infoRow("Kabupaten/Kota", request.kabupaten)}
           {infoRow("Layanan", request.layanan)}
           {infoRow("Target Deadline", request.deadline)}
           {infoRow("Dibuat", formatDate(request.createdAt))}

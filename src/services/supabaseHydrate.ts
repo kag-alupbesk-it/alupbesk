@@ -11,7 +11,6 @@ import { customRequests } from "../backend/modules/custom/requests/store";
 import type { CustomRequest, CustomRequestItem } from "../backend/modules/custom/requests/types";
 import { kasEntries } from "../backend/modules/keuangan/kas/store";
 import { syncKasDariPesanan } from "../backend/modules/keuangan/kas/sync";
-import { pembayaran } from "../backend/modules/keuangan/penagihan/store";
 import { marketingBanners } from "../backend/modules/marketing/banners/store";
 import type { MarketingBanner } from "../backend/modules/marketing/types";
 import { partners } from "../backend/modules/content/partners/store";
@@ -495,9 +494,11 @@ async function hydrateCustomRequests(): Promise<void> {
       kode: row.kode ?? undefined,
       perusahaan: row.perusahaan ?? undefined,
       email: row.email ?? undefined,
-      telp: row.telp,
-      projectAddress: row.project_address ?? undefined,
-      layanan: row.layanan,
+       telp: row.telp,
+       projectAddress: row.project_address ?? undefined,
+       provinsi: row.provinsi ?? undefined,
+       kabupaten: row.kabupaten ?? undefined,
+       layanan: row.layanan,
       deskripsi: row.deskripsi,
       deadline: row.deadline ?? undefined,
       rawImage: row.raw_image ?? undefined,
@@ -530,15 +531,6 @@ async function hydrateKas(): Promise<void> {
   }
   if (rows.length > 0) return;
   syncKasDariPesanan();
-}
-
-async function hydratePenagihan(): Promise<void> {
-  if (!db) return;
-  const rows = await readRows(db.from("penagihan").select("order_id, status"));
-  pembayaran.clear();
-  for (const row of rows) {
-    pembayaran.set(row.order_id, row.status);
-  }
 }
 
 async function hydrateBanners(): Promise<void> {
@@ -708,7 +700,6 @@ export function ensureHydrated(): Promise<void> {
           hydrateGudangMaterialLots(),
           hydratePMCutLists(),
           hydrateCustomRequests(),
-          hydratePenagihan(),
           hydrateBanners(),
           hydratePartners(),
           hydrateFaq(),

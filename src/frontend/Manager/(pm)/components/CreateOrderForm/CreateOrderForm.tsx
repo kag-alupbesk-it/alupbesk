@@ -46,6 +46,9 @@ export function CreateOrderForm() {
   const [contractorCode, setContractorCode] = useState("");
   const [contractorPhone, setContractorPhone] = useState("");
   const [projectAddress, setProjectAddress] = useState("");
+  const [projectProvince, setProjectProvince] = useState("");
+  const [projectKabupaten, setProjectKabupaten] = useState("");
+  const [companyName, setCompanyName] = useState("");
   const [targetDate, setTargetDate] = useState("");
   const [items, setItems] = useState<FormItem[]>(() => [createItem(`${formId}-item-1`)]);
   const [imagePreview, setImagePreview] = useState<string | undefined>();
@@ -75,9 +78,12 @@ export function CreateOrderForm() {
 
         setFromCustomId(match.id);
         setContractorName(match.nama);
-        setContractorPhone(match.telp);
-        setProjectAddress(match.projectAddress ?? "");
-        setTargetDate(match.deadline ?? "");
+         setContractorPhone(match.telp);
+         setProjectAddress(match.projectAddress ?? "");
+         setProjectProvince(match.provinsi ?? "");
+         setProjectKabupaten(match.kabupaten ?? "");
+         setCompanyName(match.perusahaan ?? "");
+         setTargetDate(match.deadline ?? "");
         setItems(
           match.items.length > 0
             ? match.items.slice().sort((a, b) => a.sortOrder - b.sortOrder).map((item, index) => ({
@@ -238,6 +244,9 @@ export function CreateOrderForm() {
         contractorCode: contractorCode.trim() || undefined,
         contractorPhone,
         projectAddress,
+        projectProvince,
+        projectKabupaten,
+        companyName,
         targetDate,
         items: validItems.map((item) => ({
           name: item.name.trim(),
@@ -298,8 +307,20 @@ export function CreateOrderForm() {
                 <input id="contractor-phone" name="contractorPhone" type="tel" value={contractorPhone} onChange={(event) => setContractorPhone(event.target.value)} placeholder="Nomor yang dapat dihubungi" className={inputClass} />
               </div>
               <div>
-                <label htmlFor="project-address" className={labelClass}>Alamat Proyek</label>
+                <label htmlFor="project-address" className={labelClass}>Alamat Lengkap</label>
                 <input id="project-address" name="projectAddress" value={projectAddress} onChange={(event) => setProjectAddress(event.target.value)} placeholder="Alamat tujuan pengiriman" className={inputClass} />
+              </div>
+              <div>
+                <label htmlFor="project-province" className={labelClass}>Provinsi</label>
+                <input id="project-province" name="projectProvince" value={projectProvince} onChange={(event) => setProjectProvince(event.target.value)} placeholder="Provinsi" className={inputClass} />
+              </div>
+              <div>
+                <label htmlFor="project-kabupaten" className={labelClass}>Kabupaten/Kota</label>
+                <input id="project-kabupaten" name="projectKabupaten" value={projectKabupaten} onChange={(event) => setProjectKabupaten(event.target.value)} placeholder="Kabupaten" className={inputClass} />
+              </div>
+              <div>
+                <label htmlFor="company-name" className={labelClass}>Nama Perusahaan</label>
+                <input id="company-name" name="companyName" value={companyName} onChange={(event) => setCompanyName(event.target.value)} placeholder="Nama perusahaan" className={inputClass} />
               </div>
             </div>
             <div className="mt-5 grid grid-cols-1 gap-5 md:grid-cols-2">

@@ -1,4 +1,4 @@
-import type { KasData, KasEntry, PenagihanItem } from "@/backend/modules/keuangan";
+import type { KasData, KasEntry } from "@/backend/modules/keuangan";
 import type { FinancialsData } from "@/backend/modules/manager";
 import { request } from "../request";
 
@@ -18,9 +18,6 @@ export const keuanganApi = {
     request("/keuangan/kas", { method: "POST", body: JSON.stringify(input) }),
   hapusKas: (id: string): Promise<KasEntry> =>
     request(`/keuangan/kas/${encodeURIComponent(id)}`, { method: "DELETE" }),
-  getPenagihan: (): Promise<PenagihanItem[]> => request("/keuangan/penagihan"),
-  setLunas: (id: string): Promise<PenagihanItem> =>
-    request(`/keuangan/penagihan/${encodeURIComponent(id)}/lunas`, { method: "POST" }),
   getLaporan: (period = "monthly"): Promise<FinancialsData> =>
     request(`/keuangan/laporan?period=${encodeURIComponent(period)}`),
 };
