@@ -248,7 +248,7 @@ export function CuttingList() {
                         <tr key={item.id} className="border-t border-outline/20">
                           <td className="px-3 py-2 text-on-surface">
                             {item.componentName}
-                            {item.length != null ? ` · ${item.length}mm` : ""}
+                            {item.length != null ? ` · ${item.length} cm` : ""}
                             {item.materialItemId ? (
                               <span className="block text-[10px] text-on-surface-variant">
                                 {itemName.get(item.materialItemId) ?? "bahan"}

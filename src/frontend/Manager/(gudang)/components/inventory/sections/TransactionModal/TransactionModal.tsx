@@ -2,6 +2,8 @@
 
 import { useMemo, useState } from "react";
 import type { GudangCategory, GudangInventoryItem, MaterialKind } from "@/backend/modules/gudangInventory";
+import type { DimensionUnit } from "@/frontend/shared/units/dimensions";
+import { toCm } from "@/frontend/shared/units/dimensions";
 import * as s from "../../style/style";
 
 export interface TransactionLotInput {
@@ -58,12 +60,15 @@ interface TransactionForm
   lengthPerUnit: string;
   widthPerUnit: string;
   weightPerUnit: string;
+  panjangUnit: DimensionUnit;
+  lebarUnit: DimensionUnit;
 }
 
 interface LotRow {
   quantity: string;
   length: string;
   width: string;
+  unit: DimensionUnit;
 }
 
 function todayIso(): string {
@@ -76,6 +81,12 @@ const KIND_TO_UNIT: Record<MaterialKind, string> = {
   sheet: "lembar",
   roll: "roll",
 };
+
+function dimensionToCm(value: string, unit: DimensionUnit): number | null {
+  if (value.trim() === "") return null;
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? toCm(parsed, unit) : null;
+}
 
 export function TransactionModal({
   mode,
@@ -96,18 +107,19 @@ export function TransactionModal({
     color: "",
     rackGroup: "",
     subRow: "",
-    unit: "",
     materialKind: "unit",
     lengthPerUnit: "",
     widthPerUnit: "",
     weightPerUnit: "",
+    panjangUnit: "cm",
+    lebarUnit: "cm",
     quantity: "1",
     transactionDate: todayIso(),
     personInCharge: "",
     projectName: "",
   }));
   const [pickedId, setPickedId] = useState("");
-  const [lots, setLots] = useState<LotRow[]>([{ quantity: "1", length: "", width: "" }]);
+  const [lots, setLots] = useState<LotRow[]>([{ quantity: "1", length: "", width: "", unit: "cm" }]);
   const [errors, setErrors] = useState<Partial<Record<keyof TransactionForm, string>>>({});
 
   function set<K extends keyof TransactionForm>(key: K, value: string) {
@@ -115,11 +127,11 @@ export function TransactionModal({
   }
 
   function setMaterialKind(value: MaterialKind) {
-    setForm((prev) => ({ ...prev, materialKind: value, unit: KIND_TO_UNIT[value] }));
+    setForm((prev) => ({ ...prev, materialKind: value }));
   }
 
   function addLot() {
-    setLots((prev) => [...prev, { quantity: "1", length: "", width: "" }]);
+    setLots((prev) => [...prev, { quantity: "1", length: "", width: "", unit: "cm" }]);
   }
 
   function removeLot(index: number) {
@@ -143,7 +155,6 @@ export function TransactionModal({
       color: item.color,
       rackGroup: item.rackGroup,
       subRow: item.subRow,
-      unit: item.unit,
       materialKind: item.materialKind,
     }));
   }
@@ -205,8 +216,8 @@ export function TransactionModal({
       ? lots
           .map((lot) => ({
             quantity: Number(lot.quantity),
-            length: lot.length.trim() === "" ? null : Number(lot.length),
-            width: lot.width.trim() === "" ? null : Number(lot.width),
+            length: dimensionToCm(lot.length, lot.unit),
+            width: dimensionToCm(lot.width, lot.unit),
           }))
           .filter((lot) => Number.isInteger(lot.quantity) && lot.quantity > 0)
       : undefined;
@@ -222,10 +233,10 @@ export function TransactionModal({
         color: form.color.trim(),
         rackGroup: form.rackGroup.trim(),
         subRow: form.subRow.trim(),
-        unit: newItem ? form.unit?.trim() : undefined,
+        unit: newItem ? KIND_TO_UNIT[form.materialKind ?? "unit"] : undefined,
         materialKind: newItem ? form.materialKind : undefined,
-        lengthPerUnit: newItem && form.lengthPerUnit.trim() !== "" ? Number(form.lengthPerUnit) : null,
-        widthPerUnit: newItem && form.widthPerUnit.trim() !== "" ? Number(form.widthPerUnit) : null,
+        lengthPerUnit: newItem ? dimensionToCm(form.lengthPerUnit, form.panjangUnit) : null,
+        widthPerUnit: newItem ? dimensionToCm(form.widthPerUnit, form.lebarUnit) : null,
         weightPerUnit: newItem && form.weightPerUnit.trim() !== "" ? Number(form.weightPerUnit) : null,
       },
       lots: lotPayload,
@@ -379,53 +390,62 @@ export function TransactionModal({
           </div>
 
           {!matchedItem && (
-            <div className={s.formGrid}>
-              <div>
-                <label className={s.formLabel}>Satuan</label>
-                <input
-                  className={s.formInput}
-                  placeholder="Contoh: pcs, batang, lembar"
-                  value={form.unit}
-                  onChange={(event) => set("unit", event.target.value)}
-                />
-              </div>
-              <div>
-                <label className={s.formLabel}>Jenis Bahan</label>
-                <select
-                  className={s.formInput}
-                  value={form.materialKind}
-                  onChange={(event) => setMaterialKind(event.target.value as MaterialKind)}
-                >
-                  <option value="unit">Unit (pcs)</option>
-                  <option value="bar">Batang</option>
-                  <option value="sheet">Lembar</option>
-                  <option value="roll">Roll</option>
-                </select>
-              </div>
+            <div>
+              <label className={s.formLabel}>Jenis Bahan</label>
+              <select
+                className={s.formInput}
+                value={form.materialKind}
+                onChange={(event) => setMaterialKind(event.target.value as MaterialKind)}
+              >
+                <option value="unit">Unit (pcs)</option>
+                <option value="bar">Batang</option>
+                <option value="sheet">Lembar</option>
+                <option value="roll">Roll</option>
+              </select>
             </div>
           )}
 
           {!matchedItem && form.materialKind !== "unit" && (
             <div className={s.formGrid}>
               <div>
-                <label className={s.formLabel}>Panjang Acuan (mm)</label>
-                <input
-                  type="number"
-                  min="0"
-                  className={s.formInput}
-                  value={form.lengthPerUnit}
-                  onChange={(event) => set("lengthPerUnit", event.target.value)}
-                />
+                <label className={s.formLabel}>Panjang Acuan</label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="number"
+                    min="0"
+                    className={s.formInput}
+                    value={form.lengthPerUnit}
+                    onChange={(event) => set("lengthPerUnit", event.target.value)}
+                  />
+                  <select
+                    className={s.formInput}
+                    value={form.panjangUnit}
+                    onChange={(event) => set("panjangUnit", event.target.value as DimensionUnit)}
+                  >
+                    <option value="cm">cm</option>
+                    <option value="m">m</option>
+                  </select>
+                </div>
               </div>
               <div>
-                <label className={s.formLabel}>Lebar Acuan (mm)</label>
-                <input
-                  type="number"
-                  min="0"
-                  className={s.formInput}
-                  value={form.widthPerUnit}
-                  onChange={(event) => set("widthPerUnit", event.target.value)}
-                />
+                <label className={s.formLabel}>Lebar Acuan</label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="number"
+                    min="0"
+                    className={s.formInput}
+                    value={form.widthPerUnit}
+                    onChange={(event) => set("widthPerUnit", event.target.value)}
+                  />
+                  <select
+                    className={s.formInput}
+                    value={form.lebarUnit}
+                    onChange={(event) => set("lebarUnit", event.target.value as DimensionUnit)}
+                  >
+                    <option value="cm">cm</option>
+                    <option value="m">m</option>
+                  </select>
+                </div>
               </div>
             </div>
           )}
@@ -455,7 +475,7 @@ export function TransactionModal({
                       />
                     </div>
                     <div className="flex-1">
-                      <label className={s.formLabel}>Panjang (mm)</label>
+                      <label className={s.formLabel}>Panjang</label>
                       <input
                         type="number"
                         min="0"
@@ -465,7 +485,7 @@ export function TransactionModal({
                       />
                     </div>
                     <div className="flex-1">
-                      <label className={s.formLabel}>Lebar (mm)</label>
+                      <label className={s.formLabel}>Lebar</label>
                       <input
                         type="number"
                         min="0"
@@ -473,6 +493,19 @@ export function TransactionModal({
                         value={lot.width}
                         onChange={(event) => setLot(index, "width", event.target.value)}
                       />
+                    </div>
+                    <div className="w-20">
+                      <label className={s.formLabel}>Satuan</label>
+                      <select
+                        className={s.formInput}
+                        value={lot.unit}
+                        onChange={(event) =>
+                          setLot(index, "unit", event.target.value as DimensionUnit)
+                        }
+                      >
+                        <option value="cm">cm</option>
+                        <option value="m">m</option>
+                      </select>
                     </div>
                     {lots.length > 1 && (
                       <button

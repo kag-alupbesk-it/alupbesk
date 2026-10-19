@@ -364,7 +364,7 @@ alter table gudang_production_request_items add column if not exists sub_row tex
 -- 5d. BAHAN BAKU & LOT — pelacakan fisik bahan bersisa (modul BOM/Cutting)
 -- ---------------------------------------------------------------------
 -- Satu lot merepresentasikan sekumpulan potongan fisik: `quantity` banyak
--- batang/lembar, masing-masing sepanjang `length` mm. Sisa potong disimpan
+-- batang/lembar, masing-masing sepanjang `length` cm. Sisa potong disimpan
 -- sebagai lot baru berstatus 'sisa' (reusable) atau 'scrap' (tidak dipakai).
 create table if not exists gudang_material_lots (
     id                text primary key,

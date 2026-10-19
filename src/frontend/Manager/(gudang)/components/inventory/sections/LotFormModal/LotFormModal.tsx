@@ -7,6 +7,8 @@ import type {
   GudangMaterialLotView,
   MaterialLotStatus,
 } from "@/backend/modules/gudangInventory";
+import type { DimensionUnit } from "@/frontend/shared/units/dimensions";
+import { toCm } from "@/frontend/shared/units/dimensions";
 import * as s from "../../style/style";
 
 interface LotFormModalProps {
@@ -23,6 +25,8 @@ interface LotForm {
   receivedDate: string;
   length: string;
   width: string;
+  panjangUnit: DimensionUnit;
+  lebarUnit: DimensionUnit;
   quantity: string;
   rackGroup: string;
   subRow: string;
@@ -50,6 +54,8 @@ export function LotFormModal({
     receivedDate: lot?.receivedDate ?? new Date().toISOString().slice(0, 10),
     length: lot?.length != null ? String(lot.length) : "",
     width: lot?.width != null ? String(lot.width) : "",
+    panjangUnit: "cm",
+    lebarUnit: "cm",
     quantity: String(lot?.quantity ?? 1),
     rackGroup: lot?.rackGroup ?? "",
     subRow: lot?.subRow ?? "",
@@ -76,10 +82,10 @@ export function LotFormModal({
     return Object.keys(next).length === 0;
   }
 
-  function toNumberOrNull(value: string): number | null {
+  function dimensionToCm(value: string, unit: DimensionUnit): number | null {
     if (value.trim() === "") return null;
     const parsed = Number(value);
-    return Number.isFinite(parsed) ? parsed : null;
+    return Number.isFinite(parsed) ? toCm(parsed, unit) : null;
   }
 
   async function handleSave() {
@@ -90,8 +96,8 @@ export function LotFormModal({
         itemId: form.itemId,
         lotCode: form.lotCode.trim(),
         receivedDate: form.receivedDate,
-        length: toNumberOrNull(form.length),
-        width: toNumberOrNull(form.width),
+        length: dimensionToCm(form.length, form.panjangUnit),
+        width: dimensionToCm(form.width, form.lebarUnit),
         quantity: Number(form.quantity),
         rackGroup: form.rackGroup.trim(),
         subRow: form.subRow.trim(),
@@ -164,26 +170,46 @@ export function LotFormModal({
 
           <div className={s.formGrid}>
             <div>
-              <label className={s.formLabel}>Panjang per Batang (mm)</label>
-              <input
-                type="number"
-                min="0"
-                step="0.01"
-                className={s.formInput}
-                value={form.length}
-                onChange={(event) => set("length", event.target.value)}
-              />
+              <label className={s.formLabel}>Panjang per Batang</label>
+              <div className="flex items-center gap-2">
+                <input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  className={s.formInput}
+                  value={form.length}
+                  onChange={(event) => set("length", event.target.value)}
+                />
+                <select
+                  className={s.formInput}
+                  value={form.panjangUnit}
+                  onChange={(event) => set("panjangUnit", event.target.value as DimensionUnit)}
+                >
+                  <option value="cm">cm</option>
+                  <option value="m">m</option>
+                </select>
+              </div>
             </div>
             <div>
-              <label className={s.formLabel}>Lebar (mm)</label>
-              <input
-                type="number"
-                min="0"
-                step="0.01"
-                className={s.formInput}
-                value={form.width}
-                onChange={(event) => set("width", event.target.value)}
-              />
+              <label className={s.formLabel}>Lebar</label>
+              <div className="flex items-center gap-2">
+                <input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  className={s.formInput}
+                  value={form.width}
+                  onChange={(event) => set("width", event.target.value)}
+                />
+                <select
+                  className={s.formInput}
+                  value={form.lebarUnit}
+                  onChange={(event) => set("lebarUnit", event.target.value as DimensionUnit)}
+                >
+                  <option value="cm">cm</option>
+                  <option value="m">m</option>
+                </select>
+              </div>
             </div>
           </div>
 
