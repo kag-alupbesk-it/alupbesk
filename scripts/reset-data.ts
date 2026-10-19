@@ -46,6 +46,7 @@ const db = createClient(url, serviceKey, { auth: { persistSession: false } });
 //    key = kolom PK (semua tabel punya PK NOT NULL)
 // ---------------------------------------------------------------------
 const tables: { table: string; key: string }[] = [
+  { table: "audit_logs", key: "id" },
   { table: "push_subscriptions", key: "id" },
   { table: "role_requests", key: "id" },
   { table: "order_status_events", key: "id" },
@@ -115,12 +116,7 @@ async function wipeTables(): Promise<void> {
 async function reseed(): Promise<void> {
   console.log("\n=== 2. INSERT ULANG SEED BASELINE ===");
 
-  const categories = [
-    { id: "cat-aksesoris", name: "Aksesoris" },
-    { id: "cat-handle-lock", name: "Handle & Lock" },
-    { id: "cat-alumunium", name: "Alumunium" },
-    { id: "cat-fastener", name: "Fastener/Baut" },
-  ];
+  // Kategori gudang sengaja tidak di-seed — biar tim gudang membuatnya sendiri.
   const faqs = [
     {
       id: "a4000000-0000-4000-8000-000000000001",
@@ -253,7 +249,6 @@ async function reseed(): Promise<void> {
   ];
 
   const jobs: { label: string; run: () => PromiseLike<{ error: { message: string } | null }> }[] = [
-    { label: "gudang_categories", run: () => db.from("gudang_categories").upsert(categories, { onConflict: "id" }) },
     { label: "faq_items", run: () => db.from("faq_items").upsert(faqs, { onConflict: "id" }) },
     { label: "custom_services", run: () => db.from("custom_services").upsert(services, { onConflict: "id" }) },
     { label: "site_content", run: () => db.from("site_content").upsert(siteContent, { onConflict: "key" }) },
