@@ -64,6 +64,11 @@ const navigationByRole = {
     { key: "create-order", href: "/pm/orders/create", permissionPath: "/pm/orders/create", label: "Tambah Order Baru", icon: "add_circle" },
     { key: "audit", href: "/pm/audit", permissionPath: "/pm/audit", label: "Riwayat Aktivitas", icon: "history" },
   ],
+  drafter: [
+    { key: "overview", href: "/drafter", permissionPath: "/drafter", label: "Dashboard", icon: "design_services" },
+    { key: "tasks", href: "/drafter", permissionPath: "/drafter", label: "Tugas Desain", icon: "draw" },
+    { key: "audit", href: "/drafter/audit", permissionPath: "/drafter/audit", label: "Riwayat Aktivitas", icon: "history" },
+  ],
   produksi: [
     { key: "queue", href: "/produksi", permissionPath: "/produksi", label: "Antrean Produksi", icon: "precision_manufacturing" },
     { key: "drawings", href: "/produksi/drawings", permissionPath: "/produksi/drawings", label: "Upload Gambar Teknik", icon: "upload_file" },
