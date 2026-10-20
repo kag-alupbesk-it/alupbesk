@@ -6,6 +6,7 @@ export type AppRole =
   | "proyek"
   | "field"
   | "produksi"
+  | "drafter"
   | "manager"
   | "owner";
 
@@ -16,7 +17,7 @@ function matchesPath(pathname: string, prefix: string): boolean {
 const READ_ONLY_METHODS = new Set(["GET", "HEAD", "OPTIONS"]);
 
 // Modul divisi tempat Owner hanya boleh memantau (read-only).
-const DIVISION_ROOTS = ["keuangan", "gudang", "marketing", "pm", "produksi", "field"];
+const DIVISION_ROOTS = ["keuangan", "gudang", "marketing", "pm", "produksi", "field", "drafter"];
 
 function isDivisionPath(path: string): boolean {
   return DIVISION_ROOTS.some(
@@ -53,7 +54,7 @@ export function roleCanAccess(
   method = "GET",
 ): boolean {
   const adminRolePath = pathname.match(
-    /^\/admin\/(manager|owner|gudang|keuangan|pm|produksi|field|marketing)(?=\/|$)/,
+    /^\/admin\/(manager|owner|gudang|keuangan|pm|produksi|field|marketing|drafter)(?=\/|$)/,
   );
   const path = adminRolePath ? pathname.slice("/admin".length) : pathname;
   const elevated = role === "manager" || role === "owner";
@@ -104,6 +105,9 @@ export function roleCanAccess(
   if (matchesPath(path, "/pm")) return role === "proyek" || elevated;
   if (["/produksi", "/api/produksi"].some((prefix) => matchesPath(path, prefix))) {
     return role === "produksi" || elevated;
+  }
+  if (["/drafter", "/api/drafter"].some((prefix) => matchesPath(path, prefix))) {
+    return role === "drafter" || elevated;
   }
   if (["/field", "/api/field"].some((prefix) => matchesPath(path, prefix))) {
     return role === "field" || elevated;

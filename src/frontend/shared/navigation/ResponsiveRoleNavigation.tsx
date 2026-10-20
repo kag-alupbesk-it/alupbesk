@@ -28,6 +28,7 @@ const ROLE_LABELS: Record<NavigationRole, string> = {
   proyek: "Project Manager",
   produksi: "Produksi",
   field: "Field",
+  drafter: "Drafter",
 };
 
 function matchesPath(pathname: string, href: string) {

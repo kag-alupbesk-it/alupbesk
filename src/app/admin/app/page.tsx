@@ -10,6 +10,7 @@ const roleStartPage: Record<AppRole, string> = {
   proyek: "/admin/pm",
   field: "/admin/field",
   produksi: "/admin/produksi",
+  drafter: "/admin/drafter",
   manager: "/admin/manager",
   owner: "/admin/owner",
 };

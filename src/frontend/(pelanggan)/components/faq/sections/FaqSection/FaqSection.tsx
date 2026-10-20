@@ -1,16 +1,12 @@
 "use client";
 
-import { useCallback, useState } from "react";
-import { contentApi } from "@/services/api/index";
-import type { FaqItem } from "@/backend/modules/content/index";
-import { usePollingResource } from "@/frontend/shared/hooks/usePollingResource";
+import { useState } from "react";
 import { useLanguage } from "@/frontend/shared/i18n/LanguageProvider";
+import { staticFaqData } from "@/frontend/shared/data/faq";
 
 export default function FaqSection() {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [openIndex, setOpenIndex] = useState<number | null>(null);
-  const loadFaq = useCallback(() => contentApi.getFaq(), []);
-  const { data: faqItems, loading, error } = usePollingResource<FaqItem[]>(loadFaq, []);
 
   return (
     <section className="bg-primary-container py-section-gap-desktop" id="faq">
@@ -39,11 +35,7 @@ export default function FaqSection() {
           </div>
         </div>
         <div className="lg:col-span-7 space-y-4">
-          {loading && faqItems.length === 0 ? (
-            <p className="py-8 text-center text-sm text-on-surface/50">{t("loadingFaq")}</p>
-          ) : error && faqItems.length === 0 ? (
-            <p className="py-8 text-center text-sm text-on-surface/50">{t("noFaq")}</p>
-          ) : faqItems.filter((item) => item.active).map((item, index) => {
+          {staticFaqData.map((item, index) => {
             const isOpen = openIndex === index;
             return (
               <div
@@ -56,7 +48,7 @@ export default function FaqSection() {
                   type="button"
                 >
                   <span className="font-bold text-on-surface transition-colors group-hover:text-secondary">
-                    {item.question}
+                    {item.question[language]}
                   </span>
                   <span
                     className={`material-symbols-outlined transition-transform duration-300 ${isOpen ? "rotate-180 text-secondary" : "text-on-surface/60"}`}
@@ -69,7 +61,7 @@ export default function FaqSection() {
                 >
                   <div className="overflow-hidden">
                     <p className="p-6 pt-0 text-label-sm text-on-surface/70">
-                      {item.answer}
+                      {item.answer[language]}
                     </p>
                   </div>
                 </div>
