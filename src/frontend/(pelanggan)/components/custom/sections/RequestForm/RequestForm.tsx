@@ -239,103 +239,108 @@ export default function RequestForm({
         </div>
       </section>
 
-      <section className={cardHeader}>
-        <div className="flex items-start gap-3 border-b border-outline/15 pb-5">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-400/10 text-blue-300"><FileImage size={17} /></div>
-          <div>
-            <h3 className={sectionTitle}>Spesifikasi Item</h3>
-            <p className={sectionSubtitle}>Tambahkan detail barang yang perlu dibuat. Bisa lebih dari satu.</p>
-          </div>
-          <button type="button" onClick={addItem} className="ml-auto inline-flex items-center gap-1.5 rounded-lg border border-secondary/30 bg-secondary/10 px-3 py-2 text-[10px] font-bold text-secondary transition-colors hover:bg-secondary/20">
-            <Plus size={13} /> Tambah Item
-          </button>
-        </div>
-        <div className="space-y-3">
-          {form.items.map((item, index) => (
-            <div key={item.id} className="rounded-xl border border-outline/20 bg-surface-container p-4">
-              <div className="mb-3 flex items-center justify-between">
-                <span className="text-[10px] font-bold uppercase tracking-[0.12em] text-on-surface-variant">Item {String(index + 1).padStart(2, "0")}</span>
-                <button type="button" onClick={() => removeItem(item.id)} disabled={form.items.length === 1} aria-label={`Hapus item ${index + 1}`} className="rounded-lg p-1.5 text-on-surface-variant/60 transition-colors hover:bg-error/10 hover:text-error disabled:cursor-not-allowed disabled:opacity-30">
-                  <Trash2 size={14} />
-                </button>
-              </div>
-
-               {activeSearchItemId === item.id ? (
-                 <div className="mb-4 rounded-xl border border-secondary/30 bg-surface-variant p-3 space-y-2">
-                   <div className="flex items-center gap-2">
-                     <Search size={16} className="text-secondary" />
-                     <input className={`${styles.field} flex-1`} placeholder="Ketik nama barang..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
-                     <button onClick={cancelSearch}><X size={18} className="text-on-surface-variant" /></button>
-                   </div>
-                   {searchResults.map(result => (
-                     <button key={result.id} onClick={() => selectItem(item.id, result)} className="w-full text-left rounded-lg bg-surface p-2 text-xs hover:bg-secondary/10">
-                       {result.itemName} ({result.brand})
-                     </button>
-                   ))}
-                   {searchQuery.length >= 2 && searchSearched && searchResults.length === 0 && (
-                     <div className="mt-2 text-center">
-                       <p className="text-xs text-on-surface-variant py-1">Barang tidak ditemukan.</p>
-                       <button type="button" onClick={() => addCustomRequestItem(item.id)} className="mt-1 inline-flex items-center justify-center gap-1.5 rounded-lg border border-secondary/30 bg-secondary/10 px-3 py-2 text-[10px] font-bold text-secondary hover:bg-secondary/20">
-                         <Plus size={13} /> Tambah Request Barang
-                       </button>
-                     </div>
-                   )}
-                 </div>
-               ) : !confirmedItems.has(item.id) && !item.inventoryItemId && !item.name ? (
-                 <button type="button" onClick={() => startSearch(item.id)} className="mb-3 w-full inline-flex items-center justify-center gap-1.5 rounded-lg border border-secondary/30 bg-secondary/10 px-3 py-2 text-[10px] font-bold text-secondary transition-colors hover:bg-secondary/20">
-                   <Search size={13} /> Cari Barang dari Gudang
-                 </button>
-               ) : (
-                 <button type="button" onClick={() => startSearch(item.id)} className="mb-3 w-full inline-flex items-center justify-center gap-1.5 rounded-lg border border-secondary/30 bg-secondary/10 px-3 py-2 text-[10px] font-bold text-secondary transition-colors hover:bg-secondary/20">
-                   <Search size={13} /> {item.inventoryItemId ? "Ganti Barang dari Gudang" : "Ganti Barang"}
-                 </button>
-               )}
-
-              {confirmedItems.has(item.id) || item.inventoryItemId || item.name ? (
-                <>
-                  <div className="grid grid-cols-1 gap-3 md:grid-cols-[minmax(0,1.5fr)_110px_120px]">
-                    <label className="space-y-1.5 block">
-                      <span className={styles.label}>Nama Item <span className="text-secondary">*</span></span>
-                      <input className={styles.field} placeholder="cth. Curtain Wall Aluminium" value={item.name} onChange={(event) => updateItem(item.id, "name", event.target.value)} />
-                    </label>
-                    <label className="space-y-1.5 block">
-                      <span className={styles.label}>Kuantitas <span className="text-secondary">*</span></span>
-                      <input type="number" min="1" className={styles.field} value={item.quantity} onChange={(event) => updateItem(item.id, "quantity", event.target.value)} />
-                    </label>
-                    <label className="space-y-1.5 block">
-                      <span className={styles.label}>Satuan</span>
-                      <input className={styles.field} placeholder="pcs / m²" value={item.unit} onChange={(event) => updateItem(item.id, "unit", event.target.value)} />
-                    </label>
-                  </div>
-                  <div className="mt-3 grid grid-cols-1 gap-3 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_120px]">
-                    <label className="space-y-1.5 block">
-                      <span className={styles.label}>Panjang</span>
-                      <input type="number" min="0" step="0.01" inputMode="decimal" className={styles.field} placeholder="cth. 100" value={item.panjang} onChange={(event) => updateItem(item.id, "panjang", event.target.value)} />
-                    </label>
-                    <label className="space-y-1.5 block">
-                      <span className={styles.label}>Lebar</span>
-                      <input type="number" min="0" step="0.01" inputMode="decimal" className={styles.field} placeholder="cth. 200" value={item.lebar} onChange={(event) => updateItem(item.id, "lebar", event.target.value)} />
-                    </label>
-                    <label className="space-y-1.5 block">
-                      <span className={styles.label}>Satuan Ukuran</span>
-                      <select className={styles.field} value={item.unitDimensi} onChange={(event) => updateItem(item.id, "unitDimensi", event.target.value)}>
-                        <option value="cm">cm</option>
-                        <option value="m">m</option>
-                      </select>
-                    </label>
-                  </div>
-                  <label className="mt-3 space-y-1.5 block">
-                    <span className={styles.label}>Catatan Teknis</span>
-                    <textarea rows={2} className={`${styles.field} resize-none`} placeholder="Tambahkan finish, material, atau spesifikasi khusus..." value={item.technicalNote} onChange={(event) => updateItem(item.id, "technicalNote", event.target.value)} />
-                  </label>
-                </>
-              ) : (
-                <p className="text-[11px] text-on-surface-variant">Cari barang dari gudang atau tambahkan sebagai request barang baru.</p>
-              )}
+      {form.layanan !== "Desain Gambar" && (
+        <section className={cardHeader}>
+          <div className="flex items-start gap-3 border-b border-outline/15 pb-5">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-400/10 text-blue-300"><FileImage size={17} /></div>
+            <div>
+              <h3 className={sectionTitle}>Spesifikasi Item</h3>
+              <p className={sectionSubtitle}>Tambahkan detail barang yang perlu dibuat. Bisa lebih dari satu.</p>
             </div>
-          ))}
-        </div>
-      </section>
+            <button type="button" onClick={addItem} className="ml-auto inline-flex items-center gap-1.5 rounded-lg border border-secondary/30 bg-secondary/10 px-3 py-2 text-[10px] font-bold text-secondary transition-colors hover:bg-secondary/20">
+              <Plus size={13} /> Tambah Item
+            </button>
+          </div>
+          <div className="space-y-3">
+            {form.items.map((item, index) => (
+              <div key={item.id} className="rounded-xl border border-outline/20 bg-surface-container p-4">
+                <div className="mb-3 flex items-center justify-between">
+                  <span className="text-[10px] font-bold uppercase tracking-[0.12em] text-on-surface-variant">Item {String(index + 1).padStart(2, "0")}</span>
+                  <button type="button" onClick={() => removeItem(item.id)} disabled={form.items.length === 1} aria-label={`Hapus item ${index + 1}`} className="rounded-lg p-1.5 text-on-surface-variant/60 transition-colors hover:bg-error/10 hover:text-error disabled:cursor-not-allowed disabled:opacity-30">
+                    <Trash2 size={14} />
+                  </button>
+                </div>
+
+                 {activeSearchItemId === item.id ? (
+                   <div className="mb-4 rounded-xl border border-secondary/30 bg-surface-variant p-3 space-y-2">
+                     <div className="flex items-center gap-2">
+                       <Search size={16} className="text-secondary" />
+                       <input className={`${styles.field} flex-1`} placeholder="Ketik nama barang..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
+                       <button onClick={cancelSearch}><X size={18} className="text-on-surface-variant" /></button>
+                     </div>
+                     {searchResults.map(result => (
+                       <button key={result.id} onClick={() => selectItem(item.id, result)} className="w-full text-left rounded-lg bg-surface p-2 text-xs hover:bg-secondary/10">
+                         {result.itemName} ({result.brand})
+                       </button>
+                     ))}
+                     {searchQuery.length >= 2 && searchSearched && searchResults.length === 0 && (
+                       <div className="mt-2 text-center">
+                         <p className="text-xs text-on-surface-variant py-1">Barang tidak ditemukan.</p>
+                         <button type="button" onClick={() => addCustomRequestItem(item.id)} className="mt-1 inline-flex items-center justify-center gap-1.5 rounded-lg border border-secondary/30 bg-secondary/10 px-3 py-2 text-[10px] font-bold text-secondary hover:bg-secondary/20">
+                           <Plus size={13} /> Tambah Request Barang
+                         </button>
+                       </div>
+                     )}
+                   </div>
+                 ) : !confirmedItems.has(item.id) && !item.inventoryItemId && !item.name ? (
+                   <button type="button" onClick={() => startSearch(item.id)} className="mb-3 w-full inline-flex items-center justify-center gap-1.5 rounded-lg border border-secondary/30 bg-secondary/10 px-3 py-2 text-[10px] font-bold text-secondary transition-colors hover:bg-secondary/20">
+                     <Search size={13} /> Cari Barang dari Gudang
+                   </button>
+                 ) : (
+                   <button type="button" onClick={() => startSearch(item.id)} className="mb-3 w-full inline-flex items-center justify-center gap-1.5 rounded-lg border border-secondary/30 bg-secondary/10 px-3 py-2 text-[10px] font-bold text-secondary transition-colors hover:bg-secondary/20">
+                     <Search size={13} /> {item.inventoryItemId ? "Ganti Barang dari Gudang" : "Ganti Barang"}
+                   </button>
+                 )}
+
+                {confirmedItems.has(item.id) || item.inventoryItemId || item.name ? (
+                  <>
+                    <div className="grid grid-cols-1 gap-3 md:grid-cols-[minmax(0,1.5fr)_110px_120px]">
+                      <label className="space-y-1.5 block">
+                        <span className={styles.label}>Nama Item <span className="text-secondary">*</span></span>
+                        <input className={styles.field} placeholder="cth. Curtain Wall Aluminium" value={item.name} onChange={(event) => updateItem(item.id, "name", event.target.value)} />
+                      </label>
+                      <label className="space-y-1.5 block">
+                        <span className={styles.label}>Kuantitas <span className="text-secondary">*</span></span>
+                        <input type="number" min="1" className={styles.field} value={item.quantity} onChange={(event) => updateItem(item.id, "quantity", event.target.value)} />
+                      </label>
+                      <label className="space-y-1.5 block">
+                        <span className={styles.label}>Satuan</span>
+                        <input className={styles.field} placeholder="pcs / m²" value={item.unit} onChange={(event) => updateItem(item.id, "unit", event.target.value)} />
+                      </label>
+                    </div>
+                    {/* Kondisional Dimensi: Sembunyikan untuk unit */}
+                    {(!item.inventoryItemId || (searchResults.find(x => x.id === item.inventoryItemId)?.materialKind !== "unit")) && (
+                      <div className="mt-3 grid grid-cols-1 gap-3 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_120px]">
+                        <label className="space-y-1.5 block">
+                          <span className={styles.label}>Panjang</span>
+                          <input type="number" min="0" step="0.01" inputMode="decimal" className={styles.field} placeholder="cth. 100" value={item.panjang} onChange={(event) => updateItem(item.id, "panjang", event.target.value)} />
+                        </label>
+                        <label className="space-y-1.5 block">
+                          <span className={styles.label}>Lebar</span>
+                          <input type="number" min="0" step="0.01" inputMode="decimal" className={styles.field} placeholder="cth. 200" value={item.lebar} onChange={(event) => updateItem(item.id, "lebar", event.target.value)} />
+                        </label>
+                        <label className="space-y-1.5 block">
+                          <span className={styles.label}>Satuan Ukuran</span>
+                          <select className={styles.field} value={item.unitDimensi} onChange={(event) => updateItem(item.id, "unitDimensi", event.target.value)}>
+                            <option value="cm">cm</option>
+                            <option value="m">m</option>
+                          </select>
+                        </label>
+                      </div>
+                    )}
+                    <label className="mt-3 space-y-1.5 block">
+                      <span className={styles.label}>Catatan Teknis</span>
+                      <textarea rows={2} className={`${styles.field} resize-none`} placeholder="Tambahkan finish, material, atau spesifikasi khusus..." value={item.technicalNote} onChange={(event) => updateItem(item.id, "technicalNote", event.target.value)} />
+                    </label>
+                  </>
+                ) : (
+                  <p className="text-[11px] text-on-surface-variant">Cari barang dari gudang atau tambahkan sebagai request barang baru.</p>
+                )}
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
 
       {catatanSection(form, update)}
     </div>
