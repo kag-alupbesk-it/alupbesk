@@ -12,7 +12,7 @@ import { PasswordInput } from "./PasswordInput";
 import { useLoginAttemptLimit } from "./useLoginAttemptLimit";
 import { activatePushSubscription, requestNotificationPermission } from "./usePushNotification";
 import { request } from "@/services/api/request";
-import { getAuthOtpErrorMessage } from "./getAuthOtpErrorMessage";
+import { getAuthOtpErrorMessage } from "@/shared/auth/getAuthOtpErrorMessage";
 
 const roleHome: Record<string, string> = {
   pelanggan: "/catalog",

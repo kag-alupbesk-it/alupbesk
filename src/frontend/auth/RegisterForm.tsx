@@ -7,7 +7,7 @@ import { LanguageSwitcher } from "@/frontend/shared/i18n/LanguageSwitcher";
 import { useLanguage } from "@/frontend/shared/i18n/LanguageProvider";
 import ThemeToggle from "@/app/ThemeToggle";
 import { PasswordInput } from "./PasswordInput";
-import { getAuthOtpErrorMessage } from "./getAuthOtpErrorMessage";
+import { getAuthOtpErrorMessage } from "@/shared/auth/getAuthOtpErrorMessage";
 
 const requestedRoles = [
   { value: "keuangan", label: "Finance", labelId: "Keuangan" },

@@ -56,6 +56,7 @@ export function executeCutList(
     }
 
     const lengthUsed = input.lengthUsed ?? item.length ?? null;
+    const widthUsed = input.widthUsed ?? item.width ?? null;
     const remaining = lot.quantity - input.quantity;
     persistMaterialLot({
       ...lot,
@@ -69,24 +70,36 @@ export function executeCutList(
         ? Math.round((lot.length - lengthUsed) * 100) / 100
         : null;
 
+    const leftoverWidth =
+      lot.width !== null && widthUsed !== null && lot.width > widthUsed
+        ? Math.round((lot.width - widthUsed) * 100) / 100
+        : null;
+
     const allocation: PMCutAllocation = {
       id: `alloc-${crypto.randomUUID()}`,
       cutListItemId: item.id,
       lotId: lot.id,
       quantity: input.quantity,
       lengthUsed,
+      widthUsed,
       leftoverLength,
+      leftoverWidth,
       leftoverStatus: input.leftoverStatus,
       createdAt: now,
     };
     item.allocations.push(allocation);
 
-    if (leftoverLength !== null && leftoverLength > 0) {
+    if (
+      (leftoverLength !== null && leftoverLength > 0) ||
+      (leftoverWidth !== null && leftoverWidth > 0)
+    ) {
       createMaterialLot({
         itemId: lot.itemId,
         lotCode: lot.lotCode ? `${lot.lotCode}-S` : "",
-        length: leftoverLength,
-        width: lot.width,
+        length: leftoverLength ?? lot.length,
+        width: leftoverWidth ?? lot.width,
+        thickness: lot.thickness,
+        glassType: lot.glassType,
         quantity: input.quantity,
         rackGroup: lot.rackGroup,
         subRow: lot.subRow,

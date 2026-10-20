@@ -289,13 +289,15 @@ async function hydrateGudangInventoryTables(): Promise<void> {
       currentStock: Number(row.current_stock),
       unit: row.unit ?? "pcs",
       materialKind: row.material_kind ?? "unit",
-      lengthPerUnit: row.length_per_unit === null ? null : Number(row.length_per_unit),
-      widthPerUnit: row.width_per_unit === null ? null : Number(row.width_per_unit),
-      weightPerUnit: row.weight_per_unit === null ? null : Number(row.weight_per_unit),
-      createdAt: row.created_at ?? "",
-      updatedAt: row.updated_at ?? "",
-    });
-  }
+       lengthPerUnit: row.length_per_unit === null ? null : Number(row.length_per_unit),
+       widthPerUnit: row.width_per_unit === null ? null : Number(row.width_per_unit),
+       weightPerUnit: row.weight_per_unit === null ? null : Number(row.weight_per_unit),
+       thickness: row.thickness === null ? null : Number(row.thickness),
+       glassType: row.glass_type ?? null,
+       createdAt: row.created_at ?? "",
+       updatedAt: row.updated_at ?? "",
+     });
+   }
 
   const inRows = await readRows(db.from("gudang_in_transactions").select("*"));
   gudangInTransactions.clear();
@@ -386,10 +388,12 @@ async function hydrateGudangMaterialLots(): Promise<void> {
         lotCode: row.lot_code ?? "",
         receivedDate: row.received_date,
         inTransactionId: row.in_transaction_id ?? null,
-        length: row.length === null ? null : Number(row.length),
-        width: row.width === null ? null : Number(row.width),
-        quantity: Number(row.quantity),
-        rackGroup: row.rack_group ?? "",
+         length: row.length === null ? null : Number(row.length),
+         width: row.width === null ? null : Number(row.width),
+         thickness: row.thickness === null ? null : Number(row.thickness),
+         glassType: row.glass_type ?? null,
+         quantity: Number(row.quantity),
+         rackGroup: row.rack_group ?? "",
         subRow: row.sub_row ?? "",
         status: row.status ?? "tersedia",
         note: row.note ?? "",
@@ -418,8 +422,11 @@ async function hydratePMCutLists(): Promise<void> {
         lotId: row.lot_id ?? null,
         quantity: Number(row.quantity),
         lengthUsed: row.length_used === null ? null : Number(row.length_used),
+        widthUsed: row.width_used === null ? null : Number(row.width_used),
         leftoverLength:
           row.leftover_length === null ? null : Number(row.leftover_length),
+        leftoverWidth:
+          row.leftover_width === null ? null : Number(row.leftover_width),
         leftoverStatus: row.leftover_status === "scrap" ? "scrap" : "reusable",
         createdAt: row.created_at ?? "",
       });
@@ -436,6 +443,8 @@ async function hydratePMCutLists(): Promise<void> {
         quantity: Number(row.quantity),
         length: row.length === null ? null : Number(row.length),
         width: row.width === null ? null : Number(row.width),
+        thickness: row.thickness === null ? null : Number(row.thickness),
+        glassType: row.glass_type ?? null,
         materialItemId: row.material_item_id ?? null,
         note: row.note ?? "",
         sortOrder: Number(row.sort_order ?? 0),

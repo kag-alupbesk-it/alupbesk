@@ -17,6 +17,8 @@ function buildItems(
     quantity: input.quantity,
     length: input.length ?? null,
     width: input.width ?? null,
+    thickness: input.thickness ?? null,
+    glassType: input.glassType ?? null,
     materialItemId: input.materialItemId ?? null,
     note: (input.note ?? "").trim(),
     sortOrder: index,

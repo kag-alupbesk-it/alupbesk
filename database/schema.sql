@@ -295,6 +295,8 @@ alter table gudang_inventory_items add column if not exists material_kind text n
 alter table gudang_inventory_items add column if not exists length_per_unit numeric(12,2);
 alter table gudang_inventory_items add column if not exists width_per_unit numeric(12,2);
 alter table gudang_inventory_items add column if not exists weight_per_unit numeric(12,3);
+alter table gudang_inventory_items add column if not exists thickness numeric(12,2);
+alter table gudang_inventory_items add column if not exists glass_type text;
 
 create table if not exists gudang_in_transactions (
     id               uuid primary key default gen_random_uuid(),
@@ -399,6 +401,8 @@ alter table gudang_material_lots add column if not exists width numeric(12,2);
 alter table gudang_material_lots add column if not exists rack_group text not null default '';
 alter table gudang_material_lots add column if not exists sub_row text not null default '';
 alter table gudang_material_lots add column if not exists note text not null default '';
+alter table gudang_material_lots add column if not exists thickness numeric(12,2);
+alter table gudang_material_lots add column if not exists glass_type text;
 
 -- ---------------------------------------------------------------------
 -- 6. KEUANGAN — buku kas & penagihan
@@ -591,6 +595,8 @@ create table if not exists pm_cut_list_items (
     quantity         integer not null check (quantity > 0),
     length           numeric(12,2),
     width            numeric(12,2),
+    thickness        numeric(12,2),
+    glass_type       text,
     material_item_id text references gudang_inventory_items(id) on delete set null,
     note             text not null default '',
     sort_order       integer not null default 0
@@ -602,7 +608,9 @@ create table if not exists pm_cut_allocations (
     lot_id           text references gudang_material_lots(id) on delete set null,
     quantity         numeric(15,2) not null default 0 check (quantity >= 0),
     length_used      numeric(12,2),
+    width_used       numeric(12,2),
     leftover_length  numeric(12,2),
+    leftover_width   numeric(12,2),
     leftover_status  text not null default 'reusable'
                      check (leftover_status in ('reusable', 'scrap')),
     created_at       timestamptz not null default now()

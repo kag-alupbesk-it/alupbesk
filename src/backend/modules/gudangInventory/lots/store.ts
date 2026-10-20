@@ -17,6 +17,8 @@ export function persistMaterialLot(lot: GudangMaterialLot): void {
       in_transaction_id: lot.inTransactionId,
       length: lot.length,
       width: lot.width,
+      thickness: lot.thickness,
+      glass_type: lot.glassType,
       quantity: lot.quantity,
       rack_group: lot.rackGroup,
       sub_row: lot.subRow,

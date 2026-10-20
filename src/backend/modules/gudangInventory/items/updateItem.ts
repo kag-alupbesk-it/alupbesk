@@ -62,6 +62,10 @@ export function updateInventoryItem(
       input.widthPerUnit !== undefined ? input.widthPerUnit : existing.widthPerUnit,
     weightPerUnit:
       input.weightPerUnit !== undefined ? input.weightPerUnit : existing.weightPerUnit,
+    thickness:
+      input.thickness !== undefined ? input.thickness : existing.thickness,
+    glassType:
+      input.glassType !== undefined ? input.glassType : existing.glassType,
     updatedAt: new Date().toISOString(),
   };
   persistInventoryItem(updated);
