@@ -162,17 +162,9 @@ async function reseed(): Promise<void> {
     {
       id: "a5000000-0000-4000-8000-000000000002",
       icon: "design_services",
-      title: "Desain Rangka",
+      title: "Desain Gambar",
       description: "Konsultasi dan desain rangka aluminium.",
       sort_order: 2,
-      active: true,
-    },
-    {
-      id: "a5000000-0000-4000-8000-000000000003",
-      icon: "format_paint",
-      title: "Finishing Custom",
-      description: "Anodizing, powder coating, atau mill finish.",
-      sort_order: 3,
       active: true,
     },
     {
@@ -180,7 +172,7 @@ async function reseed(): Promise<void> {
       icon: "precision_manufacturing",
       title: "Fabrikasi Lengkap",
       description: "Dari desain hingga produk jadi siap pasang.",
-      sort_order: 4,
+      sort_order: 3,
       active: true,
     },
   ];
