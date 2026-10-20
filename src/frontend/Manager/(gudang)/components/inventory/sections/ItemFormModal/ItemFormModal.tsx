@@ -52,6 +52,7 @@ const KIND_TO_UNIT: Record<MaterialKind, string> = {
   bar: "batang",
   sheet: "lembar",
   roll: "roll",
+  glass: "lembar",
 };
 
 export function ItemFormModal({

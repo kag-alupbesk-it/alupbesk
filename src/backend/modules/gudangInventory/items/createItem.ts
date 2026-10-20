@@ -42,6 +42,8 @@ export function createInventoryItem(
     lengthPerUnit: input.lengthPerUnit ?? null,
     widthPerUnit: input.widthPerUnit ?? null,
     weightPerUnit: input.weightPerUnit ?? null,
+    thickness: input.thickness ?? null,
+    glassType: input.glassType ?? null,
     createdAt: now,
     updatedAt: now,
   };
