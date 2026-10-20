@@ -15,7 +15,6 @@ import { marketingBanners } from "../backend/modules/marketing/banners/store";
 import type { MarketingBanner } from "../backend/modules/marketing/types";
 import { partners } from "../backend/modules/content/partners/store";
 import type { Partner } from "../backend/modules/content/types";
-import { faqItems } from "../backend/modules/content/faq/store";
 import { customServices } from "../backend/modules/content/services/store";
 import { siteContent } from "../backend/modules/content/sitecontent/store";
 import { portfolioItems, caseStudies } from "./portfolio/store";
@@ -581,22 +580,6 @@ async function hydratePartners(): Promise<void> {
   }
 }
 
-async function hydrateFaq(): Promise<void> {
-  if (!db) return;
-  const rows = await readRows(db.from("faq_items").select("*"));
-  faqItems.clear();
-  for (const row of rows) {
-    faqItems.set(row.id, {
-      id: row.id,
-      question: row.question,
-      answer: row.answer,
-      sortOrder: row.sort_order,
-      active: row.active,
-      createdAt: row.created_at,
-    });
-  }
-}
-
 async function hydrateCustomServices(): Promise<void> {
   if (!db) return;
   const rows = await readRows(db.from("custom_services").select("*"));
@@ -711,7 +694,6 @@ export function ensureHydrated(): Promise<void> {
           hydrateCustomRequests(),
           hydrateBanners(),
           hydratePartners(),
-          hydrateFaq(),
           hydrateCustomServices(),
           hydrateSiteContent(),
           hydratePortfolio(),
