@@ -10,9 +10,8 @@ import type { CustomRequestForm } from "@/frontend/(pelanggan)/types/types";
 
 const fallbackServices: CustomService[] = [
   { id: "1", icon: "straighten", title: "Potong Custom", description: "Pemotongan presisi sesuai dimensi yang Anda tentukan.", sortOrder: 1, active: true, createdAt: new Date().toISOString() },
-  { id: "2", icon: "design_services", title: "Desain Rangka", description: "Konsultasi dan desain rangka aluminium.", sortOrder: 2, active: true, createdAt: new Date().toISOString() },
-  { id: "3", icon: "format_paint", title: "Finishing Custom", description: "Anodizing, powder coating, atau mill finish.", sortOrder: 3, active: true, createdAt: new Date().toISOString() },
-  { id: "4", icon: "precision_manufacturing", title: "Fabrikasi Lengkap", description: "Dari desain hingga produk jadi siap pasang.", sortOrder: 4, active: true, createdAt: new Date().toISOString() },
+  { id: "2", icon: "design_services", title: "Desain Gambar", description: "Konsultasi dan desain rangka aluminium.", sortOrder: 2, active: true, createdAt: new Date().toISOString() },
+  { id: "4", icon: "precision_manufacturing", title: "Fabrikasi Lengkap", description: "Dari desain hingga produk jadi siap pasang.", sortOrder: 3, active: true, createdAt: new Date().toISOString() },
 ];
 
 export default function ServiceSelector({

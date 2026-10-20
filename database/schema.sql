@@ -19,6 +19,7 @@ do $$ begin
         'proyek',
         'field',
         'produksi',
+        'drafter',
         'manager',
         'owner'
     );
@@ -28,6 +29,7 @@ exception when duplicate_object then null; end $$;
 alter type user_role add value if not exists 'proyek';
 alter type user_role add value if not exists 'field';
 alter type user_role add value if not exists 'produksi';
+alter type user_role add value if not exists 'drafter';
 
 create table if not exists users (
     id          uuid primary key default gen_random_uuid(),
@@ -796,9 +798,8 @@ on conflict (id) do nothing;
 insert into custom_services (id, icon, title, description, sort_order, active)
 values
     ('a5000000-0000-4000-8000-000000000001', 'straighten', 'Potong Custom', 'Pemotongan presisi sesuai dimensi yang Anda tentukan.', 1, true),
-    ('a5000000-0000-4000-8000-000000000002', 'design_services', 'Desain Rangka', 'Konsultasi dan desain rangka aluminium.', 2, true),
-    ('a5000000-0000-4000-8000-000000000003', 'format_paint', 'Finishing Custom', 'Anodizing, powder coating, atau mill finish.', 3, true),
-    ('a5000000-0000-4000-8000-000000000004', 'precision_manufacturing', 'Fabrikasi Lengkap', 'Dari desain hingga produk jadi siap pasang.', 4, true)
+    ('a5000000-0000-4000-8000-000000000002', 'design_services', 'Desain Gambar', 'Konsultasi dan desain rangka aluminium.', 2, true),
+    ('a5000000-0000-4000-8000-000000000004', 'precision_manufacturing', 'Fabrikasi Lengkap', 'Dari desain hingga produk jadi siap pasang.', 3, true)
 on conflict (id) do nothing;
 
 insert into site_content (key, value)
@@ -873,7 +874,7 @@ begin
         return new;
     end if;
     if requested_role_text not in (
-        'marketing', 'gudang', 'keuangan', 'proyek', 'field', 'produksi'
+        'marketing', 'gudang', 'keuangan', 'proyek', 'field', 'produksi', 'drafter'
     ) then
         raise exception 'INVALID_REQUESTED_ROLE';
     end if;
