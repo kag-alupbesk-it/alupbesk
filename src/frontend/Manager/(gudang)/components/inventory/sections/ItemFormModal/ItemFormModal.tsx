@@ -35,6 +35,8 @@ interface ItemForm {
   panjangUnit: DimensionUnit;
   lebarUnit: DimensionUnit;
   weightPerUnit: string;
+  thickness: string;
+  glassType: string;
 }
 
 const MATERIAL_KINDS: { value: MaterialKind; label: string }[] = [
@@ -42,6 +44,7 @@ const MATERIAL_KINDS: { value: MaterialKind; label: string }[] = [
   { value: "bar", label: "Batang (bar)" },
   { value: "sheet", label: "Lembaran (sheet)" },
   { value: "roll", label: "Gulungan (roll)" },
+  { value: "glass", label: "Kaca (glass)" },
 ];
 
 const KIND_TO_UNIT: Record<MaterialKind, string> = {
@@ -74,6 +77,8 @@ export function ItemFormModal({
     panjangUnit: "cm",
     lebarUnit: "cm",
     weightPerUnit: item?.weightPerUnit != null ? String(item.weightPerUnit) : "",
+    thickness: item?.thickness != null ? String(item.thickness) : "",
+    glassType: item?.glassType ?? "",
   }));
   const [errors, setErrors] = useState<Partial<Record<keyof ItemForm, string>>>({});
   const [cooldown, setCooldown] = useState(false);
@@ -130,6 +135,8 @@ export function ItemFormModal({
         lengthPerUnit: dimensionToCm(form.lengthPerUnit, form.panjangUnit),
         widthPerUnit: dimensionToCm(form.widthPerUnit, form.lebarUnit),
         weightPerUnit: toNumberOrNull(form.weightPerUnit),
+        thickness: toNumberOrNull(form.thickness),
+        glassType: form.glassType.trim() || null,
       });
     } finally {
       setCooldown(false);
@@ -264,8 +271,9 @@ export function ItemFormModal({
             </div>
           </div>
 
-          {isMaterial && (
+              {isMaterial && (
             <div className={s.formGrid}>
+              {/* Existing inputs for Panjang & Lebar */}
               <div>
                 <label className={s.formLabel}>Panjang Acuan</label>
                 <div className="flex items-center gap-2">
@@ -308,6 +316,35 @@ export function ItemFormModal({
                   </select>
                 </div>
               </div>
+              {form.materialKind === "glass" && (
+                <>
+                  <div>
+                    <label className={s.formLabel}>Ketebalan (mm)</label>
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.1"
+                      className={s.formInput}
+                      value={form.thickness}
+                      onChange={(event) => set("thickness", event.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <label className={s.formLabel}>Jenis Kaca</label>
+                    <select
+                      className={s.formInput}
+                      value={form.glassType}
+                      onChange={(event) => set("glassType", event.target.value)}
+                    >
+                      <option value="">Pilih jenis</option>
+                      <option value="Bening">Bening</option>
+                      <option value="Hitam">Hitam</option>
+                      <option value="Riben">Riben</option>
+                      <option value="Tempered">Tempered</option>
+                    </select>
+                  </div>
+                </>
+              )}
             </div>
           )}
         </div>

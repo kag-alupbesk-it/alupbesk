@@ -9,7 +9,9 @@ export interface PMCutAllocation {
   lotId: string | null;
   quantity: number;
   lengthUsed: number | null;
+  widthUsed: number | null;
   leftoverLength: number | null;
+  leftoverWidth: number | null;
   leftoverStatus: LeftoverStatus;
   createdAt: string;
 }
@@ -21,6 +23,8 @@ export interface PMCutListItem {
   quantity: number;
   length: number | null;
   width: number | null;
+  thickness: number | null;
+  glassType: string | null;
   materialItemId: string | null;
   note: string;
   sortOrder: number;
@@ -44,6 +48,8 @@ export interface PMCutListItemInput {
   quantity: number;
   length?: number | null;
   width?: number | null;
+  thickness?: number | null;
+  glassType?: string | null;
   materialItemId?: string | null;
   note?: string;
 }
@@ -68,6 +74,7 @@ export interface ExecuteAllocationInput {
   lotId: string;
   quantity: number;
   lengthUsed?: number | null;
+  widthUsed?: number | null;
   leftoverStatus: LeftoverStatus;
 }
 

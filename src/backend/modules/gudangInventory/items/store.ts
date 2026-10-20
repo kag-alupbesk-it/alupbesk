@@ -24,6 +24,8 @@ export function persistInventoryItem(item: GudangInventoryItem): void {
       length_per_unit: item.lengthPerUnit,
       width_per_unit: item.widthPerUnit,
       weight_per_unit: item.weightPerUnit,
+      thickness: item.thickness,
+      glass_type: item.glassType,
       created_at: item.createdAt,
       updated_at: item.updatedAt,
     },

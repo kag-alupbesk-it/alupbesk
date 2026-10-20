@@ -23,6 +23,8 @@ export function createMaterialLot(
     inTransactionId: input.inTransactionId ?? null,
     length: input.length ?? null,
     width: input.width ?? null,
+    thickness: input.thickness ?? item.thickness ?? null,
+    glassType: input.glassType ?? item.glassType ?? null,
     quantity: input.quantity ?? 1,
     rackGroup: (input.rackGroup ?? item.rackGroup).trim(),
     subRow: (input.subRow ?? item.subRow).trim(),

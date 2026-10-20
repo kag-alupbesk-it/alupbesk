@@ -22,6 +22,8 @@ export interface GudangInventoryItem {
   lengthPerUnit: number | null;
   widthPerUnit: number | null;
   weightPerUnit: number | null;
+  thickness: number | null;
+  glassType: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -29,7 +31,7 @@ export interface GudangInventoryItem {
 // Jenis bahan: 'unit' = barang satuan biasa; 'bar' = batang profil;
 // 'sheet' = lembaran; 'roll' = gulungan. Selain 'unit', bahan dilacak lewat
 // lot agar sisa potong dapat dipakai ulang.
-export type MaterialKind = "unit" | "bar" | "sheet" | "roll";
+export type MaterialKind = "unit" | "bar" | "sheet" | "roll" | "glass";
 
 export type MaterialLotStatus = "tersedia" | "sisa" | "scrap" | "habis";
 
@@ -41,6 +43,8 @@ export interface GudangMaterialLot {
   inTransactionId: string | null;
   length: number | null;
   width: number | null;
+  thickness: number | null;
+  glassType: string | null;
   quantity: number;
   rackGroup: string;
   subRow: string;
@@ -67,6 +71,8 @@ export interface GudangMaterialLotInput {
   inTransactionId?: string | null;
   length?: number | null;
   width?: number | null;
+  thickness?: number | null;
+  glassType?: string | null;
   quantity?: number;
   rackGroup?: string;
   subRow?: string;
@@ -121,6 +127,8 @@ export interface GudangInventoryItemInput {
   lengthPerUnit?: number | null;
   widthPerUnit?: number | null;
   weightPerUnit?: number | null;
+  thickness?: number | null;
+  glassType?: string | null;
 }
 
 export interface GudangInTransactionInput {
