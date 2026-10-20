@@ -2,14 +2,15 @@ import { persistPartner } from "./persistPartner";
 import { partners } from "./store";
 import type { Partner, PartnerInput } from "../types";
 
-export function updatePartner(id: string, input: PartnerInput): Partner | undefined {
+export function updatePartner(id: string, input: Partial<PartnerInput>): Partner | undefined {
   const current = partners.get(id);
   if (!current) return undefined;
   const partner: Partner = {
-    id,
+    ...current,
     ...input,
-    name: input.name.trim(),
-    initials: input.initials.trim(),
+    id,
+    name: input.name !== undefined ? input.name.trim() : current.name,
+    initials: input.initials !== undefined ? input.initials.trim() : current.initials,
     createdAt: current.createdAt,
   };
   persistPartner(partner);
