@@ -30,14 +30,17 @@ export function approveProductionRequest(
   const projectName = `Produksi - ${current.spkLabel || current.spkRef}`;
   for (const line of current.items) {
     if (!line.itemId) continue;
-    createOutTransaction({
-      transactionDate: tanggal,
-      itemId: line.itemId,
-      quantity: line.quantity,
-      projectName,
-      source: "produksi",
-      createdBy: current.requesterName || approvedBy,
-    });
+    const item = gudangInventoryItems.get(line.itemId);
+    if (item?.materialKind === "unit") {
+      createOutTransaction({
+        transactionDate: tanggal,
+        itemId: line.itemId,
+        quantity: line.quantity,
+        projectName,
+        source: "produksi",
+        createdBy: current.requesterName || approvedBy,
+      });
+    }
   }
 
   const now = new Date().toISOString();
