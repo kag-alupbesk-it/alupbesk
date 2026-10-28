@@ -1,6 +1,8 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { useReadOnly } from "@/frontend/shared/access/AccessModeProvider";
 import {
   ArrowLeft,
   Building2,
@@ -86,6 +88,12 @@ function DetailLabel({ icon: Icon, label, value }: { icon: LucideIcon; label: st
 
 export function PMOrderDetail({ orderId }: { orderId: string }) {
   const { orders, advanceOrder } = usePMOrders();
+  const pathname = usePathname();
+  const readOnly = useReadOnly();
+  const isOwner = pathname.startsWith("/owner") || readOnly;
+  const backHref = isOwner ? "/owner/proyek" : "/pm";
+  const backLabel = isOwner ? "Kembali ke overview" : "Kembali ke dashboard";
+
   const order = orders.find((currentOrder) => currentOrder.id === orderId);
   const nextAction = order ? nextProjectStatus(order.projectStatus) : null;
 
@@ -95,7 +103,7 @@ export function PMOrderDetail({ orderId }: { orderId: string }) {
         <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-surface-variant text-on-surface-variant"><FileText size={24} /></div>
         <h2 className="mt-5 font-headline text-2xl font-extrabold text-on-surface">Proyek tidak ditemukan</h2>
         <p className="mt-2 text-sm text-on-surface-variant">Order dengan ID ini tidak tersedia pada data modul PM.</p>
-        <Link href="/pm" className="mt-6 inline-flex items-center gap-2 rounded-xl bg-secondary px-4 py-2.5 text-xs font-bold text-primary"><ArrowLeft size={14} /> Kembali ke dashboard</Link>
+        <Link href={backHref} className="mt-6 inline-flex items-center gap-2 rounded-xl bg-secondary px-4 py-2.5 text-xs font-bold text-primary"><ArrowLeft size={14} /> {backLabel}</Link>
       </div>
     );
   }
@@ -104,8 +112,8 @@ export function PMOrderDetail({ orderId }: { orderId: string }) {
     <div className="mx-auto max-w-[1500px] space-y-6">
       <section className="flex flex-col justify-between gap-5 xl:flex-row xl:items-end">
         <div>
-          <Link href="/pm" className="mb-4 inline-flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.14em] text-on-surface-variant transition-colors hover:text-secondary">
-            <ArrowLeft size={14} /> Kembali ke overview
+          <Link href={backHref} className="mb-4 inline-flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.14em] text-on-surface-variant transition-colors hover:text-secondary">
+            <ArrowLeft size={14} /> {backLabel}
           </Link>
           <div className="flex flex-wrap items-center gap-3">
             <h2 className="font-headline text-3xl font-extrabold tracking-tight text-on-surface">{order.contractorCode}</h2>
@@ -116,18 +124,20 @@ export function PMOrderDetail({ orderId }: { orderId: string }) {
             <span>{order.contractorName}</span><span className="text-outline">•</span><span>Order ID {order.id}</span>
           </div>
         </div>
-        <div className="flex flex-wrap items-center gap-2.5">
-          {order.projectStatus === "menunggu_acc" ? (
-            <Link href="/pm/approval" className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-secondary px-4 py-2.5 text-xs font-extrabold text-primary shadow-lg shadow-secondary/15 transition-colors hover:brightness-105 md:min-h-0">
-              <Clock3 size={14} /> Review Gambar
-            </Link>
-          ) : nextAction ? (
-            <button type="button" onClick={() => advanceOrder(order.id)} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-secondary px-4 py-2.5 text-xs font-extrabold text-primary shadow-lg shadow-secondary/15 transition-colors hover:brightness-105 md:min-h-0">
-              {order.projectStatus === "siap_produksi" ? <Play size={14} /> : order.projectStatus === "produksi" ? <PackageCheck size={14} /> : <CheckCircle2 size={14} />}
-              {nextAction}
-            </button>
-          ) : null}
-        </div>
+        {!isOwner && (
+          <div className="flex flex-wrap items-center gap-2.5">
+            {order.projectStatus === "menunggu_acc" ? (
+              <Link href="/pm/approval" className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-secondary px-4 py-2.5 text-xs font-extrabold text-primary shadow-lg shadow-secondary/15 transition-colors hover:brightness-105 md:min-h-0">
+                <Clock3 size={14} /> Review Gambar
+              </Link>
+            ) : nextAction ? (
+              <button type="button" onClick={() => advanceOrder(order.id)} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-secondary px-4 py-2.5 text-xs font-extrabold text-primary shadow-lg shadow-secondary/15 transition-colors hover:brightness-105 md:min-h-0">
+                {order.projectStatus === "siap_produksi" ? <Play size={14} /> : order.projectStatus === "produksi" ? <PackageCheck size={14} /> : <CheckCircle2 size={14} />}
+                {nextAction}
+              </button>
+            ) : null}
+          </div>
+        )}
       </section>
 
       <section className="grid grid-cols-2 gap-3 xl:grid-cols-4">
