@@ -1,4 +1,4 @@
-import { KontenSection } from "@/frontend/(marketing)/components/konten";
+import { KontenSection } from "@/frontend/Manager/(marketing)/components/konten";
 
 export const metadata = {
   title: "Konten | ALUPBESK Marketing",

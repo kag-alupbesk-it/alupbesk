@@ -1,4 +1,4 @@
-import { PromosiSection } from "@/frontend/(marketing)/components/promosi";
+import { PromosiSection } from "@/frontend/Manager/(marketing)/components/promosi";
 
 export const metadata = {
   title: "Promosi | ALUPBESK Marketing",
