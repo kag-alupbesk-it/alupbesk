@@ -1,7 +1,9 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useMemo, useState, useSyncExternalStore } from "react";
+import { useReadOnly } from "@/frontend/shared/access/AccessModeProvider";
 import {
   ArrowUpRight,
   CheckCircle2,
@@ -81,6 +83,10 @@ export function PMDashboard() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const greeting = useSyncExternalStore(subscribeToClock, getGreetingSnapshot, getGreetingServerSnapshot);
+  const pathname = usePathname();
+  const readOnly = useReadOnly();
+  const isOwner = pathname.startsWith("/owner") || readOnly;
+  const detailBasePath = isOwner ? "/owner/proyek" : "/pm/orders";
 
   const priorityOrders = useMemo(() => orders.filter(needsDrawingApproval), [orders]);
 
@@ -121,7 +127,7 @@ export function PMDashboard() {
             <span>{latestEnteredAt ? getPMDayLabel(latestEnteredAt) : "Belum ada order"}</span>
           </div>
           <h2 className="mt-3 font-headline text-3xl font-extrabold tracking-tight text-on-surface sm:text-4xl">
-            {greeting}, Project Manager<span className="text-secondary">.</span>
+            {greeting}, {isOwner ? "Owner" : "Project Manager"}<span className="text-secondary">.</span>
           </h2>
           <p className="mt-2 max-w-2xl text-sm leading-relaxed text-on-surface-variant">
             Pantau order, koordinasikan perubahan, dan pastikan setiap proyek siap masuk produksi.
@@ -136,21 +142,25 @@ export function PMDashboard() {
             <Download size={15} />
             Ekspor Excel
           </button>
-          <Link
-            href="/pm/approval"
-            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-outline/40 bg-surface-container px-4 py-2.5 text-xs font-bold text-on-surface transition-all hover:border-secondary/50 hover:text-secondary md:min-h-0"
-          >
-            <ClipboardCheck size={15} />
-            Review Gambar
-            {metrics.waiting > 0 && <span className="rounded-full bg-secondary px-1.5 py-0.5 text-[9px] text-primary">{metrics.waiting}</span>}
-          </Link>
-          <Link
-            href="/pm/orders/create"
-            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-secondary px-4 py-2.5 text-xs font-extrabold text-primary shadow-lg shadow-secondary/15 transition-all hover:-translate-y-0.5 hover:brightness-105 md:min-h-0"
-          >
-            <FilePlus2 size={15} strokeWidth={2.5} />
-            Tambah Order Baru
-          </Link>
+          {!isOwner && (
+            <>
+              <Link
+                href="/pm/approval"
+                className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-outline/40 bg-surface-container px-4 py-2.5 text-xs font-bold text-on-surface transition-all hover:border-secondary/50 hover:text-secondary md:min-h-0"
+              >
+                <ClipboardCheck size={15} />
+                Review Gambar
+                {metrics.waiting > 0 && <span className="rounded-full bg-secondary px-1.5 py-0.5 text-[9px] text-primary">{metrics.waiting}</span>}
+              </Link>
+              <Link
+                href="/pm/orders/create"
+                className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-secondary px-4 py-2.5 text-xs font-extrabold text-primary shadow-lg shadow-secondary/15 transition-all hover:-translate-y-0.5 hover:brightness-105 md:min-h-0"
+              >
+                <FilePlus2 size={15} strokeWidth={2.5} />
+                Tambah Order Baru
+              </Link>
+            </>
+          )}
         </div>
       </section>
 
@@ -249,7 +259,7 @@ export function PMDashboard() {
 
                   <div className="mt-4 flex">
                     <Link
-                      href={`/pm/orders/${order.id}`}
+                      href={`${detailBasePath}/${order.id}`}
                       className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-secondary px-4 py-2.5 text-xs font-extrabold text-primary shadow-lg shadow-secondary/15 transition-colors hover:brightness-105 md:min-h-0"
                     >
                       <ArrowUpRight size={15} />
@@ -311,7 +321,7 @@ export function PMDashboard() {
                       <td className="px-5 py-4 sm:px-6"><ProjectStatusBadge status={order.projectStatus} /></td>
                       <td className="whitespace-nowrap px-5 py-4 text-right sm:px-6">
                         <Link
-                          href={`/pm/orders/${order.id}`}
+                          href={`${detailBasePath}/${order.id}`}
                           aria-label={`Buka detail order ${order.contractorCode}`}
                           className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-xl border border-outline/40 px-3 py-2 text-[10px] font-bold text-on-surface transition-colors hover:border-secondary/50 hover:text-secondary md:min-h-0"
                         >
@@ -348,7 +358,7 @@ export function PMDashboard() {
                 </div>
               ) : (
                 priorityOrders.slice(0, 3).map((order) => (
-                  <Link key={order.id} href={`/pm/orders/${order.id}`} className="group block rounded-xl border border-outline/25 bg-surface-variant/35 p-3.5 transition-colors hover:border-secondary/40">
+                  <Link key={order.id} href={`${detailBasePath}/${order.id}`} className="group block rounded-xl border border-outline/25 bg-surface-variant/35 p-3.5 transition-colors hover:border-secondary/40">
                     <div className="flex items-start gap-3">
                       <div className={`mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${order.drawingStatus === "revisi" ? "bg-red-400/10 text-red-300" : "bg-secondary/10 text-secondary"}`}>
                         {order.drawingStatus === "revisi" ? <TimerReset size={15} /> : <Clock3 size={15} />}
