@@ -16,6 +16,8 @@ const requestedRoles = [
   { value: "produksi", label: "Production", labelId: "Produksi" },
   { value: "gudang", label: "Warehouse", labelId: "Gudang" },
   { value: "marketing", label: "Marketing", labelId: "Marketing" },
+  { value: "drafter", label: "Drafter", labelId: "Drafter" },
+  { value: "manager", label: "Manager", labelId: "Manager" },
 ] as const;
 
 export function RegisterForm() {
