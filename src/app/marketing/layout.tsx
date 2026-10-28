@@ -1,7 +1,7 @@
 "use client";
 
 import { useTheme } from "@/app/ThemeContext";
-import { SidebarProvider, Sidebar, MarketingShell } from "@/frontend/(marketing)/components/layout";
+import { SidebarProvider, Sidebar, MarketingShell } from "@/frontend/Manager/(marketing)/components/layout";
 
 function MarketingLayoutInner({ children }: { children: React.ReactNode }) {
   const { theme } = useTheme();

@@ -1,4 +1,4 @@
-import { LaporanSection } from "@/frontend/(marketing)/components/laporan";
+import { LaporanSection } from "@/frontend/Manager/(marketing)/components/laporan";
 
 export const metadata = {
   title: "Laporan | ALUPBESK Marketing",
