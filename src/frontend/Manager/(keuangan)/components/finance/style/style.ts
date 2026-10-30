@@ -66,11 +66,11 @@ export const badgeBonedar = "border-secondary/40 bg-secondary/10 text-secondary-
 
 export const badgeNetral = "border-outline/30 bg-surface-variant text-on-surface-variant";
 
-export const tableWrap = "hidden w-full overflow-x-auto rounded-2xl border border-outline/20 md:block";
+export const tableWrap = "hidden w-full overflow-x-auto rounded-2xl border border-outline/50 bg-surface md:block shadow-md";
 
-export const tableWrapModal = "w-full overflow-x-auto rounded-2xl border border-outline/20";
+export const tableWrapModal = "w-full overflow-x-auto rounded-2xl border border-outline/50 bg-surface";
 
-export const table = "w-full text-left text-xs";
+export const table = "w-full text-left text-xs divide-y divide-outline/30";
 
 export const cardListWrap = "flex flex-col gap-3 md:hidden";
 
@@ -88,7 +88,7 @@ export const cardListValue = "mt-0.5 text-xs text-on-surface";
 
 export const cardListActions = "mt-3 flex items-center justify-end gap-1.5 border-t border-outline/20 pt-3";
 
-export const tableHead = "bg-surface-variant/60 text-[10px] uppercase tracking-[0.2em] text-on-surface-variant border-b border-outline/30";
+export const tableHead = "bg-surface-variant text-[11px] font-bold uppercase tracking-[0.15em] text-on-surface border-b-2 border-outline/60";
 
 export const th = "px-4 py-3 font-bold";
 
@@ -98,7 +98,7 @@ export const tdStrong = `${td} font-semibold text-on-surface`;
 
 export const tdMuted = `${td} text-on-surface-variant`;
 
-export const tr = "border-t border-outline/30 transition-colors hover:bg-surface-variant/25";
+export const tr = "border-t border-outline/40 transition-colors hover:bg-surface-variant/40";
 
 export const emptyRow = "px-4 py-8 text-center text-xs text-on-surface-variant";
 
