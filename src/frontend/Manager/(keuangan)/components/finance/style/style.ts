@@ -88,7 +88,7 @@ export const cardListValue = "mt-0.5 text-xs text-on-surface";
 
 export const cardListActions = "mt-3 flex items-center justify-end gap-1.5 border-t border-outline/20 pt-3";
 
-export const tableHead = "bg-surface-variant/60 text-[10px] uppercase tracking-[0.2em] text-on-surface-variant";
+export const tableHead = "bg-surface-variant/60 text-[10px] uppercase tracking-[0.2em] text-on-surface-variant border-b border-outline/30";
 
 export const th = "px-4 py-3 font-bold";
 
@@ -98,7 +98,7 @@ export const tdStrong = `${td} font-semibold text-on-surface`;
 
 export const tdMuted = `${td} text-on-surface-variant`;
 
-export const tr = "border-t border-outline/10 transition-colors hover:bg-surface-variant/25";
+export const tr = "border-t border-outline/30 transition-colors hover:bg-surface-variant/25";
 
 export const emptyRow = "px-4 py-8 text-center text-xs text-on-surface-variant";
 
