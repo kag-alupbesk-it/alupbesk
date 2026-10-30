@@ -9,6 +9,7 @@ import { PayrollSection } from "../PayrollSection/PayrollSection";
 import { TerminSection } from "../TerminSection/TerminSection";
 import Sidebar from "@/frontend/Manager/(keuangan)/components/layout/Sidebar/Sidebar";
 import ThemeToggle from "@/app/ThemeToggle";
+import NotificationBell from "@/frontend/(owner)/components/layout/TopBar/NotificationBell";
 import { LogoutButton } from "@/frontend/auth/LogoutButton";
 import { financeNavigationItems, type FinanceTabKey } from "@/frontend/shared/navigation/roleNavigation";
 import AuditLogSection from "@/frontend/shared/audit/AuditLogSection";
@@ -37,10 +38,17 @@ function IsiTab({ tab }: { tab: TabKey }) {
   return (
     <div className="p-3 pb-24 sm:p-4 sm:pb-24 md:px-6 md:pt-6 md:pb-24 lg:pb-6">
       <div className="w-full space-y-5">
-        <header className={s.pageHeader}>
-          <p className={s.pageEyebrow}>Modul Keuangan</p>
-          <h1 className={s.pageTitle}>{tabAktif.label}</h1>
-          <p className={s.pageSubtitle}>{TAB_SUMMARIES[tabAktif.key]}</p>
+        <header className={`${s.pageHeader} flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3`}>
+          <div>
+            <p className={s.pageEyebrow}>Modul Keuangan</p>
+            <h1 className={s.pageTitle}>{tabAktif.label}</h1>
+            <p className={s.pageSubtitle}>{TAB_SUMMARIES[tabAktif.key]}</p>
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
+            <NotificationBell />
+            <ThemeToggle />
+            <LogoutButton />
+          </div>
         </header>
 
         <div
@@ -72,6 +80,7 @@ export function KeuanganDashboard() {
           <div className={`${s.mobileBar} justify-between`}>
             <p className={s.navTitleMobile}>{financeNavigationItems.find((item) => item.key === tab)?.label ?? "Kas"}</p>
             <div className="flex shrink-0 items-center gap-2">
+              <NotificationBell />
               <ThemeToggle />
               <LogoutButton />
             </div>
