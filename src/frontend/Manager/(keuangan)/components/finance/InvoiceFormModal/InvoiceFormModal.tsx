@@ -74,7 +74,6 @@ export function InvoiceFormModal({ awal, onTutup }: Props) {
 
   const totalTermin = termin.reduce((sum, item) => sum + item.nominal, 0);
   const selisih = total - totalTermin;
-  const saranNama = Array.from(new Set(state.invoice.map((item) => item.nama).filter(Boolean)));
 
   const ubahTotal = (value: number) => {
     setTotal(value);
@@ -300,11 +299,10 @@ export function InvoiceFormModal({ awal, onTutup }: Props) {
 
             <div>
               <label className={s.fieldLabel} htmlFor="invoice-nama">
-                Nama Klien / Toko / Pemberi Kerja
+                Nama Klien
               </label>
               <input
                 id="invoice-nama"
-                list="invoice-saran-nama"
                 value={nama}
                 onChange={(event) => {
                   setNama(event.target.value);
@@ -314,11 +312,6 @@ export function InvoiceFormModal({ awal, onTutup }: Props) {
                 aria-invalid={Boolean(errors.nama)}
                 className={s.input}
               />
-              <datalist id="invoice-saran-nama">
-                {saranNama.map((item) => (
-                  <option key={item} value={item} />
-                ))}
-              </datalist>
               {errors.nama && (
                 <span role="alert" className={s.inputErrorText}>
                   {errors.nama}
@@ -346,10 +339,9 @@ export function InvoiceFormModal({ awal, onTutup }: Props) {
             </label>
 
             <label className={s.fieldLabel} htmlFor="invoice-pos">
-              Pos / Lokasi Proyek
+              Lokasi Proyek
               <input
                 id="invoice-pos"
-                list="invoice-saran-pos"
                 value={posProyek}
                 onChange={(event) => {
                   setPosProyek(event.target.value);
@@ -359,11 +351,6 @@ export function InvoiceFormModal({ awal, onTutup }: Props) {
                 aria-invalid={Boolean(errors.posProyek)}
                 className={s.input}
               />
-              <datalist id="invoice-saran-pos">
-                {opsiPos.map((item) => (
-                  <option key={item} value={item} />
-                ))}
-              </datalist>
               {errors.posProyek && (
                 <span role="alert" className={s.inputErrorText}>
                   {errors.posProyek}
