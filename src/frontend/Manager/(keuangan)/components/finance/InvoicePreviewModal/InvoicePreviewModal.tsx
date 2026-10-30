@@ -4,6 +4,7 @@ import { useFinance } from "../FinanceStore/FinanceStore";
 import { StatusBadge } from "../ui/StatusBadge/StatusBadge";
 import { formatRp, formatTanggalPanjang } from "../format/format";
 import type { InvoiceRingkas } from "../FinanceStore/FinanceStore";
+import { hitungInvoice } from "../types/types";
 import * as s from "../style/style";
 import { useReadOnly } from "@/frontend/shared/access/AccessModeProvider";
 
@@ -14,9 +15,12 @@ export function InvoicePreviewModal({
   data: InvoiceRingkas;
   onTutup: () => void;
 }) {
-  const { lunasTermin } = useFinance();
+  const { state, lunasTermin } = useFinance();
   const readOnly = useReadOnly();
-  const { invoice, totalTagihan, terbayar, sisaTagihan, jatuhTempo } = data;
+  const currentInvoice = state.invoice.find((item) => item.id === data.invoice.id) ?? data.invoice;
+  const currentRingkas = hitungInvoice(currentInvoice);
+  const { totalTagihan, terbayar, sisaTagihan, jatuhTempo } = currentRingkas;
+  const invoice = currentInvoice;
 
   return (
     <div className={s.modalOverlay} onMouseDown={(event) => event.target === event.currentTarget && onTutup()}>
