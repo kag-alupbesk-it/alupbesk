@@ -7,9 +7,6 @@ import { formatRp, tanggalHariIni } from "../format/format";
 import type { Invoice } from "../types/types";
 import * as s from "../style/style";
 
-const PIHAK_OPTIONS = ["Kontraktor", "Toko"] as const;
-type Pihak = (typeof PIHAK_OPTIONS)[number];
-
 type BarisTermin = {
   key: string;
   id: string;
@@ -43,7 +40,6 @@ export function InvoiceFormModal({ awal, onTutup }: Props) {
 
   const [nomor, setNomor] = useState(awal?.nomor ?? "");
   const [tanggal, setTanggal] = useState(awal?.tanggal ?? tanggalHariIni());
-  const [pihak, setPihak] = useState<Pihak>(awal?.pihak ?? "Kontraktor");
   const [nama, setNama] = useState(awal?.nama ?? "");
   const [proyek, setProyek] = useState(awal?.proyek ?? "");
   const [posProyek, setPosProyek] = useState(awal?.posProyek ?? (opsiPos[0] ?? ""));
@@ -134,6 +130,15 @@ export function InvoiceFormModal({ awal, onTutup }: Props) {
     ]);
   };
 
+  const isiSisaBarisTerakhir = () => {
+    if (termin.length === 0 || total <= 0) return;
+    const terminLain = termin.slice(0, -1);
+    const totalLain = terminLain.reduce((sum, item) => sum + item.nominal, 0);
+    const sisa = Math.max(total - totalLain, 0);
+    const terakhirKey = termin[termin.length - 1].key;
+    ubahNominal(terakhirKey, sisa);
+  };
+
   const hapusBaris = (key: string) =>
     setTermin((daftar) => (daftar.length <= 1 ? daftar : daftar.filter((item) => item.key !== key)));
 
@@ -171,10 +176,9 @@ export function InvoiceFormModal({ awal, onTutup }: Props) {
     const payload = {
       nomor: nomor.trim(),
       tanggal,
-      pihak,
       nama: nama.trim(),
       proyek: proyek.trim(),
-      posProyek,
+      posProyek: posProyek.trim(),
       uraian: uraian.trim(),
       termin: termin.map((item) => ({
         id: item.id || buatKey(),
@@ -296,39 +300,25 @@ export function InvoiceFormModal({ awal, onTutup }: Props) {
 
             <div>
               <label className={s.fieldLabel} htmlFor="invoice-nama">
-                Pihak / Klien / Kontraktor
+                Nama Klien / Toko / Pemberi Kerja
               </label>
-              <div className="flex items-stretch gap-1.5">
-                <select
-                  value={pihak}
-                  onChange={(event) => setPihak(event.target.value as Pihak)}
-                  aria-label="Jenis pihak"
-                  className={`${s.select} w-28 shrink-0`}
-                >
-                  {PIHAK_OPTIONS.map((item) => (
-                    <option key={item} value={item}>
-                      {item}
-                    </option>
-                  ))}
-                </select>
-                <input
-                  id="invoice-nama"
-                  list="invoice-saran-nama"
-                  value={nama}
-                  onChange={(event) => {
-                    setNama(event.target.value);
-                    setErrors((current) => ({ ...current, nama: "" }));
-                  }}
-                  placeholder="Nama klien / kontraktor / toko"
-                  aria-invalid={Boolean(errors.nama)}
-                  className={s.input}
-                />
-                <datalist id="invoice-saran-nama">
-                  {saranNama.map((item) => (
-                    <option key={item} value={item} />
-                  ))}
-                </datalist>
-              </div>
+              <input
+                id="invoice-nama"
+                list="invoice-saran-nama"
+                value={nama}
+                onChange={(event) => {
+                  setNama(event.target.value);
+                  setErrors((current) => ({ ...current, nama: "" }));
+                }}
+                placeholder="cth: PT Maju Bersama / Bp. Budi"
+                aria-invalid={Boolean(errors.nama)}
+                className={s.input}
+              />
+              <datalist id="invoice-saran-nama">
+                {saranNama.map((item) => (
+                  <option key={item} value={item} />
+                ))}
+              </datalist>
               {errors.nama && (
                 <span role="alert" className={s.inputErrorText}>
                   {errors.nama}
@@ -355,26 +345,25 @@ export function InvoiceFormModal({ awal, onTutup }: Props) {
               )}
             </label>
 
-            <label className={s.fieldLabel}>
+            <label className={s.fieldLabel} htmlFor="invoice-pos">
               Pos / Lokasi Proyek
-              <select
+              <input
+                id="invoice-pos"
+                list="invoice-saran-pos"
                 value={posProyek}
                 onChange={(event) => {
                   setPosProyek(event.target.value);
                   setErrors((current) => ({ ...current, posProyek: "" }));
                 }}
+                placeholder="cth: Kantor / Lapangan / Workshop"
                 aria-invalid={Boolean(errors.posProyek)}
-                className={s.select}
-              >
-                <option value="" disabled>
-                  Pilih pos…
-                </option>
+                className={s.input}
+              />
+              <datalist id="invoice-saran-pos">
                 {opsiPos.map((item) => (
-                  <option key={item} value={item}>
-                    {item}
-                  </option>
+                  <option key={item} value={item} />
                 ))}
-              </select>
+              </datalist>
               {errors.posProyek && (
                 <span role="alert" className={s.inputErrorText}>
                   {errors.posProyek}
@@ -524,12 +513,23 @@ export function InvoiceFormModal({ awal, onTutup }: Props) {
             <div
               className={`mt-3 flex flex-wrap items-center justify-between gap-2 rounded-xl border px-3 py-2 text-xs ${toneIndikator}`}
             >
-              <span className="font-semibold">
-                {totalBelumDiisi
-                  ? "Isi total nilai tagihan, lalu bagi ke tiap baris termin."
-                  : terminCocok
-                    ? "Total termin sesuai dengan total tagihan."
-                    : "Total termin harus sama dengan total tagihan."}
+              <span className="font-semibold flex items-center gap-2">
+                <span>
+                  {totalBelumDiisi
+                    ? "Isi total nilai tagihan, lalu bagi ke tiap baris termin."
+                    : terminCocok
+                      ? "Total termin sesuai dengan total tagihan."
+                      : "Total termin harus sama dengan total tagihan."}
+                </span>
+                {!totalBelumDiisi && !terminCocok && termin.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={isiSisaBarisTerakhir}
+                    className="rounded-lg bg-error/20 px-2 py-1 font-bold text-error hover:bg-error/30 transition-colors"
+                  >
+                    Isi Sisa Otomatis
+                  </button>
+                )}
               </span>
               {!totalBelumDiisi && (
                 <span className="font-bold">

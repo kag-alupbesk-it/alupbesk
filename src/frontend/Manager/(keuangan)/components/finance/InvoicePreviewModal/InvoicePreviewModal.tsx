@@ -61,7 +61,7 @@ export function InvoicePreviewModal({
           <div className="grid gap-3 sm:grid-cols-3">
             <div className={s.cardCompact}>
               <p className={s.detailLabel}>Penerima tagihan</p>
-              <p className={s.detailValue}>{invoice.pihak}</p>
+              <p className={s.detailValue}>{invoice.nama}</p>
             </div>
             <div className={s.cardCompact}>
               <p className={s.detailLabel}>Proyek</p>
@@ -160,7 +160,7 @@ export function InvoicePreviewModal({
           </dl>
 
           <p className={s.metaText}>
-            Mohon ditandatangani oleh {invoice.pihak} pada kolom tanda tangan, lalu konfirmasi oleh Finance,
+            Mohon ditandatangani oleh {invoice.nama} pada kolom tanda tangan, lalu konfirmasi oleh Finance,
             QA/QC, dan General Manager. Retensi 0,5% dari sisa tagihan:{" "}
             {formatRp(Math.round(sisaTagihan * 0.005))}.
           </p>

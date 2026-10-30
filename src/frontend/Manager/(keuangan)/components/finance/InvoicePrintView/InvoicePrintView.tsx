@@ -125,8 +125,7 @@ export function InvoicePrintView({ invoiceId }: Props) {
         <div className={s.infoGrid}>
           <div>
             <div className={s.infoBlockTitle}>Penerima Tagihan</div>
-            <div className={s.infoValue}>{invoice.pihak}</div>
-            <div className={s.infoPlain}>{invoice.nama}</div>
+            <div className={s.infoValue}>{invoice.nama}</div>
             <div className="mt-3">
               <div className={s.infoBlockTitle}>Proyek</div>
               <div className={s.infoPlain}>{invoice.proyek}</div>
@@ -180,7 +179,7 @@ export function InvoicePrintView({ invoiceId }: Props) {
         <div className={s.ttd}>
           <div className={s.ttdCol}>
             <div className={s.ttdLabel}>Penerima</div>
-            <div className={s.ttdName}>{invoice.pihak}</div>
+            <div className={s.ttdName}>{invoice.nama}</div>
             <div className={s.ttdBlank} />
             <div className="text-[13px] text-slate-900 mt-1">(Tanda Tangan & Stempel)</div>
           </div>

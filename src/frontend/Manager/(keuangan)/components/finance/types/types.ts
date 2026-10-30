@@ -96,10 +96,10 @@ export type Invoice = {
   id: string;
   nomor: string;
   tanggal: string;
-  pihak: "Kontraktor" | "Toko";
+  pihak?: string;
   nama: string;
   proyek: string;
-  posProyek: PosProyek;
+  posProyek: string;
   uraian: string;
   termin: TerminPembayaran[];
 };

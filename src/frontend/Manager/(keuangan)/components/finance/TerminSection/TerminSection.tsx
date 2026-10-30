@@ -99,6 +99,11 @@ export function TerminSection() {
   const [preview, setPreview] = useState<InvoiceRingkas | null>(null);
   const [form, setForm] = useState<{ invoice?: Invoice } | null>(null);
   const [hapus, setHapus] = useState<Invoice | null>(null);
+  const [expandedIds, setExpandedIds] = useState<Record<string, boolean>>({});
+
+  const toggleExpand = (id: string) => {
+    setExpandedIds((curr) => ({ ...curr, [id]: !curr[id] }));
+  };
 
   const daftar = useMemo(() => {
     const query = cari.trim().toLowerCase();
@@ -236,82 +241,129 @@ export function TerminSection() {
               </tr>
             </thead>
             <tbody>
-              {daftar.map((item) => (
-                <tr key={item.invoice.id} className={s.tr}>
-                  <td className={s.tdStrong}>
-                    <p>{item.invoice.nomor}</p>
-                    <p className={`${s.metaText} mt-0.5`}>
-                      {formatTanggal(item.invoice.tanggal)} · {item.invoice.pihak}
-                    </p>
-                  </td>
-                  <td className={s.tdStrong}>{item.invoice.nama}</td>
-                  <td className={s.tdMuted}>
-                    <p>{item.invoice.proyek}</p>
-                    <p className={`${s.metaText} mt-0.5`}>{item.invoice.posProyek}</p>
-                  </td>
-                  <td className={`${s.td} ${s.amountStrong} text-on-surface`}>{formatRp(item.totalTagihan)}</td>
-                  <td className={`${s.td} text-right text-success`}>{formatRp(item.terbayarDp)}</td>
-                  <td className={`${s.td} ${s.amountStrong} text-error`}>{formatRp(item.sisaTagihan)}</td>
-                  <td className={s.tdMuted}>{formatTanggal(item.jatuhTempo)}</td>
-                  <td className={s.td}>
-                    <StatusBadge tone={TONE_STATUS[item.status]} label={LABEL_STATUS[item.status]} icon={IKON_STATUS[item.status]} />
-                  </td>
-                  <td className={`${s.td} text-right`}>
-                    <div className={s.actionGroup}>
-                      <button
-                        type="button"
-                        onClick={() => setPreview(item)}
-                        aria-label={`Preview invoice ${item.invoice.nomor}`}
-                        className={s.ghostButton}
-                      >
-                        <span aria-hidden="true" className={s.iconSm}>
-                          visibility
-                        </span>
-                        Preview
-                      </button>
-                      {!readOnly && (
-                        <>
-                          {item.terminBerikutnya && (
-                            <button
-                              type="button"
-                              onClick={() => lunasTermin(item.invoice.id, item.terminBerikutnya.id)}
-                              aria-label={`Tandai lunas ${item.terminBerikutnya.label} invoice ${item.invoice.nomor}`}
-                              title={`Catat ${item.terminBerikutnya.label} sebagai Kas Masuk`}
-                              className={s.actionButton}
-                            >
-                              <span aria-hidden="true" className={s.iconSm}>
-                                paid
-                              </span>
-                            </button>
+              {daftar.map((item) => {
+                const isExpanded = Boolean(expandedIds[item.invoice.id]);
+                return (
+                  <>
+                    <tr key={item.invoice.id} className={`${s.tr} cursor-pointer hover:bg-surface-variant/30`} onClick={() => toggleExpand(item.invoice.id)}>
+                      <td className={s.tdStrong}>
+                        <div className="flex items-center gap-2">
+                          <span className="material-symbols-rounded text-sm text-on-surface-variant transition-transform">
+                            {isExpanded ? "expand_less" : "expand_more"}
+                          </span>
+                          <div>
+                            <p>{item.invoice.nomor}</p>
+                            <p className={`${s.metaText} mt-0.5`}>
+                              {formatTanggal(item.invoice.tanggal)}
+                            </p>
+                          </div>
+                        </div>
+                      </td>
+                      <td className={s.tdStrong}>{item.invoice.nama}</td>
+                      <td className={s.tdMuted}>
+                        <p>{item.invoice.proyek}</p>
+                        <p className={`${s.metaText} mt-0.5`}>{item.invoice.posProyek}</p>
+                      </td>
+                      <td className={`${s.td} ${s.amountStrong} text-on-surface`}>{formatRp(item.totalTagihan)}</td>
+                      <td className={`${s.td} text-right text-success`}>{formatRp(item.terbayarDp)}</td>
+                      <td className={`${s.td} ${s.amountStrong} text-error`}>{formatRp(item.sisaTagihan)}</td>
+                      <td className={s.tdMuted}>{formatTanggal(item.jatuhTempo)}</td>
+                      <td className={s.td}>
+                        <StatusBadge tone={TONE_STATUS[item.status]} label={LABEL_STATUS[item.status]} icon={IKON_STATUS[item.status]} />
+                      </td>
+                      <td className={`${s.td} text-right`} onClick={(e) => e.stopPropagation()}>
+                        <div className={s.actionGroup}>
+                          <button
+                            type="button"
+                            onClick={() => setPreview(item)}
+                            aria-label={`Preview invoice ${item.invoice.nomor}`}
+                            className={s.ghostButton}
+                          >
+                            <span aria-hidden="true" className={s.iconSm}>
+                              visibility
+                            </span>
+                            Preview
+                          </button>
+                          {!readOnly && (
+                            <>
+                              {item.terminBerikutnya && (
+                                <button
+                                  type="button"
+                                  onClick={() => lunasTermin(item.invoice.id, item.terminBerikutnya.id)}
+                                  aria-label={`Tandai lunas ${item.terminBerikutnya.label} invoice ${item.invoice.nomor}`}
+                                  title={`Catat ${item.terminBerikutnya.label} sebagai Kas Masuk`}
+                                  className={s.actionButton}
+                                >
+                                  <span aria-hidden="true" className={s.iconSm}>
+                                    paid
+                                  </span>
+                                </button>
+                              )}
+                              <button
+                                type="button"
+                                onClick={() => setForm({ invoice: item.invoice })}
+                                aria-label={`Ubah invoice ${item.invoice.nomor}`}
+                                title="Ubah invoice"
+                                className={s.actionButton}
+                              >
+                                <span aria-hidden="true" className={s.iconSm}>
+                                  edit
+                                </span>
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setHapus(item.invoice)}
+                                aria-label={`Hapus invoice ${item.invoice.nomor}`}
+                                title="Hapus invoice"
+                                className={s.actionButtonDanger}
+                              >
+                                <span aria-hidden="true" className={s.iconSm}>
+                                  delete
+                                </span>
+                              </button>
+                            </>
                           )}
-                          <button
-                            type="button"
-                            onClick={() => setForm({ invoice: item.invoice })}
-                            aria-label={`Ubah invoice ${item.invoice.nomor}`}
-                            title="Ubah invoice"
-                            className={s.actionButton}
-                          >
-                            <span aria-hidden="true" className={s.iconSm}>
-                              edit
-                            </span>
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => setHapus(item.invoice)}
-                            aria-label={`Hapus invoice ${item.invoice.nomor}`}
-                            title="Hapus invoice"
-                            className={s.actionButtonDanger}
-                          >
-                            <span aria-hidden="true" className={s.iconSm}>
-                              delete
-                            </span>
-                          </button>
-                        </>
-                      )}
-                    </div>
-                  </td>
-                </tr>
-              ))}
+                        </div>
+                      </td>
+                    </tr>
+                    {isExpanded && (
+                      <tr key={`${item.invoice.id}-detail`} className="bg-surface-variant/40">
+                        <td colSpan={9} className="p-4">
+                          <div className="rounded-xl border border-outline/20 bg-surface p-3 space-y-2">
+                            <p className="text-xs font-bold text-on-surface uppercase tracking-wider">Rincian Termin &amp; Tahapan Pembayaran:</p>
+                            <div className="grid gap-2 sm:grid-cols-2 md:grid-cols-3">
+                              {item.invoice.termin.map((t, idx) => (
+                                <div key={t.id || idx} className="rounded-lg border border-outline/20 bg-surface-variant/50 p-2.5 flex items-center justify-between gap-2">
+                                  <div>
+                                    <p className="text-xs font-semibold text-on-surface">{t.label}</p>
+                                    <p className={`${s.metaText} mt-0.5`}>Jatuh Tempo: {formatTanggal(t.jatuhTempo)}</p>
+                                    <p className="text-xs font-bold text-secondary mt-1">{formatRp(t.nominal)}</p>
+                                  </div>
+                                  <div className="flex items-center gap-1.5">
+                                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${t.lunas ? 'bg-success/15 text-success' : 'bg-warning/15 text-warning'}`}>
+                                      {t.lunas ? 'Lunas' : 'Belum'}
+                                    </span>
+                                    {!readOnly && !t.lunas && (
+                                      <button
+                                        type="button"
+                                        onClick={() => lunasTermin(item.invoice.id, t.id)}
+                                        className="rounded-lg bg-success text-on-success p-1 text-xs font-medium hover:opacity-90 transition-opacity"
+                                        title={`Tandai ${t.label} Lunas`}
+                                      >
+                                        <span className="material-symbols-rounded text-sm">paid</span>
+                                      </button>
+                                    )}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </>
+                );
+              })}
               {daftar.length === 0 && (
                 <tr>
                   <td colSpan={9} className={s.emptyRow}>
