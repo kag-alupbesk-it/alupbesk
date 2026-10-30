@@ -772,7 +772,6 @@ export function PayrollSection() {
                           </span>
                           <div>
                             <p>{item.nama}</p>
-                            <p className={`${s.metaText} mt-0.5`}>{item.lokasi}</p>
                           </div>
                         </div>
                       </td>
