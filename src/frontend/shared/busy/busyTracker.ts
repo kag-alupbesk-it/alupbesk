@@ -48,6 +48,7 @@ function shouldTrack(input: RequestInfo | URL, init?: RequestInit): boolean {
           ? input.href
           : input.url;
     const parsed = new URL(rawUrl, window.location.origin);
+    if (parsed.pathname === "/api/keuangan/finance-store") return false;
     return parsed.origin === window.location.origin && parsed.pathname.startsWith("/api/");
   } catch {
     return false;

@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import { useFinance } from "../FinanceStore/FinanceStore";
 import { StatusBadge } from "../ui/StatusBadge/StatusBadge";
 import { formatRp, formatTanggalPanjang } from "../format/format";
@@ -18,14 +17,6 @@ export function InvoicePreviewModal({
 }) {
   const { state, lunasTermin } = useFinance();
   const readOnly = useReadOnly();
-  const [loadingTerminId, setLoadingTerminId] = useState<string | null>(null);
-
-  const handleLunas = async (invoiceId: string, terminId: string) => {
-    setLoadingTerminId(terminId);
-    await new Promise((r) => setTimeout(r, 600));
-    lunasTermin(invoiceId, terminId);
-    setLoadingTerminId(null);
-  };
 
   const currentInvoice = state.invoice.find((item) => item.id === data.invoice.id) ?? data.invoice;
   const currentRingkas = hitungInvoice(currentInvoice);
@@ -137,15 +128,14 @@ export function InvoicePreviewModal({
                         {!termin.lunas ? (
                           <button
                             type="button"
-                            disabled={loadingTerminId === termin.id}
-                            onClick={() => handleLunas(invoice.id, termin.id)}
+                            onClick={() => lunasTermin(invoice.id, termin.id)}
                             aria-label={`Tandai lunas ${termin.label} invoice ${invoice.nomor}`}
                             className={s.ghostButton}
                           >
                             <span aria-hidden="true" className={s.iconSm}>
-                              {loadingTerminId === termin.id ? "progress_activity" : "paid"}
+                              paid
                             </span>
-                            {loadingTerminId === termin.id ? "Memuat..." : "Tandai Lunas"}
+                            Tandai Lunas
                           </button>
                         ) : (
                           <span className="text-xs font-bold text-success">Selesai</span>
