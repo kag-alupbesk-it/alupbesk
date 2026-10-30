@@ -82,6 +82,61 @@ function InputRupiah({
   );
 }
 
+function InlinePayrollEditor({ karyawan }: { karyawan: Karyawan }) {
+  const { ubahKaryawan } = useFinance();
+  const [tunjangan, setTunjangan] = useState(karyawan.tunjangan);
+  const [lembur, setLembur] = useState(karyawan.lembur);
+  const [potongan, setPotongan] = useState(karyawan.potongan);
+
+  const simpan = () => {
+    ubahKaryawan({
+      ...karyawan,
+      tunjangan,
+      lembur,
+      potongan,
+    });
+  };
+
+  return (
+    <div className="rounded-xl border border-outline/30 bg-surface p-4 space-y-3">
+      <div className="flex items-center justify-between">
+        <p className="text-xs font-bold text-on-surface uppercase tracking-wider">
+          Input / Update Tunjangan, Lembur &amp; Kasbon: {karyawan.nama}
+        </p>
+      </div>
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 md:grid-cols-4">
+        <InputRupiah
+          label="Tunjangan"
+          nilai={tunjangan}
+          prefix="Rp"
+          onUbah={setTunjangan}
+        />
+        <InputRupiah
+          label="Lembur"
+          nilai={lembur}
+          prefix="Rp"
+          onUbah={setLembur}
+        />
+        <InputRupiah
+          label="Potongan Kasbon/Bon"
+          nilai={potongan}
+          prefix="Rp"
+          onUbah={setPotongan}
+        />
+        <div className="flex items-end">
+          <button
+            type="button"
+            onClick={simpan}
+            className={`${s.primaryButton} w-full`}
+          >
+            Simpan Komponen Gaji
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function FormKaryawan({
   edit,
   onSelesai,
@@ -107,10 +162,12 @@ function FormKaryawan({
     if (!draft.nama.trim()) validasi.nama = "Nama karyawan wajib diisi.";
     if (!draft.jabatan.trim()) validasi.jabatan = "Jabatan wajib diisi.";
     if (draft.gajiPokok <= 0) validasi.gajiPokok = "Gaji pokok harus lebih dari Rp 0.";
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(draft.periode))
-      validasi.periode = "Tanggal gajian wajib diisi, cth: 2026-10-15.";
-    if (draft.potongan > draft.gajiPokok + draft.tunjangan + draft.lembur)
-      validasi.potongan = "Total potongan melebihi pendapatan karyawan.";
+    if (edit) {
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(draft.periode))
+        validasi.periode = "Tanggal gajian wajib diisi, cth: 2026-10-15.";
+      if (draft.potongan > draft.gajiPokok + draft.tunjangan + draft.lembur)
+        validasi.potongan = "Total potongan melebihi pendapatan karyawan.";
+    }
     setErrors(validasi);
     if (Object.keys(validasi).length > 0) return;
 
@@ -120,6 +177,9 @@ function FormKaryawan({
         ...draft,
         nama: draft.nama.trim(),
         jabatan: draft.jabatan.trim(),
+        tunjangan: 0,
+        lembur: 0,
+        potongan: 0,
       });
     onSelesai();
   };
@@ -134,7 +194,9 @@ function FormKaryawan({
         <div>
           <h2 className={s.sectionTitle}>{edit ? "Ubah Data Karyawan" : "Tambah Karyawan"}</h2>
           <p className={s.sectionSubtitle}>
-            Lengkapi identitas, komponen gaji, dan potongan bon/kasbon. Data ini otomatis dipakai saat pencairan gaji.
+            {edit
+              ? "Lengkapi identitas, komponen gaji, dan potongan bon/kasbon."
+              : "Masukkan Nama, Jabatan, dan Gaji Pokok saja. Tunjangan, lembur, dan kasbon dapat diinput kemudian melalui accordion di tabel karyawan."}
           </p>
         </div>
         {edit && (
@@ -147,8 +209,8 @@ function FormKaryawan({
         )}
       </div>
 
-      <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-6">
-        <label className={`${s.fieldLabel} sm:col-span-2 lg:col-span-2 2xl:col-span-2`}>
+      <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        <label className={s.fieldLabel}>
           Nama Karyawan
           <input
             value={draft.nama}
@@ -174,46 +236,6 @@ function FormKaryawan({
           onTambah={tambahOpsiJabatan}
         />
 
-        <SelectTambahBaru
-          label="Lokasi / Pos"
-          value={draft.lokasi}
-          options={opsiPos}
-          placeholder="cth: Pabrik Malang"
-          onChange={(value) => ubah("lokasi", value as PosProyek)}
-          onTambah={(value) => tambahOpsi("pos", value)}
-        />
-
-        <label className={s.fieldLabel}>
-          Tanggal Gajian
-          <input
-            type="date"
-            value={draft.periode}
-            onChange={(event) => ubah("periode", event.target.value)}
-            aria-invalid={Boolean(errors.periode)}
-            className={s.input}
-          />
-          {errors.periode && (
-            <span role="alert" className={s.inputErrorText}>
-              {errors.periode}
-            </span>
-          )}
-        </label>
-
-        <label className={s.fieldLabel}>
-          Metode Bayar
-          <select
-            value={draft.metodeBayar}
-            onChange={(event) => ubah("metodeBayar", event.target.value)}
-            className={s.select}
-          >
-            {METODE_BAYAR.map((item) => (
-              <option key={item} value={item}>
-                {item}
-              </option>
-            ))}
-          </select>
-        </label>
-
         <InputRupiah
           label="Gaji Pokok"
           nilai={draft.gajiPokok}
@@ -221,33 +243,65 @@ function FormKaryawan({
           error={errors.gajiPokok}
           onUbah={(value) => ubah("gajiPokok", value)}
         />
-        <InputRupiah
-          label="Tunjangan"
-          nilai={draft.tunjangan}
-          prefix="Rp"
-          onUbah={(value) => ubah("tunjangan", value)}
-        />
-        <InputRupiah
-          label="Lembur"
-          nilai={draft.lembur}
-          prefix="Rp"
-          onUbah={(value) => ubah("lembur", value)}
-        />
-        <InputRupiah
-          label="Potongan Kasbon/Bon"
-          nilai={draft.potongan}
-          prefix="Rp"
-          error={errors.potongan}
-          onUbah={(value) => ubah("potongan", value)}
-        />
 
-        <div className={`${s.panelHighlight} flex flex-col justify-center sm:col-span-2 lg:col-span-1`}>
-          <p className={s.cardListLabel}>Simulasi Gaji Bulanan</p>
-          <p className={`${s.statValue} text-secondary`}>{formatRp(bersihNetto)}</p>
-          <p className={`${s.metaText} mt-1`}>
-            Pendapatan {formatRp(pendapatan)} · Potongan {formatRp(potongan)}
-          </p>
-        </div>
+        {edit && (
+          <>
+            <SelectTambahBaru
+              label="Lokasi / Pos"
+              value={draft.lokasi}
+              options={opsiPos}
+              placeholder="cth: Pabrik Malang"
+              onChange={(value) => ubah("lokasi", value as PosProyek)}
+              onTambah={(value) => tambahOpsi("pos", value)}
+            />
+
+            <label className={s.fieldLabel}>
+              Tanggal Gajian
+              <input
+                type="date"
+                value={draft.periode}
+                onChange={(event) => ubah("periode", event.target.value)}
+                aria-invalid={Boolean(errors.periode)}
+                className={s.input}
+              />
+            </label>
+
+            <label className={s.fieldLabel}>
+              Metode Bayar
+              <select
+                value={draft.metodeBayar}
+                onChange={(event) => ubah("metodeBayar", event.target.value)}
+                className={s.select}
+              >
+                {METODE_BAYAR.map((item) => (
+                  <option key={item} value={item}>
+                    {item}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <InputRupiah
+              label="Tunjangan"
+              nilai={draft.tunjangan}
+              prefix="Rp"
+              onUbah={(value) => ubah("tunjangan", value)}
+            />
+            <InputRupiah
+              label="Lembur"
+              nilai={draft.lembur}
+              prefix="Rp"
+              onUbah={(value) => ubah("lembur", value)}
+            />
+            <InputRupiah
+              label="Potongan Kasbon/Bon"
+              nilai={draft.potongan}
+              prefix="Rp"
+              error={errors.potongan}
+              onUbah={(value) => ubah("potongan", value)}
+            />
+          </>
+        )}
       </div>
 
       <div className="mt-5 flex flex-col gap-2 sm:flex-row sm:justify-end">
@@ -488,7 +542,7 @@ function DetailUangKas() {
 
 export function PayrollSection() {
   const readOnly = useReadOnly();
-  const { state, opsiPos, bayarGaji, hapusKaryawan, clearToast } = useFinance();
+  const { state, opsiPos, bayarGaji, hapusKaryawan, ubahKaryawan, clearToast } = useFinance();
   const [filterStatus, setFilterStatus] = useState<"all" | "belum" | "terbayar">("all");
   const [filterLokasi, setFilterLokasi] = useState("all");
   const [cari, setCari] = useState("");
@@ -498,6 +552,11 @@ export function PayrollSection() {
   const [hapus, setHapus] = useState<Karyawan | null>(null);
   const [gajiLagiRow, setGajiLagiRow] = useState<Karyawan | null>(null);
   const [filterPeriode, setFilterPeriode] = useState("");
+  const [expandedPayrollIds, setExpandedPayrollIds] = useState<Record<string, boolean>>({});
+
+  const togglePayrollExpand = (id: string) => {
+    setExpandedPayrollIds((curr) => ({ ...curr, [id]: !curr[id] }));
+  };
 
   const mulaiTambah = () => {
     setEdit(null);
@@ -720,97 +779,114 @@ export function PayrollSection() {
             <tbody>
               {daftar.map((item) => {
                 const { netto } = hitungGaji(item);
+                const isExpanded = Boolean(expandedPayrollIds[item.id]);
                 return (
-                  <tr key={item.id} className={s.tr}>
-                    <td className={s.tdStrong}>
-                      <p>{item.nama}</p>
-                      <p className={`${s.metaText} mt-0.5`}>{item.lokasi}</p>
-                    </td>
-                    <td className={s.tdMuted}>{item.jabatan}</td>
-                    <td className={s.tdMuted}>{formatTanggal(item.periode)}</td>
-                    <td className={`${s.td} text-right text-on-surface`}>{formatRp(item.gajiPokok)}</td>
-                    <td className={`${s.td} text-right text-success`}>
-                      +{formatRp(item.tunjangan + item.lembur)}
-                      <span className={`${s.metaText} block`}>
-                        {formatRp(item.tunjangan)} tunj · {formatRp(item.lembur)} lembur
-                      </span>
-                    </td>
-                    <td className={`${s.td} text-right text-error`}>
-                      -{formatRp(item.potongan)}
-                    </td>
-                    <td className={`${s.td} ${s.amountStrong} text-secondary`}>{formatRp(netto)}</td>
-                    <td className={s.td}>
-                      {item.statusBayar === "terbayar" ? (
-                        <StatusBadge tone="approved" label={`Terbayar ${formatTanggal(item.tanggalBayar)}`} icon="check" />
-                      ) : (
-                        <StatusBadge tone="pending" label="Belum dibayar" icon="schedule" />
-                      )}
-                    </td>
-                    <td className={`${s.td} text-right`}>
-                      <div className={s.actionGroup}>
-                        <button
-                          type="button"
-                          onClick={() => setSlip(item)}
-                          aria-label={`Buka slip gaji ${item.nama}`}
-                          className={s.ghostButton}
-                        >
-                          <span aria-hidden="true" className={s.iconSm}>
-                            receipt_long
+                  <>
+                    <tr key={item.id} className={`${s.tr} cursor-pointer hover:bg-surface-variant/30`} onClick={() => togglePayrollExpand(item.id)}>
+                      <td className={s.tdStrong}>
+                        <div className="flex items-center gap-2">
+                          <span className="material-symbols-outlined text-[16px] text-on-surface-variant transition-transform">
+                            {isExpanded ? "expand_less" : "expand_more"}
                           </span>
-                          Slip Gaji
-                        </button>
-                        {!readOnly && (
-                          <>
-                            <button
-                              type="button"
-                              onClick={() => setGajiLagiRow(item)}
-                              aria-label={`Gaji lagi ${item.nama} di tanggal lain`}
-                              title="Gaji lagi di tanggal lain"
-                              className={s.actionButton}
-                            >
-                              <span aria-hidden="true" className={s.iconSm}>
-                                event_repeat
-                              </span>
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => mulaiUbah(item)}
-                              aria-label={`Ubah data gaji ${item.nama}`}
-                              title="Ubah data karyawan"
-                              className={s.actionButton}
-                            >
-                              <span aria-hidden="true" className={s.iconSm}>
-                                edit
-                              </span>
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => bayarGaji(item.id, new Date().toISOString().slice(0, 10))}
-                              disabled={item.statusBayar === "terbayar"}
-                              aria-label={`Tandai terbayar gaji ${item.nama}`}
-                              title="Tandai terbayar"
-                              className={s.actionButton}
-                            >
-                              <span aria-hidden="true" className={s.iconSm}>
-                                paid
-                              </span>
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => setHapus(item)}
-                              aria-label={`Hapus karyawan ${item.nama}`}
-                              title="Hapus karyawan"
-                              className={s.actionButtonDanger}
-                            >
-                              <span aria-hidden="true" className={s.iconSm}>
-                                delete
-                              </span>
-                            </button>
-                          </>
+                          <div>
+                            <p>{item.nama}</p>
+                            <p className={`${s.metaText} mt-0.5`}>{item.lokasi}</p>
+                          </div>
+                        </div>
+                      </td>
+                      <td className={s.tdMuted}>{item.jabatan}</td>
+                      <td className={s.tdMuted}>{formatTanggal(item.periode)}</td>
+                      <td className={`${s.td} text-right text-on-surface`}>{formatRp(item.gajiPokok)}</td>
+                      <td className={`${s.td} text-right text-success`}>
+                        +{formatRp(item.tunjangan + item.lembur)}
+                        <span className={`${s.metaText} block`}>
+                          {formatRp(item.tunjangan)} tunj · {formatRp(item.lembur)} lembur
+                        </span>
+                      </td>
+                      <td className={`${s.td} text-right text-error`}>
+                        -{formatRp(item.potongan)}
+                      </td>
+                      <td className={`${s.td} ${s.amountStrong} text-secondary`}>{formatRp(netto)}</td>
+                      <td className={s.td}>
+                        {item.statusBayar === "terbayar" ? (
+                          <StatusBadge tone="approved" label={`Terbayar ${formatTanggal(item.tanggalBayar)}`} icon="check" />
+                        ) : (
+                          <StatusBadge tone="pending" label="Belum dibayar" icon="schedule" />
                         )}
-                      </div>
-                    </td>
-                  </tr>
+                      </td>
+                      <td className={`${s.td} text-right`} onClick={(e) => e.stopPropagation()}>
+                        <div className={s.actionGroup}>
+                          <button
+                            type="button"
+                            onClick={() => setSlip(item)}
+                            aria-label={`Buka slip gaji ${item.nama}`}
+                            className={s.ghostButton}
+                          >
+                            <span aria-hidden="true" className={s.iconSm}>
+                              receipt_long
+                            </span>
+                            Slip Gaji
+                          </button>
+                          {!readOnly && (
+                            <>
+                              <button
+                                type="button"
+                                onClick={() => setGajiLagiRow(item)}
+                                aria-label={`Gaji lagi ${item.nama} di tanggal lain`}
+                                title="Gaji lagi di tanggal lain"
+                                className={s.actionButton}
+                              >
+                                <span aria-hidden="true" className={s.iconSm}>
+                                  event_repeat
+                                </span>
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => mulaiUbah(item)}
+                                aria-label={`Ubah data gaji ${item.nama}`}
+                                title="Ubah data karyawan"
+                                className={s.actionButton}
+                              >
+                                <span aria-hidden="true" className={s.iconSm}>
+                                  edit
+                                </span>
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => bayarGaji(item.id, new Date().toISOString().slice(0, 10))}
+                                disabled={item.statusBayar === "terbayar"}
+                                aria-label={`Tandai terbayar gaji ${item.nama}`}
+                                title="Tandai terbayar"
+                                className={s.actionButton}
+                              >
+                                <span aria-hidden="true" className={s.iconSm}>
+                                  paid
+                                </span>
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setHapus(item)}
+                                aria-label={`Hapus ${item.nama}`}
+                                title="Hapus karyawan"
+                                className={s.actionButtonDanger}
+                              >
+                                <span aria-hidden="true" className={s.iconSm}>
+                                  delete
+                                </span>
+                              </button>
+                            </>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                    {isExpanded && (
+                      <tr key={`${item.id}-detail`} className="bg-surface-variant/40">
+                        <td colSpan={9} className="p-4">
+                          <InlinePayrollEditor karyawan={item} />
+                        </td>
+                      </tr>
+                    )}
+                  </>
                 );
               })}
               {daftar.length === 0 && (
