@@ -248,7 +248,7 @@ export function TerminSection() {
                     <tr key={item.invoice.id} className={`${s.tr} cursor-pointer hover:bg-surface-variant/30`} onClick={() => toggleExpand(item.invoice.id)}>
                       <td className={s.tdStrong}>
                         <div className="flex items-center gap-2">
-                          <span className="material-symbols-rounded text-sm text-on-surface-variant transition-transform">
+                          <span className="material-symbols-outlined text-[16px] text-on-surface-variant transition-transform">
                             {isExpanded ? "expand_less" : "expand_more"}
                           </span>
                           <div>
@@ -350,7 +350,7 @@ export function TerminSection() {
                                         className="rounded-lg bg-success text-on-success p-1 text-xs font-medium hover:opacity-90 transition-opacity"
                                         title={`Tandai ${t.label} Lunas`}
                                       >
-                                        <span className="material-symbols-rounded text-sm">paid</span>
+                                         <span className="material-symbols-outlined text-[16px]">paid</span>
                                       </button>
                                     )}
                                   </div>
