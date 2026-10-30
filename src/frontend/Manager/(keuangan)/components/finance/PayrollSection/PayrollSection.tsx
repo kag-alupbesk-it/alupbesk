@@ -639,24 +639,6 @@ export function PayrollSection() {
         />
       </div>
 
-      {!formTerbuka && (
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-          <p className={s.sectionSubtitle}>
-            {readOnly
-              ? "Rincian pendapatan, potongan bon/kasbon, dan status pembayaran per karyawan."
-              : "Tanggal gajian bebas per karyawan — gajian tidak harus barengan. Tekan “Gaji lagi” di baris karyawan untuk menyimpan gaji berikutnya tanpa mengetik nama lagi."}
-          </p>
-          {!readOnly && (
-            <button type="button" onClick={mulaiTambah} className={`${s.primaryButton} shrink-0`}>
-              <span aria-hidden="true" className={s.iconMd}>
-                person_add
-              </span>
-              Tambah Karyawan
-            </button>
-          )}
-        </div>
-      )}
-
       {gajiLagiRow && <DialogGajiLagi karyawan={gajiLagiRow} onTutup={() => setGajiLagiRow(null)} />}
 
       {formTerbuka && <FormKaryawan edit={edit} onSelesai={tutupForm} />}
