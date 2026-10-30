@@ -41,7 +41,7 @@ function FormKas() {
   const [tanggal, setTanggal] = useState(tanggalHariIni());
   const [uraian, setUraian] = useState("");
   const [nominal, setNominal] = useState(0);
-  const [kategori, setKategori] = useState<string>(KATEGORI_BIAYA[0]);
+  const [kategori, setKategori] = useState<string>((KATEGORI_BIAYA as readonly string[])[0] ?? "");
   const [person, setPerson] = useState("");
   const [pos, setPos] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -50,7 +50,7 @@ function FormKas() {
 
   const gantiJenis = (berikutnya: JenisTransaksi) => {
     setJenis(berikutnya);
-    setKategori(KATEGORI_BIAYA[0]);
+    setKategori((KATEGORI_BIAYA as readonly string[])[0] ?? "");
   };
 
   const submit = (event: React.FormEvent<HTMLFormElement>) => {
