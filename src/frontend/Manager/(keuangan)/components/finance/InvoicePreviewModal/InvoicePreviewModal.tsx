@@ -124,18 +124,21 @@ export function InvoicePreviewModal({
                     </td>
                     {!readOnly && (
                       <td className={`${s.td} text-right`}>
-                        <button
-                          type="button"
-                          disabled={termin.lunas}
-                          onClick={() => lunasTermin(invoice.id, termin.id)}
-                          aria-label={`Tandai lunas ${termin.label} invoice ${invoice.nomor}`}
-                          className={s.ghostButton}
-                        >
-                          <span aria-hidden="true" className={s.iconSm}>
-                            {termin.lunas ? "task_alt" : "paid"}
-                          </span>
-                          {termin.lunas ? "Lunas" : "Tandai Lunas"}
-                        </button>
+                        {!termin.lunas ? (
+                          <button
+                            type="button"
+                            onClick={() => lunasTermin(invoice.id, termin.id)}
+                            aria-label={`Tandai lunas ${termin.label} invoice ${invoice.nomor}`}
+                            className={s.ghostButton}
+                          >
+                            <span aria-hidden="true" className={s.iconSm}>
+                              paid
+                            </span>
+                            Tandai Lunas
+                          </button>
+                        ) : (
+                          <span className="text-xs font-bold text-success">Selesai</span>
+                        )}
                       </td>
                     )}
                   </tr>
