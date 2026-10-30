@@ -13,47 +13,13 @@ export const LABEL_JENIS_SINGKAT: Record<JenisTransaksi, string> = {
   kas_beredar: "Bon",
 };
 
-export const KATEGORI_BIAYA = [
-  "BBM",
-  "Alat & Bahan",
-  "Telpon & Listrik",
-  "ATK",
-  "Fee Marketing",
-  "Konsumsi",
-  "Transportasi",
-  "Pemeliharaan",
-  "Dll",
-] as const;
+export const KATEGORI_BIAYA = [] as const;
 export type KategoriBiaya = (typeof KATEGORI_BIAYA)[number] | (string & {});
 
-export const POS_PROYEK = [
-  "Kantor",
-  "Nganyang",
-  "Karang Ploso",
-  "SR Jasinga",
-  "SR Nganjuk",
-  "Dll",
-] as const;
+export const POS_PROYEK = [] as const;
 export type PosProyek = (typeof POS_PROYEK)[number] | (string & {});
 
-export const PIHAK = [
-  "Sukarno",
-  "Ahmad Fauzi",
-  "Bambang Sutrisno",
-  "Dedi Prasetyo",
-  "Yoga NPM",
-  "M. Hafiz",
-  "Agus Salim",
-  "Rina Kartika",
-  "CV Karya Baja Malang",
-  "PT Alumex Indonesia",
-  "UD Berkah Mandiri",
-  "CV Mitra Sejahtera",
-  "Toko Bangunan Jaya",
-  "Toko Listrik Mulya",
-  "PLN",
-  "Pertamina",
-] as const;
+export const PIHAK = [] as const;
 
 export type FieldOpsi = "person" | "kategori" | "pos";
 
