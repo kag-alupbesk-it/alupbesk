@@ -77,7 +77,6 @@ export type Karyawan = {
   lokasi: PosProyek;
   gajiPokok: number;
   tunjangan: number;
-  lembur: number;
   potongan: number;
   periode: string;
   statusBayar: "belum" | "terbayar";
@@ -206,7 +205,7 @@ export const hitungInvoice = (invoice: Invoice) => {
 };
 
 export const hitungGaji = (karyawan: Karyawan) => {
-  const pendapatan = karyawan.gajiPokok + karyawan.tunjangan + karyawan.lembur;
+  const pendapatan = karyawan.gajiPokok + karyawan.tunjangan;
   const potongan = karyawan.potongan;
   return {
     pendapatan,

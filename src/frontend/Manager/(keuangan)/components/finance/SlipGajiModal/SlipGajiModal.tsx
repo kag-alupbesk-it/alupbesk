@@ -14,7 +14,6 @@ export function SlipGajiModal({ karyawan, onTutup }: { karyawan: Karyawan; onTut
   const baris = [
     { label: "Gaji Pokok", nilai: karyawan.gajiPokok, tanda: "+" as const },
     { label: "Tunjangan", nilai: karyawan.tunjangan, tanda: "+" as const },
-    { label: "Lembur", nilai: karyawan.lembur, tanda: "+" as const },
     { label: "Potongan Kasbon/Bon", nilai: karyawan.potongan, tanda: "-" as const },
   ];
 

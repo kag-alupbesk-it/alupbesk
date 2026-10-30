@@ -17,10 +17,9 @@ type DraftKaryawan = Omit<Karyawan, "id" | "statusBayar" | "tanggalBayar">;
 const draftKosong = (): DraftKaryawan => ({
   nama: "",
   jabatan: "",
-  lokasi: "Nganyang",
+  lokasi: "Kantor",
   gajiPokok: 0,
   tunjangan: 0,
-  lembur: 0,
   potongan: 0,
   periode: tanggalHariIni(),
   metodeBayar: "Transfer BCA",
@@ -34,7 +33,6 @@ const draftDari = (karyawan: Karyawan): DraftKaryawan => ({
   lokasi: karyawan.lokasi,
   gajiPokok: karyawan.gajiPokok,
   tunjangan: karyawan.tunjangan,
-  lembur: karyawan.lembur,
   potongan: karyawan.potongan,
   periode: karyawan.periode,
   metodeBayar: karyawan.metodeBayar,
@@ -85,14 +83,12 @@ function InputRupiah({
 function InlinePayrollEditor({ karyawan }: { karyawan: Karyawan }) {
   const { ubahKaryawan } = useFinance();
   const [tunjangan, setTunjangan] = useState(karyawan.tunjangan);
-  const [lembur, setLembur] = useState(karyawan.lembur);
   const [potongan, setPotongan] = useState(karyawan.potongan);
 
   const simpan = () => {
     ubahKaryawan({
       ...karyawan,
       tunjangan,
-      lembur,
       potongan,
     });
   };
@@ -101,21 +97,15 @@ function InlinePayrollEditor({ karyawan }: { karyawan: Karyawan }) {
     <div className="rounded-xl border border-outline/30 bg-surface p-4 space-y-3">
       <div className="flex items-center justify-between">
         <p className="text-xs font-bold text-on-surface uppercase tracking-wider">
-          Input / Update Tunjangan, Lembur &amp; Kasbon: {karyawan.nama}
+          Input / Update Tunjangan &amp; Kasbon: {karyawan.nama}
         </p>
       </div>
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 md:grid-cols-4">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3">
         <InputRupiah
           label="Tunjangan"
           nilai={tunjangan}
           prefix="Rp"
           onUbah={setTunjangan}
-        />
-        <InputRupiah
-          label="Lembur"
-          nilai={lembur}
-          prefix="Rp"
-          onUbah={setLembur}
         />
         <InputRupiah
           label="Potongan Kasbon/Bon"
@@ -165,7 +155,7 @@ function FormKaryawan({
     if (edit) {
       if (!/^\d{4}-\d{2}-\d{2}$/.test(draft.periode))
         validasi.periode = "Tanggal gajian wajib diisi, cth: 2026-10-15.";
-      if (draft.potongan > draft.gajiPokok + draft.tunjangan + draft.lembur)
+      if (draft.potongan > draft.gajiPokok + draft.tunjangan)
         validasi.potongan = "Total potongan melebihi pendapatan karyawan.";
     }
     setErrors(validasi);
@@ -178,13 +168,12 @@ function FormKaryawan({
         nama: draft.nama.trim(),
         jabatan: draft.jabatan.trim(),
         tunjangan: 0,
-        lembur: 0,
         potongan: 0,
       });
     onSelesai();
   };
 
-  const pendapatan = draft.gajiPokok + draft.tunjangan + draft.lembur;
+  const pendapatan = draft.gajiPokok + draft.tunjangan;
   const potongan = draft.potongan;
   const bersihNetto = pendapatan - potongan;
 
@@ -196,7 +185,7 @@ function FormKaryawan({
           <p className={s.sectionSubtitle}>
             {edit
               ? "Lengkapi identitas, komponen gaji, dan potongan bon/kasbon."
-              : "Masukkan Nama, Jabatan, dan Gaji Pokok saja. Tunjangan, lembur, dan kasbon dapat diinput kemudian melalui accordion di tabel karyawan."}
+              : "Masukkan Nama, Jabatan, dan Gaji Pokok saja. Tunjangan dan kasbon dapat diinput kemudian melalui accordion di tabel karyawan."}
           </p>
         </div>
         {edit && (
@@ -286,12 +275,6 @@ function FormKaryawan({
               nilai={draft.tunjangan}
               prefix="Rp"
               onUbah={(value) => ubah("tunjangan", value)}
-            />
-            <InputRupiah
-              label="Lembur"
-              nilai={draft.lembur}
-              prefix="Rp"
-              onUbah={(value) => ubah("lembur", value)}
             />
             <InputRupiah
               label="Potongan Kasbon/Bon"
@@ -437,7 +420,7 @@ function DialogGajiLagi({ karyawan, onTutup }: { karyawan: Karyawan; onTutup: ()
           <div className={s.panelHighlight}>
             <p className={s.cardListLabel}>Yang disalin</p>
             <p className={`${s.detailValue} mt-1`}>
-              Gaji pokok, tunjangan, lembur, dan potongan dibawa apa adanya.
+              Gaji pokok, tunjangan, dan potongan dibawa apa adanya.
             </p>
             <p className={`${s.metaText} mt-1`}>Status pembayaran di-reset menjadi belum dibayar.</p>
           </div>
@@ -601,7 +584,7 @@ export function PayrollSection() {
     .filter((item) => item.statusBayar === "belum")
     .reduce((sum, item) => sum + hitungGaji(item).netto, 0);
   const sudahBayar = rowsPeriode.filter((item) => item.statusBayar === "terbayar").length;
-  const totalTunjangan = rowsPeriode.reduce((sum, item) => sum + item.tunjangan + item.lembur, 0);
+  const totalTunjangan = rowsPeriode.reduce((sum, item) => sum + item.tunjangan, 0);
   const totalPotongan = rowsPeriode.reduce((sum, item) => sum + item.potongan, 0);
 
   return (
@@ -624,7 +607,7 @@ export function PayrollSection() {
           tone="error"
         />
         <FinancialStatCard
-          label="Tunjangan + Lembur"
+          label="Tunjangan"
           value={formatRp(totalTunjangan)}
           icon="add_circle"
           trend="Komponen tambahan payroll"
@@ -742,7 +725,7 @@ export function PayrollSection() {
                   Gaji Pokok
                 </th>
                 <th scope="col" className={`${s.th} text-right`}>
-                  Tunjangan / Lembur
+                  Tunjangan
                 </th>
                 <th scope="col" className={`${s.th} text-right`}>
                   Potongan Kasbon/Bon
@@ -779,10 +762,7 @@ export function PayrollSection() {
                       <td className={s.tdMuted}>{formatTanggal(item.periode)}</td>
                       <td className={`${s.td} text-right text-on-surface`}>{formatRp(item.gajiPokok)}</td>
                       <td className={`${s.td} text-right text-success`}>
-                        +{formatRp(item.tunjangan + item.lembur)}
-                        <span className={`${s.metaText} block`}>
-                          {formatRp(item.tunjangan)} tunj · {formatRp(item.lembur)} lembur
-                        </span>
+                        +{formatRp(item.tunjangan)}
                       </td>
                       <td className={`${s.td} text-right text-error`}>
                         -{formatRp(item.potongan)}
@@ -913,11 +893,8 @@ Belum ada data karyawan. Tekan &ldquo;Tambah Karyawan&rdquo; untuk menambah, ata
                     <p className={`${s.cardListValue} font-bold text-secondary`}>{formatRp(netto)}</p>
                   </div>
                   <div>
-                    <p className={s.cardListLabel}>Tunjangan + Lembur</p>
-                    <p className={`${s.cardListValue} text-success`}>+{formatRp(item.tunjangan + item.lembur)}</p>
-                    <p className={`${s.metaText} mt-0.5`}>
-                      {formatRp(item.tunjangan)} tunj · {formatRp(item.lembur)} lembur
-                    </p>
+                    <p className={s.cardListLabel}>Tunjangan</p>
+                    <p className={`${s.cardListValue} text-success`}>+{formatRp(item.tunjangan)}</p>
                   </div>
                   <div>
                     <p className={s.cardListLabel}>Potongan Kasbon/Bon</p>
