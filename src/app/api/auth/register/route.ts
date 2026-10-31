@@ -15,6 +15,8 @@ const requestableRoles = [
   "produksi",
   "gudang",
   "marketing",
+  "drafter",
+  "manager",
 ] as const;
 
 const registerSchema = z.object({
