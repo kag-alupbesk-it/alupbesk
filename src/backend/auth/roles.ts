@@ -98,9 +98,9 @@ export function roleCanAccess(
   }
   if (matchesPath(path, "/api/pm")) {
     if (matchesPath(path, "/api/pm/orders") && path.endsWith("/drawing")) {
-      return role === "produksi" || elevated;
+      return role === "produksi" || role === "drafter" || elevated;
     }
-    return role === "proyek" || role === "produksi" || elevated;
+    return role === "proyek" || role === "produksi" || role === "drafter" || elevated;
   }
   if (matchesPath(path, "/pm")) return role === "proyek" || elevated;
   if (["/produksi", "/api/produksi"].some((prefix) => matchesPath(path, prefix))) {
