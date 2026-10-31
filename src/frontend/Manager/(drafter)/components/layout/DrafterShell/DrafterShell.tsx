@@ -8,6 +8,7 @@ import { getRolePagePath } from "@/frontend/shared/navigation/getRolePagePath";
 
 const TITLES: Record<string, string> = {
   "/drafter": "Dashboard Drafter & Tugas Desain",
+  "/drafter/upload": "Upload Gambar Teknik",
   "/drafter/audit": "Riwayat Aktivitas - Drafter",
 };
 

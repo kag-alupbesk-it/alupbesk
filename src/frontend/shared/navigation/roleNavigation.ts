@@ -66,7 +66,7 @@ const navigationByRole = {
   ],
   drafter: [
     { key: "overview", href: "/drafter", permissionPath: "/drafter", label: "Dashboard", icon: "design_services" },
-    { key: "tasks", href: "/drafter", permissionPath: "/drafter", label: "Tugas Desain", icon: "draw" },
+    { key: "drawings", href: "/drafter/upload", permissionPath: "/drafter", label: "Upload Gambar Teknik", icon: "upload_file" },
     { key: "audit", href: "/drafter/audit", permissionPath: "/drafter/audit", label: "Riwayat Aktivitas", icon: "history" },
   ],
   produksi: [
