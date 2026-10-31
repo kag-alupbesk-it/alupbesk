@@ -20,8 +20,8 @@ import { StatusGambarBadge } from "../../../(produksi)/components/shared/StatusB
 import type { BerkasGambar } from "../../../(produksi)/types/types";
 import { formatTanggal, getInisial } from "../../../(produksi)/utils/format/format";
 
-const TIPE_DITERIMA = [".pdf", ".dwg", ".dxf", ".png", ".jpg", ".jpeg", ".webp"];
-const MAX_FILE_SIZE = 50 * 1024 * 1024;
+const TIPE_DITERIMA = [".pdf", ".jpg", ".jpeg", ".png"];
+const MAX_FILE_SIZE = 5 * 1024 * 1024;
 
 export function DrafterUploadGambarTeknik() {
   const router = useRouter();
@@ -55,13 +55,13 @@ export function DrafterUploadGambarTeknik() {
     if (!TIPE_DITERIMA.includes(ekstensi)) {
       setFile(null);
       setBerkas(null);
-      setError("Format berkas tidak didukung. Gunakan PDF, CAD (DWG/DXF), atau gambar (PNG/JPG/WEBP).");
+      setError("Format berkas tidak didukung. Gunakan PDF, JPG, atau PNG.");
       return;
     }
     if (file.size <= 0 || file.size > MAX_FILE_SIZE) {
       setFile(null);
       setBerkas(null);
-      setError("Ukuran gambar teknik maksimal 50 MB.");
+      setError("Ukuran file maksimal 5 MB.");
       return;
     }
     if (objectUrlRef.current) URL.revokeObjectURL(objectUrlRef.current);
@@ -196,7 +196,7 @@ export function DrafterUploadGambarTeknik() {
               <input
                 ref={inputRef}
                 type="file"
-                accept=".pdf,.dwg,.dxf,.png,.jpg,.jpeg,.webp"
+                accept=".pdf,.jpg,.jpeg,.png"
                 className="hidden"
                 onChange={(e) => terimaBerkas(e.target.files?.[0])}
               />
@@ -204,7 +204,7 @@ export function DrafterUploadGambarTeknik() {
                 <UploadCloud size={24} />
               </div>
               <p className="mt-3 text-xs font-bold text-on-surface">Klik atau seret file gambar teknik ke sini</p>
-              <p className="mt-1 text-[10px] text-on-surface-variant">PDF, CAD (DWG/DXF), atau Gambar (PNG/JPG/WEBP) hingga 50 MB</p>
+              <p className="mt-1 text-[10px] text-on-surface-variant">PDF, JPG, atau PNG hingga 5 MB</p>
             </div>
 
             {berkas && (
