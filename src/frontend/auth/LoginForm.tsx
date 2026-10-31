@@ -23,6 +23,7 @@ const roleHome: Record<string, string> = {
   proyek: "/admin/pm",
   field: "/admin/field",
   produksi: "/admin/produksi",
+  drafter: "/drafter",
   manager: "/admin/manager",
   owner: "/admin/owner",
 };
