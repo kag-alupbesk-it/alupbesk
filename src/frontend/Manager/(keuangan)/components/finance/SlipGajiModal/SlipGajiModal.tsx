@@ -2,19 +2,19 @@
 
 import { useFinance } from "../FinanceStore/FinanceStore";
 import { FeedbackToast } from "../ui/FeedbackToast/FeedbackToast";
-import { formatRp, formatTanggalPanjang } from "../format/format";
-import { hitungGaji, type Karyawan } from "../types/types";
+import { formatBulan, formatRp, formatTanggalPanjang } from "../format/format";
+import { hitungGaji, type Penggajian } from "../types/types";
 import * as s from "../style/style";
 
-export function SlipGajiModal({ karyawan, onTutup }: { karyawan: Karyawan; onTutup: () => void }) {
+export function SlipGajiModal({ slip, onTutup }: { slip: Penggajian; onTutup: () => void }) {
   const { state, clearToast } = useFinance();
-  const sudahBayar = karyawan.statusBayar === "terbayar";
-  const { pendapatan, potongan, netto } = hitungGaji(karyawan);
+  const sudahBayar = slip.statusBayar === "terbayar";
+  const { pendapatan, potongan, netto } = hitungGaji(slip);
 
   const baris = [
-    { label: "Gaji Pokok", nilai: karyawan.gajiPokok, tanda: "+" as const },
-    { label: "Tunjangan", nilai: karyawan.tunjangan, tanda: "+" as const },
-    { label: "Potongan Kasbon/Bon", nilai: karyawan.potongan, tanda: "-" as const },
+    { label: "Gaji Pokok", nilai: slip.gajiPokok, tanda: "+" as const },
+    { label: "Tunjangan", nilai: slip.tunjangan, tanda: "+" as const },
+    { label: "Potongan Kasbon/Bon", nilai: slip.potongan, tanda: "-" as const },
   ];
 
   return (
@@ -22,12 +22,12 @@ export function SlipGajiModal({ karyawan, onTutup }: { karyawan: Karyawan; onTut
       <section role="dialog" aria-modal="true" aria-labelledby="slip-judul" className={`${s.modalPanel} max-w-2xl`}>
         <header className={s.modalHeader}>
           <div className="min-w-0">
-            <p className={s.fieldLabel}>Slip Gaji</p>
+            <p className={s.fieldLabel}>Slip Gaji · {formatBulan(slip.periode)}</p>
             <h3 id="slip-judul" className={s.modalTitle}>
-              {karyawan.nama}
+              {slip.nama}
             </h3>
             <p className={`${s.metaText} mt-1`}>
-              {karyawan.jabatan} · {karyawan.lokasi} · {karyawan.id}
+              {slip.jabatan} · {slip.lokasi} · {slip.id}
             </p>
           </div>
           <button type="button" onClick={onTutup} aria-label="Tutup slip gaji" className={s.modalClose}>
@@ -91,12 +91,12 @@ export function SlipGajiModal({ karyawan, onTutup }: { karyawan: Karyawan; onTut
             <div className={s.cardCompact}>
               <dt className={s.detailLabel}>Status pembayaran</dt>
               <dd className={s.detailValue}>
-                {sudahBayar ? `Terbayar ${formatTanggalPanjang(karyawan.tanggalBayar)}` : "Belum dibayar"}
+                {sudahBayar ? `Terbayar ${formatTanggalPanjang(slip.tanggalBayar)}` : "Belum dibayar"}
               </dd>
             </div>
             <div className={s.cardCompact}>
               <dt className={s.detailLabel}>Metode pembayaran</dt>
-              <dd className={s.detailValue}>{karyawan.metodeBayar}</dd>
+              <dd className={s.detailValue}>{slip.metodeBayar}</dd>
             </div>
             <div className={s.cardCompact}>
               <dt className={s.detailLabel}>Potongan kasbon/bon</dt>

@@ -1,18 +1,38 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { Fragment, useMemo, useState } from "react";
 import { useFinance } from "../FinanceStore/FinanceStore";
 import { FeedbackToast } from "../ui/FeedbackToast/FeedbackToast";
 import { FinancialStatCard } from "../ui/FinancialStatCard/FinancialStatCard";
 import { SelectTambahBaru } from "../ui/SelectTambahBaru/SelectTambahBaru";
 import { StatusBadge } from "../ui/StatusBadge/StatusBadge";
 import { SlipGajiModal } from "../SlipGajiModal/SlipGajiModal";
-import { formatRp, formatTanggal } from "../format/format";
-import { hitungGaji, type Karyawan, type PosProyek } from "../types/types";
+import { bulanHariIni, formatBulan, formatRp, formatTanggal } from "../format/format";
+import {
+  hitungGaji,
+  type Karyawan,
+  type Penggajian,
+  type PosProyek,
+  type StatusBayarGaji,
+} from "../types/types";
 import * as s from "../style/style";
 import { useReadOnly } from "@/frontend/shared/access/AccessModeProvider";
 
-type DraftKaryawan = Omit<Karyawan, "id" | "statusBayar" | "tanggalBayar">;
+type DraftKaryawan = Omit<Karyawan, "id">;
+
+type Baris = {
+  key: string;
+  karyawan: Karyawan | null;
+  slip: Penggajian | null;
+  nama: string;
+  jabatan: string;
+  lokasi: PosProyek;
+  gajiPokok: number;
+  tunjangan: number;
+  potongan: number;
+  metodeBayar: string;
+  status: StatusBayarGaji;
+};
 
 const draftKosong = (): DraftKaryawan => ({
   nama: "",
@@ -20,7 +40,6 @@ const draftKosong = (): DraftKaryawan => ({
   lokasi: "Kantor",
   gajiPokok: 0,
   tunjangan: 0,
-  potongan: 0,
   metodeBayar: "Transfer BCA",
 });
 
@@ -32,9 +51,10 @@ const draftDari = (karyawan: Karyawan): DraftKaryawan => ({
   lokasi: karyawan.lokasi,
   gajiPokok: karyawan.gajiPokok,
   tunjangan: karyawan.tunjangan,
-  potongan: karyawan.potongan,
   metodeBayar: karyawan.metodeBayar,
 });
+
+const tanggalHariIni = () => new Date().toISOString().slice(0, 10);
 
 function InputRupiah({
   label,
@@ -78,27 +98,23 @@ function InputRupiah({
   );
 }
 
-function InlinePayrollEditor({ karyawan }: { karyawan: Karyawan }) {
-  const { ubahKaryawan } = useFinance();
-  const [tunjangan, setTunjangan] = useState(karyawan.tunjangan);
-  const [potongan, setPotongan] = useState(karyawan.potongan);
+function InlinePayrollEditor({ slip }: { slip: Penggajian }) {
+  const { ubahPenggajian, hapusPenggajian } = useFinance();
+  const [tunjangan, setTunjangan] = useState(slip.tunjangan);
+  const [potongan, setPotongan] = useState(slip.potongan);
 
   const simpan = () => {
-    ubahKaryawan({
-      ...karyawan,
-      tunjangan,
-      potongan,
-    });
+    ubahPenggajian(slip.id, tunjangan, potongan, slip.metodeBayar);
   };
 
   return (
     <div className="rounded-xl border border-outline/30 bg-surface p-4 space-y-3">
       <div className="flex items-center justify-between">
         <p className="text-xs font-bold text-on-surface uppercase tracking-wider">
-          Input / Update Tunjangan &amp; Kasbon: {karyawan.nama}
+          Komponen Slip {formatBulan(slip.periode)}: {slip.nama}
         </p>
       </div>
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-4">
         <InputRupiah
           label="Tunjangan"
           nilai={tunjangan}
@@ -112,12 +128,20 @@ function InlinePayrollEditor({ karyawan }: { karyawan: Karyawan }) {
           onUbah={setPotongan}
         />
         <div className="flex items-end">
+          <button type="button" onClick={simpan} className={`${s.primaryButton} w-full`}>
+            Simpan Komponen
+          </button>
+        </div>
+        <div className="flex items-end">
           <button
             type="button"
-            onClick={simpan}
-            className={`${s.primaryButton} w-full`}
+            onClick={() => hapusPenggajian(slip.id)}
+            className={`${s.dangerButton} w-full`}
           >
-            Simpan Komponen Gaji
+            <span aria-hidden="true" className={s.iconSm}>
+              delete
+            </span>
+            Hapus Slip
           </button>
         </div>
       </div>
@@ -150,22 +174,16 @@ function FormKaryawan({
     if (!draft.nama.trim()) validasi.nama = "Nama karyawan wajib diisi.";
     if (!draft.jabatan.trim()) validasi.jabatan = "Jabatan wajib diisi.";
     if (draft.gajiPokok <= 0) validasi.gajiPokok = "Gaji pokok harus lebih dari Rp 0.";
-    if (edit) {
-      if (draft.potongan > draft.gajiPokok + draft.tunjangan)
-        validasi.potongan = "Total potongan melebihi pendapatan karyawan.";
-    }
     setErrors(validasi);
     if (Object.keys(validasi).length > 0) return;
 
-    if (edit) ubahKaryawan({ ...draft, ...edit, nama: draft.nama.trim(), jabatan: draft.jabatan.trim() });
-    else
-      tambahKaryawan({
-        ...draft,
-        nama: draft.nama.trim(),
-        jabatan: draft.jabatan.trim(),
-        tunjangan: 0,
-        potongan: 0,
-      });
+    const payload = {
+      ...draft,
+      nama: draft.nama.trim(),
+      jabatan: draft.jabatan.trim(),
+    };
+    if (edit) ubahKaryawan({ ...payload, id: edit.id });
+    else tambahKaryawan(payload);
     onSelesai();
   };
 
@@ -175,9 +193,7 @@ function FormKaryawan({
         <div>
           <h2 className={s.sectionTitle}>{edit ? "Ubah Data Karyawan" : "Tambah Karyawan"}</h2>
           <p className={s.sectionSubtitle}>
-            {edit
-              ? "Lengkapi identitas, komponen gaji, dan potongan bon/kasbon."
-              : "Masukkan Nama, Jabatan, dan Gaji Pokok saja. Tunjangan dan kasbon dapat diinput kemudian melalui accordion di tabel karyawan."}
+            Data ini menjadi acuan slip gaji baru. Tunjangan dan potongan per bulan dapat diubah pada slip masing-masing.
           </p>
         </div>
         {edit && (
@@ -225,47 +241,36 @@ function FormKaryawan({
           onUbah={(value) => ubah("gajiPokok", value)}
         />
 
-        {edit && (
-          <>
-            <SelectTambahBaru
-              label="Lokasi / Pos"
-              value={draft.lokasi}
-              options={opsiPos}
-              placeholder="cth: Pabrik Malang"
-              onChange={(value) => ubah("lokasi", value as PosProyek)}
-              onTambah={(value) => tambahOpsi("pos", value)}
-            />
+        <SelectTambahBaru
+          label="Lokasi / Pos"
+          value={draft.lokasi}
+          options={opsiPos}
+          placeholder="cth: Pabrik Malang"
+          onChange={(value) => ubah("lokasi", value as PosProyek)}
+          onTambah={(value) => tambahOpsi("pos", value)}
+        />
 
-            <label className={s.fieldLabel}>
-              Metode Bayar
-              <select
-                value={draft.metodeBayar}
-                onChange={(event) => ubah("metodeBayar", event.target.value)}
-                className={s.select}
-              >
-                {METODE_BAYAR.map((item) => (
-                  <option key={item} value={item}>
-                    {item}
-                  </option>
-                ))}
-              </select>
-            </label>
+        <label className={s.fieldLabel}>
+          Metode Bayar
+          <select
+            value={draft.metodeBayar}
+            onChange={(event) => ubah("metodeBayar", event.target.value)}
+            className={s.select}
+          >
+            {METODE_BAYAR.map((item) => (
+              <option key={item} value={item}>
+                {item}
+              </option>
+            ))}
+          </select>
+        </label>
 
-            <InputRupiah
-              label="Tunjangan"
-              nilai={draft.tunjangan}
-              prefix="Rp"
-              onUbah={(value) => ubah("tunjangan", value)}
-            />
-            <InputRupiah
-              label="Potongan Kasbon/Bon"
-              nilai={draft.potongan}
-              prefix="Rp"
-              error={errors.potongan}
-              onUbah={(value) => ubah("potongan", value)}
-            />
-          </>
-        )}
+        <InputRupiah
+          label="Tunjangan"
+          nilai={draft.tunjangan}
+          prefix="Rp"
+          onUbah={(value) => ubah("tunjangan", value)}
+        />
       </div>
 
       <div className="mt-5 flex flex-col gap-2 sm:flex-row sm:justify-end">
@@ -293,8 +298,8 @@ function ModalHapusKaryawan({
   onHapus: () => void;
 }) {
   const { state } = useFinance();
-  const { netto } = hitungGaji(karyawan);
-  const adaTransaksi = state.transaksi.some((item) => item.refId === karyawan.id);
+  const { netto } = hitungGaji({ ...karyawan, potongan: 0 });
+  const adaRiwayat = state.penggajian.some((item) => item.karyawanId === karyawan.id);
 
   return (
     <div className={s.modalOverlay} onMouseDown={(event) => event.target === event.currentTarget && onTutup()}>
@@ -320,14 +325,14 @@ function ModalHapusKaryawan({
           <p className="text-xs leading-relaxed text-on-surface-variant">
             <span className="font-bold text-on-surface">{karyawan.nama}</span> dengan gaji pokok{" "}
             <span className="font-bold text-on-surface">{formatRp(karyawan.gajiPokok)}</span> dan neto{" "}
-            <span className="font-bold text-on-surface">{formatRp(netto)}</span> akan dihapus dari daftar payroll.
+            <span className="font-bold text-on-surface">{formatRp(netto)}</span> akan dihapus dari daftar karyawan.
           </p>
-          <div className={adaTransaksi ? s.panelHighlight : s.panelMuted}>
+          <div className={adaRiwayat ? s.panelHighlight : s.panelMuted}>
             <p className={s.cardListLabel}>Dampak Penghapusan</p>
             <p className={`${s.detailValue} mt-1`}>
-              {adaTransaksi
-                ? "Ada transaksi Kas Keluar gaji atas nama ini. Transaksi tetap tersimpan sebagai riwayat pembukuan, hanya data karyawan yang dihapus."
-                : "Belum ada transaksi Kas Keluar untuk karyawan ini, jadi tidak ada transaksi yang tersisa."}
+              {adaRiwayat
+                ? "Riwayat slip gaji dan transaksi Kas Keluar atas nama ini tetap tersimpan dan dapat dibuka kembali."
+                : "Belum ada riwayat slip gaji untuk karyawan ini."}
             </p>
           </div>
           <div className="flex justify-end gap-2">
@@ -342,65 +347,6 @@ function ModalHapusKaryawan({
             </button>
           </div>
         </div>
-      </section>
-    </div>
-  );
-}
-
-function DialogGajiLagi({ karyawan, onTutup }: { karyawan: Karyawan; onTutup: () => void }) {
-  const { gajiLagi } = useFinance();
-
-  const submit = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    gajiLagi(karyawan.id);
-    onTutup();
-  };
-
-  return (
-    <div className={s.modalOverlay} onMouseDown={(event) => event.target === event.currentTarget && onTutup()}>
-      <section role="dialog" aria-modal="true" aria-labelledby="gaji-lagi-judul" className={`${s.modalPanel} max-w-md`}>
-        <header className={s.modalHeader}>
-          <div className="min-w-0">
-            <p className={s.fieldLabel}>Siapkan Gaji Berikutnya</p>
-            <h3 id="gaji-lagi-judul" className={s.modalTitle}>
-              {karyawan.nama}
-            </h3>
-            <p className={`${s.metaText} mt-1`}>
-              {karyawan.jabatan} · {karyawan.lokasi}
-              {karyawan.tanggalBayar ? ` · terakhir dibayar ${formatTanggal(karyawan.tanggalBayar)}` : ""}
-            </p>
-          </div>
-          <button type="button" onClick={onTutup} aria-label="Tutup dialog gaji berikutnya" className={s.modalClose}>
-            <span aria-hidden="true" className={s.iconMd}>
-              close
-            </span>
-          </button>
-        </header>
-
-        <form onSubmit={submit} className="space-y-4 px-4 py-4 sm:px-6">
-          <div className={s.panelHighlight}>
-            <p className={s.cardListLabel}>Yang terjadi</p>
-            <p className={`${s.detailValue} mt-1`}>
-              Status pembayaran di-reset menjadi belum dibayar agar bisa dibayar lagi. Gaji pokok, tunjangan, dan
-              potongan tetap sama.
-            </p>
-            <p className={`${s.metaText} mt-1`}>
-              Saat dibayar, tanggal otomatis tercatat hari ini dan masuk ke Kas Keluar.
-            </p>
-          </div>
-
-          <div className="flex justify-end gap-2">
-            <button type="button" onClick={onTutup} className={s.secondaryButton}>
-              Batal
-            </button>
-            <button type="submit" className={s.primaryButton}>
-              <span aria-hidden="true" className={s.iconMd}>
-                event_repeat
-              </span>
-              Siapkan Gaji
-            </button>
-          </div>
-        </form>
       </section>
     </div>
   );
@@ -438,7 +384,7 @@ function DetailUangKas() {
         <div>
           <h2 className={s.sectionTitle}>Detail Uang Masuk &amp; Uang Keluar</h2>
           <p className={s.sectionSubtitle}>
-            Rekap kas seluruh transaksi — gaji yang ditandai terbayar otomatis tercatat sebagai uang keluar.
+            Rekap kas seluruh transaksi — gaji yang dibayar otomatis tercatat sebagai uang keluar.
           </p>
         </div>
         <p className={s.metaText}>Saldo bersih {formatRp(rekap.saldo)} · kas beredar {formatRp(rekap.totalBeredar)}</p>
@@ -489,19 +435,29 @@ function DetailUangKas() {
 
 export function PayrollSection() {
   const readOnly = useReadOnly();
-  const { state, opsiPos, bayarGaji, hapusKaryawan, clearToast } = useFinance();
+  const {
+    state,
+    opsiPos,
+    buatPenggajian,
+    buatPenggajianBulan,
+    bayarGaji,
+    bayarLangsung,
+    batalkanBayar,
+    hapusKaryawan,
+    clearToast,
+  } = useFinance();
+  const [periode, setPeriode] = useState(() => bulanHariIni());
   const [filterStatus, setFilterStatus] = useState<"all" | "belum" | "terbayar">("all");
   const [filterLokasi, setFilterLokasi] = useState("all");
   const [cari, setCari] = useState("");
-  const [slip, setSlip] = useState<Karyawan | null>(null);
+  const [slipTerbuka, setSlipTerbuka] = useState<Penggajian | null>(null);
   const [formTerbuka, setFormTerbuka] = useState(false);
   const [edit, setEdit] = useState<Karyawan | null>(null);
   const [hapus, setHapus] = useState<Karyawan | null>(null);
-  const [gajiLagiRow, setGajiLagiRow] = useState<Karyawan | null>(null);
-  const [expandedPayrollIds, setExpandedPayrollIds] = useState<Record<string, boolean>>({});
+  const [expanded, setExpanded] = useState<Record<string, boolean>>({});
 
-  const togglePayrollExpand = (id: string) => {
-    setExpandedPayrollIds((curr) => ({ ...curr, [id]: !curr[id] }));
+  const toggleExpand = (id: string) => {
+    setExpanded((curr) => ({ ...curr, [id]: !curr[id] }));
   };
 
   const mulaiTambah = () => {
@@ -519,59 +475,218 @@ export function PayrollSection() {
     setEdit(null);
   };
 
-  const daftar = useMemo(() => {
-    const query = cari.trim().toLowerCase();
-    return state.karyawan.filter((item) => {
-      const cocokStatus = filterStatus === "all" || item.statusBayar === filterStatus;
-      const cocokLokasi = filterLokasi === "all" || item.lokasi === filterLokasi;
-      const cocokCari =
-        !query || `${item.nama} ${item.jabatan} ${item.lokasi}`.toLowerCase().includes(query);
-      return cocokStatus && cocokLokasi && cocokCari;
-    });
-  }, [state.karyawan, filterStatus, filterLokasi, cari]);
+  const slipPeriode = useMemo(
+    () => state.penggajian.filter((item) => item.periode === periode),
+    [state.penggajian, periode],
+  );
 
-  const totalGaji = state.karyawan.reduce((sum, item) => sum + hitungGaji(item).netto, 0);
-  const gajiBelumDibayar = state.karyawan
-    .filter((item) => item.statusBayar === "belum")
-    .reduce((sum, item) => sum + hitungGaji(item).netto, 0);
-  const sudahBayar = state.karyawan.filter((item) => item.statusBayar === "terbayar").length;
-  const totalTunjangan = state.karyawan.reduce((sum, item) => sum + item.tunjangan, 0);
-  const totalPotongan = state.karyawan.reduce((sum, item) => sum + item.potongan, 0);
+  const totalGaji = slipPeriode.reduce((sum, item) => sum + hitungGaji(item).netto, 0);
+  const belumBayar = slipPeriode.filter((item) => item.statusBayar === "belum");
+  const terbayar = slipPeriode.filter((item) => item.statusBayar === "terbayar");
+  const gajiBelumDibayar = belumBayar.reduce((sum, item) => sum + hitungGaji(item).netto, 0);
+  const totalTunjangan = slipPeriode.reduce((sum, item) => sum + item.tunjangan, 0);
+  const totalPotongan = slipPeriode.reduce((sum, item) => sum + item.potongan, 0);
+  const belumDibuat = state.karyawan.filter(
+    (item) => !slipPeriode.some((slip) => slip.karyawanId === item.id),
+  ).length;
+
+  const daftar = useMemo<Baris[]>(() => {
+    const query = cari.trim().toLowerCase();
+    const hasil: Baris[] = [];
+
+    for (const karyawan of state.karyawan) {
+      const slip = slipPeriode.find((item) => item.karyawanId === karyawan.id) ?? null;
+      const status = slip?.statusBayar ?? "belum";
+      if (filterStatus !== "all" && status !== filterStatus) continue;
+      const lokasi = slip?.lokasi ?? karyawan.lokasi;
+      if (filterLokasi !== "all" && lokasi !== filterLokasi) continue;
+      if (query && !`${karyawan.nama} ${karyawan.jabatan} ${karyawan.lokasi}`.toLowerCase().includes(query))
+        continue;
+      hasil.push({
+        key: karyawan.id,
+        karyawan,
+        slip,
+        nama: karyawan.nama,
+        jabatan: karyawan.jabatan,
+        lokasi,
+        gajiPokok: slip?.gajiPokok ?? karyawan.gajiPokok,
+        tunjangan: slip?.tunjangan ?? karyawan.tunjangan,
+        potongan: slip?.potongan ?? 0,
+        metodeBayar: slip?.metodeBayar ?? karyawan.metodeBayar,
+        status,
+      });
+    }
+
+    for (const slip of slipPeriode) {
+      if (state.karyawan.some((item) => item.id === slip.karyawanId)) continue;
+      if (filterStatus !== "all" && slip.statusBayar !== filterStatus) continue;
+      if (filterLokasi !== "all" && slip.lokasi !== filterLokasi) continue;
+      if (query && !`${slip.nama} ${slip.jabatan} ${slip.lokasi}`.toLowerCase().includes(query)) continue;
+      hasil.push({
+        key: slip.id,
+        karyawan: null,
+        slip,
+        nama: slip.nama,
+        jabatan: slip.jabatan,
+        lokasi: slip.lokasi,
+        gajiPokok: slip.gajiPokok,
+        tunjangan: slip.tunjangan,
+        potongan: slip.potongan,
+        metodeBayar: slip.metodeBayar,
+        status: slip.statusBayar,
+      });
+    }
+
+    return hasil;
+  }, [state.karyawan, slipPeriode, filterStatus, filterLokasi, cari]);
+
+  const badgeStatus = (baris: Baris) => {
+    if (!baris.slip) {
+      return <StatusBadge tone="pending" label="Slip belum dibuat" icon="schedule" />;
+    }
+    if (baris.status === "terbayar") {
+      return (
+        <StatusBadge
+          tone="approved"
+          label={`Terbayar ${formatTanggal(baris.slip.tanggalBayar)}`}
+          icon="check"
+        />
+      );
+    }
+    return <StatusBadge tone="pending" label="Belum dibayar" icon="schedule" />;
+  };
+
+  const aksiBaris = (baris: Baris) => {
+    const { karyawan, slip } = baris;
+    return (
+      <div className={s.actionGroup}>
+        {slip && (
+          <button
+            type="button"
+            onClick={() => setSlipTerbuka(slip)}
+            aria-label={`Buka slip gaji ${baris.nama}`}
+            className={s.ghostButton}
+          >
+            <span aria-hidden="true" className={s.iconSm}>
+              receipt_long
+            </span>
+            Slip Gaji
+          </button>
+        )}
+        {!readOnly && karyawan && !slip && (
+          <>
+            <button
+              type="button"
+              onClick={() => buatPenggajian(karyawan.id, periode)}
+              aria-label={`Buat slip gaji ${baris.nama}`}
+              className={s.ghostButton}
+            >
+              <span aria-hidden="true" className={s.iconSm}>
+                add_card
+              </span>
+              Buat Slip
+            </button>
+            <button
+              type="button"
+              onClick={() => bayarLangsung(karyawan.id, periode, tanggalHariIni())}
+              aria-label={`Bayar langsung gaji ${baris.nama}`}
+              title="Buat slip dan bayar hari ini"
+              className={s.actionButton}
+            >
+              <span aria-hidden="true" className={s.iconSm}>
+                paid
+              </span>
+            </button>
+          </>
+        )}
+        {!readOnly && slip?.statusBayar === "belum" && (
+          <button
+            type="button"
+            onClick={() => bayarGaji(slip.id, tanggalHariIni())}
+            aria-label={`Bayar gaji ${baris.nama}`}
+            title="Bayar hari ini"
+            className={s.actionButton}
+          >
+            <span aria-hidden="true" className={s.iconSm}>
+              paid
+            </span>
+          </button>
+        )}
+        {!readOnly && slip?.statusBayar === "terbayar" && (
+          <button
+            type="button"
+            onClick={() => batalkanBayar(slip.id)}
+            aria-label={`Batalkan pembayaran gaji ${baris.nama}`}
+            title="Batalkan pembayaran"
+            className={s.actionButtonDanger}
+          >
+            <span aria-hidden="true" className={s.iconSm}>
+              undo
+            </span>
+          </button>
+        )}
+        {!readOnly && karyawan && (
+          <>
+            <button
+              type="button"
+              onClick={() => mulaiUbah(karyawan)}
+              aria-label={`Ubah data karyawan ${baris.nama}`}
+              title="Ubah data karyawan"
+              className={s.actionButton}
+            >
+              <span aria-hidden="true" className={s.iconSm}>
+                edit
+              </span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setHapus(karyawan)}
+              aria-label={`Hapus karyawan ${baris.nama}`}
+              title="Hapus karyawan"
+              className={s.actionButtonDanger}
+            >
+              <span aria-hidden="true" className={s.iconSm}>
+                delete
+              </span>
+            </button>
+          </>
+        )}
+      </div>
+    );
+  };
 
   return (
     <div className="space-y-5">
       <div className={s.statGrid}>
         <FinancialStatCard
-          label="Total Gaji Karyawan"
+          label={`Total Gaji ${formatBulan(periode)}`}
           value={formatRp(totalGaji)}
           icon="payments"
-          trend={`${state.karyawan.length} karyawan · ${sudahBayar} sudah dibayar`}
+          trend={`${slipPeriode.length} slip · ${terbayar.length} sudah dibayar`}
           tone="gold"
         />
         <FinancialStatCard
           label="Belum Dibayar"
           value={formatRp(gajiBelumDibayar)}
           icon="schedule"
-          trend={`${state.karyawan.length - sudahBayar} karyawan menunggu`}
+          trend={`${belumBayar.length} slip menunggu · ${belumDibuat} karyawan belum dibuatkan slip`}
           tone="error"
         />
         <FinancialStatCard
           label="Tunjangan"
           value={formatRp(totalTunjangan)}
           icon="add_circle"
-          trend="Komponen tambahan payroll"
+          trend="Komponen tambahan slip bulan ini"
           tone="success"
         />
         <FinancialStatCard
           label="Potongan Kasbon/Bon"
           value={formatRp(totalPotongan)}
           icon="remove_circle"
-          trend="Potongan dari gaji karyawan"
+          trend="Potongan pada slip bulan ini"
           tone="neutral"
         />
       </div>
-
-      {gajiLagiRow && <DialogGajiLagi karyawan={gajiLagiRow} onTutup={() => setGajiLagiRow(null)} />}
 
       {formTerbuka && <FormKaryawan edit={edit} onSelesai={tutupForm} />}
 
@@ -580,25 +695,47 @@ export function PayrollSection() {
           <div>
             <h2 className={s.sectionTitle}>Daftar Gaji Karyawan</h2>
             <p className={s.sectionSubtitle}>
-              Buka slip gaji untuk rincian pendapatan, potongan bon/kasbon, dan tandai pembayaran yang sudah cair.
+              Pilih bulan gaji, buat slip, lalu bayar. Slip yang sudah dibayar terkunci dan dapat dibatalkan.
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
-            <span className={s.dataCounter}>
-              {daftar.length} dari {state.karyawan.length} karyawan
-            </span>
+            <span className={s.dataCounter}>{daftar.length} baris</span>
             {!readOnly && (
-              <button type="button" onClick={formTerbuka ? tutupForm : mulaiTambah} className={s.secondaryButton}>
-                <span aria-hidden="true" className={s.iconSm}>
-                  {formTerbuka ? "close" : "person_add"}
-                </span>
-                {formTerbuka ? "Tutup Form" : "Tambah Karyawan"}
-              </button>
+              <>
+                <button
+                  type="button"
+                  onClick={() => buatPenggajianBulan(periode)}
+                  className={s.secondaryButton}
+                  disabled={!periode || state.karyawan.length === 0}
+                >
+                  <span aria-hidden="true" className={s.iconSm}>
+                    playlist_add
+                  </span>
+                  Buat Semua Slip
+                </button>
+                <button type="button" onClick={formTerbuka ? tutupForm : mulaiTambah} className={s.secondaryButton}>
+                  <span aria-hidden="true" className={s.iconSm}>
+                    {formTerbuka ? "close" : "person_add"}
+                  </span>
+                  {formTerbuka ? "Tutup Form" : "Tambah Karyawan"}
+                </button>
+              </>
             )}
           </div>
         </div>
 
         <div className={`mt-4 ${s.toolbarRow}`}>
+          <label className="sr-only" htmlFor="payroll-periode">
+            Bulan gaji
+          </label>
+          <input
+            id="payroll-periode"
+            type="month"
+            value={periode}
+            onChange={(event) => setPeriode(event.target.value)}
+            className={s.filterSelect}
+            aria-label="Bulan gaji"
+          />
           <label className="sr-only" htmlFor="payroll-cari">
             Cari karyawan
           </label>
@@ -641,6 +778,13 @@ export function PayrollSection() {
           </select>
         </div>
 
+        {periode && (
+          <p className={`mt-3 ${s.metaText}`}>
+            Menampilkan gaji periode <span className="font-bold text-on-surface">{formatBulan(periode)}</span>
+            {belumDibuat > 0 ? ` · ${belumDibuat} karyawan belum dibuatkan slip` : ""}
+          </p>
+        )}
+
         <div className={`mt-4 ${s.tableWrap}`}>
           <table className={`${s.table} min-w-[960px] xl:min-w-0`}>
             <thead className={s.tableHead}>
@@ -658,13 +802,13 @@ export function PayrollSection() {
                   Tunjangan
                 </th>
                 <th scope="col" className={`${s.th} text-right`}>
-                  Potongan Kasbon/Bon
+                  Potongan
                 </th>
                 <th scope="col" className={`${s.th} text-right`}>
                   Total Netto
                 </th>
                 <th scope="col" className={s.th}>
-                  Status Pembayaran
+                  Status
                 </th>
                 <th scope="col" className={`${s.th} text-right`}>
                   Aksi
@@ -672,117 +816,57 @@ export function PayrollSection() {
               </tr>
             </thead>
             <tbody>
-              {daftar.map((item) => {
-                const { netto } = hitungGaji(item);
-                const isExpanded = Boolean(expandedPayrollIds[item.id]);
+              {daftar.map((baris) => {
+                const { netto } = hitungGaji(baris);
+                const bisaEdit = Boolean(
+                  !readOnly && baris.karyawan && baris.slip?.statusBayar === "belum",
+                );
+                const isExpanded = bisaEdit && Boolean(expanded[baris.key]);
                 return (
-                  <>
-                    <tr key={item.id} className={`${s.tr} cursor-pointer hover:bg-surface-variant/30`} onClick={() => togglePayrollExpand(item.id)}>
+                  <Fragment key={baris.key}>
+                    <tr
+                      className={`${s.tr} ${bisaEdit ? "cursor-pointer hover:bg-surface-variant/30" : ""}`}
+                      onClick={() => bisaEdit && toggleExpand(baris.key)}
+                    >
                       <td className={s.tdStrong}>
                         <div className="flex items-center gap-2">
-                          <span className="material-symbols-outlined text-[16px] text-on-surface-variant transition-transform">
-                            {isExpanded ? "expand_less" : "expand_more"}
-                          </span>
+                          {bisaEdit && (
+                            <span className="material-symbols-outlined text-[16px] text-on-surface-variant">
+                              {isExpanded ? "expand_less" : "expand_more"}
+                            </span>
+                          )}
                           <div>
-                            <p>{item.nama}</p>
+                            <p>{baris.nama}</p>
+                            {!baris.karyawan && (
+                              <p className={`${s.metaText} mt-0.5`}>Karyawan sudah dihapus</p>
+                            )}
                           </div>
                         </div>
                       </td>
-                      <td className={s.tdMuted}>{item.jabatan}</td>
-                      <td className={`${s.td} text-right text-on-surface`}>{formatRp(item.gajiPokok)}</td>
-                      <td className={`${s.td} text-right text-success`}>
-                        +{formatRp(item.tunjangan)}
-                      </td>
-                      <td className={`${s.td} text-right text-error`}>
-                        -{formatRp(item.potongan)}
-                      </td>
+                      <td className={s.tdMuted}>{baris.jabatan}</td>
+                      <td className={`${s.td} text-right text-on-surface`}>{formatRp(baris.gajiPokok)}</td>
+                      <td className={`${s.td} text-right text-success`}>+{formatRp(baris.tunjangan)}</td>
+                      <td className={`${s.td} text-right text-error`}>-{formatRp(baris.potongan)}</td>
                       <td className={`${s.td} ${s.amountStrong} text-secondary`}>{formatRp(netto)}</td>
-                      <td className={s.td}>
-                        {item.statusBayar === "terbayar" ? (
-                          <StatusBadge tone="approved" label={`Terbayar ${formatTanggal(item.tanggalBayar)}`} icon="check" />
-                        ) : (
-                          <StatusBadge tone="pending" label="Belum dibayar" icon="schedule" />
-                        )}
-                      </td>
-                      <td className={`${s.td} text-right`} onClick={(e) => e.stopPropagation()}>
-                        <div className={s.actionGroup}>
-                          <button
-                            type="button"
-                            onClick={() => setSlip(item)}
-                            aria-label={`Buka slip gaji ${item.nama}`}
-                            className={s.ghostButton}
-                          >
-                            <span aria-hidden="true" className={s.iconSm}>
-                              receipt_long
-                            </span>
-                            Slip Gaji
-                          </button>
-                          {!readOnly && (
-                            <>
-                              <button
-                                type="button"
-                                onClick={() => setGajiLagiRow(item)}
-                                aria-label={`Siapkan gaji berikutnya ${item.nama}`}
-                                title="Siapkan gaji berikutnya"
-                                className={s.actionButton}
-                              >
-                                <span aria-hidden="true" className={s.iconSm}>
-                                  event_repeat
-                                </span>
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => mulaiUbah(item)}
-                                aria-label={`Ubah data gaji ${item.nama}`}
-                                title="Ubah data karyawan"
-                                className={s.actionButton}
-                              >
-                                <span aria-hidden="true" className={s.iconSm}>
-                                  edit
-                                </span>
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => bayarGaji(item.id, new Date().toISOString().slice(0, 10))}
-                                disabled={item.statusBayar === "terbayar"}
-                                aria-label={`Tandai terbayar gaji ${item.nama}`}
-                                title="Tandai terbayar"
-                                className={s.actionButton}
-                              >
-                                <span aria-hidden="true" className={s.iconSm}>
-                                  paid
-                                </span>
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => setHapus(item)}
-                                aria-label={`Hapus ${item.nama}`}
-                                title="Hapus karyawan"
-                                className={s.actionButtonDanger}
-                              >
-                                <span aria-hidden="true" className={s.iconSm}>
-                                  delete
-                                </span>
-                              </button>
-                            </>
-                          )}
-                        </div>
+                      <td className={s.td}>{badgeStatus(baris)}</td>
+                      <td className={`${s.td} text-right`} onClick={(event) => event.stopPropagation()}>
+                        {aksiBaris(baris)}
                       </td>
                     </tr>
-                    {isExpanded && (
-                      <tr key={`${item.id}-detail`} className="bg-surface-variant/40">
+                    {isExpanded && baris.slip && (
+                      <tr className="bg-surface-variant/40">
                         <td colSpan={8} className="p-4">
-                          <InlinePayrollEditor karyawan={item} />
+                          <InlinePayrollEditor slip={baris.slip} />
                         </td>
                       </tr>
                     )}
-                  </>
+                  </Fragment>
                 );
               })}
               {daftar.length === 0 && (
                 <tr>
                   <td colSpan={8} className={s.emptyRow}>
-Belum ada data karyawan. Tekan &ldquo;Tambah Karyawan&rdquo; untuk menambah, atau filter gajian lain.
+                    Belum ada data gaji untuk periode ini. Tekan &ldquo;Buat Semua Slip&rdquo; atau tambah karyawan.
                   </td>
                 </tr>
               )}
@@ -792,30 +876,29 @@ Belum ada data karyawan. Tekan &ldquo;Tambah Karyawan&rdquo; untuk menambah, ata
 
         <div className={`mt-4 ${s.cardListWrap}`}>
           {daftar.length === 0 && (
-            <p className={s.emptyRow}>Belum ada data karyawan. Tekan &ldquo;Tambah Karyawan&rdquo; untuk menambah, atau filter gajian lain.</p>
+            <p className={s.emptyRow}>
+              Belum ada data gaji untuk periode ini. Tekan &ldquo;Buat Semua Slip&rdquo; atau tambah karyawan.
+            </p>
           )}
-          {daftar.map((item) => {
-            const { netto } = hitungGaji(item);
+          {daftar.map((baris) => {
+            const { netto } = hitungGaji(baris);
             return (
-              <article key={item.id} className={s.cardListItem}>
+              <article key={baris.key} className={s.cardListItem}>
                 <div className={s.cardListHead}>
                   <div className="min-w-0">
-                    <p className={`${s.cardListTitle} break-words`}>{item.nama}</p>
+                    <p className={`${s.cardListTitle} break-words`}>{baris.nama}</p>
                     <p className={`${s.metaText} mt-0.5`}>
-                      {item.jabatan} · {item.lokasi}
+                      {baris.jabatan} · {baris.lokasi}
+                      {!baris.karyawan ? " · karyawan sudah dihapus" : ""}
                     </p>
                   </div>
-                  {item.statusBayar === "terbayar" ? (
-                    <StatusBadge tone="approved" label={`Terbayar ${formatTanggal(item.tanggalBayar)}`} icon="check" />
-                  ) : (
-                    <StatusBadge tone="pending" label="Belum dibayar" icon="schedule" />
-                  )}
+                  {badgeStatus(baris)}
                 </div>
 
                 <div className={s.cardListGrid}>
                   <div>
                     <p className={s.cardListLabel}>Gaji Pokok</p>
-                    <p className={s.cardListValue}>{formatRp(item.gajiPokok)}</p>
+                    <p className={s.cardListValue}>{formatRp(baris.gajiPokok)}</p>
                   </div>
                   <div>
                     <p className={s.cardListLabel}>Netto</p>
@@ -823,76 +906,15 @@ Belum ada data karyawan. Tekan &ldquo;Tambah Karyawan&rdquo; untuk menambah, ata
                   </div>
                   <div>
                     <p className={s.cardListLabel}>Tunjangan</p>
-                    <p className={`${s.cardListValue} text-success`}>+{formatRp(item.tunjangan)}</p>
+                    <p className={`${s.cardListValue} text-success`}>+{formatRp(baris.tunjangan)}</p>
                   </div>
                   <div>
-                    <p className={s.cardListLabel}>Potongan Kasbon/Bon</p>
-                    <p className={`${s.cardListValue} text-error`}>-{formatRp(item.potongan)}</p>
+                    <p className={s.cardListLabel}>Potongan</p>
+                    <p className={`${s.cardListValue} text-error`}>-{formatRp(baris.potongan)}</p>
                   </div>
                 </div>
 
-                <div className={s.cardListActions}>
-                  <button
-                    type="button"
-                    onClick={() => setSlip(item)}
-                    aria-label={`Buka slip gaji ${item.nama}`}
-                    className={s.ghostButton}
-                  >
-                    <span aria-hidden="true" className={s.iconSm}>
-                      receipt_long
-                    </span>
-                    Slip Gaji
-                  </button>
-                  {!readOnly && (
-                    <>
-                      <button
-                        type="button"
-                        onClick={() => setGajiLagiRow(item)}
-                        aria-label={`Siapkan gaji berikutnya ${item.nama}`}
-                        className={s.ghostButton}
-                      >
-                        <span aria-hidden="true" className={s.iconSm}>
-                          event_repeat
-                        </span>
-                        Siapkan Gaji
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => mulaiUbah(item)}
-                        aria-label={`Ubah data gaji ${item.nama}`}
-                        title="Ubah data karyawan"
-                        className={s.actionButton}
-                      >
-                        <span aria-hidden="true" className={s.iconSm}>
-                          edit
-                        </span>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => bayarGaji(item.id, new Date().toISOString().slice(0, 10))}
-                        disabled={item.statusBayar === "terbayar"}
-                        aria-label={`Tandai terbayar gaji ${item.nama}`}
-                        title="Tandai terbayar"
-                        className={s.actionButton}
-                      >
-                        <span aria-hidden="true" className={s.iconSm}>
-                          paid
-                        </span>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setHapus(item)}
-                        aria-label={`Hapus karyawan ${item.nama}`}
-                        title="Hapus karyawan"
-                        className={s.actionButtonDanger}
-                      >
-                        <span aria-hidden="true" className={s.iconSm}>
-                          delete
-                        </span>
-                      </button>
-                    </>
-                  )}
-                </div>
+                {aksiBaris(baris)}
               </article>
             );
           })}
@@ -911,7 +933,7 @@ Belum ada data karyawan. Tekan &ldquo;Tambah Karyawan&rdquo; untuk menambah, ata
           }}
         />
       )}
-      {slip && <SlipGajiModal karyawan={slip} onTutup={() => setSlip(null)} />}
+      {slipTerbuka && <SlipGajiModal slip={slipTerbuka} onTutup={() => setSlipTerbuka(null)} />}
       <FeedbackToast message={state.toast} onDismiss={clearToast} />
     </div>
   );

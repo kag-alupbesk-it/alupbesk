@@ -25,9 +25,11 @@ import {
   type Invoice,
   type Karyawan,
   type KategoriBiaya,
+  type Penggajian,
   type PosProyek,
   type TransaksiKas,
 } from "../types/types";
+import { formatBulan } from "../format/format";
 
 export type InvoiceRingkas = ReturnType<typeof hitungInvoice> & { invoice: Invoice };
 
@@ -35,6 +37,7 @@ export type FinanceState = {
   transaksi: TransaksiKas[];
   invoice: Invoice[];
   karyawan: Karyawan[];
+  penggajian: Penggajian[];
   opsiJabatan: string[];
   opsiPerson: string[];
   opsiKategori: KategoriBiaya[];
@@ -43,6 +46,7 @@ export type FinanceState = {
   seq: number;
   seqKaryawan: number;
   seqInvoice: number;
+  seqPenggajian: number;
 };
 
 type FinanceAction =
@@ -55,9 +59,14 @@ type FinanceAction =
   | { type: "tambah-opsi"; field: FieldOpsi; nilai: string }
   | { type: "tambah-opsi-jabatan"; nilai: string }
   | { type: "lunas-termin"; invoiceId: string; terminId: string }
+  | { type: "buat-penggajian"; karyawanId: string; periode: string }
+  | { type: "buat-penggajian-bulan"; periode: string }
+  | { type: "ubah-penggajian"; id: string; tunjangan: number; potongan: number; metodeBayar?: string }
   | { type: "bayar-gaji"; id: string; tanggal: string }
-  | { type: "gaji-lagi"; id: string }
-  | { type: "tambah-karyawan"; payload: Omit<Karyawan, "id" | "statusBayar" | "tanggalBayar"> }
+  | { type: "bayar-langsung"; karyawanId: string; periode: string; tanggal: string }
+  | { type: "batalkan-bayar"; id: string }
+  | { type: "hapus-penggajian"; id: string }
+  | { type: "tambah-karyawan"; payload: Omit<Karyawan, "id"> }
   | { type: "ubah-karyawan"; payload: Karyawan }
   | { type: "hapus-karyawan"; id: string }
   | { type: "toast"; message: string }
@@ -73,6 +82,7 @@ const initialState: FinanceState = {
   transaksi: [],
   invoice: [],
   karyawan: [],
+  penggajian: [],
   opsiJabatan: [],
   opsiPerson: [],
   opsiKategori: [],
@@ -81,6 +91,7 @@ const initialState: FinanceState = {
   seq: 1,
   seqKaryawan: 1,
   seqInvoice: 1,
+  seqPenggajian: 1,
 };
 
 function buatTransaksi(payload: Omit<TransaksiKas, "id">, urut: number): TransaksiKas {
@@ -99,10 +110,19 @@ function urutInvoiceBerikutnya(invoice: Invoice[], fallback: number): number {
   return Math.max(maks + 1, fallback);
 }
 
-type KaryawanLama = Omit<Karyawan, "potongan"> & {
+type KaryawanLama = {
+  id: string;
+  nama: string;
+  jabatan: string;
+  lokasi: PosProyek;
+  gajiPokok: number;
+  tunjangan?: number;
+  metodeBayar?: string;
   potongan?: number;
   potonganBon?: number;
   potonganKasbon?: number;
+  statusBayar?: "belum" | "terbayar";
+  tanggalBayar?: string;
   periode?: string;
 };
 
@@ -119,30 +139,130 @@ function parseAngka(nilai: unknown): number | null {
 }
 
 function normalisasiKaryawan(data: KaryawanLama): Karyawan {
-  const { potongan: potonganTersimpan, potonganBon, potonganKasbon } = data;
-  const legacy = (parseAngka(potonganBon) ?? 0) + (parseAngka(potonganKasbon) ?? 0);
   return {
     id: data.id,
     nama: data.nama,
     jabatan: data.jabatan,
     lokasi: data.lokasi,
-    gajiPokok: data.gajiPokok,
-    tunjangan: data.tunjangan,
-    potongan: parseAngka(potonganTersimpan) ?? legacy,
+    gajiPokok: parseAngka(data.gajiPokok) ?? 0,
+    tunjangan: parseAngka(data.tunjangan) ?? 0,
+    metodeBayar: data.metodeBayar || "Transfer BCA",
+  };
+}
+
+function normalisasiPenggajian(data: Penggajian): Penggajian {
+  return {
+    ...data,
+    gajiPokok: parseAngka(data.gajiPokok) ?? 0,
+    tunjangan: parseAngka(data.tunjangan) ?? 0,
+    potongan: parseAngka(data.potongan) ?? 0,
     statusBayar: data.statusBayar === "terbayar" ? "terbayar" : "belum",
     tanggalBayar: data.tanggalBayar ?? "",
-    metodeBayar: data.metodeBayar,
+    transaksiId: data.transaksiId ?? "",
   };
+}
+
+function buatSlip(karyawan: Karyawan, periode: string, urut: number): Penggajian {
+  return {
+    id: `GJI-${String(urut).padStart(4, "0")}`,
+    karyawanId: karyawan.id,
+    periode,
+    nama: karyawan.nama,
+    jabatan: karyawan.jabatan,
+    lokasi: karyawan.lokasi,
+    gajiPokok: karyawan.gajiPokok,
+    tunjangan: karyawan.tunjangan,
+    potongan: 0,
+    metodeBayar: karyawan.metodeBayar,
+    statusBayar: "belum",
+    tanggalBayar: "",
+    transaksiId: "",
+  };
+}
+
+function buatTransaksiGaji(slip: Penggajian, tanggal: string, urut: number): TransaksiKas {
+  const { netto } = hitungGaji(slip);
+  return buatTransaksi(
+    {
+      tanggal,
+      jenis: "kas_keluar",
+      uraian: `Pencairan gaji ${slip.nama} · ${formatBulan(slip.periode)}`,
+      kategori: "Dll",
+      posProyek: slip.lokasi,
+      person: slip.nama,
+      nominal: netto,
+      noNota: `SLIP/${slip.periode}/${slip.id}`,
+      bukti: `slip_gaji_${slip.id}.pdf`,
+      sumber: "payroll",
+      refId: slip.karyawanId,
+    },
+    urut,
+  );
+}
+
+function migrasiPenggajian(
+  karyawanLama: KaryawanLama[],
+  transaksi: TransaksiKas[],
+  mulaiSeq: number,
+): Penggajian[] {
+  let seq = mulaiSeq;
+  return karyawanLama
+    .filter((item) => item.statusBayar === "terbayar" && Boolean(item.tanggalBayar))
+    .map((item) => {
+      const transaksiLama = transaksi.find(
+        (row) => row.refId === item.id && row.sumber === "payroll",
+      );
+      const slip: Penggajian = {
+        id: `GJI-${String(seq).padStart(4, "0")}`,
+        karyawanId: item.id,
+        periode: (item.tanggalBayar ?? "").slice(0, 7),
+        nama: item.nama,
+        jabatan: item.jabatan,
+        lokasi: item.lokasi,
+        gajiPokok: parseAngka(item.gajiPokok) ?? 0,
+        tunjangan: parseAngka(item.tunjangan) ?? 0,
+        potongan:
+          parseAngka(item.potongan) ??
+          (parseAngka(item.potonganBon) ?? 0) + (parseAngka(item.potonganKasbon) ?? 0),
+        metodeBayar: item.metodeBayar || "Transfer BCA",
+        statusBayar: "terbayar",
+        tanggalBayar: item.tanggalBayar ?? "",
+        transaksiId: transaksiLama?.id ?? "",
+      };
+      seq += 1;
+      return slip;
+    });
 }
 
 function reducer(state: FinanceState, action: FinanceAction): FinanceState {
   switch (action.type) {
-    case "hydrate":
+    case "hydrate": {
+      const karyawanLama = action.payload.karyawan as unknown as KaryawanLama[];
+      const penggajianTersimpan = (action.payload.penggajian ?? []) as Penggajian[];
+      const transaksiTersimpan = action.payload.transaksi ?? [];
+      const perluMigrasi =
+        penggajianTersimpan.length === 0 &&
+        karyawanLama.some((item) => item.statusBayar === "terbayar");
+      const penggajian = perluMigrasi
+        ? migrasiPenggajian(karyawanLama, transaksiTersimpan, action.payload.seqPenggajian ?? 1)
+        : penggajianTersimpan.map(normalisasiPenggajian);
+      const seqPenggajian = penggajian.reduce((maks, item) => {
+        const angka = Number(item.id.match(/(\d+)\s*$/)?.[1] ?? 0);
+        return Number.isFinite(angka) ? Math.max(maks, angka + 1) : maks;
+      }, action.payload.seqPenggajian ?? 1);
+
       return {
         ...state,
         ...action.payload,
-        karyawan: action.payload.karyawan.map(normalisasiKaryawan),
+        transaksi: transaksiTersimpan,
+        karyawan: karyawanLama.map(normalisasiKaryawan),
+        penggajian,
+        seq: action.payload.seq ?? state.seq,
+        seqKaryawan: action.payload.seqKaryawan ?? state.seqKaryawan,
+        seqInvoice: action.payload.seqInvoice ?? state.seqInvoice,
+        seqPenggajian,
       };
+    }
     case "tambah-transaksi": {
       const transaksi = buatTransaksi(action.payload, state.seq);
       return {
@@ -257,50 +377,138 @@ function reducer(state: FinanceState, action: FinanceAction): FinanceState {
         toast: `${termin.label} invoice ${invoice.nomor} lunas dan tercatat sebagai Kas Masuk.`,
       };
     }
+    case "buat-penggajian": {
+      const karyawan = state.karyawan.find((item) => item.id === action.karyawanId);
+      if (!karyawan || !action.periode) return state;
+      const sudahAda = state.penggajian.some(
+        (item) => item.karyawanId === action.karyawanId && item.periode === action.periode,
+      );
+      if (sudahAda)
+        return {
+          ...state,
+          toast: `Slip ${karyawan.nama} ${formatBulan(action.periode)} sudah ada.`,
+        };
+      const slip = buatSlip(karyawan, action.periode, state.seqPenggajian);
+      return {
+        ...state,
+        seqPenggajian: state.seqPenggajian + 1,
+        penggajian: [slip, ...state.penggajian],
+        toast: `Slip gaji ${karyawan.nama} ${formatBulan(action.periode)} dibuat.`,
+      };
+    }
+    case "buat-penggajian-bulan": {
+      const periode = action.periode;
+      if (!periode) return state;
+      const sudah = new Set(
+        state.penggajian
+          .filter((item) => item.periode === periode)
+          .map((item) => item.karyawanId),
+      );
+      const belum = state.karyawan.filter((item) => !sudah.has(item.id));
+      if (belum.length === 0)
+        return {
+          ...state,
+          toast: `Semua karyawan sudah punya slip ${formatBulan(periode)}.`,
+        };
+      let seq = state.seqPenggajian;
+      const slipBaru = belum.map((karyawan) => {
+        const slip = buatSlip(karyawan, periode, seq);
+        seq += 1;
+        return slip;
+      });
+      return {
+        ...state,
+        seqPenggajian: seq,
+        penggajian: [...slipBaru, ...state.penggajian],
+        toast: `${slipBaru.length} slip ${formatBulan(periode)} dibuat.`,
+      };
+    }
+    case "ubah-penggajian": {
+      const slip = state.penggajian.find((item) => item.id === action.id);
+      if (!slip || slip.statusBayar === "terbayar") return state;
+      return {
+        ...state,
+        penggajian: state.penggajian.map((item) =>
+          item.id === action.id
+            ? {
+                ...item,
+                tunjangan: Math.max(0, action.tunjangan),
+                potongan: Math.max(0, action.potongan),
+                metodeBayar: action.metodeBayar ?? item.metodeBayar,
+              }
+            : item,
+        ),
+        toast: `Komponen gaji ${slip.nama} ${formatBulan(slip.periode)} diperbarui.`,
+      };
+    }
     case "bayar-gaji": {
-      const karyawan = state.karyawan.find((item) => item.id === action.id);
-      if (!karyawan || karyawan.statusBayar === "terbayar") return state;
-      const { netto } = hitungGaji(karyawan);
-
+      const slip = state.penggajian.find((item) => item.id === action.id);
+      if (!slip || slip.statusBayar === "terbayar") return state;
+      const transaksi = buatTransaksiGaji(slip, action.tanggal, state.seq);
       return {
         ...state,
         seq: state.seq + 1,
-        karyawan: state.karyawan.map((item) =>
+        penggajian: state.penggajian.map((item) =>
           item.id === action.id
-            ? { ...item, statusBayar: "terbayar", tanggalBayar: action.tanggal }
+            ? {
+                ...item,
+                statusBayar: "terbayar",
+                tanggalBayar: action.tanggal,
+                transaksiId: transaksi.id,
+              }
             : item,
         ),
-        transaksi: [
-          buatTransaksi(
-            {
-              tanggal: action.tanggal,
-              jenis: "kas_keluar",
-              uraian: `Pencairan gaji ${karyawan.nama}`,
-              kategori: "Dll",
-              posProyek: karyawan.lokasi,
-              person: karyawan.nama,
-              nominal: netto,
-              noNota: `SLIP/${action.tanggal}/${karyawan.id}`,
-              bukti: `slip_gaji_${karyawan.id}.pdf`,
-              sumber: "payroll",
-              refId: karyawan.id,
-            },
-            state.seq,
-          ),
-          ...state.transaksi,
-        ],
-        toast: `Gaji ${karyawan.nama} ditandai terbayar dan tercatat di Kas Keluar.`,
+        transaksi: [transaksi, ...state.transaksi],
+        toast: `Gaji ${slip.nama} ${formatBulan(slip.periode)} dibayar dan tercatat di Kas Keluar.`,
       };
     }
-    case "gaji-lagi": {
-      const sumber = state.karyawan.find((item) => item.id === action.id);
-      if (!sumber) return state;
+    case "bayar-langsung": {
+      const karyawan = state.karyawan.find((item) => item.id === action.karyawanId);
+      if (!karyawan || !action.periode) return state;
+      const ada = state.penggajian.find(
+        (item) => item.karyawanId === action.karyawanId && item.periode === action.periode,
+      );
+      if (ada?.statusBayar === "terbayar") return state;
+      const slip = ada ?? buatSlip(karyawan, action.periode, state.seqPenggajian);
+      const transaksi = buatTransaksiGaji(slip, action.tanggal, state.seq);
+      const slipTerbayar: Penggajian = {
+        ...slip,
+        statusBayar: "terbayar",
+        tanggalBayar: action.tanggal,
+        transaksiId: transaksi.id,
+      };
       return {
         ...state,
-        karyawan: state.karyawan.map((item) =>
-          item.id === action.id ? { ...item, statusBayar: "belum" } : item,
+        seq: state.seq + 1,
+        seqPenggajian: ada ? state.seqPenggajian : state.seqPenggajian + 1,
+        penggajian: ada
+          ? state.penggajian.map((item) => (item.id === slip.id ? slipTerbayar : item))
+          : [slipTerbayar, ...state.penggajian],
+        transaksi: [transaksi, ...state.transaksi],
+        toast: `Gaji ${slip.nama} ${formatBulan(slip.periode)} dibayar dan tercatat di Kas Keluar.`,
+      };
+    }
+    case "batalkan-bayar": {
+      const slip = state.penggajian.find((item) => item.id === action.id);
+      if (!slip || slip.statusBayar !== "terbayar") return state;
+      return {
+        ...state,
+        penggajian: state.penggajian.map((item) =>
+          item.id === action.id
+            ? { ...item, statusBayar: "belum", tanggalBayar: "", transaksiId: "" }
+            : item,
         ),
-        toast: `Gaji ${sumber.nama} disiapkan untuk pembayaran berikutnya.`,
+        transaksi: state.transaksi.filter((item) => item.id !== slip.transaksiId),
+        toast: `Pembayaran gaji ${slip.nama} ${formatBulan(slip.periode)} dibatalkan.`,
+      };
+    }
+    case "hapus-penggajian": {
+      const slip = state.penggajian.find((item) => item.id === action.id);
+      if (!slip || slip.statusBayar === "terbayar") return state;
+      return {
+        ...state,
+        penggajian: state.penggajian.filter((item) => item.id !== action.id),
+        toast: `Slip ${slip.nama} ${formatBulan(slip.periode)} dihapus.`,
       };
     }
     case "tambah-karyawan": {
@@ -310,8 +518,6 @@ function reducer(state: FinanceState, action: FinanceAction): FinanceState {
         ...action.payload,
         nama,
         id: `PGW-${String(state.seqKaryawan).padStart(3, "0")}`,
-        statusBayar: "belum",
-        tanggalBayar: "",
       };
 
       return {
@@ -341,13 +547,13 @@ function reducer(state: FinanceState, action: FinanceAction): FinanceState {
     case "hapus-karyawan": {
       const karyawan = state.karyawan.find((item) => item.id === action.id);
       if (!karyawan) return state;
-      const adaTransaksi = state.transaksi.some((item) => item.refId === action.id);
+      const adaRiwayat = state.penggajian.some((item) => item.karyawanId === action.id);
 
       return {
         ...state,
         karyawan: state.karyawan.filter((item) => item.id !== action.id),
-        toast: adaTransaksi
-          ? `${karyawan.nama} dihapus. Transaksi Kas Keluar terkait tetap tersimpan.`
+        toast: adaRiwayat
+          ? `${karyawan.nama} dihapus. Riwayat slip gajinya tetap tersimpan.`
           : `${karyawan.nama} dihapus dari daftar karyawan.`,
       };
     }
@@ -389,9 +595,14 @@ type FinanceContextValue = {
   hapusInvoice: (id: string) => void;
   tambahBukti: (id: string, bukti: string) => void;
   lunasTermin: (invoiceId: string, terminId: string) => void;
+  buatPenggajian: (karyawanId: string, periode: string) => void;
+  buatPenggajianBulan: (periode: string) => void;
+  ubahPenggajian: (id: string, tunjangan: number, potongan: number, metodeBayar?: string) => void;
   bayarGaji: (id: string, tanggal: string) => void;
-  gajiLagi: (id: string) => void;
-  tambahKaryawan: (payload: Omit<Karyawan, "id" | "statusBayar" | "tanggalBayar">) => void;
+  bayarLangsung: (karyawanId: string, periode: string, tanggal: string) => void;
+  batalkanBayar: (id: string) => void;
+  hapusPenggajian: (id: string) => void;
+  tambahKaryawan: (payload: Omit<Karyawan, "id">) => void;
   ubahKaryawan: (payload: Karyawan) => void;
   hapusKaryawan: (id: string) => void;
   tambahOpsiJabatan: (nilai: string) => void;
@@ -432,6 +643,7 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
     transaksi,
     invoice,
     karyawan,
+    penggajian,
     opsiJabatan,
     opsiPerson,
     opsiKategori,
@@ -439,11 +651,13 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
     seq,
     seqKaryawan,
     seqInvoice,
+    seqPenggajian,
   } = state;
   const persistedState = useMemo(() => ({
     transaksi,
     invoice,
     karyawan,
+    penggajian,
     opsiJabatan,
     opsiPerson,
     opsiKategori,
@@ -451,7 +665,8 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
     seq,
     seqKaryawan,
     seqInvoice,
-  }), [transaksi, invoice, karyawan, opsiJabatan, opsiPerson, opsiKategori, opsiPos, seq, seqKaryawan, seqInvoice]);
+    seqPenggajian,
+  }), [transaksi, invoice, karyawan, penggajian, opsiJabatan, opsiPerson, opsiKategori, opsiPos, seq, seqKaryawan, seqInvoice, seqPenggajian]);
 
   useEffect(() => {
     if (!loadedFromApi) return;
@@ -500,16 +715,39 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
       dispatch({ type: "lunas-termin", invoiceId, terminId }),
     [],
   );
+  const buatPenggajian = useCallback(
+    (karyawanId: string, periode: string) =>
+      dispatch({ type: "buat-penggajian", karyawanId, periode }),
+    [],
+  );
+  const buatPenggajianBulan = useCallback(
+    (periode: string) => dispatch({ type: "buat-penggajian-bulan", periode }),
+    [],
+  );
+  const ubahPenggajian = useCallback(
+    (id: string, tunjangan: number, potongan: number, metodeBayar?: string) =>
+      dispatch({ type: "ubah-penggajian", id, tunjangan, potongan, metodeBayar }),
+    [],
+  );
   const bayarGaji = useCallback(
     (id: string, tanggal: string) => dispatch({ type: "bayar-gaji", id, tanggal }),
     [],
   );
-  const gajiLagi = useCallback(
-    (id: string) => dispatch({ type: "gaji-lagi", id }),
+  const bayarLangsung = useCallback(
+    (karyawanId: string, periode: string, tanggal: string) =>
+      dispatch({ type: "bayar-langsung", karyawanId, periode, tanggal }),
+    [],
+  );
+  const batalkanBayar = useCallback(
+    (id: string) => dispatch({ type: "batalkan-bayar", id }),
+    [],
+  );
+  const hapusPenggajian = useCallback(
+    (id: string) => dispatch({ type: "hapus-penggajian", id }),
     [],
   );
   const tambahKaryawan = useCallback(
-    (payload: Omit<Karyawan, "id" | "statusBayar" | "tanggalBayar">) =>
+    (payload: Omit<Karyawan, "id">) =>
       dispatch({ type: "tambah-karyawan", payload }),
     [],
   );
@@ -554,8 +792,13 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
       hapusInvoice,
       tambahBukti,
       lunasTermin,
+      buatPenggajian,
+      buatPenggajianBulan,
+      ubahPenggajian,
       bayarGaji,
-      gajiLagi,
+      bayarLangsung,
+      batalkanBayar,
+      hapusPenggajian,
       tambahKaryawan,
       ubahKaryawan,
       hapusKaryawan,
@@ -573,8 +816,13 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
     hapusInvoice,
     tambahBukti,
     lunasTermin,
+    buatPenggajian,
+    buatPenggajianBulan,
+    ubahPenggajian,
     bayarGaji,
-    gajiLagi,
+    bayarLangsung,
+    batalkanBayar,
+    hapusPenggajian,
     tambahKaryawan,
     ubahKaryawan,
     hapusKaryawan,
