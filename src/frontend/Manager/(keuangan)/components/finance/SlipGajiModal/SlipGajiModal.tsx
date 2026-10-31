@@ -2,7 +2,7 @@
 
 import { useFinance } from "../FinanceStore/FinanceStore";
 import { FeedbackToast } from "../ui/FeedbackToast/FeedbackToast";
-import { formatRp, formatTanggal, formatTanggalPanjang } from "../format/format";
+import { formatRp, formatTanggalPanjang } from "../format/format";
 import { hitungGaji, type Karyawan } from "../types/types";
 import * as s from "../style/style";
 
@@ -22,7 +22,7 @@ export function SlipGajiModal({ karyawan, onTutup }: { karyawan: Karyawan; onTut
       <section role="dialog" aria-modal="true" aria-labelledby="slip-judul" className={`${s.modalPanel} max-w-2xl`}>
         <header className={s.modalHeader}>
           <div className="min-w-0">
-            <p className={s.fieldLabel}>Slip Gaji · Gajian {formatTanggal(karyawan.periode)}</p>
+            <p className={s.fieldLabel}>Slip Gaji</p>
             <h3 id="slip-judul" className={s.modalTitle}>
               {karyawan.nama}
             </h3>

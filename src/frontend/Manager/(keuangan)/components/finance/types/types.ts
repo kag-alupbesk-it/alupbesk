@@ -78,7 +78,6 @@ export type Karyawan = {
   gajiPokok: number;
   tunjangan: number;
   potongan: number;
-  periode: string;
   statusBayar: "belum" | "terbayar";
   tanggalBayar: string;
   metodeBayar: string;
@@ -93,8 +92,6 @@ export const JABATAN_AWAL = [
   "Driver",
   "Surveyor",
 ] as const;
-
-export type PeriodeGaji = string;
 
 export const REKAP_TRANSAKSI = (transaksi: TransaksiKas[]) => {
   const totalMasuk = transaksi

@@ -7,7 +7,7 @@ import { FinancialStatCard } from "../ui/FinancialStatCard/FinancialStatCard";
 import { SelectTambahBaru } from "../ui/SelectTambahBaru/SelectTambahBaru";
 import { StatusBadge } from "../ui/StatusBadge/StatusBadge";
 import { SlipGajiModal } from "../SlipGajiModal/SlipGajiModal";
-import { formatRp, formatTanggal, tanggalHariIni } from "../format/format";
+import { formatRp, formatTanggal } from "../format/format";
 import { hitungGaji, type Karyawan, type PosProyek } from "../types/types";
 import * as s from "../style/style";
 import { useReadOnly } from "@/frontend/shared/access/AccessModeProvider";
@@ -21,7 +21,6 @@ const draftKosong = (): DraftKaryawan => ({
   gajiPokok: 0,
   tunjangan: 0,
   potongan: 0,
-  periode: tanggalHariIni(),
   metodeBayar: "Transfer BCA",
 });
 
@@ -34,7 +33,6 @@ const draftDari = (karyawan: Karyawan): DraftKaryawan => ({
   gajiPokok: karyawan.gajiPokok,
   tunjangan: karyawan.tunjangan,
   potongan: karyawan.potongan,
-  periode: karyawan.periode,
   metodeBayar: karyawan.metodeBayar,
 });
 
@@ -153,8 +151,6 @@ function FormKaryawan({
     if (!draft.jabatan.trim()) validasi.jabatan = "Jabatan wajib diisi.";
     if (draft.gajiPokok <= 0) validasi.gajiPokok = "Gaji pokok harus lebih dari Rp 0.";
     if (edit) {
-      if (!/^\d{4}-\d{2}-\d{2}$/.test(draft.periode))
-        validasi.periode = "Tanggal gajian wajib diisi, cth: 2026-10-15.";
       if (draft.potongan > draft.gajiPokok + draft.tunjangan)
         validasi.potongan = "Total potongan melebihi pendapatan karyawan.";
     }
@@ -172,10 +168,6 @@ function FormKaryawan({
       });
     onSelesai();
   };
-
-  const pendapatan = draft.gajiPokok + draft.tunjangan;
-  const potongan = draft.potongan;
-  const bersihNetto = pendapatan - potongan;
 
   return (
     <form onSubmit={submit} className={s.card} noValidate>
@@ -243,17 +235,6 @@ function FormKaryawan({
               onChange={(value) => ubah("lokasi", value as PosProyek)}
               onTambah={(value) => tambahOpsi("pos", value)}
             />
-
-            <label className={s.fieldLabel}>
-              Tanggal Gajian
-              <input
-                type="date"
-                value={draft.periode}
-                onChange={(event) => ubah("periode", event.target.value)}
-                aria-invalid={Boolean(errors.periode)}
-                className={s.input}
-              />
-            </label>
 
             <label className={s.fieldLabel}>
               Metode Bayar
@@ -325,7 +306,7 @@ function ModalHapusKaryawan({
               {karyawan.nama}
             </h3>
             <p className={`${s.metaText} mt-1`}>
-              {karyawan.id} · {karyawan.jabatan} · gajian {formatTanggal(karyawan.periode)}
+              {karyawan.id} · {karyawan.jabatan}
             </p>
           </div>
           <button type="button" onClick={onTutup} aria-label="Batal hapus karyawan" className={s.modalClose}>
@@ -339,8 +320,7 @@ function ModalHapusKaryawan({
           <p className="text-xs leading-relaxed text-on-surface-variant">
             <span className="font-bold text-on-surface">{karyawan.nama}</span> dengan gaji pokok{" "}
             <span className="font-bold text-on-surface">{formatRp(karyawan.gajiPokok)}</span> dan neto{" "}
-            <span className="font-bold text-on-surface">{formatRp(netto)}</span> akan dihapus dari daftar payroll
-            gajian {formatTanggal(karyawan.periode)}.
+            <span className="font-bold text-on-surface">{formatRp(netto)}</span> akan dihapus dari daftar payroll.
           </p>
           <div className={adaTransaksi ? s.panelHighlight : s.panelMuted}>
             <p className={s.cardListLabel}>Dampak Penghapusan</p>
@@ -369,14 +349,10 @@ function ModalHapusKaryawan({
 
 function DialogGajiLagi({ karyawan, onTutup }: { karyawan: Karyawan; onTutup: () => void }) {
   const { gajiLagi } = useFinance();
-  const [tanggal, setTanggal] = useState(tanggalHariIni());
-  const bentrok = tanggal === karyawan.periode;
-  const bisaSubmit = !bentrok && tanggal !== "";
 
   const submit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!bisaSubmit) return;
-    gajiLagi(karyawan.id, tanggal);
+    gajiLagi(karyawan.id);
     onTutup();
   };
 
@@ -385,55 +361,43 @@ function DialogGajiLagi({ karyawan, onTutup }: { karyawan: Karyawan; onTutup: ()
       <section role="dialog" aria-modal="true" aria-labelledby="gaji-lagi-judul" className={`${s.modalPanel} max-w-md`}>
         <header className={s.modalHeader}>
           <div className="min-w-0">
-            <p className={s.fieldLabel}>Gaji Lagi</p>
+            <p className={s.fieldLabel}>Siapkan Gaji Berikutnya</p>
             <h3 id="gaji-lagi-judul" className={s.modalTitle}>
               {karyawan.nama}
             </h3>
             <p className={`${s.metaText} mt-1`}>
-              {karyawan.jabatan} · {karyawan.lokasi} · gajian sebelumnya {formatTanggal(karyawan.periode)}
+              {karyawan.jabatan} · {karyawan.lokasi}
+              {karyawan.tanggalBayar ? ` · terakhir dibayar ${formatTanggal(karyawan.tanggalBayar)}` : ""}
             </p>
           </div>
-          <button type="button" onClick={onTutup} aria-label="Tutup dialog gaji lagi" className={s.modalClose}>
+          <button type="button" onClick={onTutup} aria-label="Tutup dialog gaji berikutnya" className={s.modalClose}>
             <span aria-hidden="true" className={s.iconMd}>
               close
             </span>
           </button>
         </header>
 
-        <form onSubmit={submit} className="space-y-4 px-4 py-4 sm:px-6" noValidate>
-          <label className={s.fieldLabel}>
-            Tanggal Gajian Baru
-            <input
-              type="date"
-              value={tanggal}
-              onChange={(event) => setTanggal(event.target.value)}
-              aria-invalid={bentrok}
-              className={s.input}
-            />
-            {bentrok && (
-              <span role="alert" className={s.inputErrorText}>
-                Tanggal sama dengan gajian sebelumnya.
-              </span>
-            )}
-          </label>
-
+        <form onSubmit={submit} className="space-y-4 px-4 py-4 sm:px-6">
           <div className={s.panelHighlight}>
-            <p className={s.cardListLabel}>Yang disalin</p>
+            <p className={s.cardListLabel}>Yang terjadi</p>
             <p className={`${s.detailValue} mt-1`}>
-              Gaji pokok, tunjangan, dan potongan dibawa apa adanya.
+              Status pembayaran di-reset menjadi belum dibayar agar bisa dibayar lagi. Gaji pokok, tunjangan, dan
+              potongan tetap sama.
             </p>
-            <p className={`${s.metaText} mt-1`}>Status pembayaran di-reset menjadi belum dibayar.</p>
+            <p className={`${s.metaText} mt-1`}>
+              Saat dibayar, tanggal otomatis tercatat hari ini dan masuk ke Kas Keluar.
+            </p>
           </div>
 
           <div className="flex justify-end gap-2">
             <button type="button" onClick={onTutup} className={s.secondaryButton}>
               Batal
             </button>
-            <button type="submit" className={s.primaryButton} disabled={!bisaSubmit}>
+            <button type="submit" className={s.primaryButton}>
               <span aria-hidden="true" className={s.iconMd}>
                 event_repeat
               </span>
-              Gaji Lagi
+              Siapkan Gaji
             </button>
           </div>
         </form>
@@ -525,7 +489,7 @@ function DetailUangKas() {
 
 export function PayrollSection() {
   const readOnly = useReadOnly();
-  const { state, opsiPos, bayarGaji, hapusKaryawan, ubahKaryawan, clearToast } = useFinance();
+  const { state, opsiPos, bayarGaji, hapusKaryawan, clearToast } = useFinance();
   const [filterStatus, setFilterStatus] = useState<"all" | "belum" | "terbayar">("all");
   const [filterLokasi, setFilterLokasi] = useState("all");
   const [cari, setCari] = useState("");
@@ -534,7 +498,6 @@ export function PayrollSection() {
   const [edit, setEdit] = useState<Karyawan | null>(null);
   const [hapus, setHapus] = useState<Karyawan | null>(null);
   const [gajiLagiRow, setGajiLagiRow] = useState<Karyawan | null>(null);
-  const [filterPeriode, setFilterPeriode] = useState("");
   const [expandedPayrollIds, setExpandedPayrollIds] = useState<Record<string, boolean>>({});
 
   const togglePayrollExpand = (id: string) => {
@@ -556,54 +519,40 @@ export function PayrollSection() {
     setEdit(null);
   };
 
-  const daftarPeriode = useMemo(
-    () => [...new Set(state.karyawan.map((item) => item.periode))].sort((a, b) => b.localeCompare(a)),
-    [state.karyawan],
-  );
-  const periodeAktif =
-    filterPeriode && daftarPeriode.includes(filterPeriode) ? filterPeriode : "";
-
-  const rowsPeriode = useMemo(
-    () => (periodeAktif ? state.karyawan.filter((item) => item.periode === periodeAktif) : state.karyawan),
-    [state.karyawan, periodeAktif],
-  );
-
   const daftar = useMemo(() => {
     const query = cari.trim().toLowerCase();
-    return rowsPeriode.filter((item) => {
+    return state.karyawan.filter((item) => {
       const cocokStatus = filterStatus === "all" || item.statusBayar === filterStatus;
       const cocokLokasi = filterLokasi === "all" || item.lokasi === filterLokasi;
       const cocokCari =
         !query || `${item.nama} ${item.jabatan} ${item.lokasi}`.toLowerCase().includes(query);
       return cocokStatus && cocokLokasi && cocokCari;
     });
-  }, [rowsPeriode, filterStatus, filterLokasi, cari]);
+  }, [state.karyawan, filterStatus, filterLokasi, cari]);
 
-  const totalGaji = rowsPeriode.reduce((sum, item) => sum + hitungGaji(item).netto, 0);
-  const gajiBelumDibayar = rowsPeriode
+  const totalGaji = state.karyawan.reduce((sum, item) => sum + hitungGaji(item).netto, 0);
+  const gajiBelumDibayar = state.karyawan
     .filter((item) => item.statusBayar === "belum")
     .reduce((sum, item) => sum + hitungGaji(item).netto, 0);
-  const sudahBayar = rowsPeriode.filter((item) => item.statusBayar === "terbayar").length;
-  const totalTunjangan = rowsPeriode.reduce((sum, item) => sum + item.tunjangan, 0);
-  const totalPotongan = rowsPeriode.reduce((sum, item) => sum + item.potongan, 0);
+  const sudahBayar = state.karyawan.filter((item) => item.statusBayar === "terbayar").length;
+  const totalTunjangan = state.karyawan.reduce((sum, item) => sum + item.tunjangan, 0);
+  const totalPotongan = state.karyawan.reduce((sum, item) => sum + item.potongan, 0);
 
   return (
     <div className="space-y-5">
       <div className={s.statGrid}>
         <FinancialStatCard
-          label={periodeAktif ? "Total Gaji Periode Ini" : "Total Gaji Semua Gajian"}
+          label="Total Gaji Karyawan"
           value={formatRp(totalGaji)}
           icon="payments"
-          trend={`${rowsPeriode.length} karyawan · gajian ${
-            periodeAktif ? formatTanggal(periodeAktif) : "bebas tanggal"
-          }`}
+          trend={`${state.karyawan.length} karyawan · ${sudahBayar} sudah dibayar`}
           tone="gold"
         />
         <FinancialStatCard
           label="Belum Dibayar"
           value={formatRp(gajiBelumDibayar)}
           icon="schedule"
-          trend={`${rowsPeriode.length - sudahBayar} karyawan menunggu`}
+          trend={`${state.karyawan.length - sudahBayar} karyawan menunggu`}
           tone="error"
         />
         <FinancialStatCard
@@ -636,7 +585,7 @@ export function PayrollSection() {
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <span className={s.dataCounter}>
-              {daftar.length} dari {rowsPeriode.length} karyawan
+              {daftar.length} dari {state.karyawan.length} karyawan
             </span>
             {!readOnly && (
               <button type="button" onClick={formTerbuka ? tutupForm : mulaiTambah} className={s.secondaryButton}>
@@ -650,22 +599,6 @@ export function PayrollSection() {
         </div>
 
         <div className={`mt-4 ${s.toolbarRow}`}>
-          <label className="sr-only" htmlFor="payroll-filter-periode">
-            Filter tanggal gajian
-          </label>
-          <select
-            id="payroll-filter-periode"
-            value={periodeAktif}
-            onChange={(event) => setFilterPeriode(event.target.value)}
-            className={s.filterSelect}
-          >
-            <option value="">Semua gajian</option>
-            {daftarPeriode.map((item) => (
-              <option key={item} value={item}>
-                Gajian {formatTanggal(item)}
-              </option>
-            ))}
-          </select>
           <label className="sr-only" htmlFor="payroll-cari">
             Cari karyawan
           </label>
@@ -718,9 +651,6 @@ export function PayrollSection() {
                 <th scope="col" className={s.th}>
                   Jabatan
                 </th>
-                <th scope="col" className={s.th}>
-                  Periode
-                </th>
                 <th scope="col" className={`${s.th} text-right`}>
                   Gaji Pokok
                 </th>
@@ -759,7 +689,6 @@ export function PayrollSection() {
                         </div>
                       </td>
                       <td className={s.tdMuted}>{item.jabatan}</td>
-                      <td className={s.tdMuted}>{formatTanggal(item.periode)}</td>
                       <td className={`${s.td} text-right text-on-surface`}>{formatRp(item.gajiPokok)}</td>
                       <td className={`${s.td} text-right text-success`}>
                         +{formatRp(item.tunjangan)}
@@ -793,8 +722,8 @@ export function PayrollSection() {
                               <button
                                 type="button"
                                 onClick={() => setGajiLagiRow(item)}
-                                aria-label={`Gaji lagi ${item.nama} di tanggal lain`}
-                                title="Gaji lagi di tanggal lain"
+                                aria-label={`Siapkan gaji berikutnya ${item.nama}`}
+                                title="Siapkan gaji berikutnya"
                                 className={s.actionButton}
                               >
                                 <span aria-hidden="true" className={s.iconSm}>
@@ -842,7 +771,7 @@ export function PayrollSection() {
                     </tr>
                     {isExpanded && (
                       <tr key={`${item.id}-detail`} className="bg-surface-variant/40">
-                        <td colSpan={9} className="p-4">
+                        <td colSpan={8} className="p-4">
                           <InlinePayrollEditor karyawan={item} />
                         </td>
                       </tr>
@@ -852,7 +781,7 @@ export function PayrollSection() {
               })}
               {daftar.length === 0 && (
                 <tr>
-                  <td colSpan={9} className={s.emptyRow}>
+                  <td colSpan={8} className={s.emptyRow}>
 Belum ada data karyawan. Tekan &ldquo;Tambah Karyawan&rdquo; untuk menambah, atau filter gajian lain.
                   </td>
                 </tr>
@@ -873,7 +802,7 @@ Belum ada data karyawan. Tekan &ldquo;Tambah Karyawan&rdquo; untuk menambah, ata
                   <div className="min-w-0">
                     <p className={`${s.cardListTitle} break-words`}>{item.nama}</p>
                     <p className={`${s.metaText} mt-0.5`}>
-                      {item.jabatan} · {item.lokasi} · gajian {formatTanggal(item.periode)}
+                      {item.jabatan} · {item.lokasi}
                     </p>
                   </div>
                   {item.statusBayar === "terbayar" ? (
@@ -919,13 +848,13 @@ Belum ada data karyawan. Tekan &ldquo;Tambah Karyawan&rdquo; untuk menambah, ata
                       <button
                         type="button"
                         onClick={() => setGajiLagiRow(item)}
-                        aria-label={`Gaji lagi ${item.nama} di tanggal lain`}
+                        aria-label={`Siapkan gaji berikutnya ${item.nama}`}
                         className={s.ghostButton}
                       >
                         <span aria-hidden="true" className={s.iconSm}>
                           event_repeat
                         </span>
-                        Gaji lagi
+                        Siapkan Gaji
                       </button>
                       <button
                         type="button"

@@ -13,7 +13,6 @@ import {
 } from "react";
 import { request } from "@/services/api/request";
 import { isReadOnlyMode } from "@/frontend/shared/access/accessMode";
-import { formatTanggal } from "../format/format";
 
 import {
   KATEGORI_BIAYA,
@@ -57,7 +56,7 @@ type FinanceAction =
   | { type: "tambah-opsi-jabatan"; nilai: string }
   | { type: "lunas-termin"; invoiceId: string; terminId: string }
   | { type: "bayar-gaji"; id: string; tanggal: string }
-  | { type: "gaji-lagi"; id: string; tanggal: string }
+  | { type: "gaji-lagi"; id: string }
   | { type: "tambah-karyawan"; payload: Omit<Karyawan, "id" | "statusBayar" | "tanggalBayar"> }
   | { type: "ubah-karyawan"; payload: Karyawan }
   | { type: "hapus-karyawan"; id: string }
@@ -104,6 +103,7 @@ type KaryawanLama = Omit<Karyawan, "potongan"> & {
   potongan?: number;
   potonganBon?: number;
   potonganKasbon?: number;
+  periode?: string;
 };
 
 function parseAngka(nilai: unknown): number | null {
@@ -119,12 +119,19 @@ function parseAngka(nilai: unknown): number | null {
 }
 
 function normalisasiKaryawan(data: KaryawanLama): Karyawan {
-  const { potongan: potonganTersimpan, potonganBon, potonganKasbon, ...sisa } = data;
+  const { potongan: potonganTersimpan, potonganBon, potonganKasbon } = data;
   const legacy = (parseAngka(potonganBon) ?? 0) + (parseAngka(potonganKasbon) ?? 0);
   return {
-    ...sisa,
-    periode: /^\d{4}-\d{2}$/.test(sisa.periode) ? `${sisa.periode}-01` : sisa.periode,
+    id: data.id,
+    nama: data.nama,
+    jabatan: data.jabatan,
+    lokasi: data.lokasi,
+    gajiPokok: data.gajiPokok,
+    tunjangan: data.tunjangan,
     potongan: parseAngka(potonganTersimpan) ?? legacy,
+    statusBayar: data.statusBayar === "terbayar" ? "terbayar" : "belum",
+    tanggalBayar: data.tanggalBayar ?? "",
+    metodeBayar: data.metodeBayar,
   };
 }
 
@@ -268,12 +275,12 @@ function reducer(state: FinanceState, action: FinanceAction): FinanceState {
             {
               tanggal: action.tanggal,
               jenis: "kas_keluar",
-              uraian: `Pencairan gaji ${karyawan.nama} · gajian ${formatTanggal(karyawan.periode)}`,
+              uraian: `Pencairan gaji ${karyawan.nama}`,
               kategori: "Dll",
               posProyek: karyawan.lokasi,
               person: karyawan.nama,
               nominal: netto,
-              noNota: `SLIP/${karyawan.periode}/${karyawan.id}`,
+              noNota: `SLIP/${action.tanggal}/${karyawan.id}`,
               bukti: `slip_gaji_${karyawan.id}.pdf`,
               sumber: "payroll",
               refId: karyawan.id,
@@ -288,26 +295,12 @@ function reducer(state: FinanceState, action: FinanceAction): FinanceState {
     case "gaji-lagi": {
       const sumber = state.karyawan.find((item) => item.id === action.id);
       if (!sumber) return state;
-      if (!action.tanggal) return state;
-      const kunci = `${sumber.nama}|${sumber.jabatan}|${sumber.lokasi}`;
-      const sudahAda = state.karyawan.some(
-        (item) => item.periode === action.tanggal && `${item.nama}|${item.jabatan}|${item.lokasi}` === kunci,
-      );
-      if (sudahAda)
-        return { ...state, toast: `${sumber.nama} sudah punya gajian ${formatTanggal(action.tanggal)}.` };
-
-      const karyawanBaru: Karyawan = {
-        ...sumber,
-        id: `PGW-${String(state.seqKaryawan).padStart(3, "0")}`,
-        periode: action.tanggal,
-        statusBayar: "belum",
-        tanggalBayar: "",
-      };
       return {
         ...state,
-        seqKaryawan: state.seqKaryawan + 1,
-        karyawan: [...state.karyawan, karyawanBaru],
-        toast: `Gaji ${sumber.nama} disalin ke gajian ${formatTanggal(action.tanggal)}.`,
+        karyawan: state.karyawan.map((item) =>
+          item.id === action.id ? { ...item, statusBayar: "belum" } : item,
+        ),
+        toast: `Gaji ${sumber.nama} disiapkan untuk pembayaran berikutnya.`,
       };
     }
     case "tambah-karyawan": {
@@ -397,7 +390,7 @@ type FinanceContextValue = {
   tambahBukti: (id: string, bukti: string) => void;
   lunasTermin: (invoiceId: string, terminId: string) => void;
   bayarGaji: (id: string, tanggal: string) => void;
-  gajiLagi: (id: string, tanggal: string) => void;
+  gajiLagi: (id: string) => void;
   tambahKaryawan: (payload: Omit<Karyawan, "id" | "statusBayar" | "tanggalBayar">) => void;
   ubahKaryawan: (payload: Karyawan) => void;
   hapusKaryawan: (id: string) => void;
@@ -512,7 +505,7 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
     [],
   );
   const gajiLagi = useCallback(
-    (id: string, tanggal: string) => dispatch({ type: "gaji-lagi", id, tanggal }),
+    (id: string) => dispatch({ type: "gaji-lagi", id }),
     [],
   );
   const tambahKaryawan = useCallback(
