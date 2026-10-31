@@ -10,6 +10,7 @@ const mutationSchema = z.discriminatedUnion("action", [
     note: z.string().trim().min(1).max(2000),
   }),
   z.object({ action: z.literal("advance") }),
+  z.object({ action: z.literal("handoff") }),
   z.object({
     action: z.literal("production-stage"),
     stage: z.enum(["pemotongan", "perakitan", "finishing", "qc", "siap_kirim"]),
@@ -61,12 +62,19 @@ export async function PATCH(
     );
   }
 
-  const requiredRole = parsed.data.action === "production-stage" ? "produksi" : "proyek";
+  const allowedRoles =
+    parsed.data.action === "production-stage"
+      ? ["produksi"]
+      : parsed.data.action === "handoff"
+        ? ["produksi", "proyek"]
+        : ["proyek"];
   const elevated = access.profile.role === "manager" || access.profile.role === "owner";
-  if (access.profile.role !== requiredRole && !elevated) {
+  if (!allowedRoles.includes(access.profile.role) && !elevated) {
     const message = parsed.data.action === "production-stage"
       ? "Hanya role produksi yang dapat mengubah tahapan produksi."
-      : "Hanya role proyek yang dapat mengubah persetujuan order.";
+      : parsed.data.action === "handoff"
+        ? "Hanya tim produksi atau proyek yang dapat meneruskan order ke lapangan."
+        : "Hanya role proyek yang dapat mengubah persetujuan order.";
     return Response.json(
       { success: false, error: { code: "ROLE_FORBIDDEN", message } },
       { status: 403 },
@@ -99,7 +107,9 @@ export async function PATCH(
           ? `Meminta revisi order ${id}: ${parsed.data.note}`
           : parsed.data.action === "advance"
             ? `Memajukan tahap order ${id}`
-            : `Mengubah tahap produksi order ${id} menjadi ${parsed.data.stage}`;
+            : parsed.data.action === "handoff"
+              ? `Meneruskan order ${id} ke tim lapangan`
+              : `Mengubah tahap produksi order ${id} menjadi ${parsed.data.stage}`;
     recordAudit(access.profile, "EDIT", "Order Proyek", actionDetails);
     return Response.json(
       { success: true, data: result.order },

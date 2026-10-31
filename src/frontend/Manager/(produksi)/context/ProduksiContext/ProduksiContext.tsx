@@ -11,6 +11,7 @@ import {
 } from "react";
 import {
   getPMOrders,
+  handoffPMOrder,
   submitProductionDrawing,
   updateProductionStage,
 } from "@/services/api/pm/index";
@@ -27,6 +28,7 @@ interface ProduksiContextValue {
   getSPK: (nomor: string) => SPK | undefined;
   kirimGambar: (input: KirimGambarInput) => Promise<boolean>;
   ubahTahapan: (nomor: string, tahapan: TahapanProduksi) => Promise<boolean>;
+  serahkanKeLapangan: (nomor: string) => Promise<boolean>;
 }
 
 const ProduksiContext = createContext<ProduksiContextValue | undefined>(undefined);
@@ -127,6 +129,22 @@ export function ProduksiProvider({ children }: { children: ReactNode }) {
     [],
   );
 
+  const serahkanKeLapangan = useCallback(async (nomor: string) => {
+    try {
+      const updated = await handoffPMOrder(nomor);
+      setOrders((current) => replaceOrder(current, updated));
+      setError("");
+      return true;
+    } catch (handoffError) {
+      setError(
+        handoffError instanceof Error
+          ? handoffError.message
+          : "Order gagal diserahkan ke lapangan.",
+      );
+      return false;
+    }
+  }, []);
+
   const value = useMemo(
     () => ({
       spk,
@@ -137,8 +155,9 @@ export function ProduksiProvider({ children }: { children: ReactNode }) {
       getSPK,
       kirimGambar,
       ubahTahapan,
+      serahkanKeLapangan,
     }),
-    [spk, spkPerluGambar, loading, error, clearError, getSPK, kirimGambar, ubahTahapan],
+    [spk, spkPerluGambar, loading, error, clearError, getSPK, kirimGambar, ubahTahapan, serahkanKeLapangan],
   );
 
   return <ProduksiContext.Provider value={value}>{children}</ProduksiContext.Provider>;
