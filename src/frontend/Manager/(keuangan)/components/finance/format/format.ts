@@ -58,6 +58,21 @@ export const formatTanggalSingkat = (value: string) => {
 
 export const tanggalHariIni = () => new Date().toISOString().slice(0, 10);
 
+export const bulanHariIni = () => new Date().toISOString().slice(0, 7);
+
+const formatBulanFormatter = new Intl.DateTimeFormat("id-ID", {
+  month: "long",
+  year: "numeric",
+  timeZone: "UTC",
+});
+
+export const formatBulan = (value: string) => {
+  if (!/^\d{4}-\d{2}$/.test(value)) return value || "-";
+  const waktu = Date.parse(`${value}-01T00:00:00.000Z`);
+  if (!Number.isFinite(waktu)) return value;
+  return formatBulanFormatter.format(new Date(waktu));
+};
+
 export const formatPercent = (value: number, digit = 0) => `${value.toFixed(digit)}%`;
 
 export const denganPrefix = (value: number, prefix: "+" | "-" = "+") =>

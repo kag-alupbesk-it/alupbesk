@@ -44,7 +44,7 @@ const timelineSteps: TimelineStep[] = [
 
 function nextProjectStatus(status: ProjectStatus) {
   if (status === "siap_produksi") return "Mulai Produksi";
-  if (status === "produksi") return "Tandai Siap Kirim";
+  if (status === "produksi") return null; // Produksi melakukan handoff langsung ke lapangan
   if (status === "siap_kirim") return "Tandai Selesai";
   return null;
 }
@@ -132,9 +132,13 @@ export function PMOrderDetail({ orderId }: { orderId: string }) {
               </Link>
             ) : nextAction ? (
               <button type="button" onClick={() => advanceOrder(order.id)} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-secondary px-4 py-2.5 text-xs font-extrabold text-primary shadow-lg shadow-secondary/15 transition-colors hover:brightness-105 md:min-h-0">
-                {order.projectStatus === "siap_produksi" ? <Play size={14} /> : order.projectStatus === "produksi" ? <PackageCheck size={14} /> : <CheckCircle2 size={14} />}
+                {order.projectStatus === "siap_produksi" ? <Play size={14} /> : <CheckCircle2 size={14} />}
                 {nextAction}
               </button>
+            ) : order.projectStatus === "produksi" ? (
+              <span className="inline-flex items-center gap-2 rounded-xl border border-secondary/30 bg-secondary/10 px-4 py-2.5 text-xs font-bold text-secondary">
+                <Factory size={14} /> Menunggu tim produksi meneruskan ke lapangan
+              </span>
             ) : null}
           </div>
         )}

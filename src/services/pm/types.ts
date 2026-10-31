@@ -79,6 +79,7 @@ export type PMOrderMutation =
   | { action: "approve" }
   | { action: "revision"; note: string }
   | { action: "advance" }
+  | { action: "handoff" }
   | { action: "production-stage"; stage: PMProductionStage };
 
 export type PMOrderResult =

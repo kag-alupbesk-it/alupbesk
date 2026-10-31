@@ -1,6 +1,8 @@
 // Tampilan Produksi memakai order bersama dari modul PM; file gambar disimpan
 // di Supabase Storage dan tahap kerja disimpan pada order yang sama.
 
+import type { PMProjectStatus } from "@/services/pm/types";
+
 // Status gambar teknik kerja. Manajer Produksi mengunggah gambar, lalu PM yang
 // memberi ACC. "revisi" berarti PM meminta perbaikan sehingga perlu unggah ulang.
 //
@@ -53,6 +55,7 @@ export interface SPK {
   targetDeadline: string;
   tanggalMasuk: string;
   statusGambar: StatusGambarTeknik;
+  statusProyek: PMProjectStatus;
   tahapan: TahapanProduksi;
   item: ItemSPK[];
   // Berkas gambar teknik yang sudah diunggah tim produksi.

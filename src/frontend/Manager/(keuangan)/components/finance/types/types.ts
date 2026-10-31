@@ -70,6 +70,8 @@ export type Invoice = {
   termin: TerminPembayaran[];
 };
 
+export type StatusBayarGaji = "belum" | "terbayar";
+
 export type Karyawan = {
   id: string;
   nama: string;
@@ -77,11 +79,23 @@ export type Karyawan = {
   lokasi: PosProyek;
   gajiPokok: number;
   tunjangan: number;
-  potongan: number;
-  periode: string;
-  statusBayar: "belum" | "terbayar";
-  tanggalBayar: string;
   metodeBayar: string;
+};
+
+export type Penggajian = {
+  id: string;
+  karyawanId: string;
+  periode: string;
+  nama: string;
+  jabatan: string;
+  lokasi: PosProyek;
+  gajiPokok: number;
+  tunjangan: number;
+  potongan: number;
+  metodeBayar: string;
+  statusBayar: StatusBayarGaji;
+  tanggalBayar: string;
+  transaksiId: string;
 };
 
 export const JABATAN_AWAL = [
@@ -93,8 +107,6 @@ export const JABATAN_AWAL = [
   "Driver",
   "Surveyor",
 ] as const;
-
-export type PeriodeGaji = string;
 
 export const REKAP_TRANSAKSI = (transaksi: TransaksiKas[]) => {
   const totalMasuk = transaksi
@@ -204,9 +216,9 @@ export const hitungInvoice = (invoice: Invoice) => {
   };
 };
 
-export const hitungGaji = (karyawan: Karyawan) => {
-  const pendapatan = karyawan.gajiPokok + karyawan.tunjangan;
-  const potongan = karyawan.potongan;
+export const hitungGaji = (item: Pick<Penggajian, "gajiPokok" | "tunjangan" | "potongan">) => {
+  const pendapatan = item.gajiPokok + item.tunjangan;
+  const potongan = item.potongan;
   return {
     pendapatan,
     potongan,

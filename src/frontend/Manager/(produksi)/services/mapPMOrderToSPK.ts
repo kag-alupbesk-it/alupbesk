@@ -22,6 +22,7 @@ export function mapPMOrderToSPK(order: PMOrder): SPK {
     targetDeadline: order.targetDate,
     tanggalMasuk: order.enteredAt,
     statusGambar,
+    statusProyek: order.projectStatus,
     tahapan: order.productionStage,
     item: order.items.map((item) => ({
       kode: item.id,

@@ -2,6 +2,8 @@ import { db } from "@/services/supabase";
 import type { PMOrderMutation, PMOrderResult, PMProjectStatus } from "./types";
 import type { PMProductionStage } from "@/services/pm/types";
 import { getTechnicalDrawingUrls } from "./drawings/getTechnicalDrawingUrls";
+import { ensureFieldDeliveryForOrder } from "@/backend/modules/field/ensureFieldDeliveryForOrder";
+import { sendPushToRoles } from "@/services/push/send";
 
 const NEXT_STATUS: Partial<Record<PMProjectStatus, PMProjectStatus>> = {
   siap_produksi: "produksi",
@@ -98,12 +100,38 @@ export async function updatePMOrder(
     changes = {
       project_status: nextStatus,
       stage: nextStatus === "produksi" ? 2 : 3,
+      ...(nextStatus === "siap_kirim" ? { production_stage: "siap_kirim" } : {}),
       last_activity:
         nextStatus === "produksi"
           ? "Produksi dimulai"
           : nextStatus === "siap_kirim"
-            ? "Produksi selesai, order siap kirim"
+            ? "Produksi selesai, order diteruskan ke tim lapangan"
             : "Proyek ditandai selesai",
+    };
+  } else if (mutation.action === "handoff") {
+    const stage = current.production_stage as PMProductionStage;
+    if (
+      current.drawing_status !== "acc_gambar" ||
+      !["qc", "siap_kirim"].includes(stage)
+    ) {
+      return {
+        ok: false,
+        code: "INVALID_TRANSITION",
+        message: "Order belum siap diserahkan ke lapangan. Selesaikan QC terlebih dahulu.",
+      };
+    }
+    if (current.project_status === "selesai") {
+      return {
+        ok: false,
+        code: "INVALID_TRANSITION",
+        message: "Proyek yang sudah selesai tidak dapat diteruskan kembali.",
+      };
+    }
+    changes = {
+      production_stage: "siap_kirim",
+      project_status: "siap_kirim",
+      stage: 3,
+      last_activity: "Produksi selesai, order diteruskan ke tim lapangan",
     };
   } else {
     const currentStage = PRODUCTION_STAGES.indexOf(
@@ -121,9 +149,16 @@ export async function updatePMOrder(
         message: "Tahap produksi harus dilanjutkan satu langkah setelah gambar di-ACC.",
       };
     }
+    const isHandoff = mutation.stage === "siap_kirim";
     changes = {
       production_stage: mutation.stage,
-      last_activity: `Tahap produksi ${mutation.stage} dimulai`,
+      ...(isHandoff
+        ? {
+            project_status: "siap_kirim",
+            stage: 3,
+            last_activity: "Produksi selesai, order diteruskan ke tim lapangan",
+          }
+        : { last_activity: `Tahap produksi ${mutation.stage} dimulai` }),
     };
   }
 
@@ -183,6 +218,29 @@ export async function updatePMOrder(
   const drawingUrls = await getTechnicalDrawingUrls(
     updated.production_image ? [updated.production_image] : [],
   );
+
+  if (updated.project_status === "siap_kirim") {
+    try {
+      await ensureFieldDeliveryForOrder({
+        ...updated,
+        pm_order_items: items ?? [],
+      });
+    } catch (error) {
+      console.error("[pm] gagal menyiapkan antrean lapangan:", error);
+    }
+    if (current.project_status !== "siap_kirim") {
+      void sendPushToRoles(["field"], {
+        title: "Order siap dikirim",
+        body: `${updated.contractor_name} (${updated.id}) siap dikirim ke lokasi proyek.`,
+        url: "/admin/field",
+      });
+      void sendPushToRoles(["proyek"], {
+        title: "Order diteruskan ke lapangan",
+        body: `${updated.contractor_name} (${updated.id}) selesai produksi dan masuk antrean lapangan.`,
+        url: "/admin/pm",
+      });
+    }
+  }
 
   return {
     ok: true,

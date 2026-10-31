@@ -8,6 +8,7 @@ const stateSchema = z.object({
   transaksi: z.array(z.unknown()).max(10000),
   invoice: z.array(z.unknown()).max(5000),
   karyawan: z.array(z.unknown()).max(5000),
+  penggajian: z.array(z.unknown()).max(20000),
   opsiJabatan: z.array(z.string().max(120)).max(500),
   opsiPerson: z.array(z.string().max(160)).max(500),
   opsiKategori: z.array(z.string().max(120)).max(500),
@@ -15,6 +16,7 @@ const stateSchema = z.object({
   seq: z.number().int().positive(),
   seqKaryawan: z.number().int().positive(),
   seqInvoice: z.number().int().positive(),
+  seqPenggajian: z.number().int().positive(),
 });
 
 export async function GET() {

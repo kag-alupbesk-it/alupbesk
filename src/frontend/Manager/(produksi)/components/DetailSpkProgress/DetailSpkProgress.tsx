@@ -1,11 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import {
   ArrowLeft,
   Building2,
   CalendarClock,
+  CheckCircle2,
   ClipboardList,
   FileUp,
   Info,
@@ -13,6 +14,7 @@ import {
   MapPin,
   Phone,
   Ruler,
+  Truck,
 } from "lucide-react";
 import { useProduksi } from "../../context/ProduksiContext/ProduksiContext";
 import { alurMeta, alurSPK } from "../../utils/alur/alur";
@@ -23,8 +25,10 @@ import { tahapanOrder } from "../../types/types";
 import { formatAngka, formatTanggal, getInisial } from "../../utils/format/format";
 
 export function DetailSpkProgress({ nomor }: { nomor: string }) {
-  const { getSPK, ubahTahapan } = useProduksi();
+  const { getSPK, ubahTahapan, serahkanKeLapangan } = useProduksi();
   const spk = getSPK(nomor);
+  const [modalHandoff, setModalHandoff] = useState(false);
+  const [loadingHandoff, setLoadingHandoff] = useState(false);
 
   const totalItem = useMemo(() => (spk ? spk.item.length : 0), [spk]);
 
@@ -172,6 +176,38 @@ export function DetailSpkProgress({ nomor }: { nomor: string }) {
       </section>
 
       <section className="rounded-2xl border border-outline/30 bg-surface-container-low p-5 sm:p-6">
+        {spk.statusProyek === "siap_kirim" || spk.statusProyek === "selesai" ? (
+          <div className="mb-6 flex items-start gap-3 rounded-2xl border border-emerald-400/30 bg-emerald-400/10 p-4">
+            <CheckCircle2 size={20} className="mt-0.5 shrink-0 text-emerald-300" />
+            <div>
+              <p className="text-xs font-bold text-emerald-200">Order Telah Diserahkan ke Tim Lapangan</p>
+              <p className="mt-1 text-[11px] leading-relaxed text-emerald-300/80">
+                Pekerjaan workshop sudah selesai dan antrean surat jalan sudah aktif di modul Lapangan.
+              </p>
+            </div>
+          </div>
+        ) : !terkunci && (spk.tahapan === "qc" || spk.tahapan === "siap_kirim") ? (
+          <div className="mb-6 flex flex-col gap-4 rounded-2xl border border-secondary/40 bg-secondary/10 p-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-start gap-3">
+              <Truck size={20} className="mt-0.5 shrink-0 text-secondary" />
+              <div>
+                <p className="text-xs font-bold text-secondary">Produksi Siap Diserahkan</p>
+                <p className="mt-1 text-[11px] leading-relaxed text-on-surface-variant">
+                  Barang telah mencapai tahap QC / Siap Kirim. Tekan tombol untuk langsung meneruskan order ke tim lapangan.
+                </p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => setModalHandoff(true)}
+              className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-xl bg-secondary px-5 py-2.5 text-xs font-extrabold text-primary shadow-lg shadow-secondary/20 transition-all hover:brightness-105"
+            >
+              <Truck size={15} strokeWidth={2.5} />
+              Siap Kirim ke Lapangan
+            </button>
+          </div>
+        ) : null}
+
         <ProgressStepper
           tahapan={spk.tahapan}
           terkunci={terkunci}
@@ -180,7 +216,13 @@ export function DetailSpkProgress({ nomor }: { nomor: string }) {
               ? "Gambar teknik belum di-ACC PM, jadi pengerjaan belum boleh dimulai. Unggah gambar tekniknya terlebih dahulu, lalu tunggu ACC PM."
               : "Gambar teknik sedang menunggu ACC PM. Tidak ada yang perlu dilakukan sekarang - progress akan bisa diubah setelah PM menyetujui gambar."
           }
-          onPilih={(tahapan) => ubahTahapan(spk.nomor, tahapan)}
+          onPilih={(tahapan) => {
+            if (tahapan === "siap_kirim" && spk.statusProyek === "produksi") {
+              setModalHandoff(true);
+            } else {
+              void ubahTahapan(spk.nomor, tahapan);
+            }
+          }}
         />
 
         <p className="mt-4 text-[10px] text-on-surface-variant/70">
@@ -188,6 +230,42 @@ export function DetailSpkProgress({ nomor }: { nomor: string }) {
           {tahapanOrder.length}. {spk.aktivitasTerakhir}.
         </p>
       </section>
+
+      {modalHandoff && (
+        <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/60 p-4">
+          <section role="alertdialog" aria-modal="true" className="my-16 w-full max-w-md rounded-2xl border border-outline/30 bg-surface-container-low p-6 shadow-2xl">
+            <h3 className="font-headline text-lg font-bold text-on-surface">Serahkan Order ke Lapangan?</h3>
+            <p className="mt-2 text-xs leading-relaxed text-on-surface-variant">
+              SPK <span className="font-mono font-bold text-secondary">{spk.nomor}</span> untuk kontraktor{" "}
+              <span className="font-bold text-on-surface">{spk.namaKontraktor}</span> akan ditandai siap kirim dan otomatis membuka antrean surat jalan di modul Lapangan.
+            </p>
+            <div className="mt-6 flex justify-end gap-3">
+              <button
+                type="button"
+                disabled={loadingHandoff}
+                onClick={() => setModalHandoff(false)}
+                className="rounded-xl border border-outline/30 px-4 py-2.5 text-xs font-bold text-on-surface hover:bg-surface-variant"
+              >
+                Batal
+              </button>
+              <button
+                type="button"
+                disabled={loadingHandoff}
+                onClick={async () => {
+                  setLoadingHandoff(true);
+                  const ok = await serahkanKeLapangan(spk.nomor);
+                  setLoadingHandoff(false);
+                  if (ok) setModalHandoff(false);
+                }}
+                className="inline-flex items-center gap-2 rounded-xl bg-secondary px-5 py-2.5 text-xs font-bold text-primary shadow-lg shadow-secondary/15 hover:brightness-105 disabled:opacity-50"
+              >
+                <Truck size={14} />
+                {loadingHandoff ? "Memproses..." : "Ya, Serahkan ke Lapangan"}
+              </button>
+            </div>
+          </section>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 gap-6 2xl:grid-cols-[minmax(0,1fr)_420px]">
         <section className="min-w-0 rounded-2xl border border-outline/30 bg-surface-container-low">

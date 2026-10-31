@@ -2,6 +2,7 @@ export interface FinanceDashboardState {
   transaksi: unknown[];
   invoice: unknown[];
   karyawan: unknown[];
+  penggajian: unknown[];
   opsiJabatan: string[];
   opsiPerson: string[];
   opsiKategori: string[];
@@ -9,12 +10,14 @@ export interface FinanceDashboardState {
   seq: number;
   seqKaryawan: number;
   seqInvoice: number;
+  seqPenggajian: number;
 }
 
 export const EMPTY_FINANCE_STATE: FinanceDashboardState = {
   transaksi: [],
   invoice: [],
   karyawan: [],
+  penggajian: [],
   opsiJabatan: [],
   opsiPerson: [],
   opsiKategori: [],
@@ -22,4 +25,5 @@ export const EMPTY_FINANCE_STATE: FinanceDashboardState = {
   seq: 1,
   seqKaryawan: 1,
   seqInvoice: 1,
+  seqPenggajian: 1,
 };
