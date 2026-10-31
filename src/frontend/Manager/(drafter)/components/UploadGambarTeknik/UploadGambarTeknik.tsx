@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { useDrafter } from "../../context/DrafterContext/DrafterContext";
 import { FileCard, PreviewGambar } from "../../../(produksi)/components/shared/BerkasPreview/BerkasPreview";
+import { DownloadDrawingButton } from "../../../(pm)/components/shared/DownloadDrawingButton/DownloadDrawingButton";
 import { StatusGambarBadge } from "../../../(produksi)/components/shared/StatusBadge/StatusBadge";
 import type { BerkasGambar } from "../../../(produksi)/types/types";
 import { formatTanggal, getInisial } from "../../../(produksi)/utils/format/format";
@@ -159,15 +160,22 @@ export function DrafterUploadGambarTeknik() {
                 </div>
                 <p className="text-on-surface-variant">Deadline: {formatTanggal(spkTerpilih.targetDeadline)} · {spkTerpilih.item.length} item</p>
                 {spkTerpilih.gambarAcuan?.url && (
-                  <div className="pt-2">
-                    <a
-                      href={spkTerpilih.gambarAcuan.url}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="inline-flex items-center gap-1.5 font-bold text-secondary hover:underline"
-                    >
-                      Lihat Sketsa / Gambar Acuan Pemohon
-                    </a>
+                  <div className="space-y-3 pt-3 border-t border-outline/20">
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant">Sketsa / Gambar Acuan Pemohon</p>
+                    <PreviewGambar
+                      nama={spkTerpilih.gambarAcuan.nama}
+                      url={spkTerpilih.gambarAcuan.url}
+                      caption="Gambar Acuan"
+                      emptyText="Tidak ada gambar acuan."
+                    />
+                    <div className="flex justify-end">
+                      <DownloadDrawingButton
+                        scopeId={spkTerpilih.nomor}
+                        fileName={spkTerpilih.gambarAcuan.nama || `sketsa-${spkTerpilih.nomor}`}
+                        source={spkTerpilih.gambarAcuan.url}
+                        label="Download Sketsa"
+                      />
+                    </div>
                   </div>
                 )}
               </div>

@@ -4,6 +4,8 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useDrafter } from "../../context/DrafterContext/DrafterContext";
 import { StatusGambarBadge } from "../../../(produksi)/components/shared/StatusBadge/StatusBadge";
+import { PreviewGambar } from "../../../(produksi)/components/shared/BerkasPreview/BerkasPreview";
+import { DownloadDrawingButton } from "../../../(pm)/components/shared/DownloadDrawingButton/DownloadDrawingButton";
 import { formatTanggal, getInisial } from "../../../(produksi)/utils/format/format";
 import { Clock3, FileUp, Layers, CheckCircle2, AlertCircle, Building2, Ruler } from "lucide-react";
 
@@ -135,16 +137,22 @@ export function DrafterDashboard() {
                   </div>
                 </div>
                 {item.gambarAcuan?.url && (
-                  <div className="mt-3 flex items-center justify-between rounded-lg border border-outline/20 bg-surface-variant/30 px-3 py-2 text-[11px]">
-                    <span className="truncate font-medium text-on-surface">Sketsa / Gambar Acuan</span>
-                    <a
-                      href={item.gambarAcuan.url}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="font-bold text-secondary hover:underline"
-                    >
-                      Lihat Sketsa
-                    </a>
+                  <div className="mt-3 space-y-2 rounded-xl border border-outline/20 bg-surface-variant/20 p-3">
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant">Sketsa / Gambar Acuan Pemohon</p>
+                    <PreviewGambar
+                      nama={item.gambarAcuan.nama}
+                      url={item.gambarAcuan.url}
+                      caption="Gambar Acuan"
+                      emptyText="Tidak ada gambar."
+                    />
+                    <div className="flex justify-end pt-1">
+                      <DownloadDrawingButton
+                        scopeId={item.nomor}
+                        fileName={item.gambarAcuan.nama || `sketsa-${item.nomor}`}
+                        source={item.gambarAcuan.url}
+                        label="Download"
+                      />
+                    </div>
                   </div>
                 )}
               </div>
