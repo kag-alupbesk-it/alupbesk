@@ -10,6 +10,10 @@ import { useProduksi } from "../../context/ProduksiContext/ProduksiContext";
 interface DraftLine {
   key: string;
   itemId: string;
+  itemName: string;
+  modelNo: string;
+  brand: string;
+  color: string;
   quantity: number;
 }
 
@@ -78,7 +82,7 @@ export function PengajuanGudang() {
   const [requesterName, setRequesterName] = useState("");
   const [note, setNote] = useState("");
   const [lines, setLines] = useState<DraftLine[]>([
-    { key: "line-1", itemId: "", quantity: 1 },
+    { key: "line-1", itemId: "", itemName: "", modelNo: "", brand: "", color: "", quantity: 1 },
   ]);
 
   const [error, setError] = useState("");
@@ -122,7 +126,7 @@ export function PengajuanGudang() {
   function addLine() {
     setLines((current) => [
       ...current,
-      { key: `line-${crypto.randomUUID()}`, itemId: "", quantity: 1 },
+      { key: `line-${crypto.randomUUID()}`, itemId: "", itemName: "", modelNo: "", brand: "", color: "", quantity: 1 },
     ]);
   }
 
@@ -139,10 +143,13 @@ export function PengajuanGudang() {
     setNote(req.note);
     setLines(
       req.items
-        .filter((line) => line.itemId)
         .map((line) => ({
           key: `line-${crypto.randomUUID()}`,
-          itemId: line.itemId ?? "",
+          itemId: line.itemId ?? "CUSTOM",
+          itemName: line.itemName ?? "",
+          modelNo: line.modelNo ?? "",
+          brand: line.brand ?? "",
+          color: line.color ?? "",
           quantity: Math.max(1, line.quantity),
         })),
     );
@@ -174,10 +181,17 @@ export function PengajuanGudang() {
       return;
     }
     const validLines = lines
-      .filter((line) => line.itemId && line.quantity > 0)
-      .map((line) => ({ itemId: line.itemId, quantity: line.quantity }));
+      .filter((line) => (line.itemId === "CUSTOM" ? line.itemName.trim() : line.itemId) && line.quantity > 0)
+      .map((line) => ({
+        itemId: line.itemId && line.itemId !== "CUSTOM" ? line.itemId : null,
+        itemName: line.itemId === "CUSTOM" ? line.itemName.trim() : undefined,
+        modelNo: line.itemId === "CUSTOM" ? line.modelNo.trim() : undefined,
+        brand: line.itemId === "CUSTOM" ? line.brand.trim() : undefined,
+        color: line.itemId === "CUSTOM" ? line.color.trim() : undefined,
+        quantity: line.quantity,
+      }));
     if (validLines.length === 0) {
-      setError("Tambahkan minimal satu barang dengan jumlah lebih dari 0.");
+      setError("Tambahkan minimal satu barang (pilih master stok atau isi barang manual) dengan jumlah lebih dari 0.");
       return;
     }
 
@@ -208,7 +222,7 @@ export function PengajuanGudang() {
       );
       setSpkRef("");
       setNote("");
-      setLines([{ key: `line-${crypto.randomUUID()}`, itemId: "", quantity: 1 }]);
+      setLines([{ key: `line-${crypto.randomUUID()}`, itemId: "", itemName: "", modelNo: "", brand: "", color: "", quantity: 1 }]);
       setRequestDate(todayIso());
     } catch (submitError) {
       setError(submitError instanceof Error ? submitError.message : "Permintaan gagal dikirim.");
@@ -320,7 +334,8 @@ export function PengajuanGudang() {
 
             <div className="space-y-2">
               {lines.map((line) => {
-                const item = line.itemId ? itemById.get(line.itemId) : undefined;
+                const item = line.itemId && line.itemId !== "CUSTOM" ? itemById.get(line.itemId) : undefined;
+                const isCustom = line.itemId === "CUSTOM";
                 const insufficient =
                   item !== undefined && line.quantity > item.currentStock;
                 return (
@@ -332,9 +347,19 @@ export function PengajuanGudang() {
                       <select
                         className={`${inputClass} sm:flex-1`}
                         value={line.itemId}
-                        onChange={(event) => updateLine(line.key, { itemId: event.target.value })}
+                        onChange={(event) => {
+                          const val = event.target.value;
+                          if (val === "CUSTOM") {
+                            updateLine(line.key, { itemId: "CUSTOM", itemName: "", modelNo: "", brand: "", color: "" });
+                          } else {
+                            updateLine(line.key, { itemId: val });
+                          }
+                        }}
                       >
                         <option value="">Pilih barang...</option>
+                        <option value="CUSTOM" className="font-bold text-secondary">
+                          + Input Manual (Barang belum di gudang)
+                        </option>
                         {itemOptions.map((option) => (
                           <option key={option.id} value={option.id}>
                             {option.modelNo ? `[${option.modelNo}] ` : ""}
@@ -363,6 +388,41 @@ export function PengajuanGudang() {
                         <Trash2 size={15} />
                       </button>
                     </div>
+
+                    {isCustom && (
+                      <div className="mt-3 space-y-2.5 rounded-lg border border-secondary/30 bg-secondary/5 p-3 text-xs">
+                        <p className="font-bold text-secondary">Form Barang Custom / Non-Stok</p>
+                        <p className="text-[10px] text-on-surface-variant">
+                          Barang ini belum tercatat di gudang. Pihak gudang tidak dapat melakukan ACC pengajuan ini sampai barang ditambahkan ke stok gudang.
+                        </p>
+                        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                          <input
+                            className={inputClass}
+                            placeholder="Nama Barang *"
+                            value={line.itemName}
+                            onChange={(e) => updateLine(line.key, { itemName: e.target.value })}
+                          />
+                          <input
+                            className={inputClass}
+                            placeholder="Nomor Model"
+                            value={line.modelNo}
+                            onChange={(e) => updateLine(line.key, { modelNo: e.target.value })}
+                          />
+                          <input
+                            className={inputClass}
+                            placeholder="Merek"
+                            value={line.brand}
+                            onChange={(e) => updateLine(line.key, { brand: e.target.value })}
+                          />
+                          <input
+                            className={inputClass}
+                            placeholder="Warna"
+                            value={line.color}
+                            onChange={(e) => updateLine(line.key, { color: e.target.value })}
+                          />
+                        </div>
+                      </div>
+                    )}
 
                     {item && (
                       <div className="mt-3 rounded-lg border border-outline/25 bg-surface-variant/40 p-3">

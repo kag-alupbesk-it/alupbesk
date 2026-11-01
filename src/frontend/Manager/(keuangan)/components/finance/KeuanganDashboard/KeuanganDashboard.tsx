@@ -13,6 +13,7 @@ import NotificationBell from "@/frontend/(owner)/components/layout/TopBar/Notifi
 import { LogoutButton } from "@/frontend/auth/LogoutButton";
 import { financeNavigationItems, type FinanceTabKey } from "@/frontend/shared/navigation/roleNavigation";
 import AuditLogSection from "@/frontend/shared/audit/AuditLogSection";
+import { LanguageSwitcher } from "@/frontend/shared/i18n/LanguageSwitcher";
 
 export type TabKey = FinanceTabKey;
 
@@ -46,6 +47,7 @@ function IsiTab({ tab }: { tab: TabKey }) {
           </div>
           <div className="flex items-center gap-2 shrink-0">
             <NotificationBell />
+            <LanguageSwitcher className="h-8 w-8" />
             <ThemeToggle />
             <LogoutButton />
           </div>
@@ -81,6 +83,7 @@ export function KeuanganDashboard() {
             <p className={s.navTitleMobile}>{financeNavigationItems.find((item) => item.key === tab)?.label ?? "Kas"}</p>
             <div className="flex shrink-0 items-center gap-2">
               <NotificationBell />
+              <LanguageSwitcher className="h-8 w-8" />
               <ThemeToggle />
               <LogoutButton />
             </div>
