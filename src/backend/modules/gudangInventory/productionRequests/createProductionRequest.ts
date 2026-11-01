@@ -47,21 +47,40 @@ export function createProductionRequest(
     for (const line of input.items) {
       const quantity = Math.floor(line.quantity);
       if (quantity <= 0) continue;
-      const item = gudangInventoryItems.get(line.itemId);
-      if (!item) return { ok: false, code: "ITEM_NOT_FOUND" };
-      items.push({
-        id: crypto.randomUUID(),
-        itemId: item.id,
-        categoryId: item.categoryId,
-        categoryName: getCategoryById(item.categoryId)?.name ?? "",
-        itemName: item.itemName,
-        modelNo: item.modelNo,
-        brand: item.brand,
-        color: item.color,
-        rackGroup: item.rackGroup,
-        subRow: item.subRow,
-        quantity,
-      });
+
+      const matchedItem = line.itemId ? gudangInventoryItems.get(line.itemId) : undefined;
+      if (matchedItem) {
+        items.push({
+          id: crypto.randomUUID(),
+          itemId: matchedItem.id,
+          categoryId: matchedItem.categoryId,
+          categoryName: getCategoryById(matchedItem.categoryId)?.name ?? "",
+          itemName: matchedItem.itemName,
+          modelNo: matchedItem.modelNo,
+          brand: matchedItem.brand,
+          color: matchedItem.color,
+          rackGroup: matchedItem.rackGroup,
+          subRow: matchedItem.subRow,
+          quantity,
+        });
+      } else {
+        // Custom item not yet in warehouse stock
+        const customName = (line.itemName ?? "").trim();
+        if (!customName) continue;
+        items.push({
+          id: crypto.randomUUID(),
+          itemId: null,
+          categoryId: "",
+          categoryName: "Non-Stok / Custom",
+          itemName: customName,
+          modelNo: (line.modelNo ?? "").trim(),
+          brand: (line.brand ?? "").trim(),
+          color: (line.color ?? "").trim(),
+          rackGroup: "",
+          subRow: "",
+          quantity,
+        });
+      }
     }
 
     if (items.length === 0) return { ok: false, code: "NO_ITEMS" };

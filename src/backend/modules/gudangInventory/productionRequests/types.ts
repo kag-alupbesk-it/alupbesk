@@ -38,7 +38,11 @@ export interface ProductionRequest {
 }
 
 export interface ProductionRequestItemInput {
-  itemId: string;
+  itemId?: string | null;
+  itemName?: string;
+  modelNo?: string;
+  brand?: string;
+  color?: string;
   quantity: number;
 }
 
