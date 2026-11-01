@@ -1,7 +1,7 @@
 "use client";
 
 import ResponsiveRoleNavigation from "@/frontend/shared/navigation/ResponsiveRoleNavigation";
-import { getRoleNavigationItems } from "@/frontend/shared/navigation/roleNavigation";
+import { useRoleNavigationItems } from "@/frontend/shared/navigation/roleNavigation";
 import { Factory } from "lucide-react";
 import { useProduksi } from "../../../context/ProduksiContext/ProduksiContext";
 import { alurSPK } from "../../../utils/alur/alur";
@@ -10,6 +10,7 @@ import { useProduksiSidebar } from "../ProduksiSidebarProvider/ProduksiSidebarPr
 export function ProduksiSidebar() {
   const { desktopOpen } = useProduksiSidebar();
   const { spk, spkPerluGambar } = useProduksi();
+  const navigationItems = useRoleNavigationItems("produksi");
 
   const dalamProduksi = spk.filter((item) => alurSPK(item) === "dalam_produksi").length;
   const siapKirim = spk.filter((item) => alurSPK(item) === "siap_kirim").length;
@@ -17,7 +18,7 @@ export function ProduksiSidebar() {
   return (
     <ResponsiveRoleNavigation
       role="produksi"
-      items={getRoleNavigationItems("produksi")}
+      items={navigationItems}
       desktopOpen={desktopOpen}
       badges={{ drawings: spkPerluGambar.length }}
       desktopFooter={

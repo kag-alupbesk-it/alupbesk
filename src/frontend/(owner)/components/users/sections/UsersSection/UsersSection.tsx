@@ -13,12 +13,14 @@ import {
 import { roleColor as getRoleColor, statusInfo } from "../helpers/helpers";
 import { ITEMS_PER_PAGE } from "../data/data";
 import { getSupabaseBrowserClient } from "@/services/supabaseBrowser";
+import { useLanguage } from "@/frontend/shared/i18n/LanguageProvider";
 
 interface UserData {
   id: string; name: string; email: string; dept: string; role: string; status: string; active: boolean;
 }
 
 export default function UsersSection() {
+  const { t } = useLanguage();
   const { data: apiData, refetch: refetchUsers } = useApi(fetchUsersData, { interval: 30000 });
   const {
     data: roleRequestData,
@@ -104,7 +106,7 @@ export default function UsersSection() {
     <div className={styles.container}>
       <div className={styles.header}>
         <div>
-          <h3 className={styles.title}>User Management</h3>
+          <h3 className={styles.title}>{t("userManagement")}</h3>
           <p className={styles.subtitle}>Manage personnel security, structural permissions, and administrative oversight for the industrial ecosystem.</p>
         </div>
       </div>
@@ -112,11 +114,11 @@ export default function UsersSection() {
       <section data-focus-id="pendaftaran" className="mb-6 rounded-2xl border border-outline/30 bg-surface-container-low p-4 sm:p-6">
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h4 className="text-base font-bold text-on-surface sm:text-lg">Permintaan akses role</h4>
-            <p className="mt-1 text-xs text-on-surface-variant">Persetujuan ini mengaktifkan akun dan memberikan role yang diminta.</p>
+            <h4 className="text-base font-bold text-on-surface sm:text-lg">{t("roleAccessRequest")}</h4>
+            <p className="mt-1 text-xs text-on-surface-variant">{t("roleRequestDesc")}</p>
           </div>
           <span className="rounded-full bg-secondary/10 px-3 py-1 text-xs font-bold text-secondary">
-            {roleRequests.length} menunggu
+            {roleRequests.length} {t("pending")}
           </span>
         </div>
 
@@ -127,9 +129,9 @@ export default function UsersSection() {
         )}
 
         {roleRequestsLoading && roleRequests.length === 0 ? (
-          <p className="py-5 text-center text-sm text-on-surface-variant">Memuat permintaan...</p>
+          <p className="py-5 text-center text-sm text-on-surface-variant">{t("loadingRequests")}</p>
         ) : roleRequests.length === 0 ? (
-          <p className="py-5 text-center text-sm text-on-surface-variant">Tidak ada permintaan role yang menunggu.</p>
+          <p className="py-5 text-center text-sm text-on-surface-variant">{t("noRoleRequests")}</p>
         ) : (
           <div className="grid gap-3 xl:grid-cols-2">
             {roleRequests.map((request) => (

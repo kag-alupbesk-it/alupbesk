@@ -1,7 +1,7 @@
 "use client";
 
 import ResponsiveRoleNavigation from "@/frontend/shared/navigation/ResponsiveRoleNavigation";
-import { getRoleNavigationItems, type FinanceTabKey } from "@/frontend/shared/navigation/roleNavigation";
+import { useRoleNavigationItems, type FinanceTabKey } from "@/frontend/shared/navigation/roleNavigation";
 
 type Props = {
   activeTab: FinanceTabKey;
@@ -9,13 +9,14 @@ type Props = {
 };
 
 export default function Sidebar({ activeTab, onTabChange }: Props) {
+  const items = useRoleNavigationItems("keuangan");
   const isTabKey = (key: string): key is FinanceTabKey =>
-    getRoleNavigationItems("keuangan").some((item) => item.key === key);
+    items.some((item) => item.key === key);
 
   return (
     <ResponsiveRoleNavigation
       role="keuangan"
-      items={getRoleNavigationItems("keuangan")}
+      items={items}
       selectedKey={activeTab}
       onSelect={(key) => {
         if (isTabKey(key)) onTabChange(key);
