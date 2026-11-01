@@ -27,7 +27,7 @@ import { CategoryModal } from "../CategoryModal/CategoryModal";
 import { ConfirmModal } from "../ConfirmModal/ConfirmModal";
 import * as s from "../../style/style";
 import ResponsiveRoleNavigation from "@/frontend/shared/navigation/ResponsiveRoleNavigation";
-import { getRoleNavigationItems } from "@/frontend/shared/navigation/roleNavigation";
+import { useRoleNavigationItems } from "@/frontend/shared/navigation/roleNavigation";
 import AuditLogSection from "@/frontend/shared/audit/AuditLogSection";
 import { useSidebar } from "@/frontend/Manager/(gudang)/components/layout/SidebarProvider/SidebarProvider";
 import { getRolePagePath } from "@/frontend/shared/navigation/getRolePagePath";
@@ -43,10 +43,9 @@ const EMPTY_SNAPSHOT: InventorySnapshot = {
 
 type TabKey = "master" | "bahan" | "masuk" | "keluar" | "permintaan" | "audit";
 
-const NAV_ITEMS = getRoleNavigationItems("gudang");
-
 export function InventorySection() {
   const readOnly = useReadOnly();
+  const navItems = useRoleNavigationItems("gudang");
   const pathname = getRolePagePath(usePathname());
   const isOwnerInventoryPage = pathname === "/owner/gudang";
   const { desktopOpen } = useSidebar();
@@ -233,7 +232,7 @@ export function InventorySection() {
         {!isOwnerInventoryPage && (
           <ResponsiveRoleNavigation
             role="gudang"
-            items={NAV_ITEMS}
+            items={navItems}
             desktopOpen={desktopOpen}
             selectedKey={tab}
             onSelect={handleNavigationSelect}
@@ -256,7 +255,7 @@ export function InventorySection() {
       {!isOwnerInventoryPage && (
         <ResponsiveRoleNavigation
           role="gudang"
-          items={NAV_ITEMS}
+          items={navItems}
           desktopOpen={desktopOpen}
           selectedKey={tab}
           onSelect={handleNavigationSelect}
@@ -335,7 +334,7 @@ export function InventorySection() {
 
         {isOwnerInventoryPage && (
           <div className={s.tabs}>
-            {NAV_ITEMS.map((item) => (
+            {navItems.map((item) => (
               <button
                 key={item.key}
                 className={`${s.tab} ${tab === item.key ? s.tabActive : s.tabInactive}`}
