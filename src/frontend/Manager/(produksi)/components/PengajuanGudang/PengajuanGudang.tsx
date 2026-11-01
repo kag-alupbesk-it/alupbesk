@@ -6,6 +6,7 @@ import type { ProductionRequest } from "@/backend/modules/gudangInventory/produc
 import type { GudangInventoryItemView } from "@/backend/modules/gudangInventory";
 import { productionRequestsApi, request } from "@/services/api/index";
 import { useProduksi } from "../../context/ProduksiContext/ProduksiContext";
+import { useLanguage } from "@/frontend/shared/i18n/LanguageProvider";
 
 interface DraftLine {
   key: string;
@@ -73,6 +74,7 @@ function DetailRow({
 
 export function PengajuanGudang() {
   const { spk } = useProduksi();
+  const { t } = useLanguage();
   const [items, setItems] = useState<GudangInventoryItemView[]>([]);
   const [requests, setRequests] = useState<ProductionRequest[]>([]);
   const [loading, setLoading] = useState(true);
@@ -236,7 +238,7 @@ export function PengajuanGudang() {
     <div className="mx-auto max-w-7xl">
       <header className="mb-6">
         <h1 className="font-headline text-xl font-extrabold uppercase tracking-tight text-on-surface lg:text-2xl">
-          Permintaan Material
+          {t("materialRequest")}
         </h1>
         <p className="mt-1 text-xs text-on-surface-variant">
           Ajukan kebutuhan material produksi ke gudang. Permintaan akan diproses oleh pihak gudang.
@@ -261,7 +263,7 @@ export function PengajuanGudang() {
           <div className="mb-4 flex items-center gap-2">
             <ClipboardList size={17} className="text-secondary" />
             <h2 className="font-headline text-sm font-bold uppercase tracking-wide text-on-surface">
-              Form Pengajuan
+              {t("requestForm")}
             </h2>
           </div>
 
@@ -391,32 +393,32 @@ export function PengajuanGudang() {
 
                     {isCustom && (
                       <div className="mt-3 space-y-2.5 rounded-lg border border-secondary/30 bg-secondary/5 p-3 text-xs">
-                        <p className="font-bold text-secondary">Form Barang Custom / Non-Stok</p>
+                        <p className="font-bold text-secondary">{t("customItemForm")}</p>
                         <p className="text-[10px] text-on-surface-variant">
-                          Barang ini belum tercatat di gudang. Pihak gudang tidak dapat melakukan ACC pengajuan ini sampai barang ditambahkan ke stok gudang.
+                          {t("customItemNotice")}
                         </p>
                         <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                           <input
                             className={inputClass}
-                            placeholder="Nama Barang *"
+                            placeholder={t("itemNamePlaceholder")}
                             value={line.itemName}
                             onChange={(e) => updateLine(line.key, { itemName: e.target.value })}
                           />
                           <input
                             className={inputClass}
-                            placeholder="Nomor Model"
+                            placeholder={t("modelNoPlaceholder")}
                             value={line.modelNo}
                             onChange={(e) => updateLine(line.key, { modelNo: e.target.value })}
                           />
                           <input
                             className={inputClass}
-                            placeholder="Merek"
+                            placeholder={t("brandPlaceholder")}
                             value={line.brand}
                             onChange={(e) => updateLine(line.key, { brand: e.target.value })}
                           />
                           <input
                             className={inputClass}
-                            placeholder="Warna"
+                            placeholder={t("colorPlaceholder")}
                             value={line.color}
                             onChange={(e) => updateLine(line.key, { color: e.target.value })}
                           />
@@ -462,13 +464,13 @@ export function PengajuanGudang() {
 
           <button type="submit" className={`${primaryButtonClass} mt-5 w-full`} disabled={saving}>
             <Send size={15} />
-            {saving ? "Mengirim..." : "Kirim Permintaan"}
+            {saving ? "Mengirim..." : t("sendRequest")}
           </button>
         </form>
 
         <section className={cardClass}>
           <h2 className="mb-4 font-headline text-sm font-bold uppercase tracking-wide text-on-surface">
-            Riwayat Pengajuan
+            {t("requestHistory")}
           </h2>
 
           {loading ? (
