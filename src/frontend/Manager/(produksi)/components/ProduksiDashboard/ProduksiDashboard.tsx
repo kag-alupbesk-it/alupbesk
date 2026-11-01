@@ -460,8 +460,7 @@ export function ProduksiDashboard() {
           </StatusBadge>
           <p className="text-xs text-on-surface-variant">
             <span className="font-bold text-on-surface">{spkPerluGambar.length} SPK</span> butuh gambar teknik (belum
-            ada / perlu revisi). Buka <span className="font-bold text-on-surface">Upload Gambar Teknik</span> di menu
-            sidebar untuk mengirim.
+            ada / perlu revisi). Menunggu unggahan gambar teknik dari tim drafter.
           </p>
         </section>
       )}

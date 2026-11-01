@@ -11,7 +11,6 @@ import ProfileMenu from "@/frontend/shared/profile/ProfileMenu";
 
 function getPageTitle(pathname: string) {
   if (pathname === "/produksi") return "Antrean Produksi";
-  if (pathname.startsWith("/produksi/drawings")) return "Upload Gambar Teknik";
   if (pathname.startsWith("/produksi/orders/")) return "Detail SPK & Progress";
   return "Manajer Produksi";
 }
