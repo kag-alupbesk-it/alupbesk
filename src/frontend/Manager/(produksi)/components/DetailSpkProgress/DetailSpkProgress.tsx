@@ -64,7 +64,6 @@ export function DetailSpkProgress({ nomor }: { nomor: string }) {
 
   // Stepper hanya aktif setelah gambar teknik di-ACC PM.
   const terkunci = spk.statusGambar !== "acc_pm";
-  const bisaUnggahUlang = spk.statusGambar === "belum_diunggah" || spk.statusGambar === "revisi";
   const alur = alurSPK(spk);
 
   return (
@@ -99,16 +98,6 @@ export function DetailSpkProgress({ nomor }: { nomor: string }) {
             </div>
             <p className="mt-2 text-[11px] text-on-surface-variant">{alurMeta[alur].tindakan}</p>
           </div>
-
-          {bisaUnggahUlang && (
-            <Link
-              href="/produksi/drawings"
-              className="inline-flex min-h-11 w-fit items-center justify-center gap-2 rounded-xl bg-secondary px-4 py-2.5 text-xs font-extrabold text-primary shadow-lg shadow-secondary/15 transition-all hover:-translate-y-0.5 hover:brightness-105 md:min-h-0"
-            >
-              <FileUp size={15} strokeWidth={2.5} />
-              Upload Gambar Teknik
-            </Link>
-          )}
         </div>
 
         <dl className="mt-6 grid grid-cols-1 gap-4 border-t border-outline/20 pt-5 sm:grid-cols-2 xl:grid-cols-4">
@@ -211,11 +200,7 @@ export function DetailSpkProgress({ nomor }: { nomor: string }) {
         <ProgressStepper
           tahapan={spk.tahapan}
           terkunci={terkunci}
-          pesanTerkunci={
-            bisaUnggahUlang
-              ? "Gambar teknik belum di-ACC PM, jadi pengerjaan belum boleh dimulai. Unggah gambar tekniknya terlebih dahulu, lalu tunggu ACC PM."
-              : "Gambar teknik sedang menunggu ACC PM. Tidak ada yang perlu dilakukan sekarang - progress akan bisa diubah setelah PM menyetujui gambar."
-          }
+          pesanTerkunci="Gambar teknik belum di-ACC PM. Pengerjaan baru dapat dimulai setelah gambar disetujui PM."
           onPilih={(tahapan) => {
             if (tahapan === "siap_kirim" && spk.statusProyek === "produksi") {
               setModalHandoff(true);

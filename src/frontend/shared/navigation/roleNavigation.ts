@@ -71,7 +71,6 @@ const navigationByRole = {
   ],
   produksi: [
     { key: "queue", href: "/produksi", permissionPath: "/produksi", label: "Antrean Produksi", icon: "precision_manufacturing" },
-    { key: "drawings", href: "/produksi/drawings", permissionPath: "/produksi/drawings", label: "Upload Gambar Teknik", icon: "upload_file" },
     { key: "material", href: "/produksi/permintaan", permissionPath: "/produksi/permintaan", label: "Permintaan Material", icon: "package_2" },
     { key: "cutting", href: "/produksi/cutting-list", permissionPath: "/produksi/cutting-list", label: "Cutting List", icon: "content_cut" },
     { key: "audit", href: "/produksi/audit", permissionPath: "/produksi/audit", label: "Riwayat Aktivitas", icon: "history" },
