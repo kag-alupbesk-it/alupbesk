@@ -2,7 +2,7 @@ import OwnerKeuanganSection from "@/frontend/(owner)/components/divisi/KeuanganS
 
 export const metadata = {
   title: "Keuangan | ALUPBESK Owner",
-  description: "Pantau kas, arus kas, termin, dan payroll divisi keuangan.",
+  description: "Pantau kas, arus kas, dan termin divisi keuangan.",
 };
 
 export default function Page() {
