@@ -1,7 +1,9 @@
 "use client";
 
 import { Fragment, useMemo, useState } from "react";
+import { Upload } from "lucide-react";
 import { useFinance } from "../FinanceStore/FinanceStore";
+import { parsePayrollExcel, type ParsedPayrollData } from "./parsePayrollExcel";
 import { FeedbackToast } from "../ui/FeedbackToast/FeedbackToast";
 import { FinancialStatCard } from "../ui/FinancialStatCard/FinancialStatCard";
 import { SelectTambahBaru } from "../ui/SelectTambahBaru/SelectTambahBaru";
@@ -433,6 +435,107 @@ function DetailUangKas() {
   );
 }
 
+function ModalPreviewPayrollExcel({
+  data,
+  periode,
+  onTutup,
+  onSimpan,
+}: {
+  data: ParsedPayrollData;
+  periode: string;
+  onTutup: () => void;
+  onSimpan: () => void;
+}) {
+  return (
+    <div className={s.modalOverlay} onMouseDown={(event) => event.target === event.currentTarget && onTutup()}>
+      <section role="dialog" aria-modal="true" aria-labelledby="preview-payroll-judul" className={`${s.modalPanel} max-w-4xl max-h-[90vh] flex flex-col`}>
+        <header className={s.modalHeader}>
+          <div className="min-w-0">
+            <p className={s.fieldLabel}>Import Rekap Gaji Excel</p>
+            <h3 id="preview-payroll-judul" className={s.modalTitle}>
+              Preview Data &amp; Alokasi Proyek · {formatBulan(periode)}
+            </h3>
+          </div>
+          <button type="button" onClick={onTutup} aria-label="Tutup" className={s.modalClose}>
+            <span aria-hidden="true" className={s.iconMd}>
+              close
+            </span>
+          </button>
+        </header>
+
+        <div className="flex-1 overflow-y-auto space-y-5 px-4 py-4 sm:px-6">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+            <div className={s.cardCompact}>
+              <p className={s.detailLabel}>Total Bayaran</p>
+              <p className="mt-1 text-base font-bold text-on-surface">{formatRp(data.totalBayaran)}</p>
+            </div>
+            <div className={s.cardCompact}>
+              <p className={s.detailLabel}>Potongan Bon</p>
+              <p className="mt-1 text-base font-bold text-error">-{formatRp(data.potonganBon)}</p>
+            </div>
+            <div className={s.cardCompact}>
+              <p className={s.detailLabel}>Total Di Terima (Netto)</p>
+              <p className="mt-1 text-base font-bold text-secondary">{formatRp(data.totalDiTerima)}</p>
+            </div>
+          </div>
+
+          <div>
+            <h4 className="text-xs font-bold text-on-surface uppercase tracking-wider mb-2">Alokasi Biaya per Proyek</h4>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+              {data.projects.map((p) => (
+                <div key={p.proyek} className={s.cardCompact}>
+                  <p className={s.detailLabel}>{p.proyek}</p>
+                  <p className="text-xs font-bold text-on-surface mt-1">{formatRp(p.total)}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <h4 className="text-xs font-bold text-on-surface uppercase tracking-wider mb-2">Rincian Absensi &amp; Gaji ({data.rows.length} baris)</h4>
+            <div className={s.tableWrapModal}>
+              <table className={`${s.table} min-w-[700px]`}>
+                <thead className={s.tableHead}>
+                  <tr>
+                    <th className={s.th}>Nama</th>
+                    <th className={s.th}>Hari / Tanggal</th>
+                    <th className={s.th}>Proyek</th>
+                    <th className={`${s.th} text-right`}>Gaji</th>
+                    <th className={`${s.th} text-right`}>Makan</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {data.rows.slice(0, 50).map((r, i) => (
+                    <tr key={i} className={s.tr}>
+                      <td className={`${s.td} font-semibold text-on-surface`}>{r.nama}</td>
+                      <td className={s.tdMuted}>{r.hari} · {r.tanggal}</td>
+                      <td className={s.tdMuted}>{r.proyek}</td>
+                      <td className={`${s.td} text-right font-semibold text-success`}>{formatRp(r.gaji)}</td>
+                      <td className={`${s.td} text-right text-on-surface-variant`}>{formatRp(r.makan)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <footer className="flex items-center justify-end gap-2 border-t border-outline/30 px-6 py-4 bg-surface-container/30">
+          <button type="button" onClick={onTutup} className={s.secondaryButton}>
+            Batal
+          </button>
+          <button type="button" onClick={onSimpan} className={s.primaryButton}>
+            <span aria-hidden="true" className={s.iconSm}>
+              check_circle
+            </span>
+            Simpan &amp; Catat Kas Keluar
+          </button>
+        </footer>
+      </section>
+    </div>
+  );
+}
+
 export function PayrollSection() {
   const readOnly = useReadOnly();
   const {
@@ -444,6 +547,7 @@ export function PayrollSection() {
     bayarLangsung,
     batalkanBayar,
     hapusKaryawan,
+    tambahTransaksi,
     clearToast,
   } = useFinance();
   const [periode, setPeriode] = useState(() => bulanHariIni());
@@ -454,7 +558,40 @@ export function PayrollSection() {
   const [formTerbuka, setFormTerbuka] = useState(false);
   const [edit, setEdit] = useState<Karyawan | null>(null);
   const [hapus, setHapus] = useState<Karyawan | null>(null);
+  const [excelData, setExcelData] = useState<ParsedPayrollData | null>(null);
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
+
+  const handleImportPayrollExcel = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      const data = await parsePayrollExcel(file);
+      setExcelData(data);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Gagal memparsing file Excel payroll.");
+    } finally {
+      e.target.value = "";
+    }
+  };
+
+  const handleSimpanExcelPayroll = () => {
+    if (!excelData) return;
+    tambahTransaksi({
+      tanggal: tanggalHariIni(),
+      jenis: "kas_keluar",
+      uraian: `Pembayaran Gaji Karyawan Periode ${formatBulan(periode)}`,
+      kategori: "Gaji Karyawan",
+      posProyek: "Kantor",
+      person: "Semua Karyawan",
+      nominal: excelData.totalDiTerima,
+      noNota: `PAY/${periode}`,
+      bukti: "",
+      sumber: "payroll",
+      refId: "",
+    });
+    alert(`Berhasil menyimpan rekap gaji ${formatBulan(periode)} dan mencatat Kas Keluar sebesar ${formatRp(excelData.totalDiTerima)}!`);
+    setExcelData(null);
+  };
 
   const toggleExpand = (id: string) => {
     setExpanded((curr) => ({ ...curr, [id]: !curr[id] }));
@@ -701,6 +838,13 @@ export function PayrollSection() {
           <div className="flex flex-wrap items-center gap-2">
             <span className={s.dataCounter}>{daftar.length} baris</span>
             {!readOnly && (
+              <label className="bg-blue-600/90 hover:bg-blue-600 text-white text-xs font-semibold px-3 py-2 rounded-xl flex items-center gap-1.5 transition-all shadow-sm whitespace-nowrap cursor-pointer">
+                <Upload className="h-4 w-4 shrink-0" aria-hidden="true" />
+                <span>Import Rekap Excel</span>
+                <input type="file" accept=".xlsx,.xls" onChange={handleImportPayrollExcel} className="hidden" />
+              </label>
+            )}
+            {!readOnly && (
               <>
                 <button
                   type="button"
@@ -934,6 +1078,14 @@ export function PayrollSection() {
         />
       )}
       {slipTerbuka && <SlipGajiModal slip={slipTerbuka} onTutup={() => setSlipTerbuka(null)} />}
+      {excelData && (
+        <ModalPreviewPayrollExcel
+          data={excelData}
+          periode={periode}
+          onTutup={() => setExcelData(null)}
+          onSimpan={handleSimpanExcelPayroll}
+        />
+      )}
       <FeedbackToast message={state.toast} onDismiss={clearToast} />
     </div>
   );
