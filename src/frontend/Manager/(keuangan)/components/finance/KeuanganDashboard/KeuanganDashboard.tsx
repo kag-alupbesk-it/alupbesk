@@ -5,7 +5,6 @@ import * as s from "../style/style";
 import { FinanceProvider, useFinance } from "../FinanceStore/FinanceStore";
 import { FinancialChartsSection } from "../FinancialChartsSection/FinancialChartsSection";
 import { KasSection } from "../KasSection/KasSection";
-import { PayrollSection } from "../PayrollSection/PayrollSection";
 import { TerminSection } from "../TerminSection/TerminSection";
 import Sidebar from "@/frontend/Manager/(keuangan)/components/layout/Sidebar/Sidebar";
 import ThemeToggle from "@/app/ThemeToggle";
@@ -21,7 +20,6 @@ const TAB_SUMMARIES: Record<TabKey, string> = {
   kas: "Saldo, pemasukan, pengeluaran, dan kas beredar",
   grafik: "Arus kas dan rekap pengeluaran otomatis",
   termin: "Invoice, termin, dan status pembayaran",
-  payroll: "Gaji karyawan dan slip gaji",
   audit: "Riwayat aktivitas yang dilakukan oleh role Keuangan",
 };
 
@@ -63,7 +61,6 @@ function IsiTab({ tab }: { tab: TabKey }) {
           {tab === "kas" && <KasSection />}
           {tab === "grafik" && <FinancialChartsSection />}
           {tab === "termin" && <TerminSection />}
-          {tab === "payroll" && <PayrollSection />}
           {tab === "audit" && <AuditLogSection apiEndpoint="/api/keuangan/audit" />}
         </div>
       </div>

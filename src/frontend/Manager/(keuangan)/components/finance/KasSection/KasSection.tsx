@@ -304,6 +304,215 @@ function ModalBukti({
   );
 }
 
+function ModalEditTransaksi({
+  transaksi,
+  onTutup,
+}: {
+  transaksi: TransaksiKas;
+  onTutup: () => void;
+}) {
+  const { ubahTransaksi, opsiKategori, opsiPerson, opsiPos, tambahOpsi } = useFinance();
+  const [jenis, setJenis] = useState<JenisTransaksi>(transaksi.jenis);
+  const [tanggal, setTanggal] = useState(transaksi.tanggal);
+  const [uraian, setUraian] = useState(transaksi.uraian);
+  const [nominal, setNominal] = useState(transaksi.nominal);
+  const [kategori, setKategori] = useState<string>(transaksi.kategori);
+  const [person, setPerson] = useState(transaksi.person);
+  const [pos, setPos] = useState(transaksi.posProyek);
+  const [noNota, setNoNota] = useState(transaksi.noNota);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
+  const JENIS_BE = JENIS_TRANSAKSI.filter((item) => item !== "kas_beredar");
+
+  const submit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const validasi: Record<string, string> = {};
+    if (!tanggal) validasi.tanggal = "Tanggal wajib diisi.";
+    if (!uraian.trim()) validasi.uraian = "Deskripsi wajib diisi.";
+    if (nominal <= 0) validasi.nominal = "Jumlah harus lebih dari Rp 0.";
+    setErrors(validasi);
+    if (Object.keys(validasi).length > 0) return;
+
+    ubahTransaksi({
+      ...transaksi,
+      tanggal,
+      jenis,
+      uraian: uraian.trim(),
+      kategori,
+      posProyek: pos,
+      person: person.trim(),
+      nominal,
+      noNota: noNota.trim(),
+    });
+    onTutup();
+  };
+
+  return (
+    <div className={s.modalOverlay} onMouseDown={(event) => event.target === event.currentTarget && onTutup()}>
+      <section
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="edit-transaksi-judul"
+        className={`${s.modalPanel} max-w-2xl`}
+      >
+        <header className={s.modalHeader}>
+          <div className="min-w-0">
+            <p className={s.fieldLabel}>Ubah Transaksi Kas</p>
+            <h3 id="edit-transaksi-judul" className={s.modalTitle}>
+              {transaksi.id}
+            </h3>
+          </div>
+          <button type="button" onClick={onTutup} aria-label="Tutup form edit transaksi" className={s.modalClose}>
+            <span aria-hidden="true" className={s.iconMd}>
+              close
+            </span>
+          </button>
+        </header>
+
+        <form onSubmit={submit} className="space-y-4 px-4 py-4 sm:px-6" noValidate>
+          <fieldset>
+            <legend className={s.fieldLabel}>Jenis Transaksi</legend>
+            <div role="group" aria-label="Jenis transaksi kas" className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2">
+              {JENIS_BE.map((item) => {
+                const aktif = jenis === item;
+                return (
+                  <button
+                    key={item}
+                    type="button"
+                    aria-pressed={aktif}
+                    onClick={() => setJenis(item)}
+                    className={`${s.choiceButton} ${aktif ? s.choiceButtonActive : s.choiceButtonIdle}`}
+                  >
+                    <span aria-hidden="true" className={s.iconSm}>
+                      {IKON_JENIS[item]}
+                    </span>
+                    {LABEL_JENIS_TRANSAKSI[item]}
+                  </button>
+                );
+              })}
+            </div>
+          </fieldset>
+
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <label className={s.fieldLabel}>
+              Tanggal
+              <input
+                type="date"
+                value={tanggal}
+                onChange={(event) => {
+                  setTanggal(event.target.value);
+                  setErrors((current) => ({ ...current, tanggal: "" }));
+                }}
+                aria-invalid={Boolean(errors.tanggal)}
+                className={s.input}
+              />
+              {errors.tanggal && (
+                <span role="alert" className={s.inputErrorText}>
+                  {errors.tanggal}
+                </span>
+              )}
+            </label>
+
+            <SelectTambahBaru
+              label="Kategori"
+              value={kategori}
+              options={opsiKategori}
+              placeholder="cth: Kategori baru"
+              onChange={(value) => {
+                setKategori(value);
+                setErrors((current) => ({ ...current, kategori: "" }));
+              }}
+              onTambah={(value) => tambahOpsi("kategori", value)}
+            />
+
+            <label className={s.fieldLabel}>
+              Jumlah (Rp)
+              <input
+                type="text"
+                inputMode="numeric"
+                value={nominal > 0 ? new Intl.NumberFormat("id-ID").format(nominal) : ""}
+                onChange={(event) => {
+                  const angka = Number(event.target.value.replace(/\D/g, "")) || 0;
+                  setNominal(angka);
+                  setErrors((current) => ({ ...current, nominal: "" }));
+                }}
+                placeholder="0"
+                aria-label="Jumlah rupiah"
+                aria-invalid={Boolean(errors.nominal)}
+                className={s.input}
+              />
+              {errors.nominal && (
+                <span role="alert" className={s.inputErrorText}>
+                  {errors.nominal}
+                </span>
+              )}
+            </label>
+
+            <label className={s.fieldLabel}>
+              No. Nota (Opsional)
+              <input
+                value={noNota}
+                onChange={(event) => setNoNota(event.target.value)}
+                placeholder="cth: TRX-0001 / INV/01"
+                className={s.input}
+              />
+            </label>
+
+            <label className={`${s.fieldLabel} sm:col-span-2`}>
+              Deskripsi
+              <input
+                value={uraian}
+                onChange={(event) => {
+                  setUraian(event.target.value);
+                  setErrors((current) => ({ ...current, uraian: "" }));
+                }}
+                placeholder="cth: Pembelian BBM genset proyek"
+                aria-invalid={Boolean(errors.uraian)}
+                className={s.input}
+              />
+              {errors.uraian && (
+                <span role="alert" className={s.inputErrorText}>
+                  {errors.uraian}
+                </span>
+              )}
+            </label>
+
+            <SelectTambahBaru
+              label={jenis === "kas_keluar" ? "Penerima" : "Pihak / Pemberi"}
+              value={person}
+              options={opsiPerson}
+              placeholder={jenis === "kas_keluar" ? "cth: Bambang Sutrisno" : "cth: CV Karya Baja"}
+              onChange={(value) => setPerson(value)}
+              onTambah={(value) => tambahOpsi("person", value)}
+            />
+
+            <SelectTambahBaru
+              label="Pos / Proyek"
+              value={pos}
+              options={opsiPos}
+              placeholder="cth: Kantor, Karang Ploso"
+              onChange={(value) => setPos(value)}
+              onTambah={(value) => tambahOpsi("pos", value)}
+            />
+          </div>
+
+          <div className="flex justify-end gap-2 pt-2">
+            <button type="button" onClick={onTutup} className={s.secondaryButton}>
+              Batal
+            </button>
+            <button type="submit" className={s.primaryButton}>
+              <span aria-hidden="true" className={s.iconSm}>
+                save
+              </span>
+              Simpan Perubahan
+            </button>
+          </div>
+        </form>
+      </section>
+    </div>
+  );
+}
+
 function ModalHapus({
   transaksi,
   onTutup,
@@ -367,6 +576,7 @@ export function KasSection() {
   const [filterKategori, setFilterKategori] = useState<"all" | KategoriBiaya>("all");
   const [cari, setCari] = useState("");
   const [preview, setPreview] = useState<TransaksiKas | null>(null);
+  const [edit, setEdit] = useState<TransaksiKas | null>(null);
   const [hapus, setHapus] = useState<TransaksiKas | null>(null);
   const [bulan, setBulan] = useState(new Date().toISOString().slice(0, 7));
   const [dikembalikan, setDikembalikan] = useState(0);
@@ -621,6 +831,19 @@ export function KasSection() {
                       {!readOnly && (
                         <button
                           type="button"
+                          onClick={() => setEdit(item)}
+                          aria-label={`Ubah transaksi ${item.uraian}`}
+                          title="Ubah transaksi"
+                          className={s.actionButton}
+                        >
+                          <span aria-hidden="true" className={s.iconSm}>
+                            edit
+                          </span>
+                        </button>
+                      )}
+                      {!readOnly && (
+                        <button
+                          type="button"
                           onClick={() => setHapus(item)}
                           aria-label={`Hapus transaksi ${item.uraian}`}
                           title="Hapus transaksi"
@@ -763,6 +986,19 @@ export function KasSection() {
                 {!readOnly && (
                   <button
                     type="button"
+                    onClick={() => setEdit(item)}
+                    aria-label={`Ubah transaksi ${item.uraian}`}
+                    title="Ubah transaksi"
+                    className={s.actionButton}
+                  >
+                    <span aria-hidden="true" className={s.iconSm}>
+                      edit
+                    </span>
+                  </button>
+                )}
+                {!readOnly && (
+                  <button
+                    type="button"
                     onClick={() => setHapus(item)}
                     aria-label={`Hapus transaksi ${item.uraian}`}
                     title="Hapus transaksi"
@@ -780,6 +1016,7 @@ export function KasSection() {
       </section>
 
       {preview && <ModalBukti transaksi={preview} onTutup={() => setPreview(null)} />}
+      {edit && <ModalEditTransaksi transaksi={edit} onTutup={() => setEdit(null)} />}
       {hapus && <ModalHapus transaksi={hapus} onTutup={() => setHapus(null)} />}
       <FeedbackToast message={state.toast} onDismiss={clearToast} />
     </div>
