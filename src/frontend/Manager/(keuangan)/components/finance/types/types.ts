@@ -23,13 +23,14 @@ export const PIHAK = [] as const;
 
 export type FieldOpsi = "person" | "kategori" | "pos";
 
-export const SUMBER_TRANSAKSI = ["manual", "termin", "payroll"] as const;
+export const SUMBER_TRANSAKSI = ["manual", "termin", "payroll", "kembali"] as const;
 export type SumberTransaksi = (typeof SUMBER_TRANSAKSI)[number];
 
 export const LABEL_SUMBER_TRANSAKSI: Record<SumberTransaksi, string> = {
   manual: "Input manual",
   termin: "Penerimaan termin",
   payroll: "Pencairan gaji",
+  kembali: "Pengembalian kas beredar",
 };
 
 export type TransaksiKas = {

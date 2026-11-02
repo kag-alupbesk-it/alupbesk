@@ -282,12 +282,19 @@ function reducer(state: FinanceState, action: FinanceAction): FinanceState {
         toast: `Transaksi ${action.payload.noNota || action.payload.id} diperbarui.`,
       };
     }
-    case "hapus-transaksi":
+    case "hapus-transaksi": {
+      const transaksi = state.transaksi.find((item) => item.id === action.id);
+      const hapusPengembalian = transaksi?.jenis === "kas_beredar";
       return {
         ...state,
-        transaksi: state.transaksi.filter((item) => item.id !== action.id),
-        toast: `Transaksi ${action.id} dihapus dari buku kas.`,
+        transaksi: state.transaksi.filter(
+          (item) => item.id !== action.id && !(hapusPengembalian && item.refId === action.id && item.sumber === "kembali"),
+        ),
+        toast: hapusPengembalian
+          ? `Kas beredar ${action.id} beserta pengembaliannya dihapus dari buku kas.`
+          : `Transaksi ${action.id} dihapus dari buku kas.`,
       };
+    }
     case "tambah-invoice": {
       const urut = urutInvoiceBerikutnya(state.invoice, state.seqInvoice);
       const invoice = buatInvoice(action.payload, urut);

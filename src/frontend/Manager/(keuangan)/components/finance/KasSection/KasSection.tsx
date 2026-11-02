@@ -610,6 +610,148 @@ function ModalHapus({
   );
 }
 
+function ModalKembalikan({
+  transaksi,
+  sudahKembali,
+  onTutup,
+}: {
+  transaksi: TransaksiKas;
+  sudahKembali: number;
+  onTutup: () => void;
+}) {
+  const { tambahTransaksi } = useFinance();
+  const sisa = Math.max(transaksi.nominal - sudahKembali, 0);
+  const [tanggal, setTanggal] = useState(tanggalHariIni());
+  const [nominal, setNominal] = useState(sisa);
+  const [uraian, setUraian] = useState(`Pengembalian kas beredar ${transaksi.id}`);
+  const [error, setError] = useState("");
+
+  const submit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!tanggal) {
+      setError("Tanggal pengembalian wajib diisi.");
+      return;
+    }
+    if (nominal <= 0) {
+      setError("Nominal pengembalian harus lebih dari Rp 0.");
+      return;
+    }
+    if (nominal > sisa) {
+      setError(`Nominal pengembalian melebihi sisa kas beredar (${formatRp(sisa)}).`);
+      return;
+    }
+    tambahTransaksi({
+      tanggal,
+      jenis: "kas_masuk",
+      uraian: uraian.trim() || `Pengembalian kas beredar ${transaksi.id}`,
+      kategori: transaksi.kategori,
+      posProyek: transaksi.posProyek,
+      person: transaksi.person,
+      nominal,
+      noNota: "",
+      bukti: "",
+      sumber: "kembali",
+      refId: transaksi.id,
+    });
+    onTutup();
+  };
+
+  return (
+    <div className={s.modalOverlay} onMouseDown={(event) => event.target === event.currentTarget && onTutup()}>
+      <section role="dialog" aria-modal="true" aria-labelledby="kembali-judul" className={`${s.modalPanel} max-w-lg`}>
+        <header className={s.modalHeader}>
+          <div className="min-w-0">
+            <p className={s.fieldLabel}>Catat Pengembalian Kas Beredar</p>
+            <h3 id="kembali-judul" className={s.modalTitle}>
+              {transaksi.uraian}
+            </h3>
+          </div>
+          <button type="button" onClick={onTutup} aria-label="Tutup form pengembalian" className={s.modalClose}>
+            <span aria-hidden="true" className={s.iconMd}>
+              close
+            </span>
+          </button>
+        </header>
+
+        <form onSubmit={submit} className="space-y-4 px-4 py-4 sm:px-6" noValidate>
+          <div className="grid grid-cols-3 gap-2 rounded-xl bg-surface-container/40 p-3 text-center">
+            <div>
+              <p className={s.metaText}>Total Beredar</p>
+              <p className="text-sm font-bold text-on-surface">{formatRp(transaksi.nominal)}</p>
+            </div>
+            <div>
+              <p className={s.metaText}>Sudah Kembali</p>
+              <p className="text-sm font-bold text-success">{formatRp(sudahKembali)}</p>
+            </div>
+            <div>
+              <p className={s.metaText}>Sisa</p>
+              <p className="text-sm font-bold text-warning">{formatRp(sisa)}</p>
+            </div>
+          </div>
+
+          <label className={s.fieldLabel}>
+            Tanggal Pengembalian
+            <input
+              type="date"
+              value={tanggal}
+              onChange={(event) => {
+                setTanggal(event.target.value);
+                setError("");
+              }}
+              className={s.input}
+            />
+          </label>
+
+          <label className={s.fieldLabel}>
+            Nominal Dikembalikan (Rp)
+            <input
+              type="text"
+              inputMode="numeric"
+              value={nominal > 0 ? new Intl.NumberFormat("id-ID").format(nominal) : ""}
+              onChange={(event) => {
+                setNominal(Number(event.target.value.replace(/\D/g, "")) || 0);
+                setError("");
+              }}
+              placeholder="0"
+              aria-invalid={Boolean(error)}
+              className={s.input}
+            />
+          </label>
+
+          <label className={s.fieldLabel}>
+            Keterangan
+            <input value={uraian} onChange={(event) => setUraian(event.target.value)} className={s.input} />
+          </label>
+
+          {error && (
+            <span role="alert" className={s.inputErrorText}>
+              {error}
+            </span>
+          )}
+
+          <p className="text-xs leading-relaxed text-on-surface-variant">
+            Nominal ini dicatat otomatis sebagai <span className="font-bold text-on-surface">Kas Masuk</span> dan
+            menambah kembali saldo kas kantor. Sisa kas beredar setelah pengembalian:{" "}
+            <span className="font-bold text-on-surface">{formatRp(Math.max(sisa - nominal, 0))}</span>.
+          </p>
+
+          <div className="flex justify-end gap-2 pt-2">
+            <button type="button" onClick={onTutup} className={s.secondaryButton}>
+              Batal
+            </button>
+            <button type="submit" className={s.primaryButton}>
+              <span aria-hidden="true" className={s.iconSm}>
+                keyboard_return
+              </span>
+              Simpan Pengembalian
+            </button>
+          </div>
+        </form>
+      </section>
+    </div>
+  );
+}
+
 export function KasSection() {
   const readOnly = useReadOnly();
   const { state, opsiKategori, clearToast, tambahTransaksi } = useFinance();
@@ -619,10 +761,24 @@ export function KasSection() {
   const [edit, setEdit] = useState<TransaksiKas | null>(null);
   const [cetakNota, setCetakNota] = useState<TransaksiKas | null>(null);
   const [hapus, setHapus] = useState<TransaksiKas | null>(null);
+  const [kembali, setKembali] = useState<TransaksiKas | null>(null);
   const [bulan, setBulan] = useState(new Date().toISOString().slice(0, 7));
   const [dikembalikan, setDikembalikan] = useState(0);
 
   const ledger = useMemo(() => BANGUN_LEDGER(state.transaksi, bulan), [state.transaksi, bulan]);
+
+  const pengembalianBeredar = useMemo(() => {
+    const map = new Map<string, number>();
+    state.transaksi.forEach((item) => {
+      if (item.jenis === "kas_masuk" && item.refId) {
+        map.set(item.refId, (map.get(item.refId) ?? 0) + item.nominal);
+      }
+    });
+    return map;
+  }, [state.transaksi]);
+
+  const sisaBeredar = (item: TransaksiKas) =>
+    Math.max(item.nominal - (pengembalianBeredar.get(item.id) ?? 0), 0);
 
   const handleImportExcel = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -856,13 +1012,39 @@ export function KasSection() {
                     {item.jenis === "kas_keluar" ? formatRp(item.nominal) : "-"}
                   </td>
                   <td className={`${s.td} text-right font-semibold text-warning`}>
-                    {item.jenis === "kas_beredar" ? formatRp(item.nominal) : "-"}
+                    {item.jenis === "kas_beredar" ? (
+                      <>
+                        <span>{formatRp(item.nominal)}</span>
+                        {(pengembalianBeredar.get(item.id) ?? 0) > 0 && sisaBeredar(item) > 0 && (
+                          <span className={`${s.metaText} block`}>Sisa {formatRp(sisaBeredar(item))}</span>
+                        )}
+                      </>
+                    ) : (
+                      "-"
+                    )}
                   </td>
                   <td className={`${s.td} text-right font-bold text-on-surface`}>{formatRp(item.saldo)}</td>
                   <td className={`${s.td} text-right`}>
                     <div className={s.actionGroup}>
-                      {item.jenis === "kas_beredar" && (
-                        <StatusBadge tone="pending" label="Beredar" icon="handshake" />
+                       {item.jenis === "kas_beredar" && (
+                         <StatusBadge
+                           tone={sisaBeredar(item) === 0 ? "approved" : "pending"}
+                           label={sisaBeredar(item) === 0 ? "Lunas" : "Beredar"}
+                           icon={sisaBeredar(item) === 0 ? "check_circle" : "handshake"}
+                         />
+                       )}
+                      {!readOnly && item.jenis === "kas_beredar" && sisaBeredar(item) > 0 && (
+                        <button
+                          type="button"
+                          onClick={() => setKembali(item)}
+                          aria-label={`Catat pengembalian kas beredar ${item.uraian}`}
+                          title="Catat pengembalian"
+                          className={s.actionButton}
+                        >
+                          <span aria-hidden="true" className={s.iconSm}>
+                            keyboard_return
+                          </span>
+                        </button>
                       )}
                       <button
                         type="button"
@@ -1012,6 +1194,11 @@ export function KasSection() {
                       ? formatRp(item.nominal)
                       : `${item.jenis === "kas_masuk" ? "+" : "-"}${formatRp(item.nominal)}`}
                   </p>
+                  {item.jenis === "kas_beredar" &&
+                    (pengembalianBeredar.get(item.id) ?? 0) > 0 &&
+                    sisaBeredar(item) > 0 && (
+                      <p className={`${s.metaText} mt-0.5`}>Sisa {formatRp(sisaBeredar(item))}</p>
+                    )}
                 </div>
                 <div className="text-right">
                   <p className={s.cardListLabel}>Saldo</p>
@@ -1020,6 +1207,19 @@ export function KasSection() {
               </div>
 
               <div className={s.cardListActions}>
+                {!readOnly && item.jenis === "kas_beredar" && sisaBeredar(item) > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => setKembali(item)}
+                    aria-label={`Catat pengembalian kas beredar ${item.uraian}`}
+                    title="Catat pengembalian"
+                    className={s.actionButton}
+                  >
+                    <span aria-hidden="true" className={s.iconSm}>
+                      keyboard_return
+                    </span>
+                  </button>
+                )}
                 <button
                   type="button"
                   onClick={() => setCetakNota(item)}
@@ -1066,6 +1266,13 @@ export function KasSection() {
       {edit && <ModalEditTransaksi transaksi={edit} onTutup={() => setEdit(null)} />}
       {cetakNota && <ModalCetakNota transaksi={cetakNota} onTutup={() => setCetakNota(null)} />}
       {hapus && <ModalHapus transaksi={hapus} onTutup={() => setHapus(null)} />}
+      {kembali && (
+        <ModalKembalikan
+          transaksi={kembali}
+          sudahKembali={pengembalianBeredar.get(kembali.id) ?? 0}
+          onTutup={() => setKembali(null)}
+        />
+      )}
       <FeedbackToast message={state.toast} onDismiss={clearToast} />
     </div>
   );
