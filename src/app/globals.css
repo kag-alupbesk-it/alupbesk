@@ -407,3 +407,25 @@ html:not(.dark) .glass-card {
     animation: none;
   }
 }
+
+@media print {
+  body * {
+    visibility: hidden !important;
+  }
+  dialog, [role="dialog"], .modalPanel, .modalOverlay {
+    visibility: visible !important;
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 100% !important;
+    height: auto !important;
+    background: white !important;
+    box-shadow: none !important;
+  }
+  [role="dialog"] *, .modalPanel * {
+    visibility: visible !important;
+  }
+  .print\:hidden {
+    display: none !important;
+  }
+}
