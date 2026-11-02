@@ -426,6 +426,114 @@ function ModalBukti({
   );
 }
 
+function ModalCetakNota({
+  transaksi,
+  onTutup,
+}: {
+  transaksi: TransaksiKas;
+  onTutup: () => void;
+}) {
+  return (
+    <div className={s.modalOverlay} onMouseDown={(event) => event.target === event.currentTarget && onTutup()}>
+      <section
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="cetak-nota-judul"
+        className={`${s.modalPanel} max-w-xl bg-white text-slate-900 shadow-2xl`}
+      >
+        <header className="flex items-center justify-between border-b border-slate-200 px-6 py-4 print:hidden">
+          <div>
+            <p className="text-xs font-bold text-blue-600 uppercase tracking-wider">ALUPBESK KEUANGAN</p>
+            <h3 id="cetak-nota-judul" className="text-lg font-bold text-slate-900">
+              Cetak Nota / Kwitansi Kas
+            </h3>
+          </div>
+          <button type="button" onClick={onTutup} aria-label="Tutup" className="rounded-lg p-1.5 text-slate-500 hover:bg-slate-100">
+            <span aria-hidden="true" className={s.iconMd}>
+              close
+            </span>
+          </button>
+        </header>
+
+        <div className="space-y-6 p-6 sm:p-8">
+          <div className="flex items-start justify-between border-b-2 border-slate-900 pb-4">
+            <div>
+              <h1 className="text-xl font-extrabold uppercase tracking-tight text-slate-900">ALUPBESK</h1>
+              <p className="text-xs font-semibold text-slate-600">Divisi Keuangan &amp; Administrasi Proyek</p>
+            </div>
+            <div className="text-right">
+              <p className="text-sm font-bold uppercase text-slate-900">
+                {transaksi.jenis === "kas_masuk" ? "KWITANSI KAS MASUK" : "NOTA KAS KELUAR"}
+              </p>
+              <p className="text-xs font-mono text-slate-600 mt-0.5">No: {transaksi.noNota || transaksi.id}</p>
+              <p className="text-xs text-slate-600">Tanggal: {formatTanggal(transaksi.tanggal)}</p>
+            </div>
+          </div>
+
+          <div className="space-y-4 text-sm">
+            <div className="grid grid-cols-3 gap-2 border-b border-slate-100 py-2">
+              <span className="font-medium text-slate-500">
+                {transaksi.jenis === "kas_masuk" ? "Diterima Dari" : "Dibayarkan Kepada"}
+              </span>
+              <span className="col-span-2 font-bold text-slate-900">{transaksi.person || "-"}</span>
+            </div>
+
+            <div className="grid grid-cols-3 gap-2 border-b border-slate-100 py-2">
+              <span className="font-medium text-slate-500">Uraian / Keterangan</span>
+              <span className="col-span-2 font-semibold text-slate-900 leading-relaxed">{transaksi.uraian}</span>
+            </div>
+
+            <div className="grid grid-cols-3 gap-2 border-b border-slate-100 py-2">
+              <span className="font-medium text-slate-500">Kategori &amp; Pos Proyek</span>
+              <span className="col-span-2 font-medium text-slate-900">
+                {transaksi.kategori} · <span className="font-bold">{transaksi.posProyek || "Kantor"}</span>
+              </span>
+            </div>
+
+            <div className="mt-4 rounded-xl bg-slate-100 p-4 border border-slate-200 flex items-center justify-between">
+              <span className="text-xs font-bold uppercase text-slate-600 tracking-wider">Jumlah Nominal</span>
+              <span className={`text-xl font-extrabold ${transaksi.jenis === "kas_masuk" ? "text-emerald-700" : "text-rose-700"}`}>
+                {formatRp(transaksi.nominal)}
+              </span>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-8 pt-6 text-center text-xs">
+            <div>
+              <p className="text-slate-600 mb-16">Disetujui / Dibuat oleh,</p>
+              <p className="font-bold text-slate-900 border-t border-slate-300 pt-1 inline-block min-w-[140px]">
+                Admin Keuangan
+              </p>
+            </div>
+            <div>
+              <p className="text-slate-600 mb-16">Penerima / Pemberi,</p>
+              <p className="font-bold text-slate-900 border-t border-slate-300 pt-1 inline-block min-w-[140px]">
+                {transaksi.person || "_________________"}
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-200 print:hidden">
+            <button type="button" onClick={onTutup} className={s.secondaryButton}>
+              Tutup
+            </button>
+            <button
+              type="button"
+              onClick={() => window.print()}
+              className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs px-4 py-2.5 rounded-xl flex items-center gap-2 shadow-sm transition-all"
+            >
+              <span aria-hidden="true" className={s.iconSm}>
+                print
+              </span>
+              <span>Cetak Nota Sekarang</span>
+            </button>
+          </div>
+        </div>
+      </section>
+    </div>
+  );
+}
+
 function ModalEditTransaksi({
   transaksi,
   onTutup,
@@ -742,6 +850,7 @@ export function KasSection() {
   const [cari, setCari] = useState("");
   const [preview, setPreview] = useState<TransaksiKas | null>(null);
   const [edit, setEdit] = useState<TransaksiKas | null>(null);
+  const [cetakNota, setCetakNota] = useState<TransaksiKas | null>(null);
   const [hapus, setHapus] = useState<TransaksiKas | null>(null);
   const [bulan, setBulan] = useState(new Date().toISOString().slice(0, 7));
   const [dikembalikan, setDikembalikan] = useState(0);
@@ -993,6 +1102,17 @@ export function KasSection() {
                           visibility
                         </span>
                       </button>
+                      <button
+                        type="button"
+                        onClick={() => setCetakNota(item)}
+                        aria-label={`Cetak nota ${item.uraian}`}
+                        title="Cetak nota/kwitansi"
+                        className={s.actionButton}
+                      >
+                        <span aria-hidden="true" className={s.iconSm}>
+                          print
+                        </span>
+                      </button>
                       {!readOnly && (
                         <button
                           type="button"
@@ -1148,6 +1268,17 @@ export function KasSection() {
                     visibility
                   </span>
                 </button>
+                <button
+                  type="button"
+                  onClick={() => setCetakNota(item)}
+                  aria-label={`Cetak nota ${item.uraian}`}
+                  title="Cetak nota/kwitansi"
+                  className={s.actionButton}
+                >
+                  <span aria-hidden="true" className={s.iconSm}>
+                    print
+                  </span>
+                </button>
                 {!readOnly && (
                   <button
                     type="button"
@@ -1182,6 +1313,7 @@ export function KasSection() {
 
       {preview && <ModalBukti transaksi={preview} onTutup={() => setPreview(null)} />}
       {edit && <ModalEditTransaksi transaksi={edit} onTutup={() => setEdit(null)} />}
+      {cetakNota && <ModalCetakNota transaksi={cetakNota} onTutup={() => setCetakNota(null)} />}
       {hapus && <ModalHapus transaksi={hapus} onTutup={() => setHapus(null)} />}
       <FeedbackToast message={state.toast} onDismiss={clearToast} />
     </div>

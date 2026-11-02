@@ -107,10 +107,7 @@ export function SlipGajiModal({ slip, onTutup }: { slip: Penggajian; onTutup: ()
           <div className="flex flex-wrap justify-end gap-2">
             <button
               type="button"
-              onClick={() => {
-                clearToast();
-                onTutup();
-              }}
+              onClick={() => window.print()}
               className={s.secondaryButton}
             >
               <span aria-hidden="true" className={s.iconSm}>
