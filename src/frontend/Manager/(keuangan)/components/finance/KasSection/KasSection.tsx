@@ -49,7 +49,7 @@ function FormKas() {
   const [uploading, setUploading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const JENIS_BE = JENIS_TRANSAKSI.filter((item) => item !== "kas_beredar");
+  const JENIS_BE = JENIS_TRANSAKSI;
 
   const gantiJenis = (berikutnya: JenisTransaksi) => {
     setJenis(berikutnya);
@@ -122,7 +122,7 @@ function FormKas() {
 
       <fieldset className="mt-4">
         <legend className={s.fieldLabel}>Jenis Transaksi</legend>
-        <div role="group" aria-label="Jenis transaksi kas" className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2">
+        <div role="group" aria-label="Jenis transaksi kas" className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-3">
           {JENIS_BE.map((item) => {
             const aktif = jenis === item;
             return (
@@ -629,7 +629,7 @@ function ModalEditTransaksi({
         <form onSubmit={submit} className="space-y-4 px-4 py-4 sm:px-6" noValidate>
           <fieldset>
             <legend className={s.fieldLabel}>Jenis Transaksi</legend>
-            <div role="group" aria-label="Jenis transaksi kas" className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2">
+            <div role="group" aria-label="Jenis transaksi kas" className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-3">
               {JENIS_BE.map((item) => {
                 const aktif = jenis === item;
                 return (
