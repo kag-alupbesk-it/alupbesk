@@ -5,6 +5,7 @@ import {
   FinancialChartsSection,
   FinanceProvider,
   KasSection,
+  PayrollSection,
   TerminSection,
   useFinance,
 } from "@/frontend/Manager/(keuangan)/components/finance";
@@ -24,6 +25,7 @@ const TABS: { key: TabKey; label: string; ringkasan: string }[] = [
   { key: "kas", label: "Kas", ringkasan: "Saldo, pemasukan, pengeluaran, dan kas beredar" },
   { key: "grafik", label: "Grafik", ringkasan: "Arus kas dan rekap pengeluaran otomatis" },
   { key: "termin", label: "Termin", ringkasan: "Invoice, termin, dan status pembayaran" },
+  { key: "payroll", label: "Payroll", ringkasan: "Gaji karyawan dan slip gaji" },
 ];
 
 /**
@@ -41,6 +43,7 @@ function KeuanganIsi({ tab }: { tab: TabKey }) {
 
   if (tab === "grafik") return <FinancialChartsSection />;
   if (tab === "termin") return <div data-focus-id="tagihan"><TerminSection /></div>;
+  if (tab === "payroll") return <PayrollSection />;
   return <KasSection />;
 }
 
