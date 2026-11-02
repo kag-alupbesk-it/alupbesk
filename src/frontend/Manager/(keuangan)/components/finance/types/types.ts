@@ -4,13 +4,13 @@ export type JenisTransaksi = (typeof JENIS_TRANSAKSI)[number];
 export const LABEL_JENIS_TRANSAKSI: Record<JenisTransaksi, string> = {
   kas_masuk: "Kas Masuk",
   kas_keluar: "Kas Keluar",
-  kas_beredar: "Kas Beredar (Bon)",
+  kas_beredar: "Kas Beredar (Operasional)",
 };
 
 export const LABEL_JENIS_SINGKAT: Record<JenisTransaksi, string> = {
   kas_masuk: "Masuk",
   kas_keluar: "Keluar",
-  kas_beredar: "Bon",
+  kas_beredar: "Beredar",
 };
 
 export const KATEGORI_BIAYA = [] as const;
@@ -123,7 +123,7 @@ export const REKAP_TRANSAKSI = (transaksi: TransaksiKas[]) => {
     totalMasuk,
     totalKeluar,
     totalBeredar,
-    saldo: totalMasuk - totalKeluar,
+    saldo: totalMasuk - totalKeluar - totalBeredar,
   };
 };
 
@@ -140,7 +140,7 @@ export type LedgerKas = {
 };
 
 const deltaKas = (item: TransaksiKas) =>
-  item.jenis === "kas_masuk" ? item.nominal : item.jenis === "kas_keluar" ? -item.nominal : 0;
+  item.jenis === "kas_masuk" ? item.nominal : -item.nominal;
 
 // Membangun buku kas bulanan: saldo awal (saldo bulan lalu) dihitung dari semua
 // transaksi sebelum awal bulan, lalu saldo berjalan dihitung urut kronologis.
@@ -180,7 +180,7 @@ export const BANGUN_LEDGER = (transaksi: TransaksiKas[], bulan: string): LedgerK
     totalMasuk,
     totalKeluar,
     totalBeredar,
-    saldoAkhir: saldoAwal + totalMasuk - totalKeluar,
+    saldoAkhir: saldoAwal + totalMasuk - totalKeluar - totalBeredar,
     baris,
   };
 };

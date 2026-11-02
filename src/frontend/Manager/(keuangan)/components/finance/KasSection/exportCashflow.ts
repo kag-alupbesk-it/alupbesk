@@ -9,7 +9,7 @@ export async function exportCashflowToExcel(transaksi: TransaksiKas[] = [], bula
     .filter((item) => item.tanggal.slice(0, 7) < periode)
     .reduce(
       (sum, item) =>
-        sum + (item.jenis === "kas_masuk" ? item.nominal : item.jenis === "kas_keluar" ? -item.nominal : 0),
+        sum + (item.jenis === "kas_masuk" ? item.nominal : -item.nominal),
       0,
     );
   const labelBulan = `${new Date(`${periode}-01T00:00:00`).toLocaleDateString("id-ID", {
@@ -135,19 +135,15 @@ export async function exportCashflowToExcel(transaksi: TransaksiKas[] = [], bula
   });
 
   worksheet.getCell(`F${summaryStart}`).value = "Saldo Akhir";
-  worksheet.getCell(`F${summaryStart + 1}`).value = "Kas Beredar";
-  worksheet.getCell(`F${summaryStart + 2}`).value = "Saldo Kas Sebenarnya";
+  worksheet.getCell(`F${summaryStart + 1}`).value = "Kas Beredar (Operasional)";
   worksheet.getCell(`K${summaryStart}`).value = { formula: `K${totalRow}` };
   worksheet.getCell(`K${summaryStart + 1}`).value = sorted
     .filter((t) => t.jenis === "kas_beredar")
     .reduce((sum, t) => sum + t.nominal, 0);
-  worksheet.getCell(`K${summaryStart + 2}`).value = { formula: `K${summaryStart}-K${summaryStart + 1}` };
   ["K"].forEach((col) => {
-    for (let r = summaryStart; r <= summaryStart + 2; r++) {
+    for (let r = summaryStart; r <= summaryStart + 1; r++) {
       worksheet.getCell(`${col}${r}`).numFmt = "#,##0";
-      if (r >= summaryStart + 2) {
-        worksheet.getCell(`${col}${r}`).font = { bold: true };
-      }
+      worksheet.getCell(`${col}${r}`).font = { bold: true };
     }
   });
 

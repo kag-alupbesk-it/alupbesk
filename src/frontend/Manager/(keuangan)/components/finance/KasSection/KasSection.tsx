@@ -274,7 +274,7 @@ function ModalCetakNota({
             </div>
             <div className="text-right">
               <p className="text-sm font-bold uppercase text-slate-900">
-                {transaksi.jenis === "kas_masuk" ? "KWITANSI KAS MASUK" : "NOTA KAS KELUAR"}
+                {transaksi.jenis === "kas_masuk" ? "KWITANSI KAS MASUK" : transaksi.jenis === "kas_keluar" ? "NOTA KAS KELUAR" : "NOTA KAS BEREDAR"}
               </p>
               <p className="text-xs font-mono text-slate-600 mt-0.5">No: {transaksi.noNota || transaksi.id}</p>
               <p className="text-xs text-slate-600">Tanggal: {formatTanggal(transaksi.tanggal)}</p>
@@ -792,7 +792,7 @@ export function KasSection() {
         </div>
 
         <div className={`mt-4 ${s.tableWrap}`}>
-          <table className={`${s.table} min-w-[900px] xl:min-w-0`}>
+          <table className={`${s.table} min-w-[1000px] xl:min-w-0`}>
             <thead className={s.tableHead}>
               <tr>
                 <th scope="col" className={s.th}>
@@ -817,6 +817,9 @@ export function KasSection() {
                   Keluar
                 </th>
                 <th scope="col" className={`${s.th} text-right`}>
+                  Beredar
+                </th>
+                <th scope="col" className={`${s.th} text-right`}>
                   Saldo
                 </th>
                 <th scope="col" className={`${s.th} text-right`}>
@@ -829,7 +832,7 @@ export function KasSection() {
                 <td colSpan={5} className={`${s.td} font-semibold text-on-surface`}>
                   Saldo Bulan Lalu
                 </td>
-                <td colSpan={2} className={s.tdMuted} />
+                <td colSpan={3} className={s.tdMuted} />
                 <td className={`${s.td} text-right font-bold text-on-surface`}>{formatRp(ledger.saldoAwal)}</td>
                 <td className={s.td} />
               </tr>
@@ -851,6 +854,9 @@ export function KasSection() {
                   </td>
                   <td className={`${s.td} text-right font-semibold text-error`}>
                     {item.jenis === "kas_keluar" ? formatRp(item.nominal) : "-"}
+                  </td>
+                  <td className={`${s.td} text-right font-semibold text-warning`}>
+                    {item.jenis === "kas_beredar" ? formatRp(item.nominal) : "-"}
                   </td>
                   <td className={`${s.td} text-right font-bold text-on-surface`}>{formatRp(item.saldo)}</td>
                   <td className={`${s.td} text-right`}>
@@ -901,7 +907,7 @@ export function KasSection() {
               ))}
               {barisTampil.length === 0 && (
                 <tr>
-                  <td colSpan={9} className={s.emptyRow}>
+                  <td colSpan={10} className={s.emptyRow}>
                     Tidak ada transaksi yang cocok dengan filter.
                   </td>
                 </tr>
@@ -914,6 +920,7 @@ export function KasSection() {
                 </td>
                 <td className={`${s.td} text-right font-bold text-success`}>{formatRp(ledger.totalMasuk)}</td>
                 <td className={`${s.td} text-right font-bold text-error`}>{formatRp(ledger.totalKeluar)}</td>
+                <td className={`${s.td} text-right font-bold text-warning`}>{formatRp(ledger.totalBeredar)}</td>
                 <td className={`${s.td} text-right font-bold text-on-surface`}>{formatRp(ledger.saldoAkhir)}</td>
                 <td className={s.td} />
               </tr>
