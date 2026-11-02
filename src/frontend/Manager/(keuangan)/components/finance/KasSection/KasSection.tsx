@@ -44,6 +44,9 @@ function FormKas() {
   const [kategori, setKategori] = useState<string>((KATEGORI_BIAYA as readonly string[])[0] ?? "");
   const [person, setPerson] = useState("");
   const [pos, setPos] = useState("");
+  const [noNota, setNoNota] = useState("");
+  const [bukti, setBukti] = useState("");
+  const [uploading, setUploading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const JENIS_BE = JENIS_TRANSAKSI.filter((item) => item !== "kas_beredar");
@@ -51,6 +54,30 @@ function FormKas() {
   const gantiJenis = (berikutnya: JenisTransaksi) => {
     setJenis(berikutnya);
     setKategori((KATEGORI_BIAYA as readonly string[])[0] ?? "");
+  };
+
+  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const res = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.error?.message || "Gagal mengunggah bukti nota.");
+      }
+      setBukti(data.data.url);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Gagal mengunggah file.");
+    } finally {
+      setUploading(false);
+      e.target.value = "";
+    }
   };
 
   const submit = (event: React.FormEvent<HTMLFormElement>) => {
@@ -72,8 +99,8 @@ function FormKas() {
       posProyek: pos,
       person: person.trim(),
       nominal,
-      noNota: "",
-      bukti: "",
+      noNota: noNota.trim(),
+      bukti,
       sumber: "manual",
       refId: "",
     });
@@ -81,6 +108,8 @@ function FormKas() {
     setNominal(0);
     setPerson("");
     setPos("");
+    setNoNota("");
+    setBukti("");
     setErrors({});
   };
 
@@ -88,8 +117,7 @@ function FormKas() {
     <form onSubmit={submit} className={s.card} noValidate>
       <h2 className={s.sectionTitle}>Catat Transaksi Kas</h2>
       <p className={s.sectionSubtitle}>
-        Pilih jenis transaksi, lalu lengkapi tanggal, deskripsi, jumlah, kategori, dan nama pihak (penerima untuk
-        pengeluaran).
+        Pilih jenis transaksi, lalu lengkapi tanggal, deskripsi, jumlah, kategori, nama pihak, nomor nota, dan lampiran bukti nota.
       </p>
 
       <fieldset className="mt-4">
@@ -170,6 +198,16 @@ function FormKas() {
           )}
         </label>
 
+        <label className={s.fieldLabel}>
+          No. Nota (Opsional)
+          <input
+            value={noNota}
+            onChange={(event) => setNoNota(event.target.value)}
+            placeholder="cth: INV/001 atau TRX-01"
+            className={s.input}
+          />
+        </label>
+
         <label className={`${s.fieldLabel} sm:col-span-2 lg:col-span-2 2xl:col-span-1`}>
           Deskripsi
           <input
@@ -210,6 +248,22 @@ function FormKas() {
           onChange={(value) => setPos(value)}
           onTambah={(value) => tambahOpsi("pos", value)}
         />
+
+        <div className="flex flex-col gap-1.5">
+          <span className={s.fieldLabel}>Bukti Nota / Lampiran</span>
+          <div className="flex items-center gap-2">
+            <label className={`${s.secondaryButton} cursor-pointer inline-flex items-center gap-1.5 text-xs py-2 px-3`}>
+              <Upload className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+              <span>{uploading ? "Mengunggah..." : bukti ? "Ganti Nota" : "Unggah Nota"}</span>
+              <input type="file" accept="image/*,.pdf" onChange={handleUpload} disabled={uploading} className="hidden" />
+            </label>
+            {bukti && (
+              <span className="text-xs font-semibold text-success truncate max-w-[140px]" title={bukti}>
+                Nota terlampir ✓
+              </span>
+            )}
+          </div>
+        </div>
       </div>
 
       <div className="mt-5 flex justify-end">
@@ -231,6 +285,39 @@ function ModalBukti({
   transaksi: TransaksiKas;
   onTutup: () => void;
 }) {
+  const readOnly = useReadOnly();
+  const { tambahBukti } = useFinance();
+  const [uploading, setUploading] = useState(false);
+  const [errorUpload, setErrorUpload] = useState("");
+
+  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    setErrorUpload("");
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const res = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.error?.message || "Gagal mengunggah bukti nota.");
+      }
+      tambahBukti(transaksi.id, data.data.url);
+    } catch (err) {
+      setErrorUpload(err instanceof Error ? err.message : "Gagal mengunggah file.");
+    } finally {
+      setUploading(false);
+      e.target.value = "";
+    }
+  };
+
+  const isImageUrl = (url: string) => {
+    return /\.(jpg|jpeg|png|webp|gif)(\?.*)?$/i.test(url) || url.startsWith("http://") || url.startsWith("https://") || url.startsWith("/");
+  };
 
   return (
     <div className={s.modalOverlay} onMouseDown={(event) => event.target === event.currentTarget && onTutup()}>
@@ -278,14 +365,38 @@ function ModalBukti({
           </dl>
 
           {transaksi.bukti ? (
-            <div className={`${s.cardCompact} flex items-center gap-3`}>
-              <span aria-hidden="true" className={`${s.iconHero} text-secondary`}>
-                image
-              </span>
-              <div className="min-w-0">
-                <p className={s.detailLabel}>Bukti terlampir</p>
-                <p className="truncate text-xs font-bold text-on-surface">{transaksi.bukti}</p>
-              </div>
+            <div className="space-y-3">
+              {isImageUrl(transaksi.bukti) ? (
+                <div className="overflow-hidden rounded-2xl border border-outline/30 bg-surface-variant/20 flex justify-center p-2">
+                  <img
+                    src={transaksi.bukti}
+                    alt="Bukti Nota"
+                    className="max-h-[380px] w-auto max-w-full object-contain rounded-xl"
+                  />
+                </div>
+              ) : (
+                <div className={`${s.cardCompact} flex items-center gap-3`}>
+                  <span aria-hidden="true" className={`${s.iconHero} text-secondary`}>
+                    description
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <p className={s.detailLabel}>Dokumen terlampir</p>
+                    <a href={transaksi.bukti} target="_blank" rel="noreferrer" className="truncate text-xs font-bold text-primary hover:underline block">
+                      {transaksi.bukti}
+                    </a>
+                  </div>
+                </div>
+              )}
+              {!readOnly && (
+                <div className="flex items-center justify-between gap-3 pt-2">
+                  <p className="text-xs text-on-surface-variant">Ingin mengganti foto nota?</p>
+                  <label className={s.secondaryButton + " cursor-pointer inline-flex items-center gap-1.5"}>
+                    <Upload className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                    <span>{uploading ? "Mengunggah..." : "Ganti Nota"}</span>
+                    <input type="file" accept="image/*,.pdf" onChange={handleUpload} disabled={uploading} className="hidden" />
+                  </label>
+                </div>
+              )}
             </div>
           ) : (
             <div className={s.emptyState}>
@@ -293,10 +404,21 @@ function ModalBukti({
                 no_photography
               </span>
               <p className="text-xs font-bold text-on-surface">Bukti nota belum dilampirkan</p>
-              <p className={`${s.sectionSubtitle} max-w-sm`}>
-                Unggah foto atau scan nota kas belum tersedia di backend.
+              <p className={`${s.sectionSubtitle} max-w-sm mb-3`}>
+                Unggah foto atau scan nota kas untuk melengkapi dokumentasi transaksi.
               </p>
+              {!readOnly && (
+                <label className={s.primaryButton + " cursor-pointer inline-flex items-center gap-1.5 mt-2"}>
+                  <Upload className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                  <span>{uploading ? "Mengunggah..." : "Unggah Bukti Nota"}</span>
+                  <input type="file" accept="image/*,.pdf" onChange={handleUpload} disabled={uploading} className="hidden" />
+                </label>
+              )}
             </div>
+          )}
+
+          {errorUpload && (
+            <p role="alert" className="text-xs text-error font-medium">{errorUpload}</p>
           )}
         </div>
       </section>
@@ -320,9 +442,35 @@ function ModalEditTransaksi({
   const [person, setPerson] = useState(transaksi.person);
   const [pos, setPos] = useState(transaksi.posProyek);
   const [noNota, setNoNota] = useState(transaksi.noNota);
+  const [bukti, setBukti] = useState(transaksi.bukti);
+  const [uploading, setUploading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const JENIS_BE = JENIS_TRANSAKSI.filter((item) => item !== "kas_beredar");
+
+  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const res = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.error?.message || "Gagal mengunggah bukti nota.");
+      }
+      setBukti(data.data.url);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Gagal mengunggah file.");
+    } finally {
+      setUploading(false);
+      e.target.value = "";
+    }
+  };
 
   const submit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -343,6 +491,7 @@ function ModalEditTransaksi({
       person: person.trim(),
       nominal,
       noNota: noNota.trim(),
+      bukti,
     });
     onTutup();
   };
@@ -494,6 +643,22 @@ function ModalEditTransaksi({
               onChange={(value) => setPos(value)}
               onTambah={(value) => tambahOpsi("pos", value)}
             />
+
+            <div className="flex flex-col gap-1.5 sm:col-span-2">
+              <span className={s.fieldLabel}>Bukti Nota / Lampiran</span>
+              <div className="flex items-center gap-2">
+                <label className={`${s.secondaryButton} cursor-pointer inline-flex items-center gap-1.5 text-xs py-2 px-3`}>
+                  <Upload className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                  <span>{uploading ? "Mengunggah..." : bukti ? "Ganti Nota" : "Unggah Nota"}</span>
+                  <input type="file" accept="image/*,.pdf" onChange={handleUpload} disabled={uploading} className="hidden" />
+                </label>
+                {bukti && (
+                  <span className="text-xs font-semibold text-success truncate max-w-[220px]" title={bukti}>
+                    Nota terlampir ✓
+                  </span>
+                )}
+              </div>
+            </div>
           </div>
 
           <div className="flex justify-end gap-2 pt-2">
