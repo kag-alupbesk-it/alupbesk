@@ -2,7 +2,7 @@ import { KeuanganDashboard } from "@/frontend/Manager/(keuangan)/components/fina
 
 export const metadata = {
   title: "Keuangan | ALUPBESK",
-  description: "Dashboard keuangan dengan tab kas, grafik, termin, dan payroll",
+  description: "Dashboard keuangan dengan tab kas, grafik, dan termin",
 };
 
 export default function Page() {

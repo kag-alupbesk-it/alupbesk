@@ -51,6 +51,7 @@ export type FinanceState = {
 
 type FinanceAction =
   | { type: "tambah-transaksi"; payload: Omit<TransaksiKas, "id"> }
+  | { type: "ubah-transaksi"; payload: TransaksiKas }
   | { type: "hapus-transaksi"; id: string }
   | { type: "tambah-invoice"; payload: Omit<Invoice, "id"> }
   | { type: "ubah-invoice"; payload: Invoice }
@@ -270,6 +271,15 @@ function reducer(state: FinanceState, action: FinanceAction): FinanceState {
         seq: state.seq + 1,
         transaksi: [transaksi, ...state.transaksi],
         toast: `${transaksi.jenis === "kas_masuk" ? "Kas masuk" : transaksi.jenis === "kas_keluar" ? "Kas keluar" : "Kas beredar"} ${transaksi.noNota || transaksi.id} dicatat.`,
+      };
+    }
+    case "ubah-transaksi": {
+      const ada = state.transaksi.some((item) => item.id === action.payload.id);
+      if (!ada) return state;
+      return {
+        ...state,
+        transaksi: state.transaksi.map((item) => (item.id === action.payload.id ? action.payload : item)),
+        toast: `Transaksi ${action.payload.noNota || action.payload.id} diperbarui.`,
       };
     }
     case "hapus-transaksi":
@@ -589,6 +599,7 @@ type FinanceContextValue = {
   opsiPos: PosProyek[];
   tambahOpsi: (field: FieldOpsi, nilai: string) => void;
   tambahTransaksi: (payload: Omit<TransaksiKas, "id">) => void;
+  ubahTransaksi: (payload: TransaksiKas) => void;
   hapusTransaksi: (id: string) => void;
   tambahInvoice: (payload: Omit<Invoice, "id">) => void;
   ubahInvoice: (payload: Invoice) => void;
@@ -692,6 +703,10 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
     (payload: Omit<TransaksiKas, "id">) => dispatch({ type: "tambah-transaksi", payload }),
     [],
   );
+  const ubahTransaksi = useCallback(
+    (payload: TransaksiKas) => dispatch({ type: "ubah-transaksi", payload }),
+    [],
+  );
   const hapusTransaksi = useCallback((id: string) => dispatch({ type: "hapus-transaksi", id }), []);
   const tambahInvoice = useCallback(
     (payload: Omit<Invoice, "id">) => dispatch({ type: "tambah-invoice", payload }),
@@ -786,6 +801,7 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
       opsiJabatan: gabungOpsi(JABATAN_AWAL, state.opsiJabatan),
       tambahOpsi,
       tambahTransaksi,
+      ubahTransaksi,
       hapusTransaksi,
       tambahInvoice,
       ubahInvoice,
@@ -810,6 +826,7 @@ export function FinanceProvider({ children }: { children: ReactNode }) {
     state,
     loadedFromApi,
     tambahTransaksi,
+    ubahTransaksi,
     hapusTransaksi,
     tambahInvoice,
     ubahInvoice,
