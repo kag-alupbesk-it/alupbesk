@@ -17,6 +17,7 @@ export const financeNavigationItems = [
   { key: "kas", permissionPath: "/keuangan", label: "Kas", labelKey: "cash", icon: "payments" },
   { key: "grafik", permissionPath: "/keuangan", label: "Grafik", labelKey: "charts", icon: "show_chart" },
   { key: "termin", permissionPath: "/keuangan", label: "Termin", labelKey: "terms", icon: "receipt_long" },
+  { key: "payroll", permissionPath: "/keuangan", label: "Payroll", labelKey: "payroll", icon: "badge" },
   { key: "audit", permissionPath: "/keuangan", label: "Riwayat Aktivitas", labelKey: "activityHistory", icon: "history" },
 ] as const satisfies readonly RoleNavigationItem[];
 

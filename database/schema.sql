@@ -1196,6 +1196,40 @@ end;
 $$;
 
 -- =====================================================================
+-- MODUL PENGGAJIAN (PAYROLL) & ABSENSI
+-- =====================================================================
+create table if not exists public.employees (
+    id uuid primary key default gen_random_uuid(),
+    name text not null,
+    default_daily_wage numeric default 0,
+    hourly_overtime_rate numeric default 0,
+    created_at timestamptz default now()
+);
+
+create table if not exists public.payroll_periods (
+    id uuid primary key default gen_random_uuid(),
+    start_date date not null,
+    end_date date not null,
+    status text check (status in ('Draft', 'Finalized')) default 'Draft',
+    total_amount numeric default 0,
+    created_at timestamptz default now()
+);
+
+create table if not exists public.attendance_records (
+    id uuid primary key default gen_random_uuid(),
+    employee_id uuid references public.employees(id) on delete cascade,
+    period_id uuid references public.payroll_periods(id) on delete cascade,
+    date date not null,
+    day_name text,
+    is_present boolean default true,
+    overtime_hours numeric default 0,
+    departure_time text,
+    project_name text,
+    daily_salary numeric default 0,
+    meal_allowance numeric default 0
+);
+
+-- =====================================================================
 -- CATATAN
 -- =====================================================================
 -- Akses tabel data dilakukan melalui Route Handler server dengan service role.
