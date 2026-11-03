@@ -42,13 +42,6 @@ const timelineSteps: TimelineStep[] = [
   { label: "Siap Kirim", helper: "Serah terima order", icon: Truck },
 ];
 
-function nextProjectStatus(status: ProjectStatus) {
-  if (status === "siap_produksi") return "Mulai Produksi";
-  if (status === "produksi") return null; // Produksi melakukan handoff langsung ke lapangan
-  if (status === "siap_kirim") return "Tandai Selesai";
-  return null;
-}
-
 function Timeline({ order }: { order: PMOrder }) {
   const isFinished = order.projectStatus === "selesai";
   return (
@@ -87,7 +80,7 @@ function DetailLabel({ icon: Icon, label, value }: { icon: LucideIcon; label: st
 }
 
 export function PMOrderDetail({ orderId }: { orderId: string }) {
-  const { orders, advanceOrder } = usePMOrders();
+  const { orders } = usePMOrders();
   const pathname = usePathname();
   const readOnly = useReadOnly();
   const isOwner = pathname.startsWith("/owner") || readOnly;
@@ -95,7 +88,6 @@ export function PMOrderDetail({ orderId }: { orderId: string }) {
   const backLabel = isOwner ? "Kembali ke overview" : "Kembali ke dashboard";
 
   const order = orders.find((currentOrder) => currentOrder.id === orderId);
-  const nextAction = order ? nextProjectStatus(order.projectStatus) : null;
 
   if (!order) {
     return (
@@ -124,22 +116,11 @@ export function PMOrderDetail({ orderId }: { orderId: string }) {
             <span>{order.contractorName}</span><span className="text-outline">•</span><span>Order ID {order.id}</span>
           </div>
         </div>
-        {!isOwner && (
+        {!isOwner && order.projectStatus === "menunggu_acc" && (
           <div className="flex flex-wrap items-center gap-2.5">
-            {order.projectStatus === "menunggu_acc" ? (
-              <Link href="/pm/approval" className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-secondary px-4 py-2.5 text-xs font-extrabold text-primary shadow-lg shadow-secondary/15 transition-colors hover:brightness-105 md:min-h-0">
-                <Clock3 size={14} /> Review Gambar
-              </Link>
-            ) : nextAction ? (
-              <button type="button" onClick={() => advanceOrder(order.id)} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-secondary px-4 py-2.5 text-xs font-extrabold text-primary shadow-lg shadow-secondary/15 transition-colors hover:brightness-105 md:min-h-0">
-                {order.projectStatus === "siap_produksi" ? <Play size={14} /> : <CheckCircle2 size={14} />}
-                {nextAction}
-              </button>
-            ) : order.projectStatus === "produksi" ? (
-              <span className="inline-flex items-center gap-2 rounded-xl border border-secondary/30 bg-secondary/10 px-4 py-2.5 text-xs font-bold text-secondary">
-                <Factory size={14} /> Menunggu tim produksi meneruskan ke lapangan
-              </span>
-            ) : null}
+            <Link href="/pm/approval" className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-secondary px-4 py-2.5 text-xs font-extrabold text-primary shadow-lg shadow-secondary/15 transition-colors hover:brightness-105 md:min-h-0">
+              <Clock3 size={14} /> Review Gambar
+            </Link>
           </div>
         )}
       </section>

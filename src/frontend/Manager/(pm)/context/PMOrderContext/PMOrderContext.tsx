@@ -28,7 +28,6 @@ interface PMOrderContextValue {
   addOrder: (input: NewPMOrderInput) => Promise<PMOrder | null>;
   approveOrder: (id: string) => Promise<boolean>;
   requestRevision: (id: string, note: string) => Promise<boolean>;
-  advanceOrder: (id: string) => Promise<boolean>;
 }
 
 const PMOrderContext = createContext<PMOrderContextValue | undefined>(undefined);
@@ -117,10 +116,6 @@ export function PMOrderProvider({ children }: { children: ReactNode }) {
       applyMutation(id, { action: "revision", note }),
     [applyMutation],
   );
-  const advanceOrder = useCallback(
-    (id: string) => applyMutation(id, { action: "advance" }),
-    [applyMutation],
-  );
 
   const value = useMemo(
     () => ({
@@ -131,7 +126,6 @@ export function PMOrderProvider({ children }: { children: ReactNode }) {
       addOrder,
       approveOrder,
       requestRevision,
-      advanceOrder,
     }),
     [
       orders,
@@ -141,7 +135,6 @@ export function PMOrderProvider({ children }: { children: ReactNode }) {
       addOrder,
       approveOrder,
       requestRevision,
-      advanceOrder,
     ],
   );
 

@@ -9,7 +9,6 @@ const mutationSchema = z.discriminatedUnion("action", [
     action: z.literal("revision"),
     note: z.string().trim().min(1).max(2000),
   }),
-  z.object({ action: z.literal("advance") }),
   z.object({ action: z.literal("handoff") }),
   z.object({
     action: z.literal("production-stage"),
@@ -105,11 +104,9 @@ export async function PATCH(
         ? `Menyetujui order ${id}`
         : parsed.data.action === "revision"
           ? `Meminta revisi order ${id}: ${parsed.data.note}`
-          : parsed.data.action === "advance"
-            ? `Memajukan tahap order ${id}`
-            : parsed.data.action === "handoff"
-              ? `Meneruskan order ${id} ke tim lapangan`
-              : `Mengubah tahap produksi order ${id} menjadi ${parsed.data.stage}`;
+          : parsed.data.action === "handoff"
+            ? `Meneruskan order ${id} ke tim lapangan`
+            : `Mengubah tahap produksi order ${id} menjadi ${parsed.data.stage}`;
     recordAudit(access.profile, "EDIT", "Order Proyek", actionDetails);
     return Response.json(
       { success: true, data: result.order },

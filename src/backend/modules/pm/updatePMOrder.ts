@@ -5,12 +5,6 @@ import { getTechnicalDrawingUrls } from "./drawings/getTechnicalDrawingUrls";
 import { ensureFieldDeliveryForOrder } from "@/backend/modules/field/ensureFieldDeliveryForOrder";
 import { sendPushToRoles } from "@/services/push/send";
 
-const NEXT_STATUS: Partial<Record<PMProjectStatus, PMProjectStatus>> = {
-  siap_produksi: "produksi",
-  produksi: "siap_kirim",
-  siap_kirim: "selesai",
-};
-
 const PRODUCTION_STAGES: PMProductionStage[] = [
   "pemotongan",
   "perakitan",
@@ -88,26 +82,7 @@ export async function updatePMOrder(
       revision_count: Number(current.revision_count) + 1,
       last_activity: "Permintaan revisi dicatat",
     };
-  } else if (mutation.action === "advance") {
-    const nextStatus = NEXT_STATUS[current.project_status as PMProjectStatus];
-    if (!nextStatus || current.drawing_status !== "acc_gambar") {
-      return {
-        ok: false,
-        code: "INVALID_TRANSITION",
-        message: "Tahap order tidak dapat dilanjutkan sebelum gambar di-ACC.",
-      };
-    }
-    changes = {
-      project_status: nextStatus,
-      stage: nextStatus === "produksi" ? 2 : 3,
-      ...(nextStatus === "siap_kirim" ? { production_stage: "siap_kirim" } : {}),
-      last_activity:
-        nextStatus === "produksi"
-          ? "Produksi dimulai"
-          : nextStatus === "siap_kirim"
-            ? "Produksi selesai, order diteruskan ke tim lapangan"
-            : "Proyek ditandai selesai",
-    };
+
   } else if (mutation.action === "handoff") {
     const stage = current.production_stage as PMProductionStage;
     if (
