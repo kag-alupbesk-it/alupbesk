@@ -3,7 +3,7 @@ import type { AppRole } from "@/backend/auth/roles";
 import type { RoleRequest } from "./types";
 
 const requestableRoles = new Set<AppRole>([
-  "marketing", "gudang", "keuangan", "proyek", "field", "produksi",
+  "marketing", "gudang", "keuangan", "proyek", "field", "produksi", "manager",
 ]);
 
 function isDuplicateKey(error: { code?: string } | null) {
