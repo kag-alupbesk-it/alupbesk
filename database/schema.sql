@@ -1047,7 +1047,7 @@ begin
       from public.users
      where id = reviewer_id_input
        and active = true;
-    if reviewer_role not in ('owner', 'manager') then
+    if reviewer_role is distinct from 'owner' then
         raise exception 'ROLE_FORBIDDEN';
     end if;
 
