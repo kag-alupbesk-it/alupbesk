@@ -52,7 +52,12 @@ export default function RootLayout({
     // suppressHydrationWarning: script inline mengubah class="dark" pada <html>
     // sebelum React hydrate, jadi React harus menerima nilai yang sudah ada di DOM
     // alih-alih menandai perbedaan atribut sebagai error.
-    <html lang="en" className="dark scroll-smooth" suppressHydrationWarning>
+    <html
+      lang="en"
+      className="dark scroll-smooth"
+      data-scroll-behavior="smooth"
+      suppressHydrationWarning
+    >
       <head>
         {/*
          * Script anti-flicker tema: jalan sebelum CSS pertama dirender sehingga

@@ -6,8 +6,8 @@ import { notifyVerifiedRoleRequest } from "@/backend/modules/roleRequests";
 
 export const dynamic = "force-dynamic";
 
-// Role yang boleh diminta lewat formulir publik. Owner dan Manager sengaja
-// tidak disertakan agar endpoint ini tidak bisa dipakai menaikkan hak akses.
+// Role yang boleh diajukan lewat formulir publik. Semua pengajuan tetap
+// berstatus PENDING dan tidak memberi akses sebelum disetujui.
 const requestableRoles = [
   "keuangan",
   "proyek",

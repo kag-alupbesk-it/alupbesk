@@ -870,7 +870,7 @@ begin
         return new;
     end if;
     if requested_role_text not in (
-        'marketing', 'gudang', 'keuangan', 'proyek', 'field', 'produksi', 'drafter'
+        'marketing', 'gudang', 'keuangan', 'proyek', 'field', 'produksi', 'drafter', 'manager'
     ) then
         raise exception 'INVALID_REQUESTED_ROLE';
     end if;
