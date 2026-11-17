@@ -15,6 +15,13 @@ function matchesPath(pathname: string, prefix: string): boolean {
 }
 
 const READ_ONLY_METHODS = new Set(["GET", "HEAD", "OPTIONS"]);
+const OWNER_ADMIN_PATHS = [
+  "/owner/users",
+  "/api/owner/users",
+  "/owner/role-requests",
+  "/api/owner/role-requests",
+  "/api/owner/storage/cleanup",
+];
 
 // Modul divisi tempat Owner hanya boleh memantau (read-only).
 const DIVISION_ROOTS = ["keuangan", "gudang", "marketing", "pm", "produksi", "field", "drafter"];
@@ -59,6 +66,12 @@ export function roleCanAccess(
   const path = adminRolePath ? pathname.slice("/admin".length) : pathname;
   const elevated = role === "manager" || role === "owner";
 
+  if (
+    role === "manager" &&
+    OWNER_ADMIN_PATHS.some((prefix) => matchesPath(path, prefix))
+  ) {
+    return false;
+  }
   if (ownerReadOnly(role, path, method)) return false;
 
   if (matchesPath(path, "/api/upload")) {

@@ -6,6 +6,7 @@ import { roleCanAccess, type AppRole } from "@/backend/auth/roles";
 const ADMIN_ROLE_ROUTES = [
   "manager",
   "owner",
+  "drafter",
   "gudang",
   "keuangan",
   "pm",
@@ -85,6 +86,7 @@ function requiresRole(pathname: string, method: string): boolean {
     "/api/owner",
     "/api/gudang",
     "/api/keuangan",
+    "/api/drafter",
     "/api/pm",
     "/api/produksi",
     "/api/field",
@@ -101,6 +103,7 @@ function requiresRole(pathname: string, method: string): boolean {
     [
       "/manager",
       "/owner",
+      "/drafter",
       "/gudang",
       "/keuangan",
       "/pm",

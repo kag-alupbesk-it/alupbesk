@@ -8,8 +8,8 @@ export async function reviewRoleRequest(
   reviewerRole: AppRole,
   reviewerId: string,
 ): Promise<void> {
+  if (reviewerRole !== "owner") throw new Error("ROLE_FORBIDDEN");
   if (!db) throw new Error("DATABASE_UNAVAILABLE");
-  if (reviewerRole !== "owner" && reviewerRole !== "manager") throw new Error("ROLE_FORBIDDEN");
   const { error } = await db.rpc("review_role_request", {
     request_id_input: requestId,
     decision_input: decision,
