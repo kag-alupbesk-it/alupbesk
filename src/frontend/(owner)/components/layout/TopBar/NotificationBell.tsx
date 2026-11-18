@@ -10,6 +10,7 @@ import {
 import { usePopover } from "./usePopover";
 import { fetchNotificationTasks, type NotificationTask } from "@/frontend/shared/notifications/notifications";
 import { getSupabaseBrowserClient } from "@/services/supabaseBrowser";
+import { useLanguage } from "@/frontend/shared/i18n/LanguageProvider";
 
 const panelClass =
   "fixed top-16 left-4 right-4 z-[100] max-h-[70vh] overflow-y-auto rounded-xl border border-outline/40 bg-surface-container shadow-2xl p-4 text-left sm:absolute sm:left-auto sm:right-0 sm:top-full sm:mt-2 sm:w-72 sm:max-h-96";
@@ -33,10 +34,13 @@ function saveReadIds(ids: Set<string>) {
 }
 
 export default function NotificationBell() {
+  const { t } = useLanguage();
   const { open, toggle, setOpen, ref } = usePopover();
   const [status, setStatus] = useState<PushStatus | null>(null);
   const [pending, setPending] = useState(false);
-  const [message, setMessage] = useState("");
+  const [message, setMessage] = useState<
+    "commonNotificationsDisabled" | "commonNotificationsEnabled" | "commonNotificationsUnavailable" | ""
+  >("");
   const [tasks, setTasks] = useState<NotificationTask[]>([]);
   const [readIds, setReadIds] = useState<Set<string>>(() => getReadIds());
   const [newTask, setNewTask] = useState<NotificationTask | null>(null);
@@ -116,13 +120,11 @@ export default function NotificationBell() {
     try {
       if (status.subscribed) {
         await unsubscribePush();
-        setMessage("Notifikasi dimatikan di perangkat ini.");
+        setMessage("commonNotificationsDisabled");
       } else {
         const ok = await subscribePush();
         setMessage(
-          ok
-            ? "Notifikasi aktif. Anda akan menerima pemberitahuan penting."
-            : "Notifikasi tidak dapat diaktifkan. Cek izin browser.",
+          ok ? "commonNotificationsEnabled" : "commonNotificationsUnavailable",
         );
       }
       await refresh();
@@ -139,9 +141,9 @@ export default function NotificationBell() {
       <button
         type="button"
         onClick={toggle}
-        aria-label="Notifikasi"
+        aria-label={t("commonNotifications")}
         aria-expanded={open}
-        title="Notifikasi"
+        title={t("commonNotifications")}
         className="text-on-surface-variant hover:text-secondary transition-colors relative"
       >
         <span className="material-symbols-outlined text-[18px] lg:text-[20px]">
@@ -164,9 +166,9 @@ export default function NotificationBell() {
             <div className="min-w-0 flex-1">
               <p className="text-sm font-bold text-on-surface">{newTask.title}</p>
               <p className="mt-1 truncate text-xs text-on-surface-variant">{newTask.detail}</p>
-              <button type="button" onClick={() => { markAsRead(newTask.id); window.location.assign(newTask.href); setNewTask(null); }} className="mt-3 text-xs font-bold text-secondary">Buka tugas</button>
+              <button type="button" onClick={() => { markAsRead(newTask.id); window.location.assign(newTask.href); setNewTask(null); }} className="mt-3 text-xs font-bold text-secondary">{t("commonOpenTask")}</button>
             </div>
-            <button type="button" aria-label="Tutup notifikasi" onClick={() => { markAsRead(newTask.id); setNewTask(null); }} className="text-on-surface-variant">×</button>
+            <button type="button" aria-label={t("commonDismissNotification")} onClick={() => { markAsRead(newTask.id); setNewTask(null); }} className="text-on-surface-variant">×</button>
           </div>
         </div>
       )}
@@ -174,7 +176,7 @@ export default function NotificationBell() {
       {open && (
         <div className={panelClass}>
           <div className="flex items-center justify-between gap-2">
-            <p className="text-sm font-bold text-on-surface">Notifikasi</p>
+            <p className="text-sm font-bold text-on-surface">{t("commonNotifications")}</p>
             <div className="flex items-center gap-2">
               {unreadTasks.length > 0 && (
                 <button
@@ -182,13 +184,13 @@ export default function NotificationBell() {
                   onClick={markAllRead}
                   className="text-[10px] font-semibold text-secondary hover:underline"
                 >
-                  Tandai semua dibaca
+                  {t("commonMarkAllRead")}
                 </button>
               )}
               <button
                 type="button"
                 onClick={() => setOpen(false)}
-                aria-label="Tutup"
+                aria-label={t("commonClose")}
                 className="text-on-surface-variant hover:text-on-surface"
               >
                 <span className="material-symbols-outlined text-[18px]">close</span>
@@ -197,7 +199,7 @@ export default function NotificationBell() {
           </div>
 
           {tasks.length === 0 ? (
-            <p className="mt-3 text-xs text-on-surface-variant">Tidak ada tugas yang menunggu.</p>
+            <p className="mt-3 text-xs text-on-surface-variant">{t("commonNoPendingTasks")}</p>
           ) : (
             <ul className="mt-3 max-h-64 space-y-2 overflow-y-auto">
               {tasks.slice(0, 8).map((task) => (
@@ -215,23 +217,21 @@ export default function NotificationBell() {
           )}
 
           {status === null ? (
-            <p className="mt-3 text-xs text-on-surface-variant">Memeriksa status...</p>
+            <p className="mt-3 text-xs text-on-surface-variant">{t("commonCheckingStatus")}</p>
           ) : !status.supported ? (
             <p className="mt-3 text-xs leading-relaxed text-on-surface-variant">
-              Notifikasi push hanya aktif pada build production dan browser yang mendukung
-              Service Worker.
+              {t("commonPushProductionOnly")}
             </p>
           ) : status.permission === "denied" ? (
             <p className="mt-3 text-xs leading-relaxed text-on-surface-variant">
-              Izin notifikasi diblokir di browser. Aktifkan kembali lewat pengaturan situs
-              pada browser Anda.
+              {t("commonNotificationsBlocked")}
             </p>
           ) : (
             <>
               <p className="mt-3 text-xs leading-relaxed text-on-surface-variant">
                 {subscribed
-                  ? "Perangkat ini berlangganan pemberitahuan penting (pesanan, approval, dan pengiriman)."
-                  : "Aktifkan untuk menerima pemberitahuan pesanan, approval, dan pengiriman langsung di perangkat ini."}
+                  ? t("commonSubscribedDevice")
+                  : t("commonEnableNotificationsDescription")}
               </p>
               <button
                 type="button"
@@ -242,12 +242,16 @@ export default function NotificationBell() {
                 <span className="material-symbols-outlined text-[16px]">
                   {pending ? "progress_activity" : subscribed ? "notifications_off" : "notifications_active"}
                 </span>
-                {pending ? "Memproses..." : subscribed ? "Matikan notifikasi" : "Aktifkan notifikasi"}
+                {pending
+                  ? t("commonProcessing")
+                  : subscribed
+                    ? t("commonTurnOffNotifications")
+                    : t("commonTurnOnNotifications")}
               </button>
             </>
           )}
 
-          {message && <p className="mt-2 text-[11px] text-on-surface-variant">{message}</p>}
+          {message && <p className="mt-2 text-[11px] text-on-surface-variant">{t(message)}</p>}
         </div>
       )}
     </div>

@@ -7,6 +7,20 @@ import { fetchInventoryData } from "@/frontend/Manager/(manager)/services/invent
 import { gudangApi } from "@/services/api/index";
 import { statusFromStock } from "../helpers/helpers";
 import { filters, defaultForm } from "../data/data";
+import { useLanguage } from "@/frontend/shared/i18n/LanguageProvider";
+import type { MessageKey } from "@/frontend/shared/i18n/translations";
+
+const inventoryStatusKeys: Record<string, MessageKey> = {
+  Healthy: "managerInventoryHealthy",
+  Critical: "managerInventoryCritical",
+  "Out of Stock": "managerInventoryOutOfStock",
+};
+
+const categoryLabelKeys: Record<string, MessageKey> = {
+  "All Items": "managerAllItems",
+  Hardware: "managerHardware",
+  Proyek: "managerProjectCategory",
+};
 
 interface InventoryItem {
   id: string; sku: string; name: string; variant: string; category: string; icon: string;
@@ -14,6 +28,7 @@ interface InventoryItem {
 }
 
 export default function InventorySection() {
+  const { language, t } = useLanguage();
   const { data: apiData, refetch } = useApi(fetchInventoryData, { interval: 30000 });
   const [activeFilter, setActiveFilter] = useState("All Items");
   const [search, setSearch] = useState("");
@@ -28,6 +43,14 @@ export default function InventorySection() {
   const [editingIdx, setEditingIdx] = useState<number | null>(null);
   const [showMoreMenu, setShowMoreMenu] = useState<number | null>(null);
   const [form, setForm] = useState(defaultForm);
+  const statusLabel = (status: string) => {
+    const key = inventoryStatusKeys[status];
+    return key ? t(key) : status;
+  };
+  const categoryLabel = (category: string) => {
+    const key = categoryLabelKeys[category];
+    return key ? t(key) : category;
+  };
 
   const filteredItems = items.filter((item) => {
     const matchFilter = activeFilter === "All Items" || item.category === activeFilter;
@@ -59,7 +82,7 @@ export default function InventorySection() {
       setShowAddModal(false);
       setForm(defaultForm);
     } catch (reason) {
-      setError(reason instanceof Error ? reason.message : "Barang gagal ditambahkan.");
+      setError(reason instanceof Error ? reason.message : t("managerInventoryAddFailed"));
     }
   };
 
@@ -82,20 +105,20 @@ export default function InventorySection() {
       setShowEditModal(false);
       setEditingIdx(null);
     } catch (reason) {
-      setError(reason instanceof Error ? reason.message : "Stok gagal diperbarui.");
+      setError(reason instanceof Error ? reason.message : t("managerInventoryUpdateFailed"));
     }
   };
 
   const handleDelete = async (idx: number) => {
     const item = filteredItems[idx];
-    if (!confirm(`Hapus ${item.name}?`)) return;
+    if (!confirm(t("managerDeleteInventoryItem").replace("{name}", item.name))) return;
     setError("");
     try {
       await gudangApi.deleteItem(item.id);
       await reloadInventory();
       setShowMoreMenu(null);
     } catch (reason) {
-      setError(reason instanceof Error ? reason.message : "Barang gagal dihapus.");
+      setError(reason instanceof Error ? reason.message : t("managerInventoryDeleteFailed"));
     }
   };
 
@@ -112,13 +135,13 @@ export default function InventorySection() {
       await reloadInventory();
       setShowMoreMenu(null);
     } catch (reason) {
-      setError(reason instanceof Error ? reason.message : "Stok gagal ditambah.");
+      setError(reason instanceof Error ? reason.message : t("managerInventoryRestockFailed"));
     }
   };
 
   const handleExport = () => {
-    const header = "SKU,Name,Category,Stock,Threshold,Status\n";
-    const rows = items.map((i) => `${i.sku},${i.name},${i.category},${i.stock},${i.threshold},${i.status}`).join("\n");
+    const header = `${t("managerSkuId")},${t("managerProductName")},${t("managerCategory")},${t("managerStock")},${t("managerThreshold")},${t("managerStatus")}\n`;
+    const rows = items.map((i) => `${i.sku},${i.name},${categoryLabel(i.category)},${i.stock},${i.threshold},${statusLabel(i.status)}`).join("\n");
     const blob = new Blob([header + rows], { type: "text/csv" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -133,16 +156,16 @@ export default function InventorySection() {
       <header className={styles.header}>
         <div>
           <nav className={styles.breadcrumb}>
-            <span>Manufacturing</span><span className={`${styles.iconFont} ${styles.breadcrumbChevron}`}>chevron_right</span><span className={styles.breadcrumbActive}>Inventory</span>
+            <span>{t("managerManufacturing")}</span><span className={`${styles.iconFont} ${styles.breadcrumbChevron}`}>chevron_right</span><span className={styles.breadcrumbActive}>{t("inventory")}</span>
           </nav>
-          <h2 className={`${styles.headline} ${styles.pageTitle}`}>Inventory Management</h2>
+          <h2 className={`${styles.headline} ${styles.pageTitle}`}>{t("managerInventoryTitle")}</h2>
         </div>
         <div className={styles.headerActions}>
           <button onClick={handleExport} className={`${styles.pill} ${styles.exportButton}`}>
-            <span className={`${styles.iconFont} ${styles.iconInline}`}>download</span> Export CSV
+            <span className={`${styles.iconFont} ${styles.iconInline}`}>download</span> {t("managerExportCsv")}
           </button>
           <button onClick={() => { setForm(defaultForm); setShowAddModal(true); }} className={`${styles.pill} ${styles.addButton}`}>
-            <span className={`${styles.iconFont} ${styles.iconInline}`}>add_circle</span> Add New SKU
+            <span className={`${styles.iconFont} ${styles.iconInline}`}>add_circle</span> {t("managerAddSku")}
           </button>
         </div>
       </header>
@@ -151,9 +174,9 @@ export default function InventorySection() {
 
       <section className={styles.metricsGrid}>
         {[
-          { label: "Total Active SKUs", value: items.length.toString(), change: `${items.filter((i) => i.status === "Healthy").length} healthy`, icon: "inventory", alert: false },
-          { label: "Low Stock Alerts", value: items.filter((i) => i.status === "Critical" || i.status === "Out of Stock").length.toString(), change: items.filter((i) => i.status === "Critical" || i.status === "Out of Stock").length > 0 ? "Action Required" : "All clear", icon: "warning", alert: items.filter((i) => i.status === "Critical" || i.status === "Out of Stock").length > 0 },
-          { label: "Total Units", value: items.reduce((a, b) => a + b.stock, 0).toLocaleString(), change: `Across ${items.length} SKUs`, icon: "payments", alert: false },
+          { label: "managerTotalActiveSkus" as const, value: items.length.toString(), change: t("managerHealthyCount").replace("{count}", String(items.filter((i) => i.status === "Healthy").length)), icon: "inventory", alert: false },
+          { label: "managerLowStockAlerts" as const, value: items.filter((i) => i.status === "Critical" || i.status === "Out of Stock").length.toString(), change: items.some((i) => i.status === "Critical" || i.status === "Out of Stock") ? t("managerActionRequired") : t("managerAllClearStatus"), icon: "warning", alert: items.some((i) => i.status === "Critical" || i.status === "Out of Stock") },
+          { label: "managerTotalUnits" as const, value: items.reduce((a, b) => a + b.stock, 0).toLocaleString(language === "en" ? "en-US" : "id-ID"), change: t("managerAcrossSkus").replace("{count}", String(items.length)), icon: "payments", alert: false },
         ].map((m, idx) => { const changeColors = [styles.changeHealthy, styles.changeAlert, styles.changeNeutral]; return (
           <div key={m.label} className={`${styles.metricCard} ${m.alert ? styles.metricAlertCard : styles.metricNormalCard}`}>
             {m.alert && <div className={styles.metricAlertGlow} />}
@@ -169,7 +192,7 @@ export default function InventorySection() {
               ) : <span className={`${styles.changeText} ${changeColors[idx]}`}>{m.change}</span>}
             </div>
             <div>
-              <p className={styles.metricLabel}>{m.label}</p>
+              <p className={styles.metricLabel}>{t(m.label)}</p>
               <h3 className={`${styles.headline} ${styles.metricValue} ${m.alert ? styles.metricValueAlert : styles.metricValueNormal}`}>{m.value}</h3>
             </div>
           </div>
@@ -180,19 +203,19 @@ export default function InventorySection() {
         <div className={styles.tableHeader}>
           <div className={styles.searchWrapper}>
             <span className={`${styles.iconFont} ${styles.searchIcon}`}>search</span>
-            <input className={styles.searchInput} placeholder="Search by SKU or Product Name..." type="text" value={search} onChange={(e) => setSearch(e.target.value)} />
+            <input className={styles.searchInput} placeholder={t("managerInventorySearch")} type="text" value={search} onChange={(e) => setSearch(e.target.value)} />
           </div>
           <div className={styles.filterBar}>
-            <span className={styles.filterLabel}>Filter:</span>
+            <span className={styles.filterLabel}>{t("managerFilter")}:</span>
             {filters.map((f) => (
-              <button key={f} onClick={() => setActiveFilter(f)} className={`${styles.pill} ${styles.filterButton} ${activeFilter === f ? styles.filterActive : styles.filterInactive}`}>{f}</button>
+              <button key={f} onClick={() => setActiveFilter(f)} className={`${styles.pill} ${styles.filterButton} ${activeFilter === f ? styles.filterActive : styles.filterInactive}`}>{categoryLabel(f)}</button>
             ))}
           </div>
         </div>
         <div className={styles.mobileList}>
           {filteredItems.length === 0 && (
             <div className={`${styles.card} py-10 text-center text-xs text-on-surface-variant`}>
-              Tidak ada SKU yang cocok.
+              {t("managerNoMatchingSkus")}
             </div>
           )}
           {filteredItems.map((item, i) => {
@@ -209,19 +232,19 @@ export default function InventorySection() {
                   </div>
                   <div className={`${styles.statusRow} shrink-0 ${item.status === "Critical" ? `${item.statusColor} ${styles.statusCriticalRow}` : item.statusColor}`}>
                     <div className={`${styles.statusDot} ${item.barColor} ${item.status === "Critical" ? styles.statusDotPulse : ""}`} />
-                    <span className={styles.statusText}>{item.status}</span>
+                    <span className={styles.statusText}>{statusLabel(item.status)}</span>
                   </div>
                 </div>
                 <div className={styles.cardInfo}>
                   <div className="font-mono font-bold text-secondary">{item.sku}</div>
                   <div className="flex items-center gap-2">
-                    <span className="text-[10px] font-bold uppercase tracking-widest">Kategori</span>
-                    <span className={styles.categoryBadgePill}>{item.category}</span>
+                    <span className="text-[10px] font-bold uppercase tracking-widest">{t("managerCategory")}</span>
+                    <span className={styles.categoryBadgePill}>{categoryLabel(item.category)}</span>
                   </div>
                 </div>
                 <div className={styles.cardMeta}>
                   <span className={styles.stockLabel}>
-                    {item.stock.toLocaleString()} / {item.threshold.toLocaleString()} units
+                    {item.stock.toLocaleString(language === "en" ? "en-US" : "id-ID")} / {item.threshold.toLocaleString(language === "en" ? "en-US" : "id-ID")} {t("managerUnits")}
                   </span>
                   <span className={`${styles.pctText} ${pct < 30 ? item.statusColor : styles.pctNormal}`}>{pct}%</span>
                 </div>
@@ -229,14 +252,14 @@ export default function InventorySection() {
                   <div className={`${styles.progressFill} ${item.barColor}`} style={{ width: `${Math.max(pct, 2)}%` }} />
                 </div>
                 <div className={`${styles.cardActions} gap-2`}>
-                  <button onClick={() => handleOpenEdit(i)} className={`${styles.iconButton} w-full`}><span className={`${styles.iconAction} ${styles.iconInline}`}>edit</span></button>
-                  <button onClick={() => setShowMoreMenu(showMoreMenu === i ? null : i)} className={`${styles.iconButton} w-full`}><span className={`${styles.iconAction} ${styles.iconInline}`}>more_vert</span></button>
+                  <button aria-label={t("edit")} onClick={() => handleOpenEdit(i)} className={`${styles.iconButton} w-full`}><span className={`${styles.iconAction} ${styles.iconInline}`}>edit</span></button>
+                  <button aria-label={t("commonMoreActions")} onClick={() => setShowMoreMenu(showMoreMenu === i ? null : i)} className={`${styles.iconButton} w-full`}><span className={`${styles.iconAction} ${styles.iconInline}`}>more_vert</span></button>
                 </div>
                 {showMoreMenu === i && (
                   <div className={`${styles.moreMenuFade} mt-2 space-y-1`}>
-                    <button onClick={() => handleOpenEdit(i)} className={`${styles.menuItem} min-h-11 rounded-lg bg-surface-variant/40`}><span className={`${styles.iconAction} ${styles.iconMedium}`}>edit</span> Edit SKU</button>
-                    <button onClick={() => handleRestock(i)} className={`${styles.menuItem} min-h-11 rounded-lg bg-surface-variant/40`}><span className={`${styles.iconAction} ${styles.iconMedium}`}>add_box</span> Restock</button>
-                    <button onClick={() => handleDelete(i)} className={`${styles.menuItemDanger} min-h-11 rounded-lg bg-surface-variant/40`}><span className={`${styles.iconAction} ${styles.iconMedium}`}>delete</span> Hapus</button>
+                    <button onClick={() => handleOpenEdit(i)} className={`${styles.menuItem} min-h-11 rounded-lg bg-surface-variant/40`}><span className={`${styles.iconAction} ${styles.iconMedium}`}>edit</span> {t("managerEditSku")}</button>
+                    <button onClick={() => handleRestock(i)} className={`${styles.menuItem} min-h-11 rounded-lg bg-surface-variant/40`}><span className={`${styles.iconAction} ${styles.iconMedium}`}>add_box</span> {t("managerRestock")}</button>
+                    <button onClick={() => handleDelete(i)} className={`${styles.menuItemDanger} min-h-11 rounded-lg bg-surface-variant/40`}><span className={`${styles.iconAction} ${styles.iconMedium}`}>delete</span> {t("delete")}</button>
                   </div>
                 )}
               </div>
@@ -247,8 +270,15 @@ export default function InventorySection() {
           <table className={styles.table}>
             <thead>
               <tr className={styles.tableHeadRow}>
-                {["SKU ID", "Product Name", "Category", "Stock vs Threshold", "Status", "Actions"].map((h) => (
-                  <th key={h} className={`${styles.tableHeadCell} ${h === "Actions" ? styles.tableHeadCellRight : ""}`}>{h}</th>
+                {[
+                  ["managerSkuId", t("managerSkuId")],
+                  ["managerProductName", t("managerProductName")],
+                  ["managerCategory", t("managerCategory")],
+                  ["managerStockVsThreshold", t("managerStockVsThreshold")],
+                  ["managerStatus", t("managerStatus")],
+                  ["managerActions", t("managerActions")],
+                ].map(([key, label]) => (
+                  <th key={key} className={`${styles.tableHeadCell} ${key === "managerActions" ? styles.tableHeadCellRight : ""}`}>{label}</th>
                 ))}
               </tr>
             </thead>
@@ -265,23 +295,23 @@ export default function InventorySection() {
                     <td className={styles.categoryCell}><span className={styles.categoryBadgePill}>{item.category}</span></td>
                     <td className={styles.stockCell}>
                       <div className={styles.stockCellInner}>
-                        <span className={styles.stockLabel}>{item.stock.toLocaleString()} / {item.threshold.toLocaleString()} units</span>
+                        <span className={styles.stockLabel}>{item.stock.toLocaleString(language === "en" ? "en-US" : "id-ID")} / {item.threshold.toLocaleString(language === "en" ? "en-US" : "id-ID")} {t("managerUnits")}</span>
                         <span className={`${styles.pctText} ${pct < 30 ? item.statusColor : styles.pctNormal}`}>{pct}%</span>
                       </div>
                       <div className={styles.progressTrack}><div className={`${styles.progressFill} ${item.barColor}`} style={{ width: `${Math.max(pct, 2)}%` }} /></div>
                     </td>
                     <td className={styles.statusCell}><div className={`${styles.statusRow} ${item.status === "Critical" ? `${item.statusColor} ${styles.statusCriticalRow}` : item.statusColor}`}>
                       <div className={`${styles.statusDot} ${item.barColor} ${item.status === "Critical" ? styles.statusDotPulse : ""}`} />
-                      <span className={styles.statusText}>{item.status}</span>
+                      <span className={styles.statusText}>{statusLabel(item.status)}</span>
                     </div></td>
                     <td className={styles.actionCell}><div className={styles.actionButtons}>
-                      <button onClick={() => handleOpenEdit(i)} className={styles.iconButton}><span className={`${styles.iconAction} ${styles.iconInline}`}>edit</span></button>
-                      <button onClick={() => setShowMoreMenu(showMoreMenu === i ? null : i)} className={styles.iconButton}><span className={`${styles.iconAction} ${styles.iconInline}`}>more_vert</span></button>
+                      <button aria-label={t("edit")} onClick={() => handleOpenEdit(i)} className={styles.iconButton}><span className={`${styles.iconAction} ${styles.iconInline}`}>edit</span></button>
+                      <button aria-label={t("commonMoreActions")} onClick={() => setShowMoreMenu(showMoreMenu === i ? null : i)} className={styles.iconButton}><span className={`${styles.iconAction} ${styles.iconInline}`}>more_vert</span></button>
                       {showMoreMenu === i && (
                         <div className={`${styles.moreMenuFade} ${styles.moreMenu}`}>
-                          <button onClick={() => handleOpenEdit(i)} className={styles.menuItem}><span className={`${styles.iconAction} ${styles.iconMedium}`}>edit</span> Edit SKU</button>
-                          <button onClick={() => handleRestock(i)} className={styles.menuItem}><span className={`${styles.iconAction} ${styles.iconMedium}`}>add_box</span> Restock</button>
-                          <button onClick={() => handleDelete(i)} className={styles.menuItemDanger}><span className={`${styles.iconAction} ${styles.iconMedium}`}>delete</span> Hapus</button>
+                          <button onClick={() => handleOpenEdit(i)} className={styles.menuItem}><span className={`${styles.iconAction} ${styles.iconMedium}`}>edit</span> {t("managerEditSku")}</button>
+                          <button onClick={() => handleRestock(i)} className={styles.menuItem}><span className={`${styles.iconAction} ${styles.iconMedium}`}>add_box</span> {t("managerRestock")}</button>
+                          <button onClick={() => handleDelete(i)} className={styles.menuItemDanger}><span className={`${styles.iconAction} ${styles.iconMedium}`}>delete</span> {t("delete")}</button>
                         </div>
                       )}
                     </div></td>
@@ -296,22 +326,22 @@ export default function InventorySection() {
       {showAddModal && (
         <div className={`${styles.modalOverlayFade} ${styles.modalOverlay}`} onClick={() => setShowAddModal(false)}>
           <div className={`${styles.modalContentScale} ${styles.modalContent}`} onClick={(e) => e.stopPropagation()}>
-            <h4 className={`${styles.headline} ${styles.modalTitle}`}>Tambah SKU Baru</h4>
+            <h4 className={`${styles.headline} ${styles.modalTitle}`}>{t("managerAddSkuTitle")}</h4>
             <div className={styles.formGroup}>
-              <input className={styles.input} placeholder="SKU ID" value={form.sku} onChange={(e) => setForm({ ...form, sku: e.target.value })} />
-              <input className={styles.input} placeholder="Nama Produk" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
-              <input className={styles.input} placeholder="Varian / Deskripsi" value={form.variant} onChange={(e) => setForm({ ...form, variant: e.target.value })} />
+              <input className={styles.input} placeholder={t("managerSkuId")} value={form.sku} onChange={(e) => setForm({ ...form, sku: e.target.value })} />
+              <input className={styles.input} placeholder={t("managerProductName")} value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
+              <input className={styles.input} placeholder={t("managerVariantDescription")} value={form.variant} onChange={(e) => setForm({ ...form, variant: e.target.value })} />
               <select className={styles.select} value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })}>
-                <option value="Hardware">Hardware</option><option value="Proyek">Proyek</option>
+                <option value="Hardware">{t("managerHardware")}</option><option value="Proyek">{t("managerProjectCategory")}</option>
               </select>
               <div className={styles.formRow}>
-                <div><label className={styles.formLabel}>Stock</label><input className={styles.inputPlain} type="number" min="0" value={form.stock} onChange={(e) => setForm({ ...form, stock: Number(e.target.value) })} /></div>
-                <div><label className={styles.formLabel}>Threshold</label><input className={styles.inputPlain} type="number" min="0" value={form.threshold} onChange={(e) => setForm({ ...form, threshold: Number(e.target.value) })} /></div>
+                <div><label className={styles.formLabel}>{t("managerStock")}</label><input className={styles.inputPlain} type="number" min="0" value={form.stock} onChange={(e) => setForm({ ...form, stock: Number(e.target.value) })} /></div>
+                <div><label className={styles.formLabel}>{t("managerThreshold")}</label><input className={styles.inputPlain} type="number" min="0" value={form.threshold} onChange={(e) => setForm({ ...form, threshold: Number(e.target.value) })} /></div>
               </div>
             </div>
             <div className={styles.formActions}>
-              <button onClick={() => setShowAddModal(false)} className={styles.cancelButtonPill}>Batal</button>
-              <button onClick={() => void handleAdd()} className={styles.submitButtonPill}>Tambah</button>
+              <button onClick={() => setShowAddModal(false)} className={styles.cancelButtonPill}>{t("managerCancel")}</button>
+              <button onClick={() => void handleAdd()} className={styles.submitButtonPill}>{t("managerAdd")}</button>
             </div>
           </div>
         </div>
@@ -320,22 +350,22 @@ export default function InventorySection() {
       {showEditModal && (
         <div className={`${styles.modalOverlayFade} ${styles.modalOverlay}`} onClick={() => setShowEditModal(false)}>
           <div className={`${styles.modalContentScale} ${styles.modalContent}`} onClick={(e) => e.stopPropagation()}>
-            <h4 className={`${styles.headline} ${styles.modalTitle}`}>Edit SKU</h4>
+            <h4 className={`${styles.headline} ${styles.modalTitle}`}>{t("managerEditSkuTitle")}</h4>
             <div className={styles.formGroup}>
-              <input className={styles.input} placeholder="SKU ID" value={form.sku} readOnly />
-              <input className={styles.input} placeholder="Nama Produk" value={form.name} readOnly />
-              <input className={styles.input} placeholder="Varian / Deskripsi" value={form.variant} readOnly />
+              <input className={styles.input} placeholder={t("managerSkuId")} value={form.sku} readOnly />
+              <input className={styles.input} placeholder={t("managerProductName")} value={form.name} readOnly />
+              <input className={styles.input} placeholder={t("managerVariantDescription")} value={form.variant} readOnly />
               <select className={styles.select} value={form.category} disabled>
-                <option value="Hardware">Hardware</option><option value="Proyek">Proyek</option>
+                <option value="Hardware">{t("managerHardware")}</option><option value="Proyek">{t("managerProjectCategory")}</option>
               </select>
               <div className={styles.formRow}>
-                <div><label className={styles.formLabel}>Stock</label><input className={styles.inputPlain} type="number" min="0" value={form.stock} onChange={(e) => setForm({ ...form, stock: Number(e.target.value) })} /></div>
-                <div><label className={styles.formLabel}>Threshold</label><input className={styles.inputPlain} type="number" min="0" value={form.threshold} onChange={(e) => setForm({ ...form, threshold: Number(e.target.value) })} /></div>
+                <div><label className={styles.formLabel}>{t("managerStock")}</label><input className={styles.inputPlain} type="number" min="0" value={form.stock} onChange={(e) => setForm({ ...form, stock: Number(e.target.value) })} /></div>
+                <div><label className={styles.formLabel}>{t("managerThreshold")}</label><input className={styles.inputPlain} type="number" min="0" value={form.threshold} onChange={(e) => setForm({ ...form, threshold: Number(e.target.value) })} /></div>
               </div>
             </div>
             <div className={styles.formActions}>
-              <button onClick={() => setShowEditModal(false)} className={styles.cancelButtonPill}>Batal</button>
-              <button onClick={() => void handleSaveEdit()} className={styles.submitButtonPill}>Simpan</button>
+              <button onClick={() => setShowEditModal(false)} className={styles.cancelButtonPill}>{t("managerCancel")}</button>
+              <button onClick={() => void handleSaveEdit()} className={styles.submitButtonPill}>{t("managerSave")}</button>
             </div>
           </div>
         </div>

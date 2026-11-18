@@ -6,6 +6,7 @@ import ThemeToggle from "@/app/ThemeToggle";
 import NotificationBell from "@/frontend/(owner)/components/layout/TopBar/NotificationBell";
 import { LanguageSwitcher } from "@/frontend/shared/i18n/LanguageSwitcher";
 import ProfileMenu from "@/frontend/shared/profile/ProfileMenu";
+import { useLanguage } from "@/frontend/shared/i18n/LanguageProvider";
 
 interface TopBarProps {
   title: string;
@@ -14,6 +15,7 @@ interface TopBarProps {
 
 export default function TopBar({ title }: TopBarProps) {
   const { toggleDesktop, desktopOpen } = useSidebar();
+  const { t } = useLanguage();
 
   return (
     <header className={clsx(
@@ -29,12 +31,16 @@ export default function TopBar({ title }: TopBarProps) {
           <span className="material-symbols-outlined absolute left-2.5 top-1/2 -translate-y-1/2 text-on-surface-variant text-[18px] group-focus-within:text-secondary transition-colors">search</span>
           <input
             className="bg-surface-variant border border-outline/50 rounded-pill pl-9 pr-3 py-1.5 w-36 lg:w-64 text-xs text-on-surface placeholder:text-on-surface-variant focus:ring-1 focus:ring-secondary focus:border-secondary transition-all outline-none"
-            placeholder="Search..."
+            placeholder={t("commonSearch")}
             type="text"
           />
         </div>
         <NotificationBell />
-        <button className="text-on-surface-variant hover:text-secondary transition-colors hidden md:block">
+        <button
+          aria-label={t("commonOpenCalendar")}
+          title={t("commonOpenCalendar")}
+          className="text-on-surface-variant hover:text-secondary transition-colors hidden md:block"
+        >
           <span className="material-symbols-outlined text-[18px] lg:text-[20px]">calendar_today</span>
         </button>
         <LanguageSwitcher className="h-8 w-8" />

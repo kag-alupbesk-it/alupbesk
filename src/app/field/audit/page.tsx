@@ -6,7 +6,7 @@ export default function Page() {
   return (
     <AuditLogSection
       apiEndpoint="/api/field/audit"
-      description="Catatan aktivitas yang dilakukan oleh role Field (Pengiriman)."
+      descriptionKey="fieldAuditDescription"
     />
   );
 }

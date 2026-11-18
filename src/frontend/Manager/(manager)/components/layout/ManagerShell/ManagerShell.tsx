@@ -5,19 +5,22 @@ import { clsx } from "clsx";
 import TopBar from "../TopBar/TopBar";
 import { useSidebar } from "../SidebarProvider/SidebarProvider";
 import { getRolePagePath } from "@/frontend/shared/navigation/getRolePagePath";
+import { useLanguage } from "@/frontend/shared/i18n/LanguageProvider";
+import type { MessageKey } from "@/frontend/shared/i18n/translations";
 
-const pageTitles: Record<string, string> = {
-  "/manager": "Overview",
-  "/manager/financials": "Financials",
-  "/manager/users": "User Management",
-  "/manager/inventory": "Inventory",
-  "/manager/reports": "Reports",
-  "/manager/audit": "Riwayat Aktivitas",
+const pageTitleKeys: Record<string, MessageKey> = {
+  "/manager": "managerOverviewTitle",
+  "/manager/financials": "financials",
+  "/manager/users": "userManagement",
+  "/manager/inventory": "inventory",
+  "/manager/reports": "reports",
+  "/manager/audit": "activityHistory",
 };
 
 export default function ManagerShell({ children }: { children: React.ReactNode }) {
   const pathname = getRolePagePath(usePathname());
-  const title = pageTitles[pathname] || "Dashboard";
+  const { t } = useLanguage();
+  const title = t(pageTitleKeys[pathname] ?? "managerOverviewTitle");
   const { desktopOpen } = useSidebar();
 
   return (

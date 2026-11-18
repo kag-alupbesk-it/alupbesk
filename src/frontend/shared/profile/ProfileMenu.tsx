@@ -5,9 +5,25 @@ import { useRouter } from "next/navigation";
 import { request } from "@/services/api/request";
 import { getSupabaseBrowserClient } from "@/services/supabaseBrowser";
 import type { AuthenticatedProfile } from "@/backend/auth/getAuthenticatedProfile";
+import { useLanguage } from "@/frontend/shared/i18n/LanguageProvider";
+import type { MessageKey } from "@/frontend/shared/i18n/translations";
+
+const roleLabelKeys: Record<string, MessageKey> = {
+  pelanggan: "roleCustomer",
+  marketing: "roleMarketing",
+  gudang: "roleWarehouse",
+  keuangan: "roleFinance",
+  proyek: "roleProject",
+  field: "roleField",
+  produksi: "roleProduction",
+  manager: "roleManager",
+  owner: "roleOwner",
+  drafter: "roleDrafter",
+};
 
 export default function ProfileMenu() {
   const router = useRouter();
+  const { t } = useLanguage();
   const [open, setOpen] = useState(false);
   const [profile, setProfile] = useState<AuthenticatedProfile | null>(null);
   const [loading, setLoading] = useState(false);
@@ -23,7 +39,7 @@ export default function ProfileMenu() {
   const [passwordInput, setPasswordInput] = useState("");
   const [savingSettings, setSavingSettings] = useState(false);
   const [settingsError, setSettingsError] = useState("");
-  const [settingsSuccess, setSettingsSuccess] = useState("");
+  const [settingsSuccess, setSettingsSuccess] = useState(false);
 
   const ref = useRef<HTMLDivElement>(null);
 
@@ -65,7 +81,7 @@ export default function ProfileMenu() {
     e.preventDefault();
     setSavingSettings(true);
     setSettingsError("");
-    setSettingsSuccess("");
+    setSettingsSuccess(false);
     try {
       const res = await fetch("/api/auth/profile", {
         method: "PUT",
@@ -79,17 +95,17 @@ export default function ProfileMenu() {
       const json = await res.json();
       if (json.success) {
         setProfile(json.data);
-        setSettingsSuccess("Profil berhasil diperbarui.");
+        setSettingsSuccess(true);
         setPasswordInput("");
         setTimeout(() => {
           setShowSettingsModal(false);
-          setSettingsSuccess("");
+          setSettingsSuccess(false);
         }, 1500);
       } else {
-        setSettingsError(json.error?.message ?? "Gagal menyimpan perubahan.");
+        setSettingsError(json.error?.message ?? t("commonSaveChangesFailed"));
       }
     } catch (err) {
-      setSettingsError(err instanceof Error ? err.message : "Gagal menyimpan perubahan.");
+      setSettingsError(err instanceof Error ? err.message : t("commonSaveChangesFailed"));
     } finally {
       setSavingSettings(false);
     }
@@ -112,9 +128,9 @@ export default function ProfileMenu() {
       <button
         type="button"
         onClick={handleToggle}
-        aria-label="Menu profil"
+        aria-label={t("commonMenuProfile")}
         aria-expanded={open}
-        title="Profil"
+        title={t("commonProfile")}
         className="w-7 h-7 lg:w-8 lg:h-8 rounded-full overflow-hidden border-2 border-outline hover:border-secondary transition-colors cursor-pointer relative z-[60]"
       >
         <div className="w-full h-full bg-surface-variant flex items-center justify-center">
@@ -134,17 +150,17 @@ export default function ProfileMenu() {
         <div className="absolute right-0 top-full mt-2 w-64 rounded-xl border border-outline/40 bg-surface-container shadow-2xl z-[60] p-4 text-left">
           <div className="min-w-0">
             {loading && !profile ? (
-              <p className="text-xs text-on-surface-variant">Memuat profil...</p>
+              <p className="text-xs text-on-surface-variant">{t("commonLoadProfile")}</p>
             ) : profile ? (
               <>
                 <p className="truncate text-sm font-bold text-on-surface">{profile.name}</p>
                 <p className="truncate text-xs text-on-surface-variant">{profile.email}</p>
                 <span className="mt-2 inline-flex rounded-full bg-secondary/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-secondary">
-                  {profile.role}
+                  {roleLabelKeys[profile.role] ? t(roleLabelKeys[profile.role]) : profile.role}
                 </span>
               </>
             ) : (
-              <p className="text-xs text-on-surface-variant">Profil tidak dapat dimuat.</p>
+              <p className="text-xs text-on-surface-variant">{t("commonProfileUnavailable")}</p>
             )}
           </div>
 
@@ -158,7 +174,7 @@ export default function ProfileMenu() {
               className="flex w-full items-center gap-2 rounded-lg px-2 py-2 text-xs font-medium text-on-surface-variant transition-colors hover:bg-surface-variant hover:text-on-surface"
             >
               <span className="material-symbols-outlined text-[18px]">manage_accounts</span>
-              Setting Profile
+              {t("commonProfileSettings")}
             </button>
 
             <button
@@ -170,7 +186,7 @@ export default function ProfileMenu() {
               className="flex w-full items-center gap-2 rounded-lg px-2 py-2 text-xs font-medium text-error transition-colors hover:bg-error/10"
             >
               <span className="material-symbols-outlined text-[18px]">logout</span>
-              Keluar
+              {t("commonLogout")}
             </button>
           </div>
         </div>
@@ -181,9 +197,10 @@ export default function ProfileMenu() {
         <div className="fixed inset-0 z-[120] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-surface-container border border-outline/25 rounded-2xl w-full max-w-md p-6 shadow-2xl text-on-surface">
             <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-bold">Setting Profile</h3>
+              <h3 className="text-lg font-bold">{t("commonProfileSettings")}</h3>
               <button
                 onClick={() => setShowSettingsModal(false)}
+                aria-label={t("commonClose")}
                 className="text-on-surface/50 hover:text-on-surface"
               >
                 <span className="material-symbols-outlined">close</span>
@@ -191,12 +208,12 @@ export default function ProfileMenu() {
             </div>
 
             {settingsError && <p className="text-xs text-red-400 mb-3">{settingsError}</p>}
-            {settingsSuccess && <p className="text-xs text-emerald-400 mb-3">{settingsSuccess}</p>}
+            {settingsSuccess && <p className="text-xs text-emerald-400 mb-3">{t("commonProfileUpdated")}</p>}
 
             <form onSubmit={handleSaveSettings} className="space-y-4">
               <div>
                 <label className="block text-xs font-semibold uppercase tracking-wider text-on-surface/70 mb-1">
-                  Nama Lengkap
+                  {t("fullName")}
                 </label>
                 <input
                   type="text"
@@ -209,7 +226,7 @@ export default function ProfileMenu() {
 
               <div>
                 <label className="block text-xs font-semibold uppercase tracking-wider text-on-surface/70 mb-1">
-                  Email
+                  {t("email")}
                 </label>
                 <input
                   type="email"
@@ -222,11 +239,11 @@ export default function ProfileMenu() {
 
               <div>
                 <label className={`block text-xs font-semibold uppercase tracking-wider mb-1 ${passwordInput.length > 0 && passwordInput.length < 8 ? "text-red-500" : "text-on-surface/70"}`}>
-                  Kata Sandi Baru (Opsional)
+                  {t("commonNewPasswordOptional")}
                 </label>
                 <input
                   type="password"
-                  placeholder="Min. 8 karakter jika ingin diubah"
+                  placeholder={t("commonPasswordMinHint")}
                   value={passwordInput}
                   onChange={(e) => setPasswordInput(e.target.value)}
                   className="w-full rounded-xl border border-outline/30 bg-primary-container px-3 py-2.5 text-sm text-on-surface focus:border-secondary focus:outline-none"
@@ -239,14 +256,14 @@ export default function ProfileMenu() {
                   onClick={() => setShowSettingsModal(false)}
                   className="px-4 py-2 rounded-xl border border-outline/30 text-xs font-bold text-on-surface hover:bg-surface-variant"
                 >
-                  Batal
+                  {t("cancel")}
                 </button>
                 <button
                   type="submit"
                   disabled={savingSettings || (passwordInput.length > 0 && passwordInput.length < 8)}
                   className="px-5 py-2 rounded-xl bg-secondary text-primary text-xs font-bold hover:brightness-110 disabled:opacity-50"
                 >
-                  {savingSettings ? "Menyimpan..." : "Simpan Perubahan"}
+                  {savingSettings ? t("commonSavingChanges") : t("commonSaveChanges")}
                 </button>
               </div>
             </form>
@@ -261,9 +278,9 @@ export default function ProfileMenu() {
             <span className="material-symbols-outlined text-[48px] text-amber-400 mb-3">
               warning
             </span>
-            <h3 className="text-lg font-bold mb-2">Konfirmasi Keluar</h3>
+            <h3 className="text-lg font-bold mb-2">{t("commonConfirmLogout")}</h3>
             <p className="text-sm text-on-surface/60 mb-6">
-              Apakah Anda yakin ingin keluar dari sistem? Anda harus login kembali untuk mengakses halaman admin.
+              {t("commonConfirmLogoutDescription")}
             </p>
             <div className="flex justify-center gap-3">
               <button
@@ -271,7 +288,7 @@ export default function ProfileMenu() {
                 onClick={() => setShowLogoutModal(false)}
                 className="px-5 py-2.5 rounded-xl border border-outline/30 text-xs font-bold text-on-surface hover:bg-surface-variant"
               >
-                Batal
+                {t("cancel")}
               </button>
               <button
                 type="button"
@@ -280,7 +297,7 @@ export default function ProfileMenu() {
                 className="px-5 py-2.5 rounded-xl bg-red-600 text-white text-xs font-bold hover:bg-red-700 disabled:opacity-50 flex items-center gap-2"
               >
                 {pending && <span className="material-symbols-outlined animate-spin text-[16px]">progress_activity</span>}
-                {pending ? "Keluar..." : "Ya, Keluar"}
+                {pending ? t("commonLoggingOut") : t("commonConfirmLogoutAction")}
               </button>
             </div>
           </div>
