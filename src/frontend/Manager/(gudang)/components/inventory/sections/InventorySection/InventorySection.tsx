@@ -242,7 +242,7 @@ export function InventorySection() {
           <div className={s.wrapper}>
             <AuditLogSection
               apiEndpoint="/api/gudang/audit"
-              description="Catatan aktivitas yang dilakukan oleh role Gudang."
+              descriptionKey="warehouseAuditDescription"
             />
           </div>
         </div>

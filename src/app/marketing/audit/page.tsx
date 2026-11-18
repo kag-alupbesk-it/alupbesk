@@ -6,7 +6,7 @@ export default function Page() {
   return (
     <AuditLogSection
       apiEndpoint="/api/marketing/audit"
-      description="Catatan aktivitas yang dilakukan oleh role Marketing."
+      descriptionKey="marketingAuditDescription"
     />
   );
 }

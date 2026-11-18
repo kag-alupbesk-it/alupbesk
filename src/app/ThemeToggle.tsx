@@ -1,6 +1,7 @@
 "use client";
 
 import { useTheme } from "@/app/ThemeContext";
+import { useLanguage } from "@/frontend/shared/i18n/LanguageProvider";
 
 interface ThemeToggleProps {
   className?: string;
@@ -15,14 +16,15 @@ interface ThemeToggleProps {
  */
 export default function ThemeToggle({ className = "" }: ThemeToggleProps) {
   const { theme, mounted, toggleTheme } = useTheme();
+  const { t } = useLanguage();
   const isDark = theme === "dark";
 
   return (
     <button
       id="theme-toggle-btn"
       onClick={toggleTheme}
-      aria-label={!mounted ? "Toggle tema" : isDark ? "Aktifkan tema terang" : "Aktifkan tema gelap"}
-      title={!mounted ? "Toggle theme" : isDark ? "Switch to light mode" : "Switch to dark mode"}
+      aria-label={!mounted ? t("commonToggleTheme") : isDark ? t("commonActivateLightTheme") : t("commonActivateDarkTheme")}
+      title={!mounted ? t("commonToggleTheme") : isDark ? t("commonSwitchToLightMode") : t("commonSwitchToDarkMode")}
       className={[
         "flex items-center justify-center w-8 h-8 rounded-full",
         "text-on-surface-variant hover:text-secondary",
