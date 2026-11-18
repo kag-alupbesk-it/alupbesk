@@ -17,7 +17,7 @@ import { getWhatsAppUrl } from "@/frontend/(pelanggan)/utils/getWhatsAppUrl";
 import { buildCustomRequestMessage } from "@/frontend/shared/customRequests/message";
 
 const maxFileSize = 5 * 1024 * 1024;
-const acceptedFileTypes = new Set(["image/png", "image/jpeg", "image/webp", "application/pdf"]);
+const acceptedFileTypes = new Set(["image/png", "image/jpeg", "image/jpg", "image/webp", "application/pdf"]);
 
 // Ukuran (panjang x lebar) digabung ke catatan item agar ikut tersimpan & terkirim ke WhatsApp.
 function gabungCatatanItem(item: CustomRequestFormItem): string {
@@ -49,6 +49,7 @@ export default function CustomSection() {
   const validItems = form.items.filter(
     (item) => item.name.trim() && Number.isFinite(Number(item.quantity)) && Number(item.quantity) > 0,
   );
+  const requiresItems = form.layanan !== "Desain Gambar";
 
   const isValid = Boolean(
     form.nama &&
@@ -61,7 +62,7 @@ export default function CustomSection() {
       form.deadline &&
       form.deskripsi &&
       imageFile &&
-      validItems.length > 0 &&
+      (!requiresItems || validItems.length > 0) &&
       !isReadingImage,
   );
 
@@ -256,8 +257,19 @@ export default function CustomSection() {
               <RequestForm form={form} setForm={setForm} upload={upload} />
             </div>
 
-            <RequestSidebar isValid={isValid} onSubmit={submit} checking={isSubmitting} itemsCount={validItems.length} hasName={Boolean(form.nama)} hasPhone={Boolean(form.telp)} hasService={Boolean(form.layanan)} hasDescription={Boolean(form.deskripsi)} hasDeadline={Boolean(form.deadline)} />
-            {submitError && <p className="text-sm text-red-400 sm:col-span-2">{submitError}</p>}
+            <RequestSidebar
+              isValid={isValid}
+              onSubmit={submit}
+              checking={isSubmitting}
+              itemsCount={validItems.length}
+              requiresItems={requiresItems}
+              hasName={Boolean(form.nama)}
+              hasPhone={Boolean(form.telp)}
+              hasService={Boolean(form.layanan)}
+              hasDescription={Boolean(form.deskripsi)}
+              hasDeadline={Boolean(form.deadline)}
+              submitError={submitError}
+            />
           </div>
         )}
       </main>

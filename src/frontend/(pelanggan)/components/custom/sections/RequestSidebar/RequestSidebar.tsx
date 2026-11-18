@@ -13,21 +13,25 @@ export default function RequestSidebar({
   onSubmit,
   checking,
   itemsCount,
+  requiresItems,
   hasName,
   hasPhone,
   hasService,
   hasDescription,
   hasDeadline,
+  submitError,
 }: {
   isValid: boolean;
   onSubmit: () => void;
   checking: boolean;
   itemsCount: number;
+  requiresItems: boolean;
   hasName: boolean;
   hasPhone: boolean;
   hasService: boolean;
   hasDescription: boolean;
   hasDeadline: boolean;
+  submitError: string;
 }) {
   const { language } = useLanguage();
   const loadContent = useCallback(async (): Promise<CustomSidebarContent> => {
@@ -51,10 +55,12 @@ export default function RequestSidebar({
     [hasService, "Pilih jenis layanan"],
     [hasName, "Nama lengkap terisi"],
     [hasPhone, "Nomor WhatsApp terisi"],
-    [itemsCount > 0, "Minimal satu item spesifikasi"],
     [hasDeadline, "Target deadline ditentukan"],
     [hasDescription, "Deskripsi kebutuhan lengkap"],
   ];
+  if (requiresItems) {
+    checklist.splice(3, 0, [itemsCount > 0, "Minimal satu item spesifikasi"]);
+  }
 
   return (
     <aside className={styles.sidebar}>
@@ -96,6 +102,12 @@ export default function RequestSidebar({
             ))}
           </div>
         </div>
+
+        {submitError && (
+          <p role="alert" className="mt-4 rounded-lg border border-error/30 bg-error/10 px-3 py-2 text-xs text-error">
+            {submitError}
+          </p>
+        )}
 
         <button
           onClick={onSubmit}

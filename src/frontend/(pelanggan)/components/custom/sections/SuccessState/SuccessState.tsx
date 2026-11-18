@@ -17,11 +17,14 @@ export default function SuccessState({
       </span>
 
       <h2 className="text-[24px] font-bold text-on-surface mb-3">
-        Request Berhasil Dikirim!
+        Request Berhasil Disimpan!
       </h2>
 
       <p className="text-on-surface/50 text-sm max-w-md">
-        Tim kami akan segera menghubungi Anda untuk diskusi lebih lanjut melalui WhatsApp.
+        Data request sudah tersimpan.{" "}
+        {whatsappHref
+          ? "Untuk mengirim pesan ke tim kami, buka WhatsApp melalui tombol di bawah lalu tekan Kirim. Pesan belum terkirim sebelum Anda menekan tombol Kirim di WhatsApp."
+          : "Tautan WhatsApp belum tersedia. Hubungi tim ALUPBESK secara manual untuk melanjutkan request."}
         {requestId && (
           <>
             <br />

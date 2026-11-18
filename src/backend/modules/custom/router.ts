@@ -25,9 +25,18 @@ const customRequestSchema = z
     layanan: z.string().trim().min(1),
     deskripsi: z.string().trim().min(1).max(4000),
     deadline: z.string().trim().min(1),
-    items: z.array(customRequestItemSchema).min(1),
+    items: z.array(customRequestItemSchema),
     rawImage: z.string().trim().min(1),
     rawImageName: z.string().trim().min(1).max(255),
+  })
+  .superRefine((data, context) => {
+    if (data.layanan !== "Desain Gambar" && data.items.length === 0) {
+      context.addIssue({
+        code: "custom",
+        path: ["items"],
+        message: "Tambahkan minimal satu item spesifikasi.",
+      });
+    }
   })
   .refine((data) => isAllowedRawImage(data.rawImage), {
     message: "URL gambar harus milik storage ALUPBESK.",

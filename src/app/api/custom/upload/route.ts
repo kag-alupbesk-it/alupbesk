@@ -5,30 +5,36 @@ import { checkRateLimit } from "@/backend/http/rateLimit";
 import { recordAuditForCurrentUser } from "@/backend/modules/audit/recordAudit";
 
 const MAX_SIZE = 5 * 1024 * 1024;
-const IMAGE_EXTENSIONS: Record<string, string> = {
-  "image/jpeg": "jpg",
-  "image/png": "png",
-  "image/webp": "webp",
-  "application/pdf": "pdf",
-};
 const MAX_REQUEST_SIZE = MAX_SIZE + 512 * 1024;
 
-// Cek magic-bytes: pastikan isi file benar-benar gambar atau PDF.
-function hasValidFileSignature(bytes: Uint8Array, mime: string): boolean {
-  if (mime === "image/png") {
-    return bytes[0] === 0x89 && bytes[1] === 0x50 && bytes[2] === 0x4e && bytes[3] === 0x47;
+function detectFileFormat(bytes: Uint8Array): { contentType: string; extension: string } | null {
+  if (bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff) {
+    return { contentType: "image/jpeg", extension: "jpg" };
   }
-  if (mime === "image/jpeg") {
-    return bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff;
+
+  const pngSignature = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a];
+  if (pngSignature.every((byte, index) => bytes[index] === byte)) {
+    return { contentType: "image/png", extension: "png" };
   }
-  if (mime === "image/webp") {
+
+  if (bytes.length >= 12) {
     const header = new TextDecoder().decode(bytes.slice(0, 12));
-    return header.startsWith("RIFF") && header.slice(8, 12) === "WEBP";
+    if (header.startsWith("RIFF") && header.slice(8, 12) === "WEBP") {
+      return { contentType: "image/webp", extension: "webp" };
+    }
   }
-  if (mime === "application/pdf") {
-    return bytes[0] === 0x25 && bytes[1] === 0x50 && bytes[2] === 0x44 && bytes[3] === 0x46; // %PDF-
+
+  if (
+    bytes[0] === 0x25 &&
+    bytes[1] === 0x50 &&
+    bytes[2] === 0x44 &&
+    bytes[3] === 0x46 &&
+    bytes[4] === 0x2d
+  ) {
+    return { contentType: "application/pdf", extension: "pdf" };
   }
-  return false;
+
+  return null;
 }
 
 // Upload gambar mentah/PDF form publik Jasa Custom.
@@ -48,11 +54,6 @@ export async function POST(request: Request) {
     return Response.json({ success: false, error: { code: "FILE_TOO_LARGE", message: "Ukuran file maksimal 5 MB." } }, { status: 413 });
   }
 
-  if (!(await ensureStorageBucket(IMAGES_BUCKET, IMAGES_BUCKET_CONFIG))) {
-    return Response.json({ success: false, error: { code: "BUCKET_FAILED", message: "Gagal menyiapkan bucket penyimpanan gambar." } }, { status: 500 });
-  }
-
-
   let formData: FormData;
   try {
     formData = await request.formData();
@@ -65,23 +66,29 @@ export async function POST(request: Request) {
     return Response.json({ success: false, error: { code: "FILE_REQUIRED", message: "File gambar/PDF wajib diunggah." } }, { status: 400 });
   }
 
-  const extension = IMAGE_EXTENSIONS[file.type];
-  if (!extension) {
-    return Response.json({ success: false, error: { code: "INVALID_TYPE", message: "Format yang didukung: JPEG, PNG, WebP, dan PDF." } }, { status: 400 });
-  }
-
   if (file.size > MAX_SIZE) {
     return Response.json({ success: false, error: { code: "FILE_TOO_LARGE", message: "Ukuran file maksimal 5 MB." } }, { status: 400 });
   }
 
-  const path = `custom/${crypto.randomUUID()}.${extension}`;
   const arrayBuffer = await file.arrayBuffer();
-  if (!hasValidFileSignature(new Uint8Array(arrayBuffer), file.type)) {
-    return Response.json({ success: false, error: { code: "INVALID_FILE", message: "File bukan gambar/PDF yang valid." } }, { status: 400 });
+  const format = detectFileFormat(new Uint8Array(arrayBuffer));
+  if (!format) {
+    return Response.json({
+      success: false,
+      error: {
+        code: "INVALID_FILE",
+        message: "Isi file tidak cocok dengan format JPG, PNG, WEBP, atau PDF. Coba simpan ulang file lalu unggah kembali.",
+      },
+    }, { status: 400 });
   }
 
+  if (!(await ensureStorageBucket(IMAGES_BUCKET, IMAGES_BUCKET_CONFIG))) {
+    return Response.json({ success: false, error: { code: "BUCKET_FAILED", message: "Gagal menyiapkan bucket penyimpanan gambar." } }, { status: 500 });
+  }
+
+  const path = `custom/${crypto.randomUUID()}.${format.extension}`;
   const { error } = await db.storage.from(IMAGES_BUCKET).upload(path, arrayBuffer, {
-    contentType: file.type,
+    contentType: format.contentType,
     cacheControl: "3600",
     upsert: false,
   });
