@@ -1,4 +1,5 @@
 import { gudangInventoryItems } from "../items/store";
+import { computeItemStockFromLots } from "../lots/getLots";
 import { createOutTransaction } from "../transactions/createOutTransaction";
 import { persistProductionRequest, productionRequests } from "./store";
 import type { ProductionRequest, ProductionRequestResult } from "./types";
@@ -18,28 +19,47 @@ export function approveProductionRequest(
   if (!current) return { ok: false, code: "REQUEST_NOT_FOUND" };
   if (current.status !== "diajukan") return { ok: false, code: "REQUEST_STATUS_INVALID" };
 
+  const requestedByItem = new Map<string, { itemName: string; quantity: number }>();
   for (const line of current.items) {
     const item = line.itemId ? gudangInventoryItems.get(line.itemId) : undefined;
     if (!item) return { ok: false, code: "ITEM_NOT_FOUND", detail: line.itemName };
-    if (item.currentStock < line.quantity) {
-      return { ok: false, code: "INSUFFICIENT_STOCK", detail: line.itemName };
+    const requested = requestedByItem.get(item.id);
+    if (requested) {
+      requested.quantity += line.quantity;
+    } else {
+      requestedByItem.set(item.id, { itemName: line.itemName, quantity: line.quantity });
+    }
+  }
+
+  for (const [itemId, requested] of requestedByItem) {
+    const item = gudangInventoryItems.get(itemId);
+    if (!item) return { ok: false, code: "ITEM_NOT_FOUND", detail: requested.itemName };
+    const available =
+      item.materialKind === "unit"
+        ? item.currentStock
+        : Math.min(item.currentStock, computeItemStockFromLots(itemId));
+    if (available < requested.quantity) {
+      return { ok: false, code: "INSUFFICIENT_STOCK", detail: requested.itemName };
     }
   }
 
   const tanggal = todayIso();
   const projectName = `Produksi - ${current.spkLabel || current.spkRef}`;
-  for (const line of current.items) {
-    if (!line.itemId) continue;
-    const item = gudangInventoryItems.get(line.itemId);
-    if (item?.materialKind === "unit") {
-      createOutTransaction({
-        transactionDate: tanggal,
-        itemId: line.itemId,
-        quantity: line.quantity,
-        projectName,
-        source: "produksi",
-        createdBy: current.requesterName || approvedBy,
-      });
+  for (const [itemId, requested] of requestedByItem) {
+    const result = createOutTransaction({
+      transactionDate: tanggal,
+      itemId,
+      quantity: requested.quantity,
+      projectName,
+      source: "produksi",
+      createdBy: current.requesterName || approvedBy,
+    });
+    if (!result.ok) {
+      return {
+        ok: false,
+        code: result.code === "ITEM_NOT_FOUND" ? "ITEM_NOT_FOUND" : "INSUFFICIENT_STOCK",
+        detail: requested.itemName,
+      };
     }
   }
 
