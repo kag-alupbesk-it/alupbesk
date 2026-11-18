@@ -45,6 +45,7 @@ export default function PesananSection() {
   const [showConfirm, setShowConfirm] = useState(false);
   const [showRejected, setShowRejected] = useState(false);
   const [confirmOrder, setConfirmOrder] = useState<MarketingOrder | null>(null);
+  const [whatsappFallbackUrl, setWhatsappFallbackUrl] = useState<string | null>(null);
 
   const filtered = orders.filter((o) => {
     const matchSearch = search === "" || o.id.toLowerCase().includes(search.toLowerCase()) || o.customer.name.toLowerCase().includes(search.toLowerCase()) || o.customer.phone.includes(search);
@@ -70,18 +71,36 @@ export default function PesananSection() {
     setShowConfirm(true);
   }
 
-  async function handleConfirmOrder() {
-    if (!confirmOrder) return;
+  async function handleConfirmOrder(waTab: Window | null, waUrl: string) {
+    if (!confirmOrder) {
+      waTab?.close();
+      return;
+    }
     setError("");
+    setWhatsappFallbackUrl(null);
     try {
       await marketingApi.submitOrder(confirmOrder.id);
-      refresh();
-      setShowConfirm(false);
-      setConfirmOrder(null);
-      setPage(1);
     } catch (reason) {
+      waTab?.close();
       setError(reason instanceof Error ? reason.message : "Pesanan gagal dikonfirmasi.");
+      return;
     }
+
+    let whatsappOpened = false;
+    if (waTab && !waTab.closed) {
+      try {
+        waTab.opener = null;
+        waTab.location.replace(waUrl);
+        whatsappOpened = true;
+      } catch {
+        waTab.close();
+      }
+    }
+    if (!whatsappOpened) setWhatsappFallbackUrl(waUrl);
+    refresh();
+    setShowConfirm(false);
+    setConfirmOrder(null);
+    setPage(1);
   }
 
   const newOrders = orders.filter(isNewOrder);
@@ -112,6 +131,14 @@ export default function PesananSection() {
       {tab === "produk" && (
         <>
       {(error || loadError) && <p className="mb-4 text-sm text-red-400">{error || loadError}</p>}
+      {whatsappFallbackUrl && (
+        <p role="status" className="mb-4 text-sm text-amber-300">
+          Pesanan berhasil diajukan, tetapi WhatsApp tidak terbuka.{" "}
+          <a href={whatsappFallbackUrl} target="_blank" rel="noopener noreferrer" className="underline">
+            Buka WhatsApp untuk mengirim pesan.
+          </a>
+        </p>
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
         <div className="bg-primary-container border border-outline/30 rounded-xl p-5">

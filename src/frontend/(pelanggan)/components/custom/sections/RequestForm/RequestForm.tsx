@@ -234,7 +234,7 @@ export default function RequestForm({
                 <p className="mt-1 text-[10px] text-on-surface-variant">PNG, JPG, WEBP, atau PDF · maksimal 5 MB</p>
               </label>
             )}
-            <input id="custom-raw-image" name="rawImage" type="file" accept="image/png,image/jpeg,image/webp,application/pdf" onChange={upload.handleFileChange} disabled={upload.isReadingImage} className="sr-only" />
+            <input id="custom-raw-image" name="rawImage" type="file" accept="image/png,image/jpeg,image/jpg,image/webp,application/pdf" onChange={upload.handleFileChange} disabled={upload.isReadingImage} className="sr-only" />
           </div>
         </div>
       </section>

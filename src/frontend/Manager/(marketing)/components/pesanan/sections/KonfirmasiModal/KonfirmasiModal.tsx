@@ -8,7 +8,7 @@ interface KonfirmasiModalProps {
   isOpen: boolean;
   order: MarketingOrder | null;
   onClose: () => void;
-  onConfirm: () => void;
+  onConfirm: (waTab: Window | null, waUrl: string) => void;
 }
 
 export default function KonfirmasiModal({ isOpen, order, onClose, onConfirm }: KonfirmasiModalProps) {
@@ -38,15 +38,15 @@ export default function KonfirmasiModal({ isOpen, order, onClose, onConfirm }: K
         <div className={s.infoRow}><span className={s.infoLabel}>Total</span><span className={s.infoValue}>{formatCurrency(order.total)}</span></div>
 
         <div className="mt-4 p-3 bg-surface-variant/30 rounded-xl border border-outline/10">
-          <p className="text-xs text-on-surface-variant mb-2">Notifikasi WhatsApp akan dikirim ke pelanggan:</p>
+          <p className="text-xs text-on-surface-variant mb-2">WhatsApp akan dibuka dengan pesan siap kirim:</p>
           <p className="text-[10px] text-on-surface-variant leading-relaxed break-all">{waUrl}</p>
         </div>
 
         <div className={`${s.actionsWrapper} mt-4 pt-4`}>
           <button onClick={onClose} className={s.secondaryButton}>Batal</button>
-          <button onClick={onConfirm} className={s.primaryButton}>
+          <button onClick={() => onConfirm(window.open("", "_blank"), waUrl)} className={s.primaryButton}>
             <span className={s.icon}>send</span>
-            Konfirmasi &amp; Kirim Notifikasi
+            Konfirmasi &amp; Buka WhatsApp
           </button>
         </div>
       </div>

@@ -26,10 +26,19 @@ const requestSchema = z
     kabupaten: z.string().trim().min(1, "Kabupaten wajib diisi.").max(100),
     layanan: z.string().trim().min(1, "Layanan wajib dipilih."),
     deskripsi: z.string().trim().min(1, "Deskripsi kebutuhan wajib diisi.").max(4000),
-    items: z.array(customRequestItemSchema).min(1, "Tambahkan minimal satu item spesifikasi."),
+    items: z.array(customRequestItemSchema),
     rawImage: z.string().trim().min(1, "Gambar referensi wajib diunggah."),
     rawImageName: z.string().trim().min(1, "Nama file gambar wajib diisi.").max(255),
     deadline: z.string().trim().min(1, "Target deadline wajib diisi."),
+  })
+  .superRefine((data, context) => {
+    if (data.layanan !== "Desain Gambar" && data.items.length === 0) {
+      context.addIssue({
+        code: "custom",
+        path: ["items"],
+        message: "Tambahkan minimal satu item spesifikasi.",
+      });
+    }
   })
   .refine((data) => isAllowedRawImage(data.rawImage), {
     message: "URL gambar harus milik storage ALUPBESK.",
